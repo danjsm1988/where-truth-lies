@@ -80,17 +80,21 @@ def normalize_topic(raw_topic):
     if not raw_topic:
         return "Other"
     text = str(raw_topic).lower()
+    if "medicaid" in text:
+        return "Medicaid"
+    if "medicare" in text:
+        return "Medicare"
     if "social security" in text:
         return "Social Security"
     if "health" in text:
         return "Healthcare"
-    if "energy" in text or "fossil" in text or "renewable" in text:
+    if "energy" in text or "fossil" in text or "renewable" in text or "climate" in text:
         return "Energy"
     if "iran" in text:
         return "Iran War"
-    if "election" in text or "vote" in text or "ballot" in text:
+    if "election" in text or "vote" in text or "ballot" in text or "save act" in text:
         return "Elections"
-    if "econom" in text or "job" in text or "inflation" in text or "paycheck" in text or "tax" in text:
+    if "econom" in text or "job" in text or "inflation" in text or "paycheck" in text or "tax" in text or "wage" in text:
         return "Economy"
     if "immigr" in text or "border" in text:
         return "Immigration"
@@ -98,8 +102,13 @@ def normalize_topic(raw_topic):
         return "Defense"
     if "military" in text or "war" in text:
         return "Military"
+    if "school" in text or "educat" in text or "teach" in text or "curriculum" in text:
+        return "Education"
+    if "gender" in text or "trans" in text or "lgbtq" in text or "pronouns" in text:
+        return "Gender Issues"
+    if "constitution" in text or "amendment" in text or "rights" in text or "court" in text:
+        return "Constitutional Rights"
     return "Other"
-
 
 def slugify(text):
     if not text:
