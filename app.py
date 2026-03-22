@@ -300,11 +300,29 @@ def analyze():
             fields["Claude Raw JSON"] = json.dumps(claude_json, indent=2)
             fields["OpenAI Raw JSON"] = json.dumps(openai_json, indent=2)
             response = requests.post(url, headers=headers, json={"fields": fields}, timeout=30)
-            if response.status_code == 200:
-                record = response.json()
-                airtable_result = {"saved": True, "record_id": record.get("id"), "url_slug": fields["URL Slug"]}
-            else:
-                airtable_result = {"saved": False, "error": response.text}
+
+if response.status_code == 200:
+    record = response.json()
+    airtable_result = {
+        "saved": True,
+        "record_id": record.get("id"),
+        "url_slug": fields["URL Slug"]
+    }
+else:
+    try:
+        airtable_error = response.json()
+    except Exception:
+        airtable_error = response.text
+
+    print("AIRTABLE STATUS:", response.status_code, flush=True)
+    print("AIRTABLE ERROR:", airtable_error, flush=True)
+    print("AIRTABLE FIELDS SENT:", json.dumps(fields, indent=2), flush=True)
+
+    airtable_result = {
+        "saved": False,
+        "status_code": response.status_code,
+        "error": airtable_error
+    }
     except Exception as e:
         airtable_result = {"saved": False, "error": str(e)}
 
