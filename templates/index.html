@@ -1,760 +1,1312 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Where the Truth Lies</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --navy:#0d1b2a; --navy-mid:#162336; --navy-light:#1e3a5f;
-      --gold:#c9a84c; --gold-light:#e8c97a; --gold-dim:#8a6f2e;
-      --cream:#f5f0e8; --cream-dark:#e8e0cc;
-      --text-light:#b8c4d0; --text-mid:#7a8fa0;
-      --ok:#6dba85; --bad:#e87070;
-      --shadow:0 12px 30px rgba(0,0,0,.28);
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Where the Truth Lies{% if current_claim %} — {{ current_claim.stripped_claim[:60] }}{% endif %}</title>
+<style>
+  :root {
+    --navy: #0d1b2a;
+    --navy-mid: #162336;
+    --navy-light: #1e3250;
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --gold-dim: #8a6f2e;
+    --cream: #f5f0e8;
+    --cream-dim: #c8bfad;
+    --teal: #4a9fa3;
+    --purple: #8b7ab8;
+    --amber: #c97c2a;
+    --green: #5a9e6f;
+    --red: #c94a4a;
+    --border: rgba(138,111,46,0.25);
+    --border-light: rgba(255,255,255,0.07);
+  }
 
-    *{box-sizing:border-box;margin:0;padding:0}
-    html{scroll-behavior:smooth}
-    body{background:var(--navy);color:var(--cream);font-family:'Crimson Text',Georgia,serif;font-size:18px;line-height:1.7;min-height:100vh}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    .masthead{background:var(--navy);border-bottom:1px solid var(--gold-dim);position:sticky;top:0;z-index:100}
-    .masthead-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:16px 40px}
-    .masthead-logo{display:flex;align-items:center;gap:16px}
-    .seal-small{width:52px;height:52px;border-radius:50%;background:var(--navy-mid);border:1.5px solid var(--gold-dim);display:flex;align-items:center;justify-content:center;font-size:22px;flex:0 0 auto}
-    .masthead-name{font-family:'Playfair Display',Georgia,serif;font-size:22px;font-weight:700;color:var(--cream);letter-spacing:.02em;line-height:1.1}
-    .masthead-tagline{font-family:'Crimson Text',Georgia,serif;font-size:12px;color:var(--gold);letter-spacing:.18em;text-transform:uppercase;font-style:italic}
-    .masthead-latin{font-family:'Libre Baskerville',Georgia,serif;font-size:11px;color:var(--gold-dim);letter-spacing:.12em;font-style:italic}
-    .masthead-nav{display:flex;gap:28px;align-items:center}
-    .masthead-nav a{color:var(--text-light);text-decoration:none;font-family:'Libre Baskerville',Georgia,serif;font-size:12px;letter-spacing:.12em;text-transform:uppercase;transition:color .2s;cursor:pointer}
-    .masthead-nav a:hover{color:var(--gold)}
-    .gold-btn{background:var(--gold);color:var(--navy);padding:8px 20px;font-family:'Libre Baskerville',Georgia,serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;cursor:pointer;border:none;transition:background .2s;text-decoration:none;display:inline-block}
-    .gold-btn:hover{background:var(--gold-light)}
+  body {
+    background: var(--navy);
+    color: var(--cream);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 15px;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
 
-    .super-badge{background:rgba(201,168,76,.15);border:1px solid var(--gold-dim);color:var(--gold);padding:4px 10px;font-family:'Libre Baskerville',Georgia,serif;font-size:9px;letter-spacing:.16em;text-transform:uppercase}
+  /* ── TOOLTIP SYSTEM ── */
+  .glossary-term {
+    border-bottom: 1px dotted var(--gold-dim);
+    cursor: help;
+    position: relative;
+    color: var(--gold-light);
+  }
+  .tooltip-popup {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    background: #0d1b2a;
+    border: 1px solid var(--gold-dim);
+    padding: 10px 14px;
+    max-width: 280px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--cream);
+    pointer-events: none;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.6);
+  }
+  .tooltip-popup.visible { display: block; }
+  .tooltip-term-label {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 4px;
+  }
 
-    .methodology{background:var(--navy-mid);border-bottom:1px solid rgba(201,168,76,.2);padding:24px 40px}
-    .methodology-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center}
-    .methodology-label{font-family:'Libre Baskerville',Georgia,serif;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-dim);white-space:nowrap;margin-right:32px;padding-right:32px;border-right:1px solid var(--gold-dim)}
-    .methodology-layers{display:flex;gap:0;flex:1}
-    .m-layer{flex:1;padding:0 18px;border-right:1px solid rgba(201,168,76,.15)}
-    .m-layer:last-child{border-right:none}
-    .m-num{font-family:'Playfair Display',Georgia,serif;font-size:10px;color:var(--gold);font-weight:700;letter-spacing:.1em;margin-bottom:2px}
-    .m-name{font-family:'Libre Baskerville',Georgia,serif;font-size:11px;color:var(--cream);font-weight:700;letter-spacing:.06em;margin-bottom:1px}
-    .m-desc{font-family:'Crimson Text',Georgia,serif;font-size:12px;color:var(--text-mid);line-height:1.3}
+  /* ── NAV ── */
+  .nav {
+    background: var(--navy-mid);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 58px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-brand {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+  }
+  .nav-title {
+    font-size: 17px;
+    font-weight: normal;
+    letter-spacing: 0.04em;
+    color: var(--cream);
+    text-decoration: none;
+  }
+  .nav-latin {
+    font-size: 11px;
+    color: var(--gold-dim);
+    font-style: italic;
+    letter-spacing: 0.14em;
+  }
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    font-size: 12px;
+  }
+  .super-badge {
+    background: var(--gold);
+    color: var(--navy);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    padding: 3px 8px;
+    text-transform: uppercase;
+  }
+  .nav-link {
+    color: var(--cream-dim);
+    text-decoration: none;
+    letter-spacing: 0.08em;
+    font-size: 12px;
+    font-family: 'Trebuchet MS', sans-serif;
+  }
+  .nav-link:hover { color: var(--gold); }
 
-    .main{max-width:1200px;margin:0 auto;padding:60px 40px;display:grid;grid-template-columns:1fr 340px;gap:60px;align-items:start}
+  /* ── LAYOUT ── */
+  .layout {
+    display: flex;
+    max-width: 1300px;
+    margin: 0 auto;
+    min-height: calc(100vh - 58px);
+  }
 
-    .article-header{margin-bottom:36px;padding-bottom:28px;border-bottom:1px solid rgba(201,168,76,.2)}
-    .status-row{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
-    .status-badge{font-family:'Libre Baskerville',Georgia,serif;font-size:10px;letter-spacing:.16em;text-transform:uppercase;padding:4px 12px;border:1px solid;color:var(--gold);border-color:var(--gold-dim);background:rgba(201,168,76,.08)}
-    .topic-tag{font-family:'Libre Baskerville',Georgia,serif;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-mid);padding:3px 10px;border:1px solid rgba(255,255,255,.1)}
-    .article-eyebrow{font-family:'Libre Baskerville',Georgia,serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:12px}
-    .article-title{font-family:'Playfair Display',Georgia,serif;font-size:clamp(28px,3vw,42px);font-weight:900;color:var(--cream);line-height:1.15;margin-bottom:16px}
-    .article-dek{font-family:'Crimson Text',Georgia,serif;font-size:18px;color:var(--text-light);font-style:italic;line-height:1.5}
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--border);
+    padding: 24px 0;
+    position: sticky;
+    top: 58px;
+    height: calc(100vh - 58px);
+    overflow-y: auto;
+  }
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border); }
 
-    .confidence-note{background:rgba(201,168,76,.06);border-left:3px solid var(--gold-dim);padding:16px 20px;margin-bottom:28px;font-family:'Crimson Text',Georgia,serif;font-size:14px;color:var(--text-mid);font-style:italic;line-height:1.5}
+  .sidebar-section {
+    padding: 0 20px 20px;
+    border-bottom: 1px solid var(--border-light);
+    margin-bottom: 8px;
+  }
+  .sidebar-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin-bottom: 12px;
+  }
 
-    .strip-mode{background:var(--navy-mid);border:1px solid var(--gold-dim);padding:28px 32px;margin-bottom:28px;position:relative}
-    .strip-label{position:absolute;top:-10px;left:20px;background:var(--navy-mid);padding:0 10px;font-family:'Libre Baskerville',Georgia,serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}
-    .strip-text{font-family:'Crimson Text',Georgia,serif;font-size:19px;color:var(--cream);line-height:1.6}
+  /* Analyze form */
+  .analyze-textarea {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    color: var(--cream);
+    font-family: Georgia, serif;
+    font-size: 13px;
+    padding: 10px 12px;
+    resize: none;
+    line-height: 1.6;
+    outline: none;
+    min-height: 80px;
+  }
+  .analyze-textarea:focus { border-color: rgba(201,168,76,0.4); }
+  .analyze-btn {
+    width: 100%;
+    margin-top: 8px;
+    padding: 10px;
+    background: var(--gold);
+    border: none;
+    cursor: pointer;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--navy);
+    font-family: 'Trebuchet MS', sans-serif;
+  }
+  .analyze-btn:hover { background: var(--gold-light); }
+  .analyze-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    .verdict-wrap{display:inline-flex;align-items:center;gap:12px;margin-bottom:32px;padding:10px 20px}
-    .verdict-label-txt{font-family:'Libre Baskerville',Georgia,serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--text-mid)}
-    .verdict-value{font-family:'Playfair Display',Georgia,serif;font-size:18px;font-weight:700;letter-spacing:.06em}
-    .v-true{background:rgba(26,92,46,.3);border:1px solid rgba(26,92,46,.6);color:#6dba85}
-    .v-mostly-true{background:rgba(20,70,40,.3);border:1px solid rgba(20,70,40,.6);color:#8dd4a0}
-    .v-substantially-true{background:rgba(30,80,50,.3);border:1px solid rgba(30,80,50,.6);color:#80c898}
-    .v-plausible{background:rgba(80,100,60,.25);border:1px solid rgba(80,100,60,.5);color:#a0c880}
-    .v-contested{background:rgba(74,48,96,.3);border:1px solid rgba(74,48,96,.8);color:#c49fd8}
-    .v-exaggerated{background:rgba(122,82,0,.3);border:1px solid rgba(122,82,0,.7);color:#e8b84b}
-    .v-misleading{background:rgba(140,90,0,.3);border:1px solid rgba(140,90,0,.7);color:#d4a840}
-    .v-false{background:rgba(139,32,32,.3);border:1px solid rgba(139,32,32,.6);color:#e87070}
-    .v-unproven{background:rgba(30,58,95,.4);border:1px solid rgba(30,58,95,.8);color:#7aaed8}
+  /* Recent claims list */
+  .recent-list { list-style: none; }
+  .recent-item { margin-bottom: 2px; }
+  .recent-link {
+    display: block;
+    padding: 8px 10px;
+    text-decoration: none;
+    color: var(--cream-dim);
+    font-size: 12px;
+    line-height: 1.4;
+    border-left: 2px solid transparent;
+  }
+  .recent-link:hover {
+    border-left-color: var(--gold);
+    color: var(--cream);
+    background: rgba(255,255,255,0.03);
+  }
+  .recent-link.active {
+    border-left-color: var(--gold);
+    color: var(--cream);
+    background: rgba(201,168,76,0.06);
+  }
+  .recent-verdict {
+    display: inline-block;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    margin-top: 3px;
+    color: var(--gold-dim);
+    font-family: 'Trebuchet MS', sans-serif;
+  }
 
-    .section-title{font-family:'Libre Baskerville',Georgia,serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:18px;padding-bottom:10px;border-bottom:1px solid rgba(201,168,76,.2)}
+  /* ── MAIN CONTENT ── */
+  .main {
+    flex: 1;
+    padding: 32px 40px 60px;
+    max-width: 860px;
+  }
 
-    .sub-claim-item{display:grid;grid-template-columns:1fr auto;gap:16px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.06);align-items:start}
-    .sub-claim-item:last-child{border-bottom:none}
-    .sub-claim-text{font-family:'Crimson Text',Georgia,serif;font-size:17px;color:var(--cream-dark);line-height:1.5}
-    .verdict-pill{font-family:'Libre Baskerville',Georgia,serif;font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:5px 12px;white-space:nowrap;font-weight:700}
+  /* Loading overlay */
+  .loading-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(13,27,42,0.88);
+    z-index: 200;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+  }
+  .loading-overlay.active { display: flex; }
+  .loading-spinner {
+    width: 36px;
+    height: 36px;
+    border: 2px solid var(--border);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text {
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
 
-    .layer-block{margin-bottom:20px;padding:22px 26px;background:rgba(255,255,255,.02);border-left:3px solid}
-    .layer-direct{border-color:var(--gold)}
-    .layer-adjacent{border-color:#5a8fa0}
-    .layer-root{border-color:#7a6090}
-    .layer-values{border-color:#8a6040}
-    .layer-constitutional{border-color:#4a7060}
-    .layer-left{border-color:#3a6090}
-    .layer-right{border-color:#8a3030}
-    .layer-block-title{font-family:'Libre Baskerville',Georgia,serif;font-size:10px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:10px;font-weight:700}
-    .layer-direct .layer-block-title{color:var(--gold)}
-    .layer-adjacent .layer-block-title{color:#5a8fa0}
-    .layer-root .layer-block-title{color:#9a80b0}
-    .layer-values .layer-block-title{color:#b08060}
-    .layer-constitutional .layer-block-title{color:#6a9080}
-    .layer-left .layer-block-title{color:#6a90c0}
-    .layer-right .layer-block-title{color:#c07070}
-    .layer-block-text{font-family:'Crimson Text',Georgia,serif;font-size:17px;color:var(--cream-dark);line-height:1.7;white-space:pre-line}
+  /* Error banner */
+  .error-banner {
+    display: none;
+    background: rgba(201,74,74,0.12);
+    border: 1px solid rgba(201,74,74,0.3);
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #e8a0a0;
+    margin-bottom: 20px;
+  }
 
-    .perspectives-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:28px}
-    .perspective-card{padding:22px;background:rgba(255,255,255,.02);border-top:3px solid}
-    .perspective-left-card{border-color:#3a6090}
-    .perspective-right-card{border-color:#8a3030}
+  /* ── CLAIM HEADER ── */
+  .claim-header { margin-bottom: 28px; }
+  .claim-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .topic-tag {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    border: 1px solid var(--gold-dim);
+    padding: 3px 8px;
+    font-family: 'Trebuchet MS', sans-serif;
+  }
+  .speaker-tag {
+    font-size: 11px;
+    color: var(--cream-dim);
+    font-style: italic;
+  }
+  .status-tag {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--cream-dim);
+    font-family: 'Trebuchet MS', sans-serif;
+  }
+  .claim-quote {
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--cream);
+    font-style: italic;
+    border-left: 3px solid var(--gold);
+    padding-left: 18px;
+    margin-bottom: 16px;
+  }
 
-    .paywall-wrap{position:relative;overflow:hidden;margin-bottom:28px}
-    .paywall-blur{filter:blur(5px);pointer-events:none;user-select:none}
-    .paywall-overlay{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;background:rgba(13,27,42,.75);backdrop-filter:blur(2px);z-index:10}
-    .paywall-box{text-align:center;padding:28px}
-    .paywall-lock{font-size:28px;margin-bottom:10px}
-    .paywall-title{font-family:'Playfair Display',Georgia,serif;font-size:20px;color:var(--cream);margin-bottom:8px}
-    .paywall-sub{font-family:'Crimson Text',Georgia,serif;font-size:16px;color:var(--text-light);font-style:italic;margin-bottom:18px}
-    .paywall-btn{background:transparent;border:1px solid var(--gold);color:var(--gold);padding:10px 28px;font-family:'Libre Baskerville',Georgia,serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;cursor:pointer;transition:all .2s}
-    .paywall-btn:hover{background:var(--gold);color:var(--navy)}
+  /* ── VERDICT ── */
+  .verdict-block {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 18px;
+    border: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+  .verdict-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    font-family: 'Trebuchet MS', sans-serif;
+  }
+  .verdict-value {
+    font-size: 15px;
+    font-weight: bold;
+    letter-spacing: 0.06em;
+    font-family: 'Trebuchet MS', sans-serif;
+  }
+  .v-true { color: #5a9e6f; }
+  .v-mostly-true { color: #7ab87a; }
+  .v-substantially-true { color: #8ec98e; }
+  .v-plausible { color: var(--teal); }
+  .v-contested { color: var(--gold); }
+  .v-exaggerated { color: var(--amber); }
+  .v-misleading { color: #d4935c; }
+  .v-unproven { color: var(--cream-dim); }
+  .v-false { color: var(--red); }
 
-    .ornamental{display:flex;align-items:center;gap:12px;margin:28px 0}
-    .ornamental-line{flex:1;height:1px;background:rgba(201,168,76,.2)}
-    .ornamental-diamond{width:5px;height:5px;background:var(--gold-dim);transform:rotate(45deg)}
+  /* ── ORNAMENTAL RULE ── */
+  .rule {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 28px 0 20px;
+  }
+  .rule-line { flex: 1; height: 1px; background: var(--border); }
+  .rule-diamond {
+    width: 6px;
+    height: 6px;
+    background: var(--gold-dim);
+    transform: rotate(45deg);
+    flex-shrink: 0;
+  }
 
-    .divergence-card{border:1px solid rgba(196,159,216,.3);background:rgba(74,48,96,.15);padding:22px;margin-bottom:20px}
-    .divergence-title{font-family:'Libre Baskerville',Georgia,serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#c49fd8;margin-bottom:14px}
-    .divergence-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px}
-    .divergence-model{font-family:'Libre Baskerville',Georgia,serif;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-mid);margin-bottom:8px}
-    .divergence-note{font-family:'Crimson Text',Georgia,serif;font-size:15px;color:var(--text-mid);font-style:italic}
+  /* ── COLLAPSIBLE SECTIONS ── */
+  .section { margin-bottom: 6px; }
 
-    .sidebar{
-      position: sticky;
-      top: 90px;
-      max-height: calc(100vh - 110px);
-      overflow-y: auto;
-      padding-right: 6px;
-    }
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 13px 18px;
+    cursor: pointer;
+    user-select: none;
+    border-left: 3px solid transparent;
+    background: rgba(255,255,255,0.02);
+    transition: background 0.15s;
+  }
+  .section-header:hover { background: rgba(255,255,255,0.04); }
+  .section-header.open { background: rgba(255,255,255,0.035); }
 
-    .sidebar::-webkit-scrollbar{
-      width: 8px;
-    }
+  .section-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-family: 'Trebuchet MS', sans-serif;
+    color: var(--gold);
+  }
+  .section-subtitle {
+    font-size: 12px;
+    color: var(--cream-dim);
+    font-style: italic;
+  }
+  .section-chevron {
+    font-size: 11px;
+    color: var(--gold-dim);
+    transition: transform 0.2s;
+  }
+  .section-header.open .section-chevron { transform: rotate(180deg); }
 
-    .sidebar::-webkit-scrollbar-track{
-      background: rgba(255,255,255,.03);
-    }
+  .section-body {
+    display: none;
+    padding: 16px 20px 20px;
+    border-left: 3px solid transparent;
+    background: rgba(255,255,255,0.015);
+  }
+  .section-body.open { display: block; }
 
-    .sidebar::-webkit-scrollbar-thumb{
-      background: rgba(201,168,76,.35);
-      border-radius: 8px;
-    }
+  /* Layer accent colors */
+  .layer-direct .section-header,
+  .layer-direct .section-body { border-left-color: var(--gold); }
+  .layer-adjacent .section-header,
+  .layer-adjacent .section-body { border-left-color: var(--teal); }
+  .layer-root .section-header,
+  .layer-root .section-body { border-left-color: var(--purple); }
+  .layer-values .section-header,
+  .layer-values .section-body { border-left-color: var(--amber); }
+  .layer-constitutional .section-header,
+  .layer-constitutional .section-body { border-left-color: var(--green); }
+  .layer-founders .section-header,
+  .layer-founders .section-body { border-left-color: #7ab8d4; }
+  .layer-scenarios .section-header,
+  .layer-scenarios .section-body { border-left-color: #b87ab8; }
+  .layer-perspectives .section-header,
+  .layer-perspectives .section-body { border-left-color: var(--cream-dim); }
+  .layer-sources .section-header,
+  .layer-sources .section-body { border-left-color: var(--gold-dim); }
+  .layer-summary .section-header,
+  .layer-summary .section-body { border-left-color: var(--gold); }
 
-    .sidebar::-webkit-scrollbar-thumb:hover{
-      background: rgba(201,168,76,.55);
-    }
+  /* ── BODY TEXT ── */
+  .body-text {
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--cream-dim);
+  }
+  .body-text p { margin-bottom: 10px; }
+  .body-text p:last-child { margin-bottom: 0; }
 
-    .sidebar-card{background:var(--navy-mid);border:1px solid rgba(201,168,76,.2);margin-bottom:22px;padding:22px}
-    .sidebar-title{font-family:'Libre Baskerville',Georgia,serif;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid rgba(201,168,76,.2)}
-    .claim-textarea{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:var(--cream);font-family:'Crimson Text',Georgia,serif;font-size:16px;padding:12px 14px;resize:none;height:90px;margin-bottom:10px;outline:none;transition:border-color .2s}
-    .claim-textarea::placeholder{color:var(--text-mid);font-style:italic}
-    .claim-textarea:focus{border-color:var(--gold-dim)}
-    .mode-row{display:flex;gap:8px;margin-bottom:10px}
-    .mode-btn{flex:1;background:transparent;border:1px solid rgba(201,168,76,.2);color:var(--text-mid);padding:9px 8px;font-family:'Libre Baskerville',Georgia,serif;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .2s}
-    .mode-btn.active{color:var(--gold);border-color:var(--gold);background:rgba(201,168,76,.08)}
-    .excavate-btn{width:100%;background:var(--gold);color:var(--navy);border:none;padding:12px;font-family:'Libre Baskerville',Georgia,serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;cursor:pointer;transition:background .2s}
-    .excavate-btn:hover{background:var(--gold-light)}
-    .excavate-btn:disabled{background:var(--gold-dim);cursor:not-allowed;opacity:.6}
-    .sidebar-note{font-family:'Crimson Text',Georgia,serif;font-size:13px;color:var(--text-mid);font-style:italic;margin-top:10px;line-height:1.4;text-align:center}
+  /* ── SUBCLAIMS ── */
+  .subclaims { margin-bottom: 22px; }
+  .subclaim-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 10px 14px;
+    border: 1px solid var(--border-light);
+    margin-bottom: 6px;
+  }
+  .subclaim-verdict-badge {
+    flex-shrink: 0;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    font-family: 'Trebuchet MS', sans-serif;
+    margin-top: 2px;
+    white-space: nowrap;
+  }
+  .subclaim-text {
+    font-size: 13px;
+    color: var(--cream-dim);
+    line-height: 1.55;
+  }
 
-    .status-wrap{display:none;gap:8px;flex-wrap:wrap;margin-top:12px}
-    .status-wrap.visible{display:flex}
-    .status-pill{padding:6px 10px;font-family:'Libre Baskerville',Georgia,serif;font-size:9px;letter-spacing:.12em;text-transform:uppercase;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.02);color:var(--text-mid)}
-    .status-pill.ok{border-color:rgba(109,186,133,.45);color:var(--ok)}
-    .status-pill.bad{border-color:rgba(232,112,112,.45);color:var(--bad)}
+  /* ── PERSPECTIVES GRID ── */
+  .perspectives-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .perspective-card {
+    padding: 14px 16px;
+    border: 1px solid var(--border-light);
+  }
+  .perspective-label {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    font-family: 'Trebuchet MS', sans-serif;
+  }
+  .perspective-left .perspective-label { color: #6a9fd4; }
+  .perspective-right .perspective-label { color: #d46a6a; }
+  .perspective-text {
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--cream-dim);
+  }
 
-    .loading{display:none;margin-top:14px}
-    .loading.visible{display:block}
-    .loading-text{font-family:'Crimson Text',Georgia,serif;font-size:14px;color:var(--gold);font-style:italic;text-align:center}
-    .loading-bar{width:100%;height:2px;background:rgba(201,168,76,.15);overflow:hidden;margin-top:8px}
-    .loading-fill{width:26%;height:100%;background:var(--gold);animation:slide 1.3s linear infinite}
-    @keyframes slide{0%{transform:translateX(-130%)}100%{transform:translateX(500%)}}
+  /* Paywall */
+  .paywall-container { position: relative; }
+  .paywall-blur { filter: blur(5px); pointer-events: none; user-select: none; }
+  .paywall-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+    background: rgba(13,27,42,0.65);
+  }
+  .paywall-text {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-family: 'Trebuchet MS', sans-serif;
+  }
 
-    .recent-item{padding:12px 0;border-bottom:1px solid rgba(255,255,255,.06)}
-    .recent-item:last-child{border-bottom:none;padding-bottom:0}
-    .recent-title{font-family:'Playfair Display',Georgia,serif;font-size:15px;color:var(--cream);margin-bottom:6px;line-height:1.3}
-    .recent-link{color:inherit;text-decoration:none}
-    .recent-link:hover{color:var(--gold)}
-    .recent-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-    .recent-date{font-family:'Libre Baskerville',Georgia,serif;font-size:10px;color:var(--text-mid);letter-spacing:.08em}
+  /* ── FOUNDERS GRID ── */
+  .founders-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .founder-card {
+    padding: 14px 16px;
+    border: 1px solid var(--border-light);
+    background: rgba(255,255,255,0.015);
+  }
+  .founder-name {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #7ab8d4;
+    margin-bottom: 6px;
+    font-family: 'Trebuchet MS', sans-serif;
+    cursor: help;
+  }
+  .founder-text {
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--cream-dim);
+    font-style: italic;
+  }
 
-    .about-text{font-family:'Crimson Text',Georgia,serif;font-size:15px;color:var(--text-light);line-height:1.65;margin-bottom:12px}
-    .about-seal{text-align:center;font-family:'Libre Baskerville',Georgia,serif;font-size:11px;letter-spacing:.16em;color:var(--gold-dim);font-style:italic;margin-top:12px;padding-top:12px;border-top:1px solid rgba(201,168,76,.2)}
+  /* ── SCENARIO MAP ── */
+  .scenario-block {
+    padding: 14px 18px;
+    border: 1px solid var(--border-light);
+    margin-bottom: 10px;
+    background: rgba(255,255,255,0.015);
+  }
+  .scenario-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .scenario-label {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #b87ab8;
+    font-family: 'Trebuchet MS', sans-serif;
+    font-weight: 700;
+  }
+  .scenario-name {
+    font-size: 13px;
+    color: var(--cream);
+    font-weight: normal;
+  }
+  .confidence-badge {
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border: 1px solid;
+    font-family: 'Trebuchet MS', sans-serif;
+  }
+  .conf-documented { color: var(--green); border-color: var(--green); }
+  .conf-mixed { color: var(--gold); border-color: var(--gold-dim); }
+  .conf-speculative { color: var(--cream-dim); border-color: rgba(200,191,173,0.3); }
+  .divergence-badge {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: var(--cream-dim);
+    font-family: 'Trebuchet MS', sans-serif;
+    margin-left: auto;
+  }
+  .scenario-text {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--cream-dim);
+  }
+  .scenario-note {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-light);
+    font-size: 11px;
+    color: var(--gold-dim);
+    font-style: italic;
+    text-align: center;
+    letter-spacing: 0.06em;
+  }
 
-    .results-section{display:none;max-width:1200px;margin:0 auto;padding:0 40px 60px}
-    .results-section.visible{display:block}
+  /* ── SOURCES ── */
+  .sources-block {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border-light);
+    padding: 16px 20px;
+  }
+  .sources-category {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin-bottom: 10px;
+    margin-top: 16px;
+    font-family: 'Trebuchet MS', sans-serif;
+  }
+  .sources-category:first-child { margin-top: 0; }
+  .source-line {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .source-dot {
+    width: 4px;
+    height: 4px;
+    background: var(--gold-dim);
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 7px;
+  }
+  .source-label { color: var(--cream-dim); }
+  .source-link {
+    color: var(--gold);
+    text-decoration: none;
+    word-break: break-all;
+  }
+  .source-link:hover { color: var(--gold-light); text-decoration: underline; }
 
-    .footer{background:var(--navy-mid);border-top:1px solid var(--gold-dim);padding:40px;margin-top:60px}
-    .footer-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr;gap:48px;margin-bottom:32px}
-    .footer-name{font-family:'Playfair Display',Georgia,serif;font-size:20px;font-weight:700;color:var(--cream);margin-bottom:6px}
-    .footer-tag{font-family:'Crimson Text',Georgia,serif;font-size:13px;color:var(--gold);font-style:italic;letter-spacing:.1em;margin-bottom:14px}
-    .footer-desc{font-family:'Crimson Text',Georgia,serif;font-size:15px;color:var(--text-mid);line-height:1.6}
-    .footer-col-title{font-family:'Libre Baskerville',Georgia,serif;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:14px}
-    .footer-col a{display:block;font-family:'Crimson Text',Georgia,serif;font-size:15px;color:var(--text-mid);text-decoration:none;margin-bottom:8px;transition:color .2s}
-    .footer-col a:hover{color:var(--cream)}
-    .footer-bottom{max-width:1200px;margin:0 auto;padding-top:20px;border-top:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;align-items:center}
-    .footer-latin{font-family:'Libre Baskerville',Georgia,serif;font-size:12px;letter-spacing:.14em;color:var(--gold-dim);font-style:italic}
-    .footer-copy{font-family:'Crimson Text',Georgia,serif;font-size:13px;color:var(--text-mid)}
+  /* ── STRIP MODE SUMMARY ── */
+  .summary-block {
+    padding: 18px 20px;
+    border: 1px solid var(--gold-dim);
+    background: rgba(201,168,76,0.04);
+  }
+  .summary-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 10px;
+    font-family: 'Trebuchet MS', sans-serif;
+  }
+  .summary-text {
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--cream);
+  }
 
-    @media(max-width:900px){
-      .masthead-inner{padding:12px 16px}
-      .masthead-name{font-size:17px}
-      .masthead-nav a:not(.gold-btn){display:none}
-      .methodology{display:none}
-      .main{grid-template-columns:1fr;padding:28px 16px;gap:32px}
-      .sidebar{
-        position: static;
-        max-height: none;
-        overflow-y: visible;
-        padding-right: 0;
-      }
-      .results-section{padding:0 16px 40px}
-      .perspectives-grid{grid-template-columns:1fr}
-      .divergence-grid{grid-template-columns:1fr}
-      .sub-claim-item{grid-template-columns:1fr;gap:8px}
-      .footer{padding:28px 16px}
-      .footer-inner{grid-template-columns:1fr;gap:24px}
-      .footer-bottom{flex-direction:column;gap:8px;text-align:center}
-    }
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--cream-dim);
+  }
+  .empty-seal {
+    font-size: 40px;
+    margin-bottom: 20px;
+    opacity: 0.3;
+  }
+  .empty-title {
+    font-size: 22px;
+    margin-bottom: 10px;
+    color: var(--cream);
+  }
+  .empty-sub {
+    font-size: 14px;
+    font-style: italic;
+    color: var(--gold-dim);
+  }
 
-    @media(max-width:480px){
-      .masthead-name{font-size:14px}
-      .article-title{font-size:24px}
-      .strip-text{font-size:16px}
-    }
-  </style>
+  /* ── DIVERGENCE BANNER ── */
+  .divergence-banner {
+    padding: 10px 16px;
+    background: rgba(201,124,42,0.1);
+    border: 1px solid rgba(201,124,42,0.3);
+    font-size: 12px;
+    color: #d4935c;
+    letter-spacing: 0.06em;
+    margin-bottom: 20px;
+    font-family: 'Trebuchet MS', sans-serif;
+  }
+
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main { padding: 20px 20px 40px; }
+    .founders-grid { grid-template-columns: 1fr; }
+    .perspectives-grid { grid-template-columns: 1fr; }
+  }
+</style>
 </head>
 <body>
 
-<header class="masthead">
-  <div class="masthead-inner">
-    <div class="masthead-logo">
-      <div class="seal-small">👁</div>
-      <div>
-        <div class="masthead-name">Where the Truth Lies</div>
-        <div class="masthead-tagline">Beyond the Argument</div>
-        <div class="masthead-latin">Ubi Veritas Latet</div>
-      </div>
-    </div>
-    <nav class="masthead-nav">
-      <a href="#claimlab">ClaimLab</a>
-      <a href="#archives">Archives</a>
-      <a href="#methodology-section">Methodology</a>
-      {% if superuser %}<span class="super-badge">Super User</span>{% endif %}
-      <a href="#claimlab" class="gold-btn">Run a Claim</a>
-      <a href="/logout" style="color:var(--text-mid);font-family:'Libre Baskerville',Georgia,serif;font-size:11px;letter-spacing:.12em;text-transform:uppercase;">Logout</a>
-    </nav>
-  </div>
-</header>
-
-<div class="methodology">
-  <div class="methodology-inner">
-    <div class="methodology-label">The Excavation</div>
-    <div class="methodology-layers">
-      <div class="m-layer"><div class="m-num">01</div><div class="m-name">Direct Facts</div><div class="m-desc">What the data says</div></div>
-      <div class="m-layer"><div class="m-num">02</div><div class="m-name">Adjacent Facts</div><div class="m-desc">What the claim leaves out</div></div>
-      <div class="m-layer"><div class="m-num">03</div><div class="m-name">Root Concern</div><div class="m-desc">What it is really about</div></div>
-      <div class="m-layer"><div class="m-num">04</div><div class="m-name">Values Divergence</div><div class="m-desc">Where real disagreement lives</div></div>
-      <div class="m-layer"><div class="m-num">05</div><div class="m-name">Constitutional Framework</div><div class="m-desc">What the founders wrote</div></div>
-    </div>
-  </div>
+<!-- Tooltip popup (singleton, moved by JS) -->
+<div class="tooltip-popup" id="tooltipPopup">
+  <div class="tooltip-term-label" id="tooltipLabel"></div>
+  <div id="tooltipBody"></div>
 </div>
 
-<div class="main">
-  <div>
-    {% if current_claim %}
-    <div class="article-header">
-      <div class="status-row">
-        <span class="status-badge">{{ current_claim.status or 'Active' }}</span>
-        {% for topic in current_claim.topics %}
-          <span class="topic-tag">{{ topic }}</span>
-        {% endfor %}
-        {% if current_claim.date %}
-          <span class="topic-tag">{{ current_claim.date }}</span>
-        {% endif %}
-      </div>
-      <div class="article-eyebrow">ClaimLab Full Excavation</div>
-      <h1 class="article-title">{{ current_claim.title }}</h1>
-      {% if current_claim.stripped_claim %}
-      <p class="article-dek">The stripped claim: {{ current_claim.stripped_claim }}</p>
-      {% endif %}
+<!-- Loading overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text" id="loadingText">Excavating the claim</div>
+</div>
+
+<!-- Nav -->
+<nav class="nav">
+  <div class="nav-brand">
+    <a href="/" class="nav-title">Where the Truth Lies</a>
+    <span class="nav-latin">Ubi Veritas Latet</span>
+  </div>
+  <div class="nav-right">
+    {% if superuser %}<span class="super-badge">Super User</span>{% endif %}
+    <a href="/logout" class="nav-link">Log Out</a>
+  </div>
+</nav>
+
+<!-- Layout -->
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Analyze a Claim</div>
+      <textarea class="analyze-textarea" id="claimInput" placeholder="Paste any political claim, quote, or statement here..." rows="4"></textarea>
+      <button class="analyze-btn" id="analyzeBtn" onclick="submitClaim()">Excavate</button>
     </div>
 
-    <div class="confidence-note">This analysis combines documented facts, intelligence estimates, and analytical interpretation. Where the distinction matters it is identified. This is not a verdict on policy. It is a map of what is actually known, what is contested, and where the real disagreement lives.</div>
-
-    {% if current_claim.strip_mode_summary %}
-    <div class="strip-mode">
-      <div class="strip-label">30-Second Bottom Line</div>
-      <p class="strip-text">{{ current_claim.strip_mode_summary }}</p>
+    {% if recent_claims %}
+    <div class="sidebar-section">
+      <div class="sidebar-label">Recent Claims</div>
+      <ul class="recent-list">
+        {% for c in recent_claims %}
+        <li class="recent-item">
+          <a href="/claim/{{ c.slug }}" class="recent-link {% if current_claim and current_claim.slug == c.slug %}active{% endif %}">
+            {{ c.title[:80] }}{% if c.title|length > 80 %}...{% endif %}
+            <span class="recent-verdict">{{ c.verdict }}</span>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
     </div>
     {% endif %}
+  </aside>
 
-    {% set verdict = current_claim.overall_verdict or 'Unproven' %}
-    <div class="verdict-wrap
-      {% if verdict == 'True' %}v-true
-      {% elif 'Mostly True' in verdict %}v-mostly-true
-      {% elif 'Substantially True' in verdict %}v-substantially-true
-      {% elif 'Plausible' in verdict or 'Mixed' in verdict %}v-plausible
-      {% elif verdict == 'Contested' %}v-contested
-      {% elif verdict == 'Exaggerated' %}v-exaggerated
-      {% elif verdict == 'Misleading' %}v-misleading
-      {% elif verdict == 'False' %}v-false
-      {% else %}v-unproven{% endif %}">
-      <span class="verdict-label-txt">Overall Verdict</span>
-      <span class="verdict-value">{{ verdict }}</span>
+  <!-- Main -->
+  <main class="main">
+    <div class="error-banner" id="errorBanner"></div>
+
+    {% if current_claim %}
+
+    <!-- Claim Header -->
+    <div class="claim-header">
+      <div class="claim-meta">
+        {% for topic in current_claim.topics %}
+        <span class="topic-tag">{{ topic }}</span>
+        {% endfor %}
+        {% if current_claim.speaker and current_claim.speaker != 'Unknown' %}
+        <span class="speaker-tag">{{ current_claim.speaker }}</span>
+        {% endif %}
+        {% if current_claim.status %}
+        <span class="status-tag">{{ current_claim.status }}</span>
+        {% endif %}
+        {% if current_claim.human_reviewed %}
+        <span class="topic-tag" style="border-color:var(--green);color:var(--green);">Reviewed</span>
+        {% endif %}
+      </div>
+
+      <div class="claim-quote" id="claimQuoteText">{{ current_claim.title }}</div>
+
+      {% set v = current_claim.overall_verdict | lower | replace(' ', '-') | replace('/', '-') %}
+      <div class="verdict-block">
+        <span class="verdict-label">Overall Verdict</span>
+        <span class="verdict-value
+          {% if 'false' in v %}v-false
+          {% elif 'misleading' in v %}v-misleading
+          {% elif 'exaggerated' in v %}v-exaggerated
+          {% elif 'contested' in v %}v-contested
+          {% elif 'unproven' in v %}v-unproven
+          {% elif 'plausible' in v %}v-plausible
+          {% elif 'substantially' in v %}v-substantially-true
+          {% elif 'mostly' in v %}v-mostly-true
+          {% elif v == 'true' %}v-true
+          {% else %}v-contested{% endif %}
+        ">{{ current_claim.overall_verdict }}</span>
+      </div>
     </div>
 
+    <!-- Subclaims -->
     {% if current_claim.subclaims %}
-    <div style="margin-bottom:32px;">
-      <div class="section-title">Sub-Claims — Evaluated Independently</div>
+    <div class="subclaims">
       {% for sc in current_claim.subclaims %}
-      {% set sv = sc.verdict or 'Unproven' %}
-      <div class="sub-claim-item">
-        <div class="sub-claim-text">{{ sc.claim }}</div>
-        <span class="verdict-pill
-          {% if sv == 'True' %}v-true
-          {% elif 'Mostly True' in sv %}v-mostly-true
-          {% elif 'Substantially True' in sv %}v-substantially-true
-          {% elif 'Plausible' in sv or 'Mixed' in sv %}v-plausible
-          {% elif sv == 'Contested' %}v-contested
-          {% elif sv == 'Exaggerated' %}v-exaggerated
-          {% elif sv == 'Misleading' %}v-misleading
-          {% elif sv == 'False' %}v-false
-          {% else %}v-unproven{% endif %}">
-          {{ sv }}
-        </span>
+      <div class="subclaim-row">
+        {% set sv = sc.verdict | lower | replace(' ', '-') | replace('/', '-') %}
+        <span class="subclaim-verdict-badge
+          {% if 'false' in sv %}v-false
+          {% elif 'mislead' in sv %}v-misleading
+          {% elif 'exaggerat' in sv %}v-exaggerated
+          {% elif 'contested' in sv %}v-contested
+          {% elif 'unproven' in sv %}v-unproven
+          {% elif 'plausible' in sv %}v-plausible
+          {% elif 'substantially' in sv %}v-substantially-true
+          {% elif 'mostly' in sv %}v-mostly-true
+          {% elif sv == 'true' %}v-true
+          {% else %}v-unproven{% endif %}
+          " style="border:1px solid currentColor;">{{ sc.verdict }}</span>
+        <span class="subclaim-text">{{ sc.claim }}</span>
       </div>
       {% endfor %}
     </div>
     {% endif %}
 
-    <div class="ornamental"><div class="ornamental-line"></div><div class="ornamental-diamond"></div><div class="ornamental-line"></div></div>
-
-    <div style="margin-bottom:28px;">
-      <div class="section-title">The Full Excavation</div>
-
-      {% if current_claim.direct_facts %}
-      <div class="layer-block layer-direct">
-        <div class="layer-block-title">Layer 01 — Direct Facts</div>
-        <p class="layer-block-text">{{ current_claim.direct_facts }}</p>
-      </div>
-      {% endif %}
-
-      {% if current_claim.adjacent_facts %}
-      <div class="layer-block layer-adjacent">
-        <div class="layer-block-title">Layer 02 — Adjacent Facts</div>
-        <p class="layer-block-text">{{ current_claim.adjacent_facts }}</p>
-      </div>
-      {% endif %}
-
-      {% if current_claim.root_concern %}
-      <div class="layer-block layer-root">
-        <div class="layer-block-title">Layer 03 — Root Concern</div>
-        <p class="layer-block-text">{{ current_claim.root_concern }}</p>
-      </div>
-      {% endif %}
-
-      {% if current_claim.values_divergence %}
-      <div class="layer-block layer-values">
-        <div class="layer-block-title">Layer 04 — Values Divergence</div>
-        <p class="layer-block-text">{{ current_claim.values_divergence }}</p>
-      </div>
-      {% endif %}
-
-      {% if current_claim.constitutional_framework %}
-      <div class="layer-block layer-constitutional">
-        <div class="layer-block-title">Layer 05 — Constitutional Framework</div>
-        <p class="layer-block-text">{{ current_claim.constitutional_framework }}</p>
-      </div>
-      {% endif %}
+    <!-- Strip Mode Summary -->
+    {% if current_claim.strip_mode_summary %}
+    <div class="summary-block">
+      <div class="summary-label">Bottom Line</div>
+      <div class="summary-text" id="summaryText">{{ current_claim.strip_mode_summary }}</div>
     </div>
+    {% endif %}
 
-    <div style="margin-bottom:28px;">
-      <div class="section-title">Left &amp; Right Perspectives</div>
+    <div class="rule"><div class="rule-line"></div><div class="rule-diamond"></div><div class="rule-line"></div></div>
 
-      {% if superuser %}
-      <div class="perspectives-grid">
-        {% if current_claim.left_perspective %}
-        <div class="perspective-card perspective-left-card">
-          <div class="layer-block-title" style="color:#6a90c0;margin-bottom:12px;">Left Perspective</div>
-          <p class="layer-block-text">{{ current_claim.left_perspective }}</p>
+    <!-- Layer 1: Direct Facts -->
+    {% if current_claim.direct_facts %}
+    <div class="section layer-direct">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-header-left">
+          <span class="section-label">Layer 01 — Direct Facts</span>
+          <span class="section-subtitle">What the record actually shows</span>
         </div>
-        {% endif %}
-        {% if current_claim.right_perspective %}
-        <div class="perspective-card perspective-right-card">
-          <div class="layer-block-title" style="color:#c07070;margin-bottom:12px;">Right Perspective</div>
-          <p class="layer-block-text">{{ current_claim.right_perspective }}</p>
-        </div>
-        {% endif %}
+        <span class="section-chevron">▼</span>
       </div>
-      {% else %}
-      <div class="paywall-wrap">
-        <div class="perspectives-grid paywall-blur">
-          <div class="perspective-card perspective-left-card">
-            <div class="layer-block-title" style="color:#6a90c0;margin-bottom:12px;">Left Perspective</div>
-            <p class="layer-block-text">{{ current_claim.left_perspective or 'Analysis available in paid tier...' }}</p>
-          </div>
-          <div class="perspective-card perspective-right-card">
-            <div class="layer-block-title" style="color:#c07070;margin-bottom:12px;">Right Perspective</div>
-            <p class="layer-block-text">{{ current_claim.right_perspective or 'Analysis available in paid tier...' }}</p>
-          </div>
-        </div>
-        <div class="paywall-overlay">
-          <div class="paywall-box">
-            <div class="paywall-lock">🔒</div>
-            <div class="paywall-title">Full Excavation — Paid Tier</div>
-            <div class="paywall-sub">Left perspective, right perspective, and complete sourcing</div>
-            <button class="paywall-btn">Unlock Full Analysis</button>
-          </div>
-        </div>
-      </div>
-      {% endif %}
-    </div>
-
-    {% if current_claim.scenario_map %}
-    <div style="margin-bottom:28px;">
-      <div class="section-title">Scenario Map</div>
-      <div class="layer-block layer-root">
-        <p class="layer-block-text">{{ current_claim.scenario_map }}</p>
+      <div class="section-body open">
+        <div class="body-text" id="directFactsText">{{ current_claim.direct_facts }}</div>
       </div>
     </div>
     {% endif %}
 
+    <!-- Layer 2: Adjacent Facts -->
+    {% if current_claim.adjacent_facts %}
+    <div class="section layer-adjacent">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-header-left">
+          <span class="section-label">Layer 02 — Adjacent Facts</span>
+          <span class="section-subtitle">What the claim ignores on both sides</span>
+        </div>
+        <span class="section-chevron">▼</span>
+      </div>
+      <div class="section-body open">
+        <div class="body-text" id="adjacentFactsText">{{ current_claim.adjacent_facts }}</div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Layer 3: Root Concern -->
+    {% if current_claim.root_concern %}
+    <div class="section layer-root">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-header-left">
+          <span class="section-label">Layer 03 — Root Concern</span>
+          <span class="section-subtitle">The legitimate issue underneath</span>
+        </div>
+        <span class="section-chevron">▼</span>
+      </div>
+      <div class="section-body open">
+        <div class="body-text" id="rootConcernText">{{ current_claim.root_concern }}</div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Layer 4: Values Divergence -->
+    {% if current_claim.values_divergence %}
+    <div class="section layer-values">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-header-left">
+          <span class="section-label">Layer 04 — Values Divergence</span>
+          <span class="section-subtitle">Where real disagreement lives</span>
+        </div>
+        <span class="section-chevron">▼</span>
+      </div>
+      <div class="section-body open">
+        <div class="body-text" id="valuesDivText">{{ current_claim.values_divergence }}</div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Layer 5: Constitutional Framework -->
+    {% if current_claim.constitutional_framework %}
+    <div class="section layer-constitutional">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-header-left">
+          <span class="section-label">Layer 05 — Constitutional Framework</span>
+          <span class="section-subtitle">What the founders wrote and why it matters</span>
+        </div>
+        <span class="section-chevron">▼</span>
+      </div>
+      <div class="section-body open">
+        <div class="body-text" id="constText">{{ current_claim.constitutional_framework }}</div>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="rule"><div class="rule-line"></div><div class="rule-diamond"></div><div class="rule-line"></div></div>
+
+    <!-- Perspectives (paywalled for non-super) -->
+    {% if current_claim.left_perspective or current_claim.right_perspective %}
+    <div class="section layer-perspectives">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-header-left">
+          <span class="section-label">Left and Right Perspectives</span>
+          <span class="section-subtitle">What each side gets right — and where each fails</span>
+        </div>
+        <span class="section-chevron">▼</span>
+      </div>
+      <div class="section-body">
+        {% if superuser %}
+        <div class="perspectives-grid">
+          <div class="perspective-card perspective-left">
+            <div class="perspective-label">Left Perspective</div>
+            <div class="perspective-text" id="leftPerspText">{{ current_claim.left_perspective }}</div>
+          </div>
+          <div class="perspective-card perspective-right">
+            <div class="perspective-label">Right Perspective</div>
+            <div class="perspective-text" id="rightPerspText">{{ current_claim.right_perspective }}</div>
+          </div>
+        </div>
+        {% else %}
+        <div class="paywall-container">
+          <div class="perspectives-grid paywall-blur">
+            <div class="perspective-card perspective-left">
+              <div class="perspective-label">Left Perspective</div>
+              <div class="perspective-text">This analysis examines how the left frames this claim, what their framing gets right, and where their narrative overstates or fails.</div>
+            </div>
+            <div class="perspective-card perspective-right">
+              <div class="perspective-label">Right Perspective</div>
+              <div class="perspective-text">This analysis examines how the right frames this claim, what their framing gets right, and where their narrative overstates or fails.</div>
+            </div>
+          </div>
+          <div class="paywall-overlay">
+            <div class="paywall-text">Full Analysis — Members Only</div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Founders Perspectives -->
+    {% if current_claim.founders_perspectives %}
+    <div class="section layer-founders">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-header-left">
+          <span class="section-label">Founders Perspectives</span>
+          <span class="section-subtitle">What the architects of the republic would have said</span>
+        </div>
+        <span class="section-chevron">▼</span>
+      </div>
+      <div class="section-body">
+        {% if superuser %}
+        <div class="founders-grid" id="foundersGrid">
+          {% for name, text in current_claim.founders_perspectives.items() %}
+          <div class="founder-card">
+            <div class="founder-name glossary-term" data-term="{{ name }}" data-def="Founding Father. {{ name }} was a principal architect of the American republic.">{{ name }}</div>
+            <div class="founder-text">{{ text }}</div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="paywall-container">
+          <div class="founders-grid paywall-blur">
+            <div class="founder-card"><div class="founder-name">George Washington</div><div class="founder-text">Washington's documented views on this question draw from his correspondence and the Farewell Address.</div></div>
+            <div class="founder-card"><div class="founder-name">Thomas Jefferson</div><div class="founder-text">Jefferson's perspective is grounded in the Declaration and his extensive correspondence on rights and governance.</div></div>
+            <div class="founder-card"><div class="founder-name">James Madison</div><div class="founder-text">Madison's Federalist Papers and convention notes provide direct insight into his thinking here.</div></div>
+            <div class="founder-card"><div class="founder-name">Alexander Hamilton</div><div class="founder-text">Hamilton's financial writings and Federalist essays illuminate his position on this question.</div></div>
+          </div>
+          <div class="paywall-overlay">
+            <div class="paywall-text">Full Analysis — Members Only</div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Scenario Map -->
+    {% if current_claim.scenario_map %}
+    <div class="section layer-scenarios">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-header-left">
+          <span class="section-label">Scenario Map</span>
+          <span class="section-subtitle">Plausible trajectories — not predictions</span>
+        </div>
+        <span class="section-chevron">▼</span>
+      </div>
+      <div class="section-body">
+        <div id="scenarioMapContainer"></div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Sources -->
     {% if current_claim.source_urls %}
-    <div style="margin-bottom:28px;">
-      <div class="section-title">Source URLs</div>
-      <div class="layer-block layer-adjacent">
-        <p class="layer-block-text">{{ current_claim.source_urls }}</p>
+    <div class="section layer-sources">
+      <div class="section-header" onclick="toggleSection(this)">
+        <div class="section-header-left">
+          <span class="section-label">Source URLs</span>
+          <span class="section-subtitle">Primary documentation</span>
+        </div>
+        <span class="section-chevron">▼</span>
+      </div>
+      <div class="section-body">
+        <div class="sources-block" id="sourcesContainer"></div>
       </div>
     </div>
     {% endif %}
 
     {% else %}
-    <div class="article-header">
-      <div class="article-eyebrow">ClaimLab Full Excavation</div>
-      <h1 class="article-title">No claim loaded yet</h1>
-      <p class="article-dek">Run a claim through ClaimLab to generate an excavation and save it to the archives.</p>
+
+    <!-- Empty state -->
+    <div class="empty-state">
+      <div class="empty-seal">⚖</div>
+      <div class="empty-title">Where the Truth Lies</div>
+      <div class="empty-sub">Paste a claim in the sidebar to begin excavation.</div>
     </div>
+
     {% endif %}
-
-    <div id="methodology-section" style="margin-top:48px;padding-top:32px;border-top:1px solid rgba(201,168,76,.15);">
-      <div class="section-title">What Where the Truth Lies Does</div>
-      <p style="font-family:'Crimson Text',Georgia,serif;font-size:18px;line-height:1.75;color:var(--text-light);margin-bottom:16px;">Most political analysis flattens complex claims into a single verdict. Where the Truth Lies splits compound claims into parts, separates documented facts from interpretation, finds the root concern underneath the rhetoric, and identifies where genuine disagreement stops being factual and becomes a dispute over values, priorities, or constitutional meaning.</p>
-      <p style="font-family:'Crimson Text',Georgia,serif;font-size:18px;line-height:1.75;color:var(--text-light);">ClaimLab is the live engine. Submit any political claim in the sidebar. We do not tell you what to think. We show you what is actually there.</p>
-    </div>
-  </div>
-
-  <aside class="sidebar" id="claimlab">
-    <div class="sidebar-card">
-      <div class="sidebar-title">Run a Claim Through ClaimLab</div>
-      <textarea id="claim-input" class="claim-textarea" placeholder="Paste any political claim, quote, or viral post here..."></textarea>
-      <div class="mode-row">
-        <button class="mode-btn active" id="mode-strip" onclick="setMode('strip')">Quick</button>
-        <button class="mode-btn" id="mode-full" onclick="setMode('full')">Full Excavation</button>
-      </div>
-      <button class="excavate-btn" id="run-btn" onclick="runClaim()">Excavate This Claim</button>
-      <div class="sidebar-note">Strip the rhetoric. Find the root. Show the full picture.</div>
-      <div id="loading" class="loading">
-        <div class="loading-text" id="loading-text">ClaimLab is excavating...</div>
-        <div class="loading-bar"><div class="loading-fill"></div></div>
-      </div>
-      <div id="status-wrap" class="status-wrap">
-        <div id="claude-status" class="status-pill">Claude: waiting</div>
-        <div id="openai-status" class="status-pill">OpenAI: waiting</div>
-        <div id="airtable-status" class="status-pill">Airtable: waiting</div>
-      </div>
-    </div>
-
-    <div class="sidebar-card" id="archives">
-      <div class="sidebar-title">Recent Claim Files</div>
-      {% if recent_claims %}
-        {% for claim in recent_claims %}
-        <div class="recent-item">
-          <div class="recent-title">
-            {% if claim.slug %}
-            <a class="recent-link" href="/claim/{{ claim.slug }}">{{ claim.title }}</a>
-            {% else %}
-            {{ claim.title }}
-            {% endif %}
-          </div>
-          <div class="recent-meta">
-            <span class="recent-date">{{ claim.date }}</span>
-            {% set rv = claim.verdict or 'Unproven' %}
-            <span class="verdict-pill
-              {% if rv == 'True' %}v-true
-              {% elif 'Mostly True' in rv %}v-mostly-true
-              {% elif 'Substantially True' in rv %}v-substantially-true
-              {% elif 'Plausible' in rv or 'Mixed' in rv %}v-plausible
-              {% elif rv == 'Contested' %}v-contested
-              {% elif rv == 'Exaggerated' %}v-exaggerated
-              {% elif rv == 'Misleading' %}v-misleading
-              {% elif rv == 'False' %}v-false
-              {% else %}v-unproven{% endif %}" style="font-size:9px;padding:3px 8px;">
-              {{ rv }}
-            </span>
-          </div>
-        </div>
-        {% endfor %}
-      {% else %}
-        <div class="recent-item">
-          <div class="recent-title">No recent claims yet</div>
-        </div>
-      {% endif %}
-    </div>
-
-    <div class="sidebar-card">
-      <div class="sidebar-title">About This Platform</div>
-      <p class="about-text">Where the Truth Lies is a political intelligence platform built on an excavation methodology. We do not fact-check. We dig.</p>
-      <p class="about-text">Every claim has layers. Direct facts. Adjacent facts. Root concern. Values divergence. Constitutional framework. We show all of them.</p>
-      <p class="about-text">We do not tell you what to think. We show you what is actually there.</p>
-      <div class="about-seal">Ubi Veritas Latet</div>
-    </div>
-  </aside>
+  </main>
 </div>
 
-<section id="results-section" class="results-section">
-  <div class="section-title">ClaimLab Results</div>
-  <div id="results-container"></div>
-</section>
-
-<footer class="footer">
-  <div class="footer-inner">
-    <div>
-      <div class="footer-name">Where the Truth Lies</div>
-      <div class="footer-tag">Beyond the Argument</div>
-      <p class="footer-desc">Political intelligence built on an excavation methodology. Not fact-checking — deeper. Strip the rhetoric. Find the root. Show the full picture regardless of where it lands.</p>
-    </div>
-    <div class="footer-col">
-      <div class="footer-col-title">Platform</div>
-      <a href="#claimlab">ClaimLab</a>
-      <a href="#methodology-section">Methodology</a>
-      <a href="#archives">Archives</a>
-      <a href="/logout">Logout</a>
-    </div>
-    <div class="footer-col">
-      <div class="footer-col-title">Follow</div>
-      <a href="https://x.com/UbiVeritasLatet" target="_blank">X @UbiVeritasLatet</a>
-      <a href="#">Newsletter</a>
-      <a href="#">Podcast</a>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <div class="footer-latin">Ubi Veritas Latet — Where the Truth Lies Hidden</div>
-    <div class="footer-copy">© 2026 Where the Truth Lies. Beyond the Argument.</div>
-  </div>
-</footer>
-
 <script>
-  const IS_SUPER = {{ superuser | tojson }};
-  let currentMode = 'strip';
+// ── GLOSSARY DATA ── 
+const glossaryData = {{ current_claim.glossary | tojson if current_claim else '[]' }};
 
-  function setMode(m) {
-    currentMode = m;
-    document.getElementById('mode-strip').classList.toggle('active', m === 'strip');
-    document.getElementById('mode-full').classList.toggle('active', m === 'full');
+// Build lookup map
+const glossaryMap = {};
+glossaryData.forEach(g => {
+  if (g.term && g.definition) {
+    glossaryMap[g.term.toLowerCase()] = { term: g.term, definition: g.definition };
+  }
+});
+
+// Tooltip logic
+const tooltipEl = document.getElementById('tooltipPopup');
+const tooltipLabel = document.getElementById('tooltipLabel');
+const tooltipBody = document.getElementById('tooltipBody');
+
+function showTooltip(e, term, def) {
+  tooltipLabel.textContent = term;
+  tooltipBody.textContent = def;
+  tooltipEl.classList.add('visible');
+  positionTooltip(e);
+}
+
+function positionTooltip(e) {
+  const x = e.clientX + 14;
+  const y = e.clientY + 14;
+  const w = tooltipEl.offsetWidth || 280;
+  const h = tooltipEl.offsetHeight || 80;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  tooltipEl.style.left = (x + w > vw ? vw - w - 8 : x) + 'px';
+  tooltipEl.style.top = (y + h > vh ? e.clientY - h - 8 : y) + 'px';
+}
+
+function hideTooltip() {
+  tooltipEl.classList.remove('visible');
+}
+
+document.addEventListener('mousemove', e => {
+  if (tooltipEl.classList.contains('visible')) positionTooltip(e);
+});
+
+// Attach to existing .glossary-term elements (founders)
+document.querySelectorAll('.glossary-term').forEach(el => {
+  const term = el.dataset.term;
+  const def = el.dataset.def;
+  el.addEventListener('mouseenter', e => showTooltip(e, term, def));
+  el.addEventListener('mouseleave', hideTooltip);
+});
+
+// ── APPLY GLOSSARY TO TEXT BLOCKS ──
+function applyGlossaryToElement(el) {
+  if (!el || Object.keys(glossaryMap).length === 0) return;
+  let html = el.innerHTML;
+  // Sort by term length desc to avoid partial matches
+  const terms = Object.keys(glossaryMap).sort((a,b) => b.length - a.length);
+  terms.forEach(termKey => {
+    const entry = glossaryMap[termKey];
+    // Only match whole words, first occurrence only, skip already-wrapped
+    const regex = new RegExp('(?<!data-term=["\'])\\b(' + entry.term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')\\b', 'i');
+    html = html.replace(regex, (match) => {
+      return `<span class="glossary-term" data-term="${entry.term}" data-def="${entry.definition.replace(/"/g, '&quot;')}">${match}</span>`;
+    });
+  });
+  el.innerHTML = html;
+  // Re-attach tooltip listeners
+  el.querySelectorAll('.glossary-term').forEach(el2 => {
+    const term = el2.dataset.term;
+    const def = el2.dataset.def;
+    el2.addEventListener('mouseenter', e => showTooltip(e, term, def));
+    el2.addEventListener('mouseleave', hideTooltip);
+  });
+}
+
+// Apply glossary to all body text blocks
+['directFactsText','adjacentFactsText','rootConcernText','valuesDivText',
+ 'constText','summaryText','leftPerspText','rightPerspText'].forEach(id => {
+  applyGlossaryToElement(document.getElementById(id));
+});
+
+// ── COLLAPSIBLE SECTIONS ──
+function toggleSection(header) {
+  const body = header.nextElementSibling;
+  header.classList.toggle('open');
+  body.classList.toggle('open');
+}
+
+// ── SCENARIO MAP RENDERER ──
+const rawScenario = {{ (current_claim.scenario_map | tojson) if current_claim and current_claim.scenario_map else '""' }};
+
+function renderScenarioMap(raw) {
+  const container = document.getElementById('scenarioMapContainer');
+  if (!container || !raw) return;
+
+  // Parse scenarios by looking for SCENARIO A/B/C/D/E pattern
+  const scenarioPattern = /SCENARIO ([A-E])\s*[—\-]\s*([^:]+):\s*Confidence:\s*(\w+(?:\/\w+)?)\.([\s\S]*?)(?=SCENARIO [A-E]|NOTE:|$)/gi;
+  const notePattern = /NOTE:([\s\S]*)$/i;
+
+  const scenarios = [];
+  let match;
+  while ((match = scenarioPattern.exec(raw)) !== null) {
+    const letter = match[1];
+    const name = match[2].trim();
+    const confidence = match[3].trim();
+    const rest = match[4].trim();
+
+    // Extract divergence from rest
+    const divMatch = rest.match(/Analyst Divergence:\s*(\w+)\./i);
+    const divergence = divMatch ? divMatch[1] : '';
+    const text = rest.replace(/Analyst Divergence:\s*\w+\.?/i, '').trim();
+
+    scenarios.push({ letter, name, confidence, text, divergence });
   }
 
-  function getVerdictClass(v) {
-    if (!v) return 'v-unproven';
-    const s = v.toLowerCase();
-    if (s === 'true') return 'v-true';
-    if (s.includes('mostly true')) return 'v-mostly-true';
-    if (s.includes('substantially true')) return 'v-substantially-true';
-    if (s.includes('plausible') || s.includes('mixed')) return 'v-plausible';
-    if (s === 'contested') return 'v-contested';
-    if (s === 'exaggerated') return 'v-exaggerated';
-    if (s === 'misleading') return 'v-misleading';
-    if (s === 'false') return 'v-false';
-    if (s === 'unproven') return 'v-unproven';
-    return 'v-contested';
+  const noteMatch = notePattern.exec(raw);
+  const note = noteMatch ? noteMatch[1].trim() : '';
+
+  if (scenarios.length === 0) {
+    // Fallback: render raw text
+    container.innerHTML = `<div class="body-text" style="white-space:pre-wrap;font-size:13px;color:var(--cream-dim)">${raw}</div>`;
+    return;
   }
 
-  function esc(t) {
-    if (!t) return '';
-    return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  function renderCard(data, modelName, claim) {
-    if (!data || data.error) {
-      return `<div class="layer-block layer-root"><div class="layer-block-title" style="color:#e87070;">${esc(modelName)} — Analysis Failed</div><p class="layer-block-text" style="color:#e87070;">${esc(data?.error||'Unknown error')}</p></div>`;
-    }
-
-    const verdict = data['Overall Verdict'] || data['Verdict'] || 'Unproven';
-    const vc = getVerdictClass(verdict);
-    const stripped = data['Stripped Claim'] || claim;
-    const speaker = data['Speaker'] || '';
-    const summary = data['Strip Mode Summary'] || '';
-    const directFacts = data['Direct Facts'] || '';
-    const adjacentFacts = data['Adjacent Facts'] || '';
-    const rootConcern = data['Root Concern'] || '';
-    const valuesDivergence = data['Values Divergence'] || '';
-    const leftPerspective = data['Left Perspective'] || '';
-    const rightPerspective = data['Right Perspective'] || '';
-    const constitutional = data['Constitutional Framework'] || '';
-    const subClaims = Array.isArray(data['Sub Claims']) ? data['Sub Claims'] : [];
-
-    let h = `
-      <div style="border:1px solid rgba(201,168,76,.2);background:rgba(255,255,255,.02);padding:28px;margin-bottom:24px;box-shadow:var(--shadow);">
-        <div style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid rgba(201,168,76,.15);">
-          <div style="font-family:'Libre Baskerville',Georgia,serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:8px;">${esc(modelName)} — ClaimLab Excavation</div>
-          <div style="font-family:'Playfair Display',Georgia,serif;font-size:22px;font-weight:700;color:var(--cream);line-height:1.2;margin-bottom:10px;">${esc(stripped)}</div>
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-            <span class="verdict-pill ${vc}" style="font-size:11px;">${esc(verdict)}</span>
-            ${speaker ? `<span class="topic-tag">${esc(speaker)}</span>` : ''}
-          </div>
-        </div>`;
-
-    if (summary) {
-      h += `<div class="strip-mode" style="margin-bottom:20px;"><div class="strip-label">Bottom Line</div><p class="strip-text">${esc(summary)}</p></div>`;
-    }
-
-    if (subClaims.length > 0) {
-      h += `<div style="margin-bottom:20px;"><div class="section-title">Sub-Claims</div>`;
-      subClaims.forEach(sc => {
-        const sv = sc.verdict || 'Unproven';
-        h += `<div class="sub-claim-item"><div class="sub-claim-text">${esc(sc.claim||'')}</div><span class="verdict-pill ${getVerdictClass(sv)}" style="font-size:9px;padding:4px 10px;">${esc(sv)}</span></div>`;
-      });
-      h += `</div>`;
-    }
-
-    if (directFacts || adjacentFacts || rootConcern || valuesDivergence) {
-      h += `<div class="ornamental"><div class="ornamental-line"></div><div class="ornamental-diamond"></div><div class="ornamental-line"></div></div>`;
-      h += `<div class="section-title">The Excavation</div>`;
-      if (directFacts) h += `<div class="layer-block layer-direct"><div class="layer-block-title">Layer 01 — Direct Facts</div><p class="layer-block-text">${esc(directFacts)}</p></div>`;
-      if (adjacentFacts) h += `<div class="layer-block layer-adjacent"><div class="layer-block-title">Layer 02 — Adjacent Facts</div><p class="layer-block-text">${esc(adjacentFacts)}</p></div>`;
-      if (rootConcern) h += `<div class="layer-block layer-root"><div class="layer-block-title">Layer 03 — Root Concern</div><p class="layer-block-text">${esc(rootConcern)}</p></div>`;
-      if (valuesDivergence) h += `<div class="layer-block layer-values"><div class="layer-block-title">Layer 04 — Values Divergence</div><p class="layer-block-text">${esc(valuesDivergence)}</p></div>`;
-      if (constitutional) h += `<div class="layer-block layer-constitutional"><div class="layer-block-title">Layer 05 — Constitutional Framework</div><p class="layer-block-text">${esc(constitutional)}</p></div>`;
-    }
-
-    if (leftPerspective || rightPerspective) {
-      if (IS_SUPER) {
-        h += `<div class="ornamental"><div class="ornamental-line"></div><div class="ornamental-diamond"></div><div class="ornamental-line"></div></div>`;
-        h += `<div class="section-title">Left &amp; Right Perspectives</div>`;
-        h += `<div class="perspectives-grid">`;
-        if (leftPerspective) h += `<div class="perspective-card perspective-left-card"><div class="layer-block-title" style="color:#6a90c0;margin-bottom:10px;">Left Perspective</div><p class="layer-block-text">${esc(leftPerspective)}</p></div>`;
-        if (rightPerspective) h += `<div class="perspective-card perspective-right-card"><div class="layer-block-title" style="color:#c07070;margin-bottom:10px;">Right Perspective</div><p class="layer-block-text">${esc(rightPerspective)}</p></div>`;
-        h += `</div>`;
-      } else {
-        h += `<div class="ornamental"><div class="ornamental-line"></div><div class="ornamental-diamond"></div><div class="ornamental-line"></div></div>`;
-        h += `<div class="section-title">Left &amp; Right Perspectives</div>`;
-        h += `<div class="paywall-wrap"><div class="perspectives-grid paywall-blur">
-          <div class="perspective-card perspective-left-card"><div class="layer-block-title" style="color:#6a90c0;">Left Perspective</div><p class="layer-block-text">Analysis available in paid tier...</p></div>
-          <div class="perspective-card perspective-right-card"><div class="layer-block-title" style="color:#c07070;">Right Perspective</div><p class="layer-block-text">Analysis available in paid tier...</p></div>
+  let html = '';
+  scenarios.forEach(s => {
+    const confClass = s.confidence.toLowerCase().includes('doc') ? 'conf-documented' :
+                      s.confidence.toLowerCase().includes('mix') ? 'conf-mixed' : 'conf-speculative';
+    html += `
+      <div class="scenario-block">
+        <div class="scenario-header">
+          <span class="scenario-label">Scenario ${s.letter}</span>
+          <span class="scenario-name">${s.name}</span>
+          <span class="confidence-badge ${confClass}">${s.confidence}</span>
+          ${s.divergence ? `<span class="divergence-badge">Analyst Divergence: ${s.divergence}</span>` : ''}
         </div>
-        <div class="paywall-overlay"><div class="paywall-box"><div class="paywall-lock">🔒</div><div class="paywall-title">Paid Tier</div><div class="paywall-sub">Perspectives and full sourcing</div><button class="paywall-btn">Unlock Full Analysis</button></div></div></div>`;
-      }
-    }
+        <div class="scenario-text">${s.text}</div>
+      </div>`;
+  });
 
-    h += `</div>`;
-    return h;
+  if (note) {
+    html += `<div class="scenario-note">${note}</div>`;
   }
 
-  async function runClaim() {
-    const claim = document.getElementById('claim-input').value.trim();
-    if (!claim) {
-      document.getElementById('claim-input').focus();
+  container.innerHTML = html;
+}
+
+renderScenarioMap(rawScenario);
+
+// ── SOURCES RENDERER ──
+const rawSources = {{ (current_claim.source_urls | tojson) if current_claim and current_claim.source_urls else '""' }};
+
+function renderSources(raw) {
+  const container = document.getElementById('sourcesContainer');
+  if (!container || !raw) return;
+
+  const lines = raw.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  let html = '';
+  let currentCategory = '';
+
+  lines.forEach(line => {
+    // Category header (e.g. "Primary sources:" with no URL)
+    if (line.endsWith(':') && !line.includes('http')) {
+      currentCategory = line.slice(0, -1);
+      html += `<div class="sources-category">${currentCategory}</div>`;
       return;
     }
 
-    const btn = document.getElementById('run-btn');
-    const loading = document.getElementById('loading');
-    const statusWrap = document.getElementById('status-wrap');
-    const section = document.getElementById('results-section');
-    const container = document.getElementById('results-container');
-
-    btn.disabled = true;
-    loading.classList.add('visible');
-    statusWrap.classList.add('visible');
-    section.classList.remove('visible');
-    container.innerHTML = '';
-
-    const msgs = ['ClaimLab is excavating...','Stripping the rhetoric...','Applying the four layers...','Writing to Airtable...'];
-    let mi = 0;
-    document.getElementById('loading-text').textContent = msgs[0];
-    const interval = setInterval(() => {
-      mi = (mi + 1) % msgs.length;
-      document.getElementById('loading-text').textContent = msgs[mi];
-    }, 1600);
-
-    ['claude','openai','airtable'].forEach(id => {
-      document.getElementById(id+'-status').textContent = id.charAt(0).toUpperCase()+id.slice(1)+': running';
-      document.getElementById(id+'-status').className = 'status-pill';
-    });
-
-    try {
-      const res = await fetch('/analyze', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({claim, mode: currentMode})
-      });
-
-      const ct = res.headers.get('content-type') || '';
-      if (!ct.includes('application/json')) {
-        const t = await res.text();
-        throw new Error(t.slice(0, 400));
-      }
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Server error');
-
-      const cok = data.claude && !data.claude.error;
-      const ook = data.openai && !data.openai.error;
-
-      document.getElementById('claude-status').textContent = cok ? 'Claude: complete' : 'Claude: failed';
-      document.getElementById('claude-status').className = 'status-pill ' + (cok ? 'ok' : 'bad');
-      document.getElementById('openai-status').textContent = ook ? 'OpenAI: complete' : 'OpenAI: failed';
-      document.getElementById('openai-status').className = 'status-pill ' + (ook ? 'ok' : 'bad');
-      document.getElementById('airtable-status').textContent = data.airtable?.saved ? 'Airtable: saved' : 'Airtable: failed';
-      document.getElementById('airtable-status').className = 'status-pill ' + (data.airtable?.saved ? 'ok' : 'bad');
-
-      if (data.airtable?.saved && data.airtable?.redirect_to) {
-        window.location.href = data.airtable.redirect_to;
-        return;
-      }
-
-      let html = renderCard(data.claude, 'Claude', claim);
-
-      const cv = data.claude?.['Overall Verdict'] || data.claude?.['Verdict'] || '';
-      const ov = data.openai?.['Overall Verdict'] || data.openai?.['Verdict'] || '';
-      if (cv && ov && cv.toLowerCase() !== ov.toLowerCase() && !data.openai?.error) {
-        html += `<div class="divergence-card">
-          <div class="divergence-title">Model Divergence Detected</div>
-          <div class="divergence-grid">
-            <div><div class="divergence-model">Claude</div><span class="verdict-pill ${getVerdictClass(cv)}" style="font-size:10px;">${esc(cv)}</span></div>
-            <div><div class="divergence-model">OpenAI</div><span class="verdict-pill ${getVerdictClass(ov)}" style="font-size:10px;">${esc(ov)}</span></div>
+    // Source line with label: URL pattern
+    const colonIdx = line.indexOf(': http');
+    if (colonIdx !== -1) {
+      const label = line.substring(0, colonIdx).trim();
+      const url = line.substring(colonIdx + 2).trim();
+      html += `
+        <div class="source-line">
+          <div class="source-dot"></div>
+          <div>
+            <span class="source-label">${label}: </span>
+            <a class="source-link" href="${url}" target="_blank" rel="noopener">${url}</a>
           </div>
-          <p class="divergence-note">The two models reached different verdicts. Where models diverge ClaimLab flags the claim as contested pending human review.</p>
         </div>`;
-      }
-
-      if (currentMode === 'full' && data.openai && !data.openai.error) {
-        html += `<div class="ornamental"><div class="ornamental-line"></div><div class="ornamental-diamond"></div><div class="ornamental-line"></div></div>`;
-        html += `<div class="section-title" style="margin-bottom:16px;">OpenAI Cross-Reference</div>`;
-        html += renderCard(data.openai, 'OpenAI', claim);
-      }
-
-      container.innerHTML = html;
-      section.classList.add('visible');
-      section.scrollIntoView({behavior:'smooth', block:'start'});
-
-    } catch(err) {
-      container.innerHTML = `<div class="layer-block layer-root"><p class="layer-block-text" style="color:#e87070;">Request failed: ${esc(err.message)}</p></div>`;
-      section.classList.add('visible');
-      ['claude','openai','airtable'].forEach(id => {
-        document.getElementById(id+'-status').textContent = id.charAt(0).toUpperCase()+id.slice(1)+': failed';
-        document.getElementById(id+'-status').className = 'status-pill bad';
-      });
-    } finally {
-      clearInterval(interval);
-      loading.classList.remove('visible');
-      btn.disabled = false;
+      return;
     }
-  }
+
+    // Plain URL line
+    if (line.startsWith('http')) {
+      html += `
+        <div class="source-line">
+          <div class="source-dot"></div>
+          <a class="source-link" href="${line}" target="_blank" rel="noopener">${line}</a>
+        </div>`;
+      return;
+    }
+
+    // Plain text line
+    if (line) {
+      html += `<div class="sources-category">${line}</div>`;
+    }
+  });
+
+  container.innerHTML = html || '<div class="body-text" style="color:var(--cream-dim)">No sources recorded.</div>';
+}
+
+renderSources(rawSources);
+
+// ── ANALYZE ──
+const loadingMessages = [
+  'Stripping the claim',
+  'Separating signal from noise',
+  'Excavating the layers',
+  'Checking both sides equally',
+  'Surfacing the root concern',
+  'Finding what the record shows',
+  'Locating the constitutional dimension',
+  'Asking what the founders wrote'
+];
+let msgInterval;
+
+function submitClaim() {
+  const claim = document.getElementById('claimInput').value.trim();
+  if (!claim) return;
+
+  const btn = document.getElementById('analyzeBtn');
+  const overlay = document.getElementById('loadingOverlay');
+  const loadingText = document.getElementById('loadingText');
+  const errorBanner = document.getElementById('errorBanner');
+
+  btn.disabled = true;
+  errorBanner.style.display = 'none';
+  overlay.classList.add('active');
+
+  let msgIdx = 0;
+  loadingText.textContent = loadingMessages[0];
+  msgInterval = setInterval(() => {
+    msgIdx = (msgIdx + 1) % loadingMessages.length;
+    loadingText.textContent = loadingMessages[msgIdx];
+  }, 2200);
+
+  fetch('/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ claim, mode: 'full' })
+  })
+  .then(r => r.json())
+  .then(data => {
+    clearInterval(msgInterval);
+    overlay.classList.remove('active');
+    btn.disabled = false;
+
+    if (data.airtable && data.airtable.saved && data.airtable.redirect_to) {
+      window.location.href = data.airtable.redirect_to;
+    } else if (data.error) {
+      errorBanner.textContent = 'Error: ' + data.error;
+      errorBanner.style.display = 'block';
+    } else {
+      errorBanner.textContent = 'Analysis complete but save failed. Check console.';
+      errorBanner.style.display = 'block';
+      console.error('Airtable result:', data.airtable);
+    }
+  })
+  .catch(err => {
+    clearInterval(msgInterval);
+    overlay.classList.remove('active');
+    btn.disabled = false;
+    errorBanner.textContent = 'Network error. Try again.';
+    errorBanner.style.display = 'block';
+  });
+}
+
+// Enter key in textarea
+document.getElementById('claimInput')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submitClaim();
+});
 </script>
+
 </body>
 </html>
