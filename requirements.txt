@@ -3,5 +3,5 @@ python-dotenv
 anthropic
 openai
 pyairtable
-gunicorn
+gunicorn==23.0.0
 requests
