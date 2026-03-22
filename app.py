@@ -33,8 +33,6 @@ AIRTABLE_BASE_ID = os.getenv("AIRTABLE_BASE_ID")
 AIRTABLE_TABLE_NAME = os.getenv("AIRTABLE_TABLE_NAME")
 print("WTL startup: env vars loaded", flush=True)
 
-openai_client = None
-anthropic_client = None
 print("WTL startup: deferred AI client initialization", flush=True)
 
 CLAIMLAB_SYSTEM = """You are ClaimLab, the analytical engine of Where the Truth Lies — a political intelligence platform built on an excavation methodology. Motto: Beyond the Argument. Latin seal: Ubi Veritas Latet.
@@ -69,7 +67,9 @@ Critical rules: Never use bullet points, dashes, or hyphens in any text field. W
 def safe_json_parse(text):
     if not text:
         return {}
+
     cleaned = text.strip()
+
     if cleaned.startswith("```"):
         lines = cleaned.splitlines()
         if lines and lines[0].startswith("```"):
@@ -77,8 +77,10 @@ def safe_json_parse(text):
         if lines and lines[-1].startswith("```"):
             lines = lines[:-1]
         cleaned = "\n".join(lines).strip()
+
     if cleaned.lower().startswith("json"):
         cleaned = cleaned[4:].strip()
+
     try:
         return json.loads(cleaned)
     except Exception:
@@ -95,7 +97,9 @@ def safe_json_parse(text):
 def normalize_topic(raw_topic):
     if not raw_topic:
         return "Other"
+
     text = str(raw_topic).lower()
+
     if "medicaid" in text:
         return "Medicaid"
     if "medicare" in text:
@@ -130,6 +134,7 @@ def normalize_topic(raw_topic):
 def slugify(text):
     if not text:
         return "untitled-claim"
+
     text = unicodedata.normalize("NFKD", str(text))
     text = text.encode("ascii", "ignore").decode("ascii")
     text = text.lower().strip()
@@ -155,14 +160,24 @@ def extract_primary_record_fields(claim, parsed, mode):
         "Mode": mode,
         "URL Slug": build_url_slug(parsed, claim)
     }
-    for field in ["Strip Mode Summary", "Direct Facts", "Adjacent Facts",
-                  "Root Concern", "Values Divergence", "Left Perspective",
-                  "Right Perspective", "Constitutional Framework"]:
+
+    for field in [
+        "Strip Mode Summary",
+        "Direct Facts",
+        "Adjacent Facts",
+        "Root Concern",
+        "Values Divergence",
+        "Left Perspective",
+        "Right Perspective",
+        "Constitutional Framework"
+    ]:
         if parsed.get(field):
             fields[field] = parsed[field]
+
     verdict = parsed.get("Overall Verdict") or parsed.get("Verdict")
     if verdict:
         fields["Overall Verdict"] = verdict
+
     return fields
 
 
@@ -185,14 +200,17 @@ def bootcheck():
 def login():
     if request.method == "POST":
         password = (request.form.get("password") or "").strip()
+
         if password == SUPER_PASSWORD:
             session["logged_in"] = True
             session["superuser"] = True
             return redirect("/")
-        elif password == APP_PASSWORD:
+
+        if password == APP_PASSWORD:
             session["logged_in"] = True
             session["superuser"] = False
             return redirect("/")
+
         return "Wrong password", 401
 
     return """
@@ -294,35 +312,41 @@ def analyze():
             airtable_result = {"saved": False, "error": "Airtable not configured"}
         else:
             url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{AIRTABLE_TABLE_NAME}"
-            headers = {"Authorization": f"Bearer {AIRTABLE_TOKEN}", "Content-Type": "application/json"}
+            headers = {
+                "Authorization": f"Bearer {AIRTABLE_TOKEN}",
+                "Content-Type": "application/json"
+            }
+
             primary = claude_json if "error" not in claude_json else openai_json
             fields = extract_primary_record_fields(claim, primary, mode)
             fields["Claude Raw JSON"] = json.dumps(claude_json, indent=2)
             fields["OpenAI Raw JSON"] = json.dumps(openai_json, indent=2)
+
             response = requests.post(url, headers=headers, json={"fields": fields}, timeout=30)
 
-if response.status_code == 200:
-    record = response.json()
-    airtable_result = {
-        "saved": True,
-        "record_id": record.get("id"),
-        "url_slug": fields["URL Slug"]
-    }
-else:
-    try:
-        airtable_error = response.json()
-    except Exception:
-        airtable_error = response.text
+            if response.status_code == 200:
+                record = response.json()
+                airtable_result = {
+                    "saved": True,
+                    "record_id": record.get("id"),
+                    "url_slug": fields["URL Slug"]
+                }
+            else:
+                try:
+                    airtable_error = response.json()
+                except Exception:
+                    airtable_error = response.text
 
-    print("AIRTABLE STATUS:", response.status_code, flush=True)
-    print("AIRTABLE ERROR:", airtable_error, flush=True)
-    print("AIRTABLE FIELDS SENT:", json.dumps(fields, indent=2), flush=True)
+                print("AIRTABLE STATUS:", response.status_code, flush=True)
+                print("AIRTABLE ERROR:", airtable_error, flush=True)
+                print("AIRTABLE FIELDS SENT:", json.dumps(fields, indent=2), flush=True)
 
-    airtable_result = {
-        "saved": False,
-        "status_code": response.status_code,
-        "error": airtable_error
-    }
+                airtable_result = {
+                    "saved": False,
+                    "status_code": response.status_code,
+                    "error": airtable_error
+                }
+
     except Exception as e:
         airtable_result = {"saved": False, "error": str(e)}
 
