@@ -19,931 +19,570 @@
       --muted-2:#7f92a8;
       --ok:#88c59a;
       --bad:#d88d8d;
-      --purple:#7e5aa6;
-      --green:#3c7d5f;
-      --red:#9b4d4d;
       --shadow:0 12px 30px rgba(0,0,0,.28);
     }
 
-    *{box-sizing:border-box}
+    *{box-sizing:border-box;margin:0;padding:0}
     html{scroll-behavior:smooth}
     body{
-      margin:0;
-      background:linear-gradient(180deg,var(--bg) 0%, #061425 100%);
+      background:linear-gradient(180deg,var(--bg) 0%,#061425 100%);
       color:var(--text);
-      font-family:'Cormorant Garamond', serif;
+      font-family:'Cormorant Garamond',serif;
       min-height:100vh;
     }
 
-    a{color:inherit;text-decoration:none}
-
+    /* ── TOPBAR ── */
     .topbar{
-      position:sticky;
-      top:0;
-      z-index:20;
+      position:sticky;top:0;z-index:20;
       background:rgba(9,24,42,.96);
-      backdrop-filter: blur(8px);
+      backdrop-filter:blur(8px);
       border-bottom:1px solid var(--line);
     }
-
     .topbar-inner{
-      max-width:1400px;
-      margin:0 auto;
+      max-width:1400px;margin:0 auto;
       padding:18px 28px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:24px;
+      display:flex;align-items:center;justify-content:space-between;gap:24px;
     }
-
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:16px;
-      min-width:0;
-    }
-
+    .brand{display:flex;align-items:center;gap:16px;min-width:0}
     .seal{
-      width:54px;
-      height:54px;
-      border:1px solid var(--gold);
-      border-radius:50%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color:var(--gold);
-      font-size:22px;
-      flex:0 0 auto;
+      width:54px;height:54px;border:1px solid var(--gold);border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      color:var(--gold);font-size:22px;flex:0 0 auto;
     }
-
-    .brand-text{
-      min-width:0;
-    }
-
-    .brand-name{
-      font-family:'Playfair Display', serif;
-      font-size:18px;
-      line-height:1.05;
-      font-weight:700;
-      letter-spacing:.01em;
-    }
-
-    .brand-tag{
-      font-family:'Libre Baskerville', serif;
-      color:var(--gold);
-      font-size:11px;
-      letter-spacing:.2em;
-      text-transform:uppercase;
-      margin-top:3px;
-    }
-
-    .brand-latin{
-      color:var(--gold);
-      opacity:.8;
-      font-style:italic;
-      font-size:14px;
-      margin-top:2px;
-    }
-
-    .nav{
-      display:flex;
-      align-items:center;
-      gap:28px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
-
-    .nav a{
-      font-family:'Libre Baskerville', serif;
-      font-size:11px;
-      letter-spacing:.18em;
-      text-transform:uppercase;
-      color:var(--text);
-      opacity:.92;
-    }
-
+    .brand-name{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;letter-spacing:.01em;line-height:1.05}
+    .brand-tag{font-family:'Libre Baskerville',serif;color:var(--gold);font-size:11px;letter-spacing:.2em;text-transform:uppercase;margin-top:3px}
+    .brand-latin{color:var(--gold);opacity:.8;font-style:italic;font-size:14px;margin-top:2px}
+    .nav{display:flex;align-items:center;gap:28px;flex-wrap:wrap;justify-content:flex-end}
+    .nav a{font-family:'Libre Baskerville',serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--text);opacity:.92}
     .nav a:hover{color:var(--gold-2)}
-
-    .run-btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      padding:12px 22px;
-      background:var(--gold);
-      color:#0a1b2d !important;
-      font-weight:700;
-      border:1px solid var(--gold);
-    }
-
+    .run-btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 22px;background:var(--gold);color:#0a1b2d !important;font-weight:700;border:1px solid var(--gold)}
     .run-btn:hover{background:var(--gold-2)}
 
-    .subnav{
-      border-top:1px solid rgba(208,173,75,.18);
-      border-bottom:1px solid rgba(208,173,75,.18);
-      background:rgba(20,38,61,.75);
-    }
-
-    .subnav-inner{
-      max-width:1400px;
-      margin:0 auto;
-      padding:10px 28px;
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:20px;
-      color:var(--muted-2);
-      font-size:15px;
-    }
-
-    .subnav-item{
-      padding-right:16px;
-      border-right:1px solid rgba(208,173,75,.14);
-      min-height:48px;
-      display:flex;
-      align-items:center;
-    }
-
+    /* ── SUBNAV ── */
+    .subnav{border-top:1px solid rgba(208,173,75,.18);border-bottom:1px solid rgba(208,173,75,.18);background:rgba(20,38,61,.75)}
+    .subnav-inner{max-width:1400px;margin:0 auto;padding:10px 28px;display:grid;grid-template-columns:repeat(4,1fr);gap:20px;color:var(--muted-2);font-size:15px}
+    .subnav-item{padding-right:16px;border-right:1px solid rgba(208,173,75,.14);min-height:48px;display:flex;align-items:center}
     .subnav-item:last-child{border-right:none}
 
-    .page{
-      max-width:1400px;
-      margin:0 auto;
-      padding:60px 28px 70px;
-    }
+    /* ── PAGE LAYOUT ── */
+    .page{max-width:1400px;margin:0 auto;padding:60px 28px 70px}
+    .layout{display:grid;grid-template-columns:minmax(0,1.9fr) minmax(320px,340px);gap:56px;align-items:start}
 
-    .layout{
-      display:grid;
-      grid-template-columns:minmax(0,1.9fr) minmax(320px,340px);
-      gap:56px;
-      align-items:start;
-    }
+    /* ── ARTICLE COMPONENTS ── */
+    .tags{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:18px}
+    .tag{border:1px solid rgba(208,173,75,.28);color:var(--text);padding:7px 14px;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;background:rgba(255,255,255,.02)}
+    .tag.active{background:rgba(208,173,75,.13);color:var(--gold-2);border-color:var(--gold)}
+    .eyebrow{font-family:'Libre Baskerville',serif;color:var(--gold);font-size:12px;letter-spacing:.22em;text-transform:uppercase;margin-bottom:12px}
+    .hero-title{font-family:'Playfair Display',serif;font-size:60px;line-height:.98;font-weight:800;margin:0 0 16px 0;text-wrap:balance}
+    .dek{font-size:22px;line-height:1.45;color:var(--text);font-style:italic;margin-bottom:28px;max-width:900px}
+    .note{border-left:3px solid var(--line);background:rgba(255,255,255,.04);padding:20px 22px;color:var(--muted);font-size:18px;line-height:1.5;font-style:italic;margin-bottom:30px}
+    .bottom-line{border:1px solid var(--line);padding:28px 28px 24px;background:rgba(7,20,36,.35);position:relative;box-shadow:var(--shadow);margin-bottom:34px}
+    .bottom-line-label{position:absolute;top:-11px;left:22px;background:var(--bg);color:var(--gold);padding:0 10px;font-family:'Libre Baskerville',serif;font-size:11px;letter-spacing:.22em;text-transform:uppercase}
+    .bottom-line p{margin:0;font-size:20px;line-height:1.85;color:var(--text)}
+    .section{margin-top:34px}
+    .section-title{font-family:'Libre Baskerville',serif;color:var(--gold);font-size:12px;letter-spacing:.22em;text-transform:uppercase;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid rgba(208,173,75,.15)}
+    .section-body{color:var(--text);font-size:20px;line-height:1.75}
+    .section-body p{margin:0 0 18px 0}
+    .split{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .panel{background:rgba(255,255,255,.03);border:1px solid rgba(208,173,75,.16);padding:22px;box-shadow:var(--shadow)}
+    .panel-title{font-family:'Libre Baskerville',serif;color:var(--gold);font-size:12px;letter-spacing:.18em;text-transform:uppercase;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid rgba(208,173,75,.16)}
 
-    .tags{
-      display:flex;
-      flex-wrap:wrap;
-      gap:12px;
-      margin-bottom:18px;
-    }
-
-    .tag{
-      border:1px solid rgba(208,173,75,.28);
-      color:var(--text);
-      padding:7px 14px;
-      font-family:'Libre Baskerville', serif;
-      font-size:10px;
-      letter-spacing:.18em;
-      text-transform:uppercase;
-      background:rgba(255,255,255,.02);
-    }
-
-    .tag.active{
-      background:rgba(208,173,75,.13);
-      color:var(--gold-2);
-      border-color:var(--gold);
-    }
-
-    .eyebrow{
-      font-family:'Libre Baskerville', serif;
-      color:var(--gold);
-      font-size:12px;
-      letter-spacing:.22em;
-      text-transform:uppercase;
-      margin-bottom:12px;
-    }
-
-    .hero-title{
-      font-family:'Playfair Display', serif;
-      font-size:60px;
-      line-height:.98;
-      font-weight:800;
-      margin:0 0 16px 0;
-      text-wrap:balance;
-    }
-
-    .dek{
-      font-size:22px;
-      line-height:1.45;
-      color:var(--text);
-      font-style:italic;
-      margin-bottom:28px;
-      max-width:900px;
-    }
-
-    .note{
-      border-left:3px solid var(--line);
-      background:rgba(255,255,255,.04);
-      padding:20px 22px;
-      color:var(--muted);
-      font-size:18px;
-      line-height:1.5;
-      font-style:italic;
-      margin-bottom:30px;
-    }
-
-    .bottom-line{
-      border:1px solid var(--line);
-      padding:28px 28px 24px;
-      background:rgba(7,20,36,.35);
-      position:relative;
-      box-shadow:var(--shadow);
-      margin-bottom:34px;
-    }
-
-    .bottom-line-label{
-      position:absolute;
-      top:-11px;
-      left:22px;
-      background:var(--bg);
-      color:var(--gold);
-      padding:0 10px;
-      font-family:'Libre Baskerville', serif;
-      font-size:11px;
-      letter-spacing:.22em;
-      text-transform:uppercase;
-    }
-
-    .bottom-line p{
-      margin:0;
-      font-size:20px;
-      line-height:1.85;
-      color:var(--text);
-    }
-
-    .section{
-      margin-top:34px;
-    }
-
-    .section-title{
-      font-family:'Libre Baskerville', serif;
-      color:var(--gold);
-      font-size:12px;
-      letter-spacing:.22em;
-      text-transform:uppercase;
-      margin-bottom:12px;
-      padding-bottom:12px;
-      border-bottom:1px solid rgba(208,173,75,.15);
-    }
-
-    .section-body{
-      color:var(--text);
-      font-size:20px;
-      line-height:1.75;
-    }
-
-    .section-body p{
-      margin:0 0 18px 0;
-    }
-
-    .split{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:18px;
-    }
-
-    .panel{
-      background:rgba(255,255,255,.03);
-      border:1px solid rgba(208,173,75,.16);
-      padding:22px;
-      box-shadow:var(--shadow);
-    }
-
-    .panel-title{
-      font-family:'Libre Baskerville', serif;
-      color:var(--gold);
-      font-size:12px;
-      letter-spacing:.18em;
-      text-transform:uppercase;
-      margin-bottom:14px;
-      padding-bottom:10px;
-      border-bottom:1px solid rgba(208,173,75,.16);
-    }
-
-    .sidebar-card{
-      background:rgba(255,255,255,.03);
-      border:1px solid rgba(208,173,75,.16);
-      padding:24px;
-      box-shadow:var(--shadow);
-      margin-bottom:24px;
-    }
-
-    .claim-textarea{
-      width:100%;
-      min-height:114px;
-      resize:vertical;
-      background:rgba(255,255,255,.04);
-      border:1px solid rgba(255,255,255,.12);
-      color:var(--text);
-      padding:14px 14px;
-      font-family:'Cormorant Garamond', serif;
-      font-size:18px;
-      line-height:1.5;
-      outline:none;
-    }
-
-    .claim-textarea::placeholder{
-      color:var(--muted-2);
-      font-style:italic;
-    }
-
-    .mode-row{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin:14px 0;
-    }
-
-    .mode-btn{
-      flex:1 1 140px;
-      background:transparent;
-      border:1px solid rgba(208,173,75,.2);
-      color:var(--muted);
-      padding:10px 12px;
-      font-family:'Libre Baskerville', serif;
-      font-size:10px;
-      letter-spacing:.14em;
-      text-transform:uppercase;
-      cursor:pointer;
-    }
-
-    .mode-btn.active{
-      color:var(--gold);
-      border-color:var(--gold);
-      background:rgba(208,173,75,.08);
-    }
-
-    .claim-btn{
-      width:100%;
-      border:none;
-      background:var(--gold);
-      color:#07172a;
-      padding:14px 16px;
-      font-family:'Libre Baskerville', serif;
-      font-size:12px;
-      letter-spacing:.18em;
-      text-transform:uppercase;
-      font-weight:700;
-      cursor:pointer;
-      margin-top:8px;
-    }
-
+    /* ── SIDEBAR ── */
+    .sidebar-card{background:rgba(255,255,255,.03);border:1px solid rgba(208,173,75,.16);padding:24px;box-shadow:var(--shadow);margin-bottom:24px}
+    .claim-textarea{width:100%;min-height:114px;resize:vertical;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);color:var(--text);padding:14px;font-family:'Cormorant Garamond',serif;font-size:18px;line-height:1.5;outline:none}
+    .claim-textarea::placeholder{color:var(--muted-2);font-style:italic}
+    .claim-textarea:focus{border-color:rgba(208,173,75,.4)}
+    .mode-row{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+    .mode-btn{flex:1 1 140px;background:transparent;border:1px solid rgba(208,173,75,.2);color:var(--muted);padding:10px 12px;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+    .mode-btn.active{color:var(--gold);border-color:var(--gold);background:rgba(208,173,75,.08)}
+    .claim-btn{width:100%;border:none;background:var(--gold);color:#07172a;padding:14px 16px;font-family:'Libre Baskerville',serif;font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:700;cursor:pointer;margin-top:8px}
     .claim-btn:hover{background:var(--gold-2)}
     .claim-btn:disabled{opacity:.65;cursor:not-allowed}
+    .sidebar-note{margin-top:12px;color:var(--muted-2);font-size:16px;line-height:1.45;font-style:italic;text-align:center}
 
-    .sidebar-note{
-      margin-top:12px;
-      color:var(--muted-2);
-      font-size:16px;
-      line-height:1.45;
-      font-style:italic;
-      text-align:center;
-    }
-
-    .recent-item{
-      padding:14px 0;
-      border-bottom:1px solid rgba(208,173,75,.12);
-    }
-
+    .recent-item{padding:14px 0;border-bottom:1px solid rgba(208,173,75,.12)}
     .recent-item:last-child{border-bottom:none;padding-bottom:0}
+    .recent-title{font-size:18px;line-height:1.28;font-weight:600;margin-bottom:8px}
+    .recent-meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap;color:var(--muted-2);font-size:14px}
 
-    .recent-title{
-      font-size:18px;
-      line-height:1.28;
-      font-weight:600;
-      margin-bottom:8px;
-    }
+    .pill{padding:3px 10px;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text);border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03)}
+    .pill.purple{background:rgba(126,90,166,.18);border-color:rgba(126,90,166,.45)}
+    .pill.green{background:rgba(60,125,95,.18);border-color:rgba(60,125,95,.45)}
+    .pill.red{background:rgba(155,77,77,.18);border-color:rgba(155,77,77,.45)}
+    .pill.amber{background:rgba(180,120,0,.18);border-color:rgba(180,120,0,.45)}
 
-    .recent-meta{
-      display:flex;
-      align-items:center;
-      gap:12px;
-      flex-wrap:wrap;
-      color:var(--muted-2);
-      font-size:14px;
-    }
-
-    .pill{
-      padding:3px 10px;
-      font-family:'Libre Baskerville', serif;
-      font-size:10px;
-      letter-spacing:.12em;
-      text-transform:uppercase;
-      color:var(--text);
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.03);
-    }
-
-    .pill.purple{background:rgba(126,90,166,.18); border-color:rgba(126,90,166,.45)}
-    .pill.green{background:rgba(60,125,95,.18); border-color:rgba(60,125,95,.45)}
-    .pill.red{background:rgba(155,77,77,.18); border-color:rgba(155,77,77,.45)}
-
-    .status-wrap{
-      display:none;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top:16px;
-    }
-
+    /* ── STATUS ── */
+    .status-wrap{display:none;gap:10px;flex-wrap:wrap;margin-top:16px}
     .status-wrap.visible{display:flex}
+    .status-pill{padding:8px 12px;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.12em;text-transform:uppercase;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:var(--muted)}
+    .status-pill.ok{border-color:rgba(136,197,154,.45);color:var(--ok)}
+    .status-pill.bad{border-color:rgba(216,141,141,.45);color:var(--bad)}
 
-    .status-pill{
-      padding:8px 12px;
-      font-family:'Libre Baskerville', serif;
-      font-size:10px;
-      letter-spacing:.12em;
-      text-transform:uppercase;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.03);
-      color:var(--muted);
-    }
-
-    .status-pill.ok{
-      border-color:rgba(136,197,154,.45);
-      color:var(--ok);
-    }
-
-    .status-pill.bad{
-      border-color:rgba(216,141,141,.45);
-      color:var(--bad);
-    }
-
-    .loading{
-      display:none;
-      margin-top:18px;
-    }
-
+    /* ── LOADING ── */
+    .loading{display:none;margin-top:18px}
     .loading.visible{display:block}
+    .loading-line{width:100%;height:2px;background:rgba(208,173,75,.16);overflow:hidden;margin-top:8px}
+    .loading-fill{width:26%;height:100%;background:var(--gold);animation:slide 1.3s linear infinite}
+    @keyframes slide{0%{transform:translateX(-130%)}100%{transform:translateX(500%)}}
 
-    .loading-line{
-      width:100%;
-      height:2px;
-      background:rgba(208,173,75,.16);
-      overflow:hidden;
-      margin-top:8px;
-    }
+    /* ── RESULTS SECTION ── */
+    .results-section{display:none;margin-top:48px}
+    .results-section.visible{display:block}
 
-    .loading-fill{
-      width:26%;
-      height:100%;
-      background:var(--gold);
-      animation:slide 1.3s linear infinite;
-    }
-
-    @keyframes slide{
-      0%{transform:translateX(-130%)}
-      100%{transform:translateX(500%)}
-    }
-
-    .result-shell{
-      display:none;
-      margin-top:30px;
-    }
-
-    .result-shell.visible{display:block}
-
-    .result-tabs{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-bottom:16px;
-    }
-
-    .result-tab{
-      border:1px solid rgba(208,173,75,.16);
-      background:rgba(255,255,255,.03);
-      color:var(--muted);
-      padding:10px 14px;
-      font-family:'Libre Baskerville', serif;
-      font-size:10px;
-      letter-spacing:.16em;
-      text-transform:uppercase;
-      cursor:pointer;
-    }
-
-    .result-tab.active{
-      border-color:var(--gold);
-      color:var(--gold);
-      background:rgba(208,173,75,.08);
-    }
-
-    .result-panel{
-      display:none;
-      background:rgba(255,255,255,.03);
-      border:1px solid rgba(208,173,75,.16);
-      padding:24px;
+    /* ── CLAIM CARD ── */
+    .claim-card{
+      border:1px solid rgba(208,173,75,.2);
+      background:rgba(255,255,255,.02);
+      padding:32px;
+      margin-bottom:24px;
       box-shadow:var(--shadow);
     }
 
-    .result-panel.active{display:block}
+    .card-header{margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid rgba(208,173,75,.15)}
+    .card-eyebrow{font-family:'Libre Baskerville',serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:rgba(208,173,75,.6);margin-bottom:10px}
+    .card-title{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;line-height:1.2;margin-bottom:12px}
+    .card-meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 
-    .result-panel h3{
-      font-family:'Playfair Display', serif;
-      font-size:28px;
-      margin:0 0 14px 0;
+    .verdict-badge{
+      display:inline-block;
+      padding:6px 16px;
+      font-family:'Libre Baskerville',serif;
+      font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;
     }
+    .verdict-true{background:rgba(60,125,95,.25);color:#88c59a;border:1px solid rgba(60,125,95,.5)}
+    .verdict-mostly-true{background:rgba(40,100,70,.25);color:#70b888;border:1px solid rgba(40,100,70,.5)}
+    .verdict-contested{background:rgba(126,90,166,.25);color:#c49fd8;border:1px solid rgba(126,90,166,.5)}
+    .verdict-exaggerated{background:rgba(180,120,0,.25);color:#e8c060;border:1px solid rgba(180,120,0,.5)}
+    .verdict-misleading{background:rgba(160,100,0,.25);color:#d4a840;border:1px solid rgba(160,100,0,.5)}
+    .verdict-false{background:rgba(155,77,77,.25);color:#e87070;border:1px solid rgba(155,77,77,.5)}
+    .verdict-unproven{background:rgba(30,58,95,.35);color:#7aaed8;border:1px solid rgba(30,58,95,.6)}
+    .verdict-plausible{background:rgba(80,100,60,.25);color:#a0c880;border:1px solid rgba(80,100,60,.5)}
+    .verdict-substantially-true{background:rgba(50,110,80,.25);color:#80c898;border:1px solid rgba(50,110,80,.5)}
 
-    .result-panel pre{
-      white-space:pre-wrap;
-      word-break:break-word;
-      margin:0;
-      font-family:'Cormorant Garamond', serif;
-      font-size:19px;
-      line-height:1.6;
-      color:var(--text);
+    .bottom-line-card{
+      border:1px solid var(--line);padding:24px 24px 20px;
+      background:rgba(7,20,36,.5);position:relative;margin-bottom:24px;
     }
-
-    .footer{
-      margin-top:60px;
-      padding-top:26px;
-      border-top:1px solid rgba(208,173,75,.14);
-      color:var(--gold);
-      text-align:center;
-      font-family:'Libre Baskerville', serif;
-      font-size:11px;
-      letter-spacing:.16em;
-      text-transform:uppercase;
-      opacity:.8;
+    .bottom-line-card-label{
+      position:absolute;top:-10px;left:18px;
+      background:var(--bg);color:var(--gold);padding:0 8px;
+      font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.2em;text-transform:uppercase;
     }
+    .bottom-line-card p{margin:0;font-size:19px;line-height:1.8}
 
-    @media (max-width: 1150px){
-      .layout{
-        grid-template-columns:1fr;
-        gap:36px;
-      }
-      .sidebar{
-        order:-1;
-      }
+    .sub-claims-list{margin-bottom:20px}
+    .sub-claim-row{
+      display:grid;grid-template-columns:1fr auto;gap:16px;
+      padding:14px 0;border-bottom:1px solid rgba(255,255,255,.06);align-items:start;
     }
+    .sub-claim-row:last-child{border-bottom:none}
+    .sub-claim-text{font-size:18px;line-height:1.5;color:#e8e0cc}
 
-    @media (max-width: 900px){
-      .topbar-inner{
-        flex-direction:column;
-        align-items:flex-start;
-      }
-      .nav{
-        width:100%;
-        justify-content:flex-start;
-        gap:18px;
-      }
-      .subnav-inner{
-        grid-template-columns:1fr 1fr;
-      }
-      .hero-title{
-        font-size:46px;
-      }
-      .split{
-        grid-template-columns:1fr;
-      }
+    .layer-block{margin-bottom:18px;padding:20px 22px;background:rgba(255,255,255,.02);border-left:3px solid}
+    .layer-direct{border-color:var(--gold)}
+    .layer-adjacent{border-color:#5a8fa0}
+    .layer-root{border-color:#7a6090}
+    .layer-values{border-color:#8a6040}
+    .layer-left{border-color:#3a6090}
+    .layer-right{border-color:#8a3030}
+
+    .layer-label{font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:10px;font-weight:700}
+    .layer-direct .layer-label{color:var(--gold)}
+    .layer-adjacent .layer-label{color:#5a8fa0}
+    .layer-root .layer-label{color:#9a80b0}
+    .layer-values .layer-label{color:#b08060}
+    .layer-left .layer-label{color:#6a90c0}
+    .layer-right .layer-label{color:#c07070}
+    .layer-text{font-size:18px;color:#e8e0cc;line-height:1.7}
+
+    .model-comparison{
+      display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px;
     }
+    .model-card{background:rgba(255,255,255,.02);border:1px solid rgba(208,173,75,.12);padding:18px}
+    .model-label{font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(208,173,75,.12)}
+    .model-text{font-size:16px;color:var(--muted);line-height:1.6}
 
-    @media (max-width: 640px){
-      .topbar-inner,
-      .page{
-        padding-left:18px;
-        padding-right:18px;
-      }
-      .subnav-inner{
-        padding-left:18px;
-        padding-right:18px;
-        grid-template-columns:1fr;
-        gap:0;
-      }
-      .subnav-item{
-        border-right:none;
-        border-bottom:1px solid rgba(208,173,75,.08);
-        padding:10px 0;
-        min-height:auto;
-      }
+    .ornamental{display:flex;align-items:center;gap:12px;margin:24px 0}
+    .ornamental-line{flex:1;height:1px;background:rgba(208,173,75,.15)}
+    .ornamental-diamond{width:5px;height:5px;background:rgba(208,173,75,.4);transform:rotate(45deg)}
+
+    /* ── FOOTER ── */
+    .footer{margin-top:60px;padding-top:26px;border-top:1px solid rgba(208,173,75,.14);color:var(--gold);text-align:center;font-family:'Libre Baskerville',serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;opacity:.8}
+
+    /* ── MOBILE ── */
+    @media(max-width:1150px){
+      .layout{grid-template-columns:1fr;gap:36px}
+      .sidebar{order:-1}
+    }
+    @media(max-width:900px){
+      .topbar-inner{flex-direction:column;align-items:flex-start}
+      .nav{width:100%;justify-content:flex-start;gap:18px}
+      .subnav-inner{grid-template-columns:1fr 1fr}
+      .hero-title{font-size:46px}
+      .split,.model-comparison{grid-template-columns:1fr}
+    }
+    @media(max-width:640px){
+      .topbar-inner,.page{padding-left:18px;padding-right:18px}
+      .subnav-inner{padding-left:18px;padding-right:18px;grid-template-columns:1fr;gap:0}
+      .subnav-item{border-right:none;border-bottom:1px solid rgba(208,173,75,.08);padding:10px 0;min-height:auto}
       .subnav-item:last-child{border-bottom:none}
-      .brand-name{
-        font-size:16px;
-      }
-      .hero-title{
-        font-size:36px;
-      }
-      .dek{
-        font-size:20px;
-      }
-      .bottom-line p,
-      .section-body{
-        font-size:19px;
-      }
-      .recent-title{
-        font-size:17px;
-      }
-      .result-panel h3{
-        font-size:24px;
-      }
-      .result-panel pre{
-        font-size:17px;
-      }
+      .brand-name{font-size:16px}
+      .hero-title{font-size:34px}
+      .dek{font-size:19px}
+      .bottom-line p,.section-body,.layer-text{font-size:18px}
+      .sub-claim-row{grid-template-columns:1fr;gap:8px}
+      .card-title{font-size:22px}
+      .claim-card{padding:20px}
     }
   </style>
 </head>
 <body>
-  <header class="topbar">
-    <div class="topbar-inner">
-      <div class="brand">
-        <div class="seal">◉</div>
-        <div class="brand-text">
-          <div class="brand-name">Where the Truth Lies</div>
-          <div class="brand-tag">Beyond the Argument</div>
-          <div class="brand-latin">Ubi Veritas Latet</div>
-        </div>
-      </div>
 
-      <nav class="nav">
-        <a href="#claimlab">ClaimLab</a>
-        <a href="#archives">Archives</a>
-        <a href="#methodology">Methodology</a>
-        <a href="#about">About</a>
-        <a href="#claimlab" class="run-btn">Run a Claim</a>
-        <a href="/logout" class="run-btn">Logout</a>
-      </nav>
-    </div>
-
-    <div class="subnav">
-      <div class="subnav-inner">
-        <div class="subnav-item" id="archives">Persistent claim files, not disposable articles.</div>
-        <div class="subnav-item">Two modes: quick answer or full excavation.</div>
-        <div class="subnav-item" id="about">Where documented facts end and real disagreement lives.</div>
-        <div class="subnav-item" id="methodology">What the founders actually wrote, when constitutional meaning matters.</div>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="seal">◉</div>
+      <div>
+        <div class="brand-name">Where the Truth Lies</div>
+        <div class="brand-tag">Beyond the Argument</div>
+        <div class="brand-latin">Ubi Veritas Latet</div>
       </div>
     </div>
-  </header>
-
-  <main class="page">
-    <div class="layout">
-      <section class="main">
-        <div class="tags">
-          <div class="tag active">Active</div>
-          <div class="tag">Iran War</div>
-          <div class="tag">Foreign Policy</div>
-          <div class="tag">Military</div>
-          <div class="tag">March 20, 2026</div>
-        </div>
-
-        <div class="eyebrow">ClaimLab Full Excavation</div>
-        <h1 class="hero-title">Why Is the US Attacking Iran?</h1>
-        <div class="dek">
-          The stripped claim: The United States entered the Iran war without legitimate justification, driven by external pressure rather than genuine national security necessity.
-        </div>
-
-        <div class="note">
-          This analysis combines documented facts, intelligence estimates, and analytical interpretation. Where the distinction matters it is identified. This is not a verdict on policy — it is a map of what is actually known, what is contested, and where the real disagreement lives.
-        </div>
-
-        <div class="bottom-line">
-          <div class="bottom-line-label">30-Second Bottom Line</div>
-          <p>
-            Iran has a documented 45-year record of proxy warfare against US forces and allies, enriching uranium to levels widely considered beyond civilian energy requirements, disrupting global shipping, and rejecting every diplomatic framework offered. The US struck nuclear facilities in June 2025 and conducted a regime change operation in February 2026. The strikes are documented. The threat was real. Whether the administration’s specific imminent threat framing was legally sufficient and whether congressional authorization was required are the legitimate unresolved questions.
-          </p>
-        </div>
-
-        <div class="split">
-          <div class="panel">
-            <div class="panel-title">Where the Real Disagreement Lives</div>
-            <div class="section-body">
-              <p>
-                The core disagreement is not whether Iran was a threat. The documented record settles that. The real divergence is whether decades of cumulative hostile action justify preemptive war outside the classic imminent-threat doctrine, and whether the president can initiate regime-change scale military action without Congress.
-              </p>
-            </div>
-          </div>
-
-          <div class="panel">
-            <div class="panel-title">Constitutional Tension</div>
-            <div class="section-body">
-              <p>
-                The constitutional issue is not just Trump versus Article I. It is the much deeper tension between the founders’ war-powers design and a decades-long bipartisan pattern of congressional delegation through AUMFs and executive military normalization.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div class="section">
-          <div class="section-title">What This Platform Actually Does</div>
-          <div class="section-body">
-            <p>
-              Most fact-checkers flatten complex claims into a single verdict. Where the Truth Lies does something different. It splits compound political claims into parts, separates documented facts from interpretation, finds the root concern underneath the rhetoric, and identifies where genuine disagreement stops being factual and becomes a dispute over values, priorities, risk, or constitutional meaning.
-            </p>
-            <p>
-              ClaimLab is the live engine behind that process. It does not tell you what to think. It shows you what is there.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <aside class="sidebar" id="claimlab">
-        <div class="sidebar-card">
-          <div class="panel-title">Run a Claim Through ClaimLab</div>
-
-          <textarea id="claim-input" class="claim-textarea" placeholder="Paste a claim, quote, or political statement here..."></textarea>
-
-          <div class="mode-row">
-            <button class="mode-btn active" id="mode-strip" onclick="setMode('strip')">Quick Analysis</button>
-            <button class="mode-btn" id="mode-full" onclick="setMode('full')">Full Excavation</button>
-          </div>
-
-          <button class="claim-btn" id="run-btn" onclick="runClaim()">Excavate This Claim</button>
-
-          <div class="sidebar-note">
-            We strip the rhetoric. Find the root. Show the full picture.
-          </div>
-
-          <div id="loading" class="loading">
-            <div class="sidebar-note" id="loading-text">ClaimLab is excavating...</div>
-            <div class="loading-line"><div class="loading-fill"></div></div>
-          </div>
-
-          <div id="status-wrap" class="status-wrap">
-            <div id="claude-status" class="status-pill">Claude: waiting</div>
-            <div id="openai-status" class="status-pill">OpenAI: waiting</div>
-            <div id="airtable-status" class="status-pill">Airtable: waiting</div>
-          </div>
-        </div>
-
-        <div class="sidebar-card">
-          <div class="panel-title">Recent Claim Files</div>
-
-          <div class="recent-item">
-            <div class="recent-title">Biden Genuinely Won the 2020 Election</div>
-            <div class="recent-meta">
-              <span>March 2026</span>
-              <span class="pill purple">Contested</span>
-            </div>
-          </div>
-
-          <div class="recent-item">
-            <div class="recent-title">60% of Americans Live Paycheck to Paycheck — Bernie Sanders</div>
-            <div class="recent-meta">
-              <span>March 2026</span>
-              <span class="pill green">Mostly True</span>
-            </div>
-          </div>
-
-          <div class="recent-item">
-            <div class="recent-title">If You're Pro-ID for Voting You Must Support ID for Gun Purchases</div>
-            <div class="recent-meta">
-              <span>March 2026</span>
-              <span class="pill red">Misleading</span>
-            </div>
-          </div>
-        </div>
-      </aside>
+    <nav class="nav">
+      <a href="#claimlab">ClaimLab</a>
+      <a href="#archives">Archives</a>
+      <a href="#methodology">Methodology</a>
+      <a href="#about">About</a>
+      <a href="#claimlab" class="run-btn">Run a Claim</a>
+      <a href="/logout" class="run-btn">Logout</a>
+    </nav>
+  </div>
+  <div class="subnav">
+    <div class="subnav-inner">
+      <div class="subnav-item" id="archives">Persistent claim files. Not disposable articles.</div>
+      <div class="subnav-item">Two modes: quick answer or full excavation.</div>
+      <div class="subnav-item" id="about">Where documented facts end and real disagreement lives.</div>
+      <div class="subnav-item" id="methodology">What the founders actually wrote, when it matters.</div>
     </div>
+  </div>
+</header>
 
-    <section id="results" class="result-shell">
-      <div class="section-title">ClaimLab Results</div>
+<main class="page">
+  <div class="layout">
 
-      <div class="result-tabs">
-        <button class="result-tab active" onclick="showResultTab('claude')">Claude</button>
-        <button class="result-tab" onclick="showResultTab('openai')">OpenAI</button>
+    <!-- MAIN ARTICLE -->
+    <section class="main">
+      <div class="tags">
+        <div class="tag active">Active</div>
+        <div class="tag">Iran War</div>
+        <div class="tag">Foreign Policy</div>
+        <div class="tag">Military</div>
+        <div class="tag">March 20, 2026</div>
       </div>
-
-      <div id="panel-claude" class="result-panel active">
-        <h3>Claude</h3>
-        <pre id="claude-output">Waiting...</pre>
+      <div class="eyebrow">ClaimLab Full Excavation</div>
+      <h1 class="hero-title">Why Is the US Attacking Iran?</h1>
+      <div class="dek">The stripped claim: The United States entered the Iran war without legitimate justification, driven by external pressure rather than genuine national security necessity.</div>
+      <div class="note">This analysis combines documented facts, intelligence estimates, and analytical interpretation. Where the distinction matters it is identified. This is not a verdict on policy — it is a map of what is actually known, what is contested, and where the real disagreement lives.</div>
+      <div class="bottom-line">
+        <div class="bottom-line-label">30-Second Bottom Line</div>
+        <p>Iran has a documented 45-year record of proxy warfare against US forces and allies, enriching uranium to levels widely considered beyond civilian energy requirements, disrupting global shipping, and rejecting every diplomatic framework offered. The US struck nuclear facilities in June 2025 and conducted a regime change operation in February 2026. The strikes are documented. The threat was real. Whether the administration's specific imminent threat framing was legally sufficient and whether congressional authorization was required are the legitimate unresolved questions.</p>
       </div>
-
-      <div id="panel-openai" class="result-panel">
-        <h3>OpenAI</h3>
-        <pre id="openai-output">Waiting...</pre>
+      <div class="split">
+        <div class="panel">
+          <div class="panel-title">Where the Real Disagreement Lives</div>
+          <div class="section-body"><p>Whether 45 years of cumulative hostile action justifies preemptive military action outside traditional imminent threat doctrine. Whether the president holds constitutional authority to initiate regime change without congressional authorization. Whether coordinating with a foreign ally is American strategic interest or subordination of American sovereignty.</p></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Constitutional Tension</div>
+          <div class="section-body"><p>The issue is not just executive overreach. It is the tension between the founders' war-powers design and a decades-long bipartisan pattern of congressional delegation through AUMFs. Every president since 2001 has operated under this same framework.</p></div>
+        </div>
+      </div>
+      <div class="section" id="methodology">
+        <div class="section-title">What This Platform Does</div>
+        <div class="section-body">
+          <p>Most fact-checkers flatten complex claims into a single verdict. Where the Truth Lies does something different. It splits compound political claims into parts, separates documented facts from interpretation, finds the root concern underneath the rhetoric, and identifies where genuine disagreement stops being factual and becomes a dispute over values, priorities, or constitutional meaning.</p>
+          <p>ClaimLab is the live engine behind that process. Submit any political claim in the sidebar. It does not tell you what to think. It shows you what is there.</p>
+        </div>
       </div>
     </section>
 
-    <div class="footer">Where Truth Lies — Beyond the Argument</div>
-  </main>
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="claimlab">
+      <div class="sidebar-card">
+        <div class="panel-title">Run a Claim Through ClaimLab</div>
+        <textarea id="claim-input" class="claim-textarea" placeholder="Paste a claim, quote, or political statement here..."></textarea>
+        <div class="mode-row">
+          <button class="mode-btn active" id="mode-strip" onclick="setMode('strip')">Quick Analysis</button>
+          <button class="mode-btn" id="mode-full" onclick="setMode('full')">Full Excavation</button>
+        </div>
+        <button class="claim-btn" id="run-btn" onclick="runClaim()">Excavate This Claim</button>
+        <div class="sidebar-note">Strip the rhetoric. Find the root. Show the full picture.</div>
+        <div id="loading" class="loading">
+          <div class="sidebar-note" id="loading-text">ClaimLab is excavating...</div>
+          <div class="loading-line"><div class="loading-fill"></div></div>
+        </div>
+        <div id="status-wrap" class="status-wrap">
+          <div id="claude-status" class="status-pill">Claude: waiting</div>
+          <div id="openai-status" class="status-pill">OpenAI: waiting</div>
+          <div id="airtable-status" class="status-pill">Airtable: waiting</div>
+        </div>
+      </div>
 
-  <script>
-    let currentMode = 'strip';
+      <div class="sidebar-card" id="about">
+        <div class="panel-title">Recent Claim Files</div>
+        <div class="recent-item">
+          <div class="recent-title">Biden Won the 2020 Election</div>
+          <div class="recent-meta"><span>March 2026</span><span class="pill purple">Contested</span></div>
+        </div>
+        <div class="recent-item">
+          <div class="recent-title">60% of Americans Live Paycheck to Paycheck</div>
+          <div class="recent-meta"><span>March 2026</span><span class="pill green">Mostly True</span></div>
+        </div>
+        <div class="recent-item">
+          <div class="recent-title">Pro-ID for Voting Means Pro-ID for Guns</div>
+          <div class="recent-meta"><span>March 2026</span><span class="pill red">Misleading</span></div>
+        </div>
+        <div class="recent-item">
+          <div class="recent-title">Renewable Energy Is Ready to Replace Fossil Fuels</div>
+          <div class="recent-meta"><span>March 2026</span><span class="pill amber">Exaggerated</span></div>
+        </div>
+      </div>
+    </aside>
+  </div>
 
-    function setMode(mode) {
-      currentMode = mode;
-      document.getElementById('mode-strip').classList.toggle('active', mode === 'strip');
-      document.getElementById('mode-full').classList.toggle('active', mode === 'full');
+  <!-- RESULTS — rendered below main content -->
+  <section id="results-section" class="results-section">
+    <div class="section-title">ClaimLab Results</div>
+    <div id="results-container"></div>
+  </section>
+
+  <div class="footer">Ubi Veritas Latet — Where the Truth Lies Hidden</div>
+</main>
+
+<script>
+let currentMode = 'strip';
+
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('mode-strip').classList.toggle('active', mode === 'strip');
+  document.getElementById('mode-full').classList.toggle('active', mode === 'full');
+}
+
+function getVerdictClass(verdict) {
+  if (!verdict) return 'verdict-unproven';
+  const v = verdict.toLowerCase();
+  if (v === 'true') return 'verdict-true';
+  if (v.includes('mostly true')) return 'verdict-mostly-true';
+  if (v.includes('substantially true')) return 'verdict-substantially-true';
+  if (v.includes('plausible') || v.includes('mixed')) return 'verdict-plausible';
+  if (v === 'contested') return 'verdict-contested';
+  if (v === 'exaggerated') return 'verdict-exaggerated';
+  if (v === 'misleading') return 'verdict-misleading';
+  if (v === 'false') return 'verdict-false';
+  if (v === 'unproven') return 'verdict-unproven';
+  return 'verdict-contested';
+}
+
+function renderClaimCard(data, modelName, originalClaim) {
+  if (!data || data.error) {
+    return `<div class="claim-card"><div class="card-header"><div class="card-eyebrow">${modelName}</div><div class="card-title" style="font-size:20px;color:#d88d8d">Analysis failed: ${data?.error || 'Unknown error'}</div></div></div>`;
+  }
+
+  const verdict = data['Overall Verdict'] || data['Verdict'] || 'Unproven';
+  const verdictClass = getVerdictClass(verdict);
+  const strippedClaim = data['Stripped Claim'] || originalClaim;
+  const speaker = data['Speaker'] || '';
+  const summary = data['Strip Mode Summary'] || '';
+  const directFacts = data['Direct Facts'] || '';
+  const adjacentFacts = data['Adjacent Facts'] || '';
+  const rootConcern = data['Root Concern'] || '';
+  const valuesDivergence = data['Values Divergence'] || '';
+  const leftPerspective = data['Left Perspective'] || '';
+  const rightPerspective = data['Right Perspective'] || '';
+  const subClaims = data['Sub Claims'] || [];
+
+  let html = `
+    <div class="claim-card">
+      <div class="card-header">
+        <div class="card-eyebrow">${modelName} — ClaimLab ${currentMode === 'strip' ? 'Quick Analysis' : 'Full Excavation'}</div>
+        <div class="card-title">${escapeHtml(strippedClaim)}</div>
+        <div class="card-meta">
+          <span class="verdict-badge ${verdictClass}">${verdict}</span>
+          ${speaker ? `<span class="pill">${escapeHtml(speaker)}</span>` : ''}
+        </div>
+      </div>`;
+
+  if (summary) {
+    html += `
+      <div class="bottom-line-card">
+        <div class="bottom-line-card-label">Bottom Line</div>
+        <p>${escapeHtml(summary)}</p>
+      </div>`;
+  }
+
+  if (subClaims.length > 0) {
+    html += `<div class="section-title" style="margin-top:20px;">Sub-Claims</div><div class="sub-claims-list">`;
+    subClaims.forEach(sc => {
+      const scVerdict = sc.verdict || 'Unproven';
+      html += `
+        <div class="sub-claim-row">
+          <div class="sub-claim-text">${escapeHtml(sc.claim || '')}</div>
+          <span class="verdict-badge ${getVerdictClass(scVerdict)}" style="font-size:9px;padding:4px 10px;">${scVerdict}</span>
+        </div>`;
+    });
+    html += `</div>`;
+  }
+
+  if (directFacts || adjacentFacts || rootConcern || valuesDivergence) {
+    html += `<div class="ornamental"><div class="ornamental-line"></div><div class="ornamental-diamond"></div><div class="ornamental-line"></div></div>`;
+    html += `<div class="section-title">The Excavation</div>`;
+  }
+
+  if (directFacts) {
+    html += `<div class="layer-block layer-direct"><div class="layer-label">Layer 01 — Direct Facts</div><div class="layer-text">${escapeHtml(directFacts)}</div></div>`;
+  }
+  if (adjacentFacts) {
+    html += `<div class="layer-block layer-adjacent"><div class="layer-label">Layer 02 — Adjacent Facts</div><div class="layer-text">${escapeHtml(adjacentFacts)}</div></div>`;
+  }
+  if (rootConcern) {
+    html += `<div class="layer-block layer-root"><div class="layer-label">Layer 03 — Root Concern</div><div class="layer-text">${escapeHtml(rootConcern)}</div></div>`;
+  }
+  if (valuesDivergence) {
+    html += `<div class="layer-block layer-values"><div class="layer-label">Layer 04 — Values Divergence</div><div class="layer-text">${escapeHtml(valuesDivergence)}</div></div>`;
+  }
+  if (leftPerspective) {
+    html += `<div class="layer-block layer-left"><div class="layer-label">Left Perspective</div><div class="layer-text">${escapeHtml(leftPerspective)}</div></div>`;
+  }
+  if (rightPerspective) {
+    html += `<div class="layer-block layer-right"><div class="layer-label">Right Perspective</div><div class="layer-text">${escapeHtml(rightPerspective)}</div></div>`;
+  }
+
+  html += `</div>`;
+  return html;
+}
+
+function escapeHtml(text) {
+  if (!text) return '';
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+async function runClaim() {
+  const claim = document.getElementById('claim-input').value.trim();
+  if (!claim) { document.getElementById('claim-input').focus(); return; }
+
+  const runBtn = document.getElementById('run-btn');
+  const loading = document.getElementById('loading');
+  const statusWrap = document.getElementById('status-wrap');
+  const resultsSection = document.getElementById('results-section');
+  const container = document.getElementById('results-container');
+
+  runBtn.disabled = true;
+  loading.classList.add('visible');
+  statusWrap.classList.add('visible');
+  resultsSection.classList.remove('visible');
+  container.innerHTML = '';
+
+  const msgs = ['ClaimLab is excavating...','Stripping the rhetoric...','Separating sub-claims...','Applying the four layers...','Writing to Airtable...'];
+  let mi = 0;
+  document.getElementById('loading-text').textContent = msgs[0];
+  const interval = setInterval(() => { mi = (mi+1)%msgs.length; document.getElementById('loading-text').textContent = msgs[mi]; }, 1600);
+
+  ['claude','openai','airtable'].forEach(id => {
+    document.getElementById(id+'-status').textContent = id.charAt(0).toUpperCase()+id.slice(1)+': running';
+    document.getElementById(id+'-status').className = 'status-pill';
+  });
+
+  try {
+    const response = await fetch('/analyze', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({claim, mode: currentMode})
+    });
+
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      const text = await response.text();
+      throw new Error(text.slice(0,400));
     }
 
-    function showResultTab(which) {
-      document.querySelectorAll('.result-tab').forEach(btn => btn.classList.remove('active'));
-      document.querySelectorAll('.result-panel').forEach(panel => panel.classList.remove('active'));
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Server error');
 
-      if (which === 'claude') {
-        document.querySelectorAll('.result-tab')[0].classList.add('active');
-        document.getElementById('panel-claude').classList.add('active');
-      } else {
-        document.querySelectorAll('.result-tab')[1].classList.add('active');
-        document.getElementById('panel-openai').classList.add('active');
+    // Render both model outputs as styled cards
+    let cardsHtml = '';
+
+    // Claude card
+    cardsHtml += renderClaimCard(data.claude, 'Claude', claim);
+
+    // Model comparison for full mode
+    if (currentMode === 'full' && data.openai && !data.openai.error) {
+      cardsHtml += `
+        <div class="ornamental"><div class="ornamental-line"></div><div class="ornamental-diamond"></div><div class="ornamental-line"></div></div>
+        <div class="section-title">OpenAI Cross-Reference</div>`;
+      cardsHtml += renderClaimCard(data.openai, 'OpenAI', claim);
+    }
+
+    // Strip mode: show comparison panel
+    if (currentMode === 'strip' && data.openai && !data.openai.error) {
+      const claudeVerdict = data.claude?.['Verdict'] || data.claude?.['Overall Verdict'] || '';
+      const openaiVerdict = data.openai?.['Verdict'] || data.openai?.['Overall Verdict'] || '';
+      if (claudeVerdict && openaiVerdict && claudeVerdict !== openaiVerdict) {
+        cardsHtml += `
+          <div class="claim-card" style="border-color:rgba(126,90,166,.3);">
+            <div class="panel-title" style="color:#c49fd8;">Model Divergence Detected</div>
+            <div class="model-comparison">
+              <div class="model-card">
+                <div class="model-label">Claude</div>
+                <div class="model-text"><span class="verdict-badge ${getVerdictClass(claudeVerdict)}" style="font-size:10px;">${claudeVerdict}</span></div>
+              </div>
+              <div class="model-card">
+                <div class="model-label">OpenAI</div>
+                <div class="model-text"><span class="verdict-badge ${getVerdictClass(openaiVerdict)}" style="font-size:10px;">${openaiVerdict}</span></div>
+              </div>
+            </div>
+            <div class="layer-text" style="margin-top:14px;font-size:16px;color:var(--muted);">The two models reached different verdicts. Where models diverge ClaimLab flags the claim as contested pending human review.</div>
+          </div>`;
       }
     }
 
-    async function runClaim() {
-      const claim = document.getElementById('claim-input').value.trim();
-      if (!claim) {
-        document.getElementById('claim-input').focus();
-        return;
-      }
+    container.innerHTML = cardsHtml;
+    resultsSection.classList.add('visible');
 
-      const runBtn = document.getElementById('run-btn');
-      const loading = document.getElementById('loading');
-      const statusWrap = document.getElementById('status-wrap');
-      const results = document.getElementById('results');
+    // Update status indicators
+    const claudeOk = data.claude && !data.claude.error;
+    const openaiOk = data.openai && !data.openai.error;
+    document.getElementById('claude-status').textContent = claudeOk ? 'Claude: complete' : 'Claude: failed';
+    document.getElementById('claude-status').className = 'status-pill ' + (claudeOk ? 'ok' : 'bad');
+    document.getElementById('openai-status').textContent = openaiOk ? 'OpenAI: complete' : 'OpenAI: failed';
+    document.getElementById('openai-status').className = 'status-pill ' + (openaiOk ? 'ok' : 'bad');
 
-      runBtn.disabled = true;
-      loading.classList.add('visible');
-      statusWrap.classList.add('visible');
-      results.classList.remove('visible');
-
-      const loadingMessages = [
-        'ClaimLab is excavating...',
-        'Stripping the rhetoric...',
-        'Separating sub-claims...',
-        'Writing to Airtable...'
-      ];
-
-      let i = 0;
-      document.getElementById('loading-text').textContent = loadingMessages[0];
-      const interval = setInterval(() => {
-        i = (i + 1) % loadingMessages.length;
-        document.getElementById('loading-text').textContent = loadingMessages[i];
-      }, 1500);
-
-      document.getElementById('claude-status').textContent = 'Claude: running';
-      document.getElementById('claude-status').className = 'status-pill';
-      document.getElementById('openai-status').textContent = 'OpenAI: running';
-      document.getElementById('openai-status').className = 'status-pill';
-      document.getElementById('airtable-status').textContent = 'Airtable: waiting';
-      document.getElementById('airtable-status').className = 'status-pill';
-
-      document.getElementById('claude-output').textContent = 'Loading...';
-      document.getElementById('openai-output').textContent = 'Loading...';
-
-      try {
-        const response = await fetch('/analyze', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ claim, mode: currentMode })
-        });
-
-        const contentType = response.headers.get('content-type') || '';
-
-        if (!contentType.includes('application/json')) {
-          const text = await response.text();
-          throw new Error(text.slice(0, 400));
-        }
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Server returned an error');
-        }
-
-        document.getElementById('claude-output').textContent = JSON.stringify(data.claude, null, 2);
-        document.getElementById('openai-output').textContent = JSON.stringify(data.openai, null, 2);
-
-        if (data.claude && !data.claude.error) {
-          document.getElementById('claude-status').textContent = 'Claude: complete';
-          document.getElementById('claude-status').className = 'status-pill ok';
-        } else {
-          document.getElementById('claude-status').textContent = 'Claude: failed';
-          document.getElementById('claude-status').className = 'status-pill bad';
-        }
-
-        if (data.openai && !data.openai.error) {
-          document.getElementById('openai-status').textContent = 'OpenAI: complete';
-          document.getElementById('openai-status').className = 'status-pill ok';
-        } else {
-          document.getElementById('openai-status').textContent = 'OpenAI: failed';
-          document.getElementById('openai-status').className = 'status-pill bad';
-        }
-
-        if (data.airtable && data.airtable.saved) {
-          document.getElementById('airtable-status').textContent = `Airtable: saved (${data.airtable.record_id || 'ok'})`;
-          document.getElementById('airtable-status').className = 'status-pill ok';
-        } else if (data.airtable) {
-          document.getElementById('airtable-status').textContent = 'Airtable: failed';
-          document.getElementById('airtable-status').className = 'status-pill bad';
-        } else {
-          document.getElementById('airtable-status').textContent = 'Airtable: no response';
-          document.getElementById('airtable-status').className = 'status-pill bad';
-        }
-
-        results.classList.add('visible');
-        results.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-      } catch (err) {
-        document.getElementById('claude-output').textContent = 'Request failed.\n\n' + err.message;
-        document.getElementById('openai-output').textContent = 'Request failed.\n\n' + err.message;
-        document.getElementById('claude-status').textContent = 'Claude: failed';
-        document.getElementById('claude-status').className = 'status-pill bad';
-        document.getElementById('openai-status').textContent = 'OpenAI: failed';
-        document.getElementById('openai-status').className = 'status-pill bad';
-        document.getElementById('airtable-status').textContent = 'Airtable: failed';
-        document.getElementById('airtable-status').className = 'status-pill bad';
-        results.classList.add('visible');
-      } finally {
-        clearInterval(interval);
-        loading.classList.remove('visible');
-        runBtn.disabled = false;
-      }
+    if (data.airtable?.saved) {
+      document.getElementById('airtable-status').textContent = 'Airtable: saved';
+      document.getElementById('airtable-status').className = 'status-pill ok';
+    } else {
+      document.getElementById('airtable-status').textContent = 'Airtable: failed';
+      document.getElementById('airtable-status').className = 'status-pill bad';
     }
-  </script>
+
+    resultsSection.scrollIntoView({behavior:'smooth',block:'start'});
+
+  } catch(err) {
+    container.innerHTML = `<div class="claim-card"><div class="card-title" style="color:#d88d8d;font-size:20px;">Request failed: ${escapeHtml(err.message)}</div></div>`;
+    resultsSection.classList.add('visible');
+    ['claude','openai','airtable'].forEach(id => {
+      document.getElementById(id+'-status').textContent = id.charAt(0).toUpperCase()+id.slice(1)+': failed';
+      document.getElementById(id+'-status').className = 'status-pill bad';
+    });
+  } finally {
+    clearInterval(interval);
+    loading.classList.remove('visible');
+    runBtn.disabled = false;
+  }
+}
+</script>
 </body>
 </html>
