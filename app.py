@@ -29,7 +29,7 @@ def health():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        password = request.form.get("password")
+        password = (request.form.get("password") or "").strip()
         if password == APP_PASSWORD:
             session["logged_in"] = True
             return redirect("/")
