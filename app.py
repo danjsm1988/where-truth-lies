@@ -1,14 +1,28 @@
 import os
+print("WTL startup: imported os", flush=True)
+
 import json
 import re
 import unicodedata
+print("WTL startup: imported stdlib", flush=True)
+
 import requests
+print("WTL startup: imported requests", flush=True)
+
 from flask import Flask, request, jsonify, render_template, redirect, session
+print("WTL startup: imported flask", flush=True)
+
 from openai import OpenAI
+print("WTL startup: imported openai", flush=True)
+
 import anthropic
+print("WTL startup: imported anthropic", flush=True)
 
 app = Flask(__name__)
+print("WTL startup: flask app created", flush=True)
+
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "fallback-secret")
+print("WTL startup: secret key set", flush=True)
 
 APP_PASSWORD = os.getenv("APP_PASSWORD")
 SUPER_PASSWORD = os.getenv("SUPER_PASSWORD", APP_PASSWORD)
@@ -17,9 +31,11 @@ ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 AIRTABLE_TOKEN = os.getenv("AIRTABLE_TOKEN")
 AIRTABLE_BASE_ID = os.getenv("AIRTABLE_BASE_ID")
 AIRTABLE_TABLE_NAME = os.getenv("AIRTABLE_TABLE_NAME")
+print("WTL startup: env vars loaded", flush=True)
 
-openai_client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
-anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY) if ANTHROPIC_API_KEY else None
+openai_client = None
+anthropic_client = None
+print("WTL startup: deferred AI client initialization", flush=True)
 
 CLAIMLAB_SYSTEM = """You are ClaimLab, the analytical engine of Where the Truth Lies — a political intelligence platform built on an excavation methodology. Motto: Beyond the Argument. Latin seal: Ubi Veritas Latet.
 
@@ -110,6 +126,7 @@ def normalize_topic(raw_topic):
         return "Constitutional Rights"
     return "Other"
 
+
 def slugify(text):
     if not text:
         return "untitled-claim"
@@ -152,6 +169,16 @@ def extract_primary_record_fields(claim, parsed, mode):
 @app.route("/health")
 def health():
     return "ok", 200
+
+
+@app.route("/bootcheck")
+def bootcheck():
+    return jsonify({
+        "status": "booted",
+        "openai_key_present": bool(OPENAI_API_KEY),
+        "anthropic_key_present": bool(ANTHROPIC_API_KEY),
+        "airtable_present": bool(AIRTABLE_TOKEN and AIRTABLE_BASE_ID and AIRTABLE_TABLE_NAME)
+    }), 200
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -216,6 +243,9 @@ def home():
 def analyze():
     if not session.get("logged_in"):
         return jsonify({"error": "Unauthorized"}), 401
+
+    openai_client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
+    anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY) if ANTHROPIC_API_KEY else None
 
     data = request.get_json() or {}
     claim = (data.get("claim") or "").strip()
@@ -286,6 +316,4 @@ def analyze():
     })
 
 
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=False)
+print("WTL startup: app import complete", flush=True)
