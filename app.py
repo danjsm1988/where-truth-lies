@@ -27,47 +27,47 @@ Return ONLY valid JSON. No markdown fences. No preamble. No explanation outside 
 CRITICAL FORMATTING RULES that cannot be violated under any circumstance:
 - Never use bullet points, dashes, or hyphens in ANY text field
 - Write ALL text fields as flowing prose with complete sentences
-- Never tell readers what to think — show them what is actually there
+- Never tell readers what to think
 - Apply the same analytical standard regardless of political party or speaker
-- Use "reportedly" or "estimated" for unconfirmed claims
-- ALL fields must be populated — empty strings are a failure
+- Use reportedly or estimated for unconfirmed claims
+- ALL fields must be populated unless truly not applicable
 
-Always return this exact JSON structure with every field populated:
+Always return this exact JSON structure:
 
 {
   "Stripped Claim": "The claim in plain language, with emotional framing and rhetorical decoration removed. One sentence if possible.",
   "Speaker": "Who made the claim, or Unknown if not specified.",
-  "Topic": "Exactly one of: Iran War, Energy, Healthcare, Social Security, Medicare, Medicaid, Defense, Military, Elections, Economy, Immigration, Foreign Policy, Crime, Gender Issues, Constitutional, Education, Other",
+  "Topic": "Exactly one of: Iran War, Energy, Healthcare, Social Security, Medicare, Medicaid, Defense, Military, Elections, Economy, Immigration, Foreign Policy, Crime, Gender Issues, Constitutional Rights, Education, Other",
   "Sub Claims": [
     {"claim": "First distinct falsifiable claim within the statement", "verdict": "True"},
     {"claim": "Second distinct falsifiable claim", "verdict": "Contested"},
     {"claim": "Third distinct falsifiable claim if present", "verdict": "Unproven"}
   ],
   "Direct Facts": "What the documented record actually shows. 3-4 sentences of prose. Cite specific figures, dates, and institutional confirmations where available. Use reportedly or estimated for unconfirmed items.",
-  "Adjacent Facts": "What the claim omits or ignores — on BOTH sides equally. 2-3 sentences of prose. Complicate the primary narrative from the left and from the right.",
-  "Root Concern": "The legitimate underlying concern that exists even beneath a false or misleading claim. 1-2 sentences of prose. This is not the conspiracy version — it is the real issue.",
+  "Adjacent Facts": "What the claim omits or ignores on BOTH sides equally. 2-3 sentences of prose. Complicate the primary narrative from the left and from the right.",
+  "Root Concern": "The legitimate underlying concern that exists even beneath a false or misleading claim. 1-2 sentences of prose.",
   "Values Divergence": "Where the real disagreement lives. Usually not in the facts themselves but in what people prioritize. 2-3 sentences of prose identifying the competing values.",
   "Left Perspective": "How the political left frames this claim, what their framing gets right, and where it fails or overstates. 2-3 sentences of prose.",
   "Right Perspective": "How the political right frames this claim, what their framing gets right, and where it fails or overstates. 2-3 sentences of prose.",
-  "Constitutional Framework": "MANDATORY — never return empty. Every political claim involving government action, rights, authority, public funds, war, law enforcement, elections, or institutional power must be analyzed here. Identify the specific Article, Section, or Amendment that applies. Explain what the founders wrote about this question in Federalist Papers, convention notes, or correspondence. If multiple provisions apply, address the most relevant one. Only omit if the claim is purely private with zero government dimension — and if so, explain why in one sentence.",
+  "Constitutional Framework": "If the claim touches government action, rights, authority, public funds, war, law enforcement, elections, or institutional power, identify the specific Article, Section, or Amendment that applies and explain relevant founder intent. If not applicable, explain briefly why not.",
   "Founders Perspectives": {
-    "George Washington": "What Washington would say, grounded in his Farewell Address, General Orders, or documented correspondence. 2 sentences of prose.",
-    "Thomas Jefferson": "What Jefferson would say, grounded in the Declaration of Independence, Notes on the State of Virginia, or documented letters. 2 sentences of prose.",
-    "James Madison": "What Madison would say, grounded in Federalist Papers, convention notes, or documented correspondence. 2 sentences of prose.",
-    "Alexander Hamilton": "What Hamilton would say, grounded in Federalist Papers, financial reports, or documented correspondence. 2 sentences of prose.",
-    "Benjamin Franklin": "What Franklin would say, grounded in his autobiography, convention participation, or documented correspondence. 2 sentences of prose.",
-    "John Adams": "What Adams would say, grounded in A Defence of the Constitutions, Thoughts on Government, or documented correspondence. 2 sentences of prose.",
-    "John Jay": "What Jay would say, grounded in Federalist Papers or his writings on law, foreign affairs, and union. 2 sentences of prose."
+    "George Washington": "What Washington would say, grounded in documented writings. 2 sentences of prose.",
+    "Thomas Jefferson": "What Jefferson would say, grounded in documented writings. 2 sentences of prose.",
+    "James Madison": "What Madison would say, grounded in documented writings. 2 sentences of prose.",
+    "Alexander Hamilton": "What Hamilton would say, grounded in documented writings. 2 sentences of prose.",
+    "Benjamin Franklin": "What Franklin would say, grounded in documented writings. 2 sentences of prose.",
+    "John Adams": "What Adams would say, grounded in documented writings. 2 sentences of prose.",
+    "John Jay": "What Jay would say, grounded in documented writings. 2 sentences of prose."
   },
-  "Scenario Map": "MANDATORY — always populate with exactly five scenarios in this exact format:\n\nSCENARIO A — [Short Name]: Confidence: [Documented/Mixed/Speculative]. [2-3 sentences describing this plausible trajectory based on current conditions. Prose only.] Analyst Divergence: [Low/Moderate/High].\n\nSCENARIO B — [Short Name]: Confidence: [Documented/Mixed/Speculative]. [2-3 sentences.] Analyst Divergence: [Low/Moderate/High].\n\nSCENARIO C — [Short Name]: Confidence: [Mixed/Speculative]. [2-3 sentences.] Analyst Divergence: [Moderate/High].\n\nSCENARIO D — [Short Name]: Confidence: [Mixed/Speculative]. [2-3 sentences.] Analyst Divergence: [Moderate/High].\n\nSCENARIO E — [Short Name]: Confidence: Speculative. [2-3 sentences.] Analyst Divergence: High.\n\nNOTE: These are plausible trajectories only. Not predictions. Only actions and time will determine the actual path.",
+  "Scenario Map": "MANDATORY — always populate with exactly five scenarios in this exact format: SCENARIO A — [Short Name]: Confidence: [Documented/Mixed/Speculative]. [2-3 sentences.] Analyst Divergence: [Low/Moderate/High]. Repeat through Scenario E. End with NOTE: These are plausible trajectories only. Not predictions. Only actions and time will determine the actual path.",
   "Glossary": [
-    {"term": "A term, name, or concept that general readers may not recognize", "definition": "Plain language definition in 1-2 sentences. No jargon."},
+    {"term": "A term, name, or concept that general readers may not recognize", "definition": "Plain language definition in 1-2 sentences."},
     {"term": "Another term", "definition": "Plain language definition."},
     {"term": "A third term", "definition": "Plain language definition."}
   ],
-  "Sources": "Primary sources:\nSource description one: https://url-one.com\nSource description two: https://url-two.com\nSource description three: https://url-three.com\nSource description four: https://url-four.com\nSource description five: https://url-five.com\n\nInclude 6-10 real, verifiable URLs from major news outlets, government sites, institutional bodies, or authoritative sources. Format each line exactly as: Label: URL",
+  "Sources": "Primary sources:\\nSource description one: https://url-one.com\\nSource description two: https://url-two.com\\nSource description three: https://url-three.com\\nSource description four: https://url-four.com\\nSource description five: https://url-five.com\\n\\nInclude 6-10 real, verifiable URLs from major news outlets, government sites, institutional bodies, or authoritative sources. Format each line exactly as: Label: URL",
   "Overall Verdict": "Exactly one of: True, Mostly True, Substantially True, Plausible/Mixed, Contested, Exaggerated, Misleading, Unproven, False",
-  "Strip Mode Summary": "Bottom line in 3-4 sentences of prose. What is documented. What remains contested. What the real question underneath this claim actually is. No bullet points. No dashes. No hyphens."
+  "Strip Mode Summary": "Bottom line in 3-4 sentences of prose. What is documented. What remains contested. What the real question underneath this claim actually is."
 }"""
 
 
@@ -132,7 +132,7 @@ def normalize_topic(raw_topic):
     if "gender" in text or "trans" in text or "lgbtq" in text or "pronouns" in text:
         return "Gender Issues"
     if "constitution" in text or "amendment" in text or "rights" in text or "court" in text:
-        return "Constitutional"
+        return "Constitutional Rights"
     return "Other"
 
 
@@ -250,6 +250,7 @@ def build_subclaims(fields, parsed_json):
                     "verdict": item.get("verdict", "Unproven")
                 })
         return subclaims
+
     sc1 = fields.get("Sub-Claim 1")
     sc2 = fields.get("Sub-Claim 2")
     sc3 = fields.get("Sub-Claim 3")
@@ -291,7 +292,7 @@ def build_claim_context(record):
     parsed_json = try_parse_raw_json(fields)
     title = fields.get("Original Quote") or fields.get("Stripped Claim") or "Untitled Claim"
 
-    current_claim = {
+    return {
         "record_id": record.get("id"),
         "slug": fields.get("URL Slug", ""),
         "title": title,
@@ -318,7 +319,6 @@ def build_claim_context(record):
         "published": fields.get("Published", False),
         "human_reviewed": fields.get("Human Reviewed", False)
     }
-    return current_claim
 
 
 def get_recent_claims(limit=5):
