@@ -6,70 +6,50 @@ import requests
 from flask import Flask, request, jsonify, render_template, redirect, session
 from openai import OpenAI
 import anthropic
- 
+
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "fallback-secret")
- 
+
 APP_PASSWORD = os.getenv("APP_PASSWORD")
+SUPER_PASSWORD = os.getenv("SUPER_PASSWORD", APP_PASSWORD)
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 AIRTABLE_TOKEN = os.getenv("AIRTABLE_TOKEN")
 AIRTABLE_BASE_ID = os.getenv("AIRTABLE_BASE_ID")
 AIRTABLE_TABLE_NAME = os.getenv("AIRTABLE_TABLE_NAME")
- 
+
 openai_client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
 anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY) if ANTHROPIC_API_KEY else None
- 
-# ── SYSTEM PROMPTS ──────────────────────────────────────────────────────────
- 
-STRIP_SYSTEM = """You are ClaimLab, the analytical engine of Where the Truth Lies — a political intelligence platform built on an excavation methodology. Motto: Beyond the Argument. Latin seal: Ubi Veritas Latet.
- 
+
+CLAIMLAB_SYSTEM = """You are ClaimLab, the analytical engine of Where the Truth Lies — a political intelligence platform built on an excavation methodology. Motto: Beyond the Argument. Latin seal: Ubi Veritas Latet.
+
 You do not fact-check. You excavate.
- 
+
 Return ONLY valid JSON. No markdown fences. No preamble. No explanation outside the JSON.
- 
-For Strip Mode return this exact structure:
+
+Always return this exact structure:
 {
-  "Stripped Claim": "plain language version of what is actually being claimed",
-  "Speaker": "who made the claim or Unknown",
-  "Topic": "one of: Iran War, Energy, Healthcare, Social Security, Defense, Military, Elections, Economy, Immigration, Other",
-  "Direct Facts": "what the data actually shows about this claim in 2-3 sentences",
-  "Adjacent Facts": "the most important thing the claim ignores or omits in 1-2 sentences",
-  "Root Concern": "the legitimate underlying concern in 1 sentence",
-  "Verdict": "one of: True, Mostly True, Plausible/Mixed, Exaggerated, Unproven, Misleading, False, Contested, Substantially True",
-  "Strip Mode Summary": "a 2-3 sentence bottom line that states what is true, what is contested, and what the real question is. Write in prose. No bullet points. No dashes."
-}"""
- 
-FULL_SYSTEM = """You are ClaimLab, the analytical engine of Where the Truth Lies — a political intelligence platform built on an excavation methodology. Motto: Beyond the Argument. Latin seal: Ubi Veritas Latet.
- 
-You do not fact-check. You excavate.
- 
-Return ONLY valid JSON. No markdown fences. No preamble. No explanation outside the JSON.
- 
-For Full Excavation return this exact structure:
-{
-  "Stripped Claim": "plain language version of what is actually being claimed",
-  "Speaker": "who made the claim or Unknown",
+  "Stripped Claim": "plain language version of what is actually being claimed, removing emotional language and rhetorical framing",
+  "Speaker": "who made the claim, or Unknown if not specified",
   "Topic": "one of: Iran War, Energy, Healthcare, Social Security, Defense, Military, Elections, Economy, Immigration, Other",
   "Sub Claims": [
-    {"claim": "first distinct factual claim", "verdict": "True/False/Contested/etc"},
-    {"claim": "second distinct factual claim", "verdict": "True/False/Contested/etc"}
+    {"claim": "first distinct factual claim within the statement", "verdict": "True"},
+    {"claim": "second distinct factual claim within the statement", "verdict": "Contested"}
   ],
-  "Direct Facts": "what the documented data actually shows. 3-4 sentences. No bullet points.",
-  "Adjacent Facts": "what the claim ignores or omits on both sides equally. 2-3 sentences. No bullet points.",
-  "Root Concern": "the legitimate issue underneath even a false or misleading claim. 1-2 sentences.",
-  "Values Divergence": "where real disagreement lives. Usually not in facts but in values or priorities. 2-3 sentences.",
-  "Left Perspective": "how the left frames this claim and what they get right and wrong. 2-3 sentences.",
-  "Right Perspective": "how the right frames this claim and what they get right and wrong. 2-3 sentences.",
+  "Direct Facts": "what the documented data actually shows. 3-4 sentences. Prose only. No bullet points. No dashes. Use reportedly or estimated for unconfirmed claims.",
+  "Adjacent Facts": "what the claim ignores or omits on both sides equally. 2-3 sentences. Prose only. No bullet points. No dashes.",
+  "Root Concern": "the legitimate issue underneath even a false or misleading claim. 1-2 sentences. Prose only.",
+  "Values Divergence": "where real disagreement lives. Usually not in facts but in values or priorities. 2-3 sentences. Prose only. No bullet points. No dashes.",
+  "Left Perspective": "how the left frames this claim, what they get right, and where their framing fails. 2-3 sentences. Prose only.",
+  "Right Perspective": "how the right frames this claim, what they get right, and where their framing fails. 2-3 sentences. Prose only.",
+  "Constitutional Framework": "if this claim touches on rights, government power, legislative authority, or executive action — what the Constitution actually says and what the founders wrote about intent. Return empty string if not applicable.",
   "Overall Verdict": "one of: True, Mostly True, Plausible/Mixed, Exaggerated, Unproven, Misleading, False, Contested, Substantially True",
-  "Strip Mode Summary": "a 3-4 sentence bottom line. What is documented. What is contested. What the real question is. Prose only. No bullet points. No dashes."
+  "Strip Mode Summary": "a 3-4 sentence bottom line. What is documented. What is contested. What the real question is. Prose only. No bullet points. No dashes. No hyphens."
 }
- 
-Critical rules: Never use bullet points or dashes in any text field. Write all text fields as flowing prose. Apply the same standard regardless of political party."""
- 
- 
-# ── HELPERS ─────────────────────────────────────────────────────────────────
- 
+
+Critical rules: Never use bullet points, dashes, or hyphens in any text field. Write all text fields as flowing prose. Never tell readers what to think. Apply the same analytical standard regardless of political party or speaker. Separate facts from interpretation."""
+
+
 def safe_json_parse(text):
     if not text:
         return {}
@@ -94,8 +74,8 @@ def safe_json_parse(text):
             except Exception:
                 pass
         return {"raw": text}
- 
- 
+
+
 def normalize_topic(raw_topic):
     if not raw_topic:
         return "Other"
@@ -104,13 +84,13 @@ def normalize_topic(raw_topic):
         return "Social Security"
     if "health" in text:
         return "Healthcare"
-    if "energy" in text or "wind" in text or "power" in text or "electric" in text:
+    if "energy" in text or "fossil" in text or "renewable" in text:
         return "Energy"
     if "iran" in text:
         return "Iran War"
     if "election" in text or "vote" in text or "ballot" in text:
         return "Elections"
-    if "econom" in text or "job" in text or "inflation" in text or "paycheck" in text:
+    if "econom" in text or "job" in text or "inflation" in text or "paycheck" in text or "tax" in text:
         return "Economy"
     if "immigr" in text or "border" in text:
         return "Immigration"
@@ -119,8 +99,8 @@ def normalize_topic(raw_topic):
     if "military" in text or "war" in text:
         return "Military"
     return "Other"
- 
- 
+
+
 def slugify(text):
     if not text:
         return "untitled-claim"
@@ -131,15 +111,15 @@ def slugify(text):
     text = re.sub(r"[\s_-]+", "-", text)
     text = re.sub(r"^-+|-+$", "", text)
     return text[:120] if text else "untitled-claim"
- 
- 
+
+
 def build_url_slug(parsed, claim):
-    title_source = parsed.get("Stripped Claim") or parsed.get("Original Quote") or claim
+    title_source = parsed.get("Stripped Claim") or claim
     return slugify(title_source)
- 
- 
+
+
 def extract_primary_record_fields(claim, parsed, mode):
-    return {
+    fields = {
         "Original Quote": claim,
         "Stripped Claim": parsed.get("Stripped Claim", claim),
         "Speaker": parsed.get("Speaker", "User Submission"),
@@ -149,93 +129,50 @@ def extract_primary_record_fields(claim, parsed, mode):
         "Mode": mode,
         "URL Slug": build_url_slug(parsed, claim)
     }
- 
- 
-# ── ROUTES ───────────────────────────────────────────────────────────────────
- 
+    for field in ["Strip Mode Summary", "Direct Facts", "Adjacent Facts",
+                  "Root Concern", "Values Divergence", "Left Perspective",
+                  "Right Perspective", "Constitutional Framework"]:
+        if parsed.get(field):
+            fields[field] = parsed[field]
+    verdict = parsed.get("Overall Verdict") or parsed.get("Verdict")
+    if verdict:
+        fields["Overall Verdict"] = verdict
+    return fields
+
+
 @app.route("/health")
 def health():
     return "ok", 200
- 
- 
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         password = (request.form.get("password") or "").strip()
-        if password == APP_PASSWORD:
+        if password == SUPER_PASSWORD:
             session["logged_in"] = True
+            session["superuser"] = True
+            return redirect("/")
+        elif password == APP_PASSWORD:
+            session["logged_in"] = True
+            session["superuser"] = False
             return redirect("/")
         return "Wrong password", 401
- 
+
     return """
     <html>
     <head>
         <title>Where the Truth Lies</title>
         <style>
-            body {
-                background:#0d1b2a;
-                color:#f5f0e8;
-                font-family:'Georgia', serif;
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                height:100vh;
-                margin:0;
-            }
-            .box {
-                background:#162336;
-                padding:40px;
-                border:1px solid #8a6f2e;
-                text-align:center;
-                max-width:360px;
-                width:100%;
-            }
-            h2 {
-                font-size:22px;
-                margin-bottom:6px;
-                letter-spacing:0.02em;
-            }
-            .sub {
-                font-size:12px;
-                color:#c9a84c;
-                letter-spacing:0.18em;
-                text-transform:uppercase;
-                font-style:italic;
-                margin-bottom:28px;
-            }
-            input {
-                padding:12px 14px;
-                margin-top:10px;
-                width:100%;
-                background:rgba(255,255,255,0.04);
-                border:1px solid rgba(255,255,255,0.12);
-                color:#f5f0e8;
-                font-size:16px;
-                font-family:Georgia,serif;
-                box-sizing:border-box;
-            }
-            button {
-                margin-top:14px;
-                padding:12px;
-                width:100%;
-                background:#c9a84c;
-                border:none;
-                cursor:pointer;
-                font-family:Georgia,serif;
-                font-size:12px;
-                letter-spacing:0.18em;
-                text-transform:uppercase;
-                font-weight:700;
-                color:#0d1b2a;
-            }
-            button:hover { background:#e8c97a; }
-            .latin {
-                margin-top:24px;
-                font-size:11px;
-                color:#8a6f2e;
-                font-style:italic;
-                letter-spacing:0.12em;
-            }
+            body{background:#0d1b2a;color:#f5f0e8;font-family:Georgia,serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+            .box{background:#162336;padding:40px;border:1px solid #8a6f2e;text-align:center;max-width:360px;width:90%}
+            h2{font-size:22px;margin-bottom:6px}
+            .sub{font-size:12px;color:#c9a84c;letter-spacing:.18em;text-transform:uppercase;font-style:italic;margin-bottom:28px}
+            input{padding:12px 14px;margin-top:10px;width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);color:#f5f0e8;font-size:16px;font-family:Georgia,serif;box-sizing:border-box;outline:none}
+            input:focus{border-color:rgba(201,168,76,.4)}
+            button{margin-top:14px;padding:12px;width:100%;background:#c9a84c;border:none;cursor:pointer;font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:700;color:#0d1b2a}
+            button:hover{background:#e8c97a}
+            .latin{margin-top:24px;font-size:11px;color:#8a6f2e;font-style:italic;letter-spacing:.12em}
         </style>
     </head>
     <body>
@@ -251,129 +188,95 @@ def login():
     </body>
     </html>
     """
- 
- 
+
+
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect("/login")
- 
- 
+
+
 @app.route("/")
 def home():
     if not session.get("logged_in"):
         return redirect("/login")
-    return render_template("index.html")
- 
- 
+    return render_template("index.html", superuser=session.get("superuser", False))
+
+
 @app.route("/analyze", methods=["POST"])
 def analyze():
     if not session.get("logged_in"):
         return jsonify({"error": "Unauthorized"}), 401
- 
+
     data = request.get_json() or {}
     claim = (data.get("claim") or "").strip()
     mode = data.get("mode", "strip")
- 
+
     if not claim:
         return jsonify({"error": "Claim is required"}), 400
- 
-    system_prompt = STRIP_SYSTEM if mode == "strip" else FULL_SYSTEM
- 
+
+    is_super = session.get("superuser", False)
+
     claude_json = {}
     openai_json = {}
- 
-    # ── Claude ──
+
     try:
         if anthropic_client:
             claude_response = anthropic_client.messages.create(
                 model="claude-sonnet-4-6",
-                max_tokens=1800,
-                system=system_prompt,
-                messages=[{
-                    "role": "user",
-                    "content": f"Excavate this claim: \"{claim}\""
-                }]
+                max_tokens=2000,
+                system=CLAIMLAB_SYSTEM,
+                messages=[{"role": "user", "content": f"Excavate this claim: \"{claim}\""}]
             )
-            claude_text = claude_response.content[0].text
-            claude_json = safe_json_parse(claude_text)
+            claude_json = safe_json_parse(claude_response.content[0].text)
         else:
             claude_json = {"error": "Anthropic not configured"}
     except Exception as e:
         claude_json = {"error": str(e)}
- 
-    # ── OpenAI ──
+
     try:
         if openai_client:
             openai_response = openai_client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
-                    {"role": "system", "content": system_prompt},
+                    {"role": "system", "content": CLAIMLAB_SYSTEM},
                     {"role": "user", "content": f"Excavate this claim: \"{claim}\""}
                 ]
             )
-            openai_text = openai_response.choices[0].message.content
-            openai_json = safe_json_parse(openai_text)
+            openai_json = safe_json_parse(openai_response.choices[0].message.content)
         else:
             openai_json = {"error": "OpenAI not configured"}
     except Exception as e:
         openai_json = {"error": str(e)}
- 
-    # ── Airtable ──
+
     airtable_result = {}
- 
     try:
         if not AIRTABLE_TOKEN or not AIRTABLE_BASE_ID or not AIRTABLE_TABLE_NAME:
             airtable_result = {"saved": False, "error": "Airtable not configured"}
         else:
             url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{AIRTABLE_TABLE_NAME}"
-            headers = {
-                "Authorization": f"Bearer {AIRTABLE_TOKEN}",
-                "Content-Type": "application/json"
-            }
- 
+            headers = {"Authorization": f"Bearer {AIRTABLE_TOKEN}", "Content-Type": "application/json"}
             primary = claude_json if "error" not in claude_json else openai_json
             fields = extract_primary_record_fields(claim, primary, mode)
             fields["Claude Raw JSON"] = json.dumps(claude_json, indent=2)
             fields["OpenAI Raw JSON"] = json.dumps(openai_json, indent=2)
- 
-            # Add rendered fields if available
-            if "Strip Mode Summary" in claude_json:
-                fields["Strip Mode Summary"] = claude_json["Strip Mode Summary"]
-            if "Overall Verdict" in claude_json:
-                fields["Overall Verdict"] = claude_json["Overall Verdict"]
-            if "Verdict" in claude_json:
-                fields["Overall Verdict"] = claude_json["Verdict"]
-            if "Direct Facts" in claude_json:
-                fields["Direct Facts"] = claude_json["Direct Facts"]
-            if "Adjacent Facts" in claude_json:
-                fields["Adjacent Facts"] = claude_json["Adjacent Facts"]
-            if "Root Concern" in claude_json:
-                fields["Root Concern"] = claude_json["Root Concern"]
-            if "Values Divergence" in claude_json:
-                fields["Values Divergence"] = claude_json["Values Divergence"]
- 
             response = requests.post(url, headers=headers, json={"fields": fields}, timeout=30)
- 
             if response.status_code == 200:
                 record = response.json()
-                airtable_result = {
-                    "saved": True,
-                    "record_id": record.get("id"),
-                    "url_slug": fields["URL Slug"]
-                }
+                airtable_result = {"saved": True, "record_id": record.get("id"), "url_slug": fields["URL Slug"]}
             else:
                 airtable_result = {"saved": False, "error": response.text}
     except Exception as e:
         airtable_result = {"saved": False, "error": str(e)}
- 
+
     return jsonify({
         "claude": claude_json,
         "openai": openai_json,
-        "airtable": airtable_result
+        "airtable": airtable_result,
+        "superuser": is_super
     })
- 
- 
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)

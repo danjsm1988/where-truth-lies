@@ -4,585 +4,663 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Where the Truth Lies</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Cormorant+Garamond:wght@400;500;600;700&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   <style>
-    :root{
-      --bg:#07172a;
-      --bg-2:#10253f;
-      --panel:#122843;
-      --panel-2:#17314f;
-      --line:#8b6c2f;
-      --gold:#d0ad4b;
-      --gold-2:#e2c66a;
-      --text:#f3e7d3;
-      --muted:#aab8c7;
-      --muted-2:#7f92a8;
-      --ok:#88c59a;
-      --bad:#d88d8d;
+    :root {
+      --navy:#0d1b2a; --navy-mid:#162336; --navy-light:#1e3a5f;
+      --gold:#c9a84c; --gold-light:#e8c97a; --gold-dim:#8a6f2e;
+      --cream:#f5f0e8; --cream-dark:#e8e0cc;
+      --text-light:#b8c4d0; --text-mid:#7a8fa0;
+      --ok:#6dba85; --bad:#e87070;
       --shadow:0 12px 30px rgba(0,0,0,.28);
     }
-
     *{box-sizing:border-box;margin:0;padding:0}
     html{scroll-behavior:smooth}
-    body{
-      background:linear-gradient(180deg,var(--bg) 0%,#061425 100%);
-      color:var(--text);
-      font-family:'Cormorant Garamond',serif;
-      min-height:100vh;
-    }
+    body{background:var(--navy);color:var(--cream);font-family:'Crimson Text',Georgia,serif;font-size:18px;line-height:1.7;min-height:100vh}
 
-    /* ── TOPBAR ── */
-    .topbar{
-      position:sticky;top:0;z-index:20;
-      background:rgba(9,24,42,.96);
-      backdrop-filter:blur(8px);
-      border-bottom:1px solid var(--line);
-    }
-    .topbar-inner{
-      max-width:1400px;margin:0 auto;
-      padding:18px 28px;
-      display:flex;align-items:center;justify-content:space-between;gap:24px;
-    }
-    .brand{display:flex;align-items:center;gap:16px;min-width:0}
-    .seal{
-      width:54px;height:54px;border:1px solid var(--gold);border-radius:50%;
-      display:flex;align-items:center;justify-content:center;
-      color:var(--gold);font-size:22px;flex:0 0 auto;
-    }
-    .brand-name{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;letter-spacing:.01em;line-height:1.05}
-    .brand-tag{font-family:'Libre Baskerville',serif;color:var(--gold);font-size:11px;letter-spacing:.2em;text-transform:uppercase;margin-top:3px}
-    .brand-latin{color:var(--gold);opacity:.8;font-style:italic;font-size:14px;margin-top:2px}
-    .nav{display:flex;align-items:center;gap:28px;flex-wrap:wrap;justify-content:flex-end}
-    .nav a{font-family:'Libre Baskerville',serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--text);opacity:.92}
-    .nav a:hover{color:var(--gold-2)}
-    .run-btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 22px;background:var(--gold);color:#0a1b2d !important;font-weight:700;border:1px solid var(--gold)}
-    .run-btn:hover{background:var(--gold-2)}
+    /* MASTHEAD */
+    .masthead{background:var(--navy);border-bottom:1px solid var(--gold-dim);position:sticky;top:0;z-index:100}
+    .masthead-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:16px 40px}
+    .masthead-logo{display:flex;align-items:center;gap:16px}
+    .seal-small{width:52px;height:52px;border-radius:50%;background:var(--navy-mid);border:1.5px solid var(--gold-dim);display:flex;align-items:center;justify-content:center;font-size:22px;flex:0 0 auto}
+    .masthead-name{font-family:'Playfair Display',Georgia,serif;font-size:22px;font-weight:700;color:var(--cream);letter-spacing:.02em;line-height:1.1}
+    .masthead-tagline{font-family:'Crimson Text',Georgia,serif;font-size:12px;color:var(--gold);letter-spacing:.18em;text-transform:uppercase;font-style:italic}
+    .masthead-latin{font-family:'Libre Baskerville',Georgia,serif;font-size:11px;color:var(--gold-dim);letter-spacing:.12em;font-style:italic}
+    .masthead-nav{display:flex;gap:28px;align-items:center}
+    .masthead-nav a{color:var(--text-light);text-decoration:none;font-family:'Libre Baskerville',Georgia,serif;font-size:12px;letter-spacing:.12em;text-transform:uppercase;transition:color .2s;cursor:pointer}
+    .masthead-nav a:hover{color:var(--gold)}
+    .gold-btn{background:var(--gold);color:var(--navy);padding:8px 20px;font-family:'Libre Baskerville',Georgia,serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;cursor:pointer;border:none;transition:background .2s;text-decoration:none;display:inline-block}
+    .gold-btn:hover{background:var(--gold-light)}
 
-    /* ── SUBNAV ── */
-    .subnav{border-top:1px solid rgba(208,173,75,.18);border-bottom:1px solid rgba(208,173,75,.18);background:rgba(20,38,61,.75)}
-    .subnav-inner{max-width:1400px;margin:0 auto;padding:10px 28px;display:grid;grid-template-columns:repeat(4,1fr);gap:20px;color:var(--muted-2);font-size:15px}
-    .subnav-item{padding-right:16px;border-right:1px solid rgba(208,173,75,.14);min-height:48px;display:flex;align-items:center}
-    .subnav-item:last-child{border-right:none}
+    /* SUPER BADGE */
+    .super-badge{background:rgba(201,168,76,.15);border:1px solid var(--gold-dim);color:var(--gold);padding:4px 10px;font-family:'Libre Baskerville',Georgia,serif;font-size:9px;letter-spacing:.16em;text-transform:uppercase}
 
-    /* ── PAGE LAYOUT ── */
-    .page{max-width:1400px;margin:0 auto;padding:60px 28px 70px}
-    .layout{display:grid;grid-template-columns:minmax(0,1.9fr) minmax(320px,340px);gap:56px;align-items:start}
+    /* METHODOLOGY STRIP */
+    .methodology{background:var(--navy-mid);border-bottom:1px solid rgba(201,168,76,.2);padding:24px 40px}
+    .methodology-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center}
+    .methodology-label{font-family:'Libre Baskerville',Georgia,serif;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-dim);white-space:nowrap;margin-right:32px;padding-right:32px;border-right:1px solid var(--gold-dim)}
+    .methodology-layers{display:flex;gap:0;flex:1}
+    .m-layer{flex:1;padding:0 18px;border-right:1px solid rgba(201,168,76,.15)}
+    .m-layer:last-child{border-right:none}
+    .m-num{font-family:'Playfair Display',Georgia,serif;font-size:10px;color:var(--gold);font-weight:700;letter-spacing:.1em;margin-bottom:2px}
+    .m-name{font-family:'Libre Baskerville',Georgia,serif;font-size:11px;color:var(--cream);font-weight:700;letter-spacing:.06em;margin-bottom:1px}
+    .m-desc{font-family:'Crimson Text',Georgia,serif;font-size:12px;color:var(--text-mid);line-height:1.3}
 
-    /* ── ARTICLE COMPONENTS ── */
-    .tags{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:18px}
-    .tag{border:1px solid rgba(208,173,75,.28);color:var(--text);padding:7px 14px;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;background:rgba(255,255,255,.02)}
-    .tag.active{background:rgba(208,173,75,.13);color:var(--gold-2);border-color:var(--gold)}
-    .eyebrow{font-family:'Libre Baskerville',serif;color:var(--gold);font-size:12px;letter-spacing:.22em;text-transform:uppercase;margin-bottom:12px}
-    .hero-title{font-family:'Playfair Display',serif;font-size:60px;line-height:.98;font-weight:800;margin:0 0 16px 0;text-wrap:balance}
-    .dek{font-size:22px;line-height:1.45;color:var(--text);font-style:italic;margin-bottom:28px;max-width:900px}
-    .note{border-left:3px solid var(--line);background:rgba(255,255,255,.04);padding:20px 22px;color:var(--muted);font-size:18px;line-height:1.5;font-style:italic;margin-bottom:30px}
-    .bottom-line{border:1px solid var(--line);padding:28px 28px 24px;background:rgba(7,20,36,.35);position:relative;box-shadow:var(--shadow);margin-bottom:34px}
-    .bottom-line-label{position:absolute;top:-11px;left:22px;background:var(--bg);color:var(--gold);padding:0 10px;font-family:'Libre Baskerville',serif;font-size:11px;letter-spacing:.22em;text-transform:uppercase}
-    .bottom-line p{margin:0;font-size:20px;line-height:1.85;color:var(--text)}
-    .section{margin-top:34px}
-    .section-title{font-family:'Libre Baskerville',serif;color:var(--gold);font-size:12px;letter-spacing:.22em;text-transform:uppercase;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid rgba(208,173,75,.15)}
-    .section-body{color:var(--text);font-size:20px;line-height:1.75}
-    .section-body p{margin:0 0 18px 0}
-    .split{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-    .panel{background:rgba(255,255,255,.03);border:1px solid rgba(208,173,75,.16);padding:22px;box-shadow:var(--shadow)}
-    .panel-title{font-family:'Libre Baskerville',serif;color:var(--gold);font-size:12px;letter-spacing:.18em;text-transform:uppercase;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid rgba(208,173,75,.16)}
+    /* MAIN LAYOUT */
+    .main{max-width:1200px;margin:0 auto;padding:60px 40px;display:grid;grid-template-columns:1fr 340px;gap:60px;align-items:start}
 
-    /* ── SIDEBAR ── */
-    .sidebar-card{background:rgba(255,255,255,.03);border:1px solid rgba(208,173,75,.16);padding:24px;box-shadow:var(--shadow);margin-bottom:24px}
-    .claim-textarea{width:100%;min-height:114px;resize:vertical;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);color:var(--text);padding:14px;font-family:'Cormorant Garamond',serif;font-size:18px;line-height:1.5;outline:none}
-    .claim-textarea::placeholder{color:var(--muted-2);font-style:italic}
-    .claim-textarea:focus{border-color:rgba(208,173,75,.4)}
-    .mode-row{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
-    .mode-btn{flex:1 1 140px;background:transparent;border:1px solid rgba(208,173,75,.2);color:var(--muted);padding:10px 12px;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
-    .mode-btn.active{color:var(--gold);border-color:var(--gold);background:rgba(208,173,75,.08)}
-    .claim-btn{width:100%;border:none;background:var(--gold);color:#07172a;padding:14px 16px;font-family:'Libre Baskerville',serif;font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:700;cursor:pointer;margin-top:8px}
-    .claim-btn:hover{background:var(--gold-2)}
-    .claim-btn:disabled{opacity:.65;cursor:not-allowed}
-    .sidebar-note{margin-top:12px;color:var(--muted-2);font-size:16px;line-height:1.45;font-style:italic;text-align:center}
+    /* ARTICLE HEADER */
+    .article-header{margin-bottom:36px;padding-bottom:28px;border-bottom:1px solid rgba(201,168,76,.2)}
+    .status-row{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+    .status-badge{font-family:'Libre Baskerville',Georgia,serif;font-size:10px;letter-spacing:.16em;text-transform:uppercase;padding:4px 12px;border:1px solid;color:var(--gold);border-color:var(--gold-dim);background:rgba(201,168,76,.08)}
+    .topic-tag{font-family:'Libre Baskerville',Georgia,serif;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-mid);padding:3px 10px;border:1px solid rgba(255,255,255,.1)}
+    .article-eyebrow{font-family:'Libre Baskerville',Georgia,serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:12px}
+    .article-title{font-family:'Playfair Display',Georgia,serif;font-size:clamp(28px,3vw,42px);font-weight:900;color:var(--cream);line-height:1.15;margin-bottom:16px}
+    .article-dek{font-family:'Crimson Text',Georgia,serif;font-size:18px;color:var(--text-light);font-style:italic;line-height:1.5}
 
-    .recent-item{padding:14px 0;border-bottom:1px solid rgba(208,173,75,.12)}
-    .recent-item:last-child{border-bottom:none;padding-bottom:0}
-    .recent-title{font-size:18px;line-height:1.28;font-weight:600;margin-bottom:8px}
-    .recent-meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap;color:var(--muted-2);font-size:14px}
+    /* CONFIDENCE NOTE */
+    .confidence-note{background:rgba(201,168,76,.06);border-left:3px solid var(--gold-dim);padding:16px 20px;margin-bottom:28px;font-family:'Crimson Text',Georgia,serif;font-size:14px;color:var(--text-mid);font-style:italic;line-height:1.5}
 
-    .pill{padding:3px 10px;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text);border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03)}
-    .pill.purple{background:rgba(126,90,166,.18);border-color:rgba(126,90,166,.45)}
-    .pill.green{background:rgba(60,125,95,.18);border-color:rgba(60,125,95,.45)}
-    .pill.red{background:rgba(155,77,77,.18);border-color:rgba(155,77,77,.45)}
-    .pill.amber{background:rgba(180,120,0,.18);border-color:rgba(180,120,0,.45)}
+    /* STRIP MODE / BOTTOM LINE */
+    .strip-mode{background:var(--navy-mid);border:1px solid var(--gold-dim);padding:28px 32px;margin-bottom:28px;position:relative}
+    .strip-label{position:absolute;top:-10px;left:20px;background:var(--navy-mid);padding:0 10px;font-family:'Libre Baskerville',Georgia,serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}
+    .strip-text{font-family:'Crimson Text',Georgia,serif;font-size:19px;color:var(--cream);line-height:1.6}
 
-    /* ── STATUS ── */
-    .status-wrap{display:none;gap:10px;flex-wrap:wrap;margin-top:16px}
-    .status-wrap.visible{display:flex}
-    .status-pill{padding:8px 12px;font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.12em;text-transform:uppercase;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);color:var(--muted)}
-    .status-pill.ok{border-color:rgba(136,197,154,.45);color:var(--ok)}
-    .status-pill.bad{border-color:rgba(216,141,141,.45);color:var(--bad)}
+    /* VERDICT */
+    .verdict-wrap{display:inline-flex;align-items:center;gap:12px;margin-bottom:32px;padding:10px 20px}
+    .verdict-label-txt{font-family:'Libre Baskerville',Georgia,serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--text-mid)}
+    .verdict-value{font-family:'Playfair Display',Georgia,serif;font-size:18px;font-weight:700;letter-spacing:.06em}
+    .v-true{background:rgba(26,92,46,.3);border:1px solid rgba(26,92,46,.6);color:#6dba85}
+    .v-mostly-true{background:rgba(20,70,40,.3);border:1px solid rgba(20,70,40,.6);color:#8dd4a0}
+    .v-substantially-true{background:rgba(30,80,50,.3);border:1px solid rgba(30,80,50,.6);color:#80c898}
+    .v-plausible{background:rgba(80,100,60,.25);border:1px solid rgba(80,100,60,.5);color:#a0c880}
+    .v-contested{background:rgba(74,48,96,.3);border:1px solid rgba(74,48,96,.8);color:#c49fd8}
+    .v-exaggerated{background:rgba(122,82,0,.3);border:1px solid rgba(122,82,0,.7);color:#e8b84b}
+    .v-misleading{background:rgba(140,90,0,.3);border:1px solid rgba(140,90,0,.7);color:#d4a840}
+    .v-false{background:rgba(139,32,32,.3);border:1px solid rgba(139,32,32,.6);color:#e87070}
+    .v-unproven{background:rgba(30,58,95,.4);border:1px solid rgba(30,58,95,.8);color:#7aaed8}
 
-    /* ── LOADING ── */
-    .loading{display:none;margin-top:18px}
-    .loading.visible{display:block}
-    .loading-line{width:100%;height:2px;background:rgba(208,173,75,.16);overflow:hidden;margin-top:8px}
-    .loading-fill{width:26%;height:100%;background:var(--gold);animation:slide 1.3s linear infinite}
-    @keyframes slide{0%{transform:translateX(-130%)}100%{transform:translateX(500%)}}
+    /* SECTION TITLE */
+    .section-title{font-family:'Libre Baskerville',Georgia,serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:18px;padding-bottom:10px;border-bottom:1px solid rgba(201,168,76,.2)}
 
-    /* ── RESULTS SECTION ── */
-    .results-section{display:none;margin-top:48px}
-    .results-section.visible{display:block}
+    /* SUB CLAIMS */
+    .sub-claim-item{display:grid;grid-template-columns:1fr auto;gap:16px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.06);align-items:start}
+    .sub-claim-item:last-child{border-bottom:none}
+    .sub-claim-text{font-family:'Crimson Text',Georgia,serif;font-size:17px;color:var(--cream-dark);line-height:1.5}
+    .verdict-pill{font-family:'Libre Baskerville',Georgia,serif;font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:5px 12px;white-space:nowrap;font-weight:700}
 
-    /* ── CLAIM CARD ── */
-    .claim-card{
-      border:1px solid rgba(208,173,75,.2);
-      background:rgba(255,255,255,.02);
-      padding:32px;
-      margin-bottom:24px;
-      box-shadow:var(--shadow);
-    }
-
-    .card-header{margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid rgba(208,173,75,.15)}
-    .card-eyebrow{font-family:'Libre Baskerville',serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:rgba(208,173,75,.6);margin-bottom:10px}
-    .card-title{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;line-height:1.2;margin-bottom:12px}
-    .card-meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-
-    .verdict-badge{
-      display:inline-block;
-      padding:6px 16px;
-      font-family:'Libre Baskerville',serif;
-      font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;
-    }
-    .verdict-true{background:rgba(60,125,95,.25);color:#88c59a;border:1px solid rgba(60,125,95,.5)}
-    .verdict-mostly-true{background:rgba(40,100,70,.25);color:#70b888;border:1px solid rgba(40,100,70,.5)}
-    .verdict-contested{background:rgba(126,90,166,.25);color:#c49fd8;border:1px solid rgba(126,90,166,.5)}
-    .verdict-exaggerated{background:rgba(180,120,0,.25);color:#e8c060;border:1px solid rgba(180,120,0,.5)}
-    .verdict-misleading{background:rgba(160,100,0,.25);color:#d4a840;border:1px solid rgba(160,100,0,.5)}
-    .verdict-false{background:rgba(155,77,77,.25);color:#e87070;border:1px solid rgba(155,77,77,.5)}
-    .verdict-unproven{background:rgba(30,58,95,.35);color:#7aaed8;border:1px solid rgba(30,58,95,.6)}
-    .verdict-plausible{background:rgba(80,100,60,.25);color:#a0c880;border:1px solid rgba(80,100,60,.5)}
-    .verdict-substantially-true{background:rgba(50,110,80,.25);color:#80c898;border:1px solid rgba(50,110,80,.5)}
-
-    .bottom-line-card{
-      border:1px solid var(--line);padding:24px 24px 20px;
-      background:rgba(7,20,36,.5);position:relative;margin-bottom:24px;
-    }
-    .bottom-line-card-label{
-      position:absolute;top:-10px;left:18px;
-      background:var(--bg);color:var(--gold);padding:0 8px;
-      font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.2em;text-transform:uppercase;
-    }
-    .bottom-line-card p{margin:0;font-size:19px;line-height:1.8}
-
-    .sub-claims-list{margin-bottom:20px}
-    .sub-claim-row{
-      display:grid;grid-template-columns:1fr auto;gap:16px;
-      padding:14px 0;border-bottom:1px solid rgba(255,255,255,.06);align-items:start;
-    }
-    .sub-claim-row:last-child{border-bottom:none}
-    .sub-claim-text{font-size:18px;line-height:1.5;color:#e8e0cc}
-
-    .layer-block{margin-bottom:18px;padding:20px 22px;background:rgba(255,255,255,.02);border-left:3px solid}
+    /* LAYER BLOCKS */
+    .layer-block{margin-bottom:20px;padding:22px 26px;background:rgba(255,255,255,.02);border-left:3px solid}
     .layer-direct{border-color:var(--gold)}
     .layer-adjacent{border-color:#5a8fa0}
     .layer-root{border-color:#7a6090}
     .layer-values{border-color:#8a6040}
+    .layer-constitutional{border-color:#4a7060}
     .layer-left{border-color:#3a6090}
     .layer-right{border-color:#8a3030}
+    .layer-block-title{font-family:'Libre Baskerville',Georgia,serif;font-size:10px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:10px;font-weight:700}
+    .layer-direct .layer-block-title{color:var(--gold)}
+    .layer-adjacent .layer-block-title{color:#5a8fa0}
+    .layer-root .layer-block-title{color:#9a80b0}
+    .layer-values .layer-block-title{color:#b08060}
+    .layer-constitutional .layer-block-title{color:#6a9080}
+    .layer-left .layer-block-title{color:#6a90c0}
+    .layer-right .layer-block-title{color:#c07070}
+    .layer-block-text{font-family:'Crimson Text',Georgia,serif;font-size:17px;color:var(--cream-dark);line-height:1.7}
 
-    .layer-label{font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:10px;font-weight:700}
-    .layer-direct .layer-label{color:var(--gold)}
-    .layer-adjacent .layer-label{color:#5a8fa0}
-    .layer-root .layer-label{color:#9a80b0}
-    .layer-values .layer-label{color:#b08060}
-    .layer-left .layer-label{color:#6a90c0}
-    .layer-right .layer-label{color:#c07070}
-    .layer-text{font-size:18px;color:#e8e0cc;line-height:1.7}
+    /* PERSPECTIVES */
+    .perspectives-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:28px}
+    .perspective-card{padding:22px;background:rgba(255,255,255,.02);border-top:3px solid}
+    .perspective-left-card{border-color:#3a6090}
+    .perspective-right-card{border-color:#8a3030}
 
-    .model-comparison{
-      display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px;
-    }
-    .model-card{background:rgba(255,255,255,.02);border:1px solid rgba(208,173,75,.12);padding:18px}
-    .model-label{font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(208,173,75,.12)}
-    .model-text{font-size:16px;color:var(--muted);line-height:1.6}
+    /* PAYWALLED SECTION */
+    .paywall-wrap{position:relative;overflow:hidden;margin-bottom:28px}
+    .paywall-blur{filter:blur(5px);pointer-events:none;user-select:none}
+    .paywall-overlay{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;background:rgba(13,27,42,.75);backdrop-filter:blur(2px);z-index:10}
+    .paywall-box{text-align:center;padding:28px}
+    .paywall-lock{font-size:28px;margin-bottom:10px}
+    .paywall-title{font-family:'Playfair Display',Georgia,serif;font-size:20px;color:var(--cream);margin-bottom:8px}
+    .paywall-sub{font-family:'Crimson Text',Georgia,serif;font-size:16px;color:var(--text-light);font-style:italic;margin-bottom:18px}
+    .paywall-btn{background:transparent;border:1px solid var(--gold);color:var(--gold);padding:10px 28px;font-family:'Libre Baskerville',Georgia,serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+    .paywall-btn:hover{background:var(--gold);color:var(--navy)}
 
-    .ornamental{display:flex;align-items:center;gap:12px;margin:24px 0}
-    .ornamental-line{flex:1;height:1px;background:rgba(208,173,75,.15)}
-    .ornamental-diamond{width:5px;height:5px;background:rgba(208,173,75,.4);transform:rotate(45deg)}
+    /* ORNAMENTAL RULE */
+    .ornamental{display:flex;align-items:center;gap:12px;margin:28px 0}
+    .ornamental-line{flex:1;height:1px;background:rgba(201,168,76,.2)}
+    .ornamental-diamond{width:5px;height:5px;background:var(--gold-dim);transform:rotate(45deg)}
 
-    /* ── FOOTER ── */
-    .footer{margin-top:60px;padding-top:26px;border-top:1px solid rgba(208,173,75,.14);color:var(--gold);text-align:center;font-family:'Libre Baskerville',serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;opacity:.8}
+    /* MODEL DIVERGENCE */
+    .divergence-card{border:1px solid rgba(196,159,216,.3);background:rgba(74,48,96,.15);padding:22px;margin-bottom:20px}
+    .divergence-title{font-family:'Libre Baskerville',Georgia,serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#c49fd8;margin-bottom:14px}
+    .divergence-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px}
+    .divergence-model{font-family:'Libre Baskerville',Georgia,serif;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-mid);margin-bottom:8px}
+    .divergence-note{font-family:'Crimson Text',Georgia,serif;font-size:15px;color:var(--text-mid);font-style:italic}
 
-    /* ── MOBILE ── */
-    @media(max-width:1150px){
-      .layout{grid-template-columns:1fr;gap:36px}
-      .sidebar{order:-1}
-    }
+    /* SIDEBAR */
+    .sidebar{position:sticky;top:90px}
+    .sidebar-card{background:var(--navy-mid);border:1px solid rgba(201,168,76,.2);margin-bottom:22px;padding:22px}
+    .sidebar-title{font-family:'Libre Baskerville',Georgia,serif;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid rgba(201,168,76,.2)}
+    .claim-textarea{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:var(--cream);font-family:'Crimson Text',Georgia,serif;font-size:16px;padding:12px 14px;resize:none;height:90px;margin-bottom:10px;outline:none;transition:border-color .2s}
+    .claim-textarea::placeholder{color:var(--text-mid);font-style:italic}
+    .claim-textarea:focus{border-color:var(--gold-dim)}
+    .mode-row{display:flex;gap:8px;margin-bottom:10px}
+    .mode-btn{flex:1;background:transparent;border:1px solid rgba(201,168,76,.2);color:var(--text-mid);padding:9px 8px;font-family:'Libre Baskerville',Georgia,serif;font-size:10px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+    .mode-btn.active{color:var(--gold);border-color:var(--gold);background:rgba(201,168,76,.08)}
+    .excavate-btn{width:100%;background:var(--gold);color:var(--navy);border:none;padding:12px;font-family:'Libre Baskerville',Georgia,serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;cursor:pointer;transition:background .2s}
+    .excavate-btn:hover{background:var(--gold-light)}
+    .excavate-btn:disabled{background:var(--gold-dim);cursor:not-allowed;opacity:.6}
+    .sidebar-note{font-family:'Crimson Text',Georgia,serif;font-size:13px;color:var(--text-mid);font-style:italic;margin-top:10px;line-height:1.4;text-align:center}
+
+    /* STATUS */
+    .status-wrap{display:none;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .status-wrap.visible{display:flex}
+    .status-pill{padding:6px 10px;font-family:'Libre Baskerville',Georgia,serif;font-size:9px;letter-spacing:.12em;text-transform:uppercase;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.02);color:var(--text-mid)}
+    .status-pill.ok{border-color:rgba(109,186,133,.45);color:var(--ok)}
+    .status-pill.bad{border-color:rgba(232,112,112,.45);color:var(--bad)}
+
+    /* LOADING */
+    .loading{display:none;margin-top:14px}
+    .loading.visible{display:block}
+    .loading-text{font-family:'Crimson Text',Georgia,serif;font-size:14px;color:var(--gold);font-style:italic;text-align:center}
+    .loading-bar{width:100%;height:2px;background:rgba(201,168,76,.15);overflow:hidden;margin-top:8px}
+    .loading-fill{width:26%;height:100%;background:var(--gold);animation:slide 1.3s linear infinite}
+    @keyframes slide{0%{transform:translateX(-130%)}100%{transform:translateX(500%)}}
+
+    /* RECENT CLAIMS */
+    .recent-item{padding:12px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+    .recent-item:last-child{border-bottom:none;padding-bottom:0}
+    .recent-title{font-family:'Playfair Display',Georgia,serif;font-size:15px;color:var(--cream);margin-bottom:6px;line-height:1.3;cursor:pointer}
+    .recent-title:hover{color:var(--gold)}
+    .recent-meta{display:flex;align-items:center;gap:10px}
+    .recent-date{font-family:'Libre Baskerville',Georgia,serif;font-size:10px;color:var(--text-mid);letter-spacing:.08em}
+
+    /* ABOUT */
+    .about-text{font-family:'Crimson Text',Georgia,serif;font-size:15px;color:var(--text-light);line-height:1.65;margin-bottom:12px}
+    .about-seal{text-align:center;font-family:'Libre Baskerville',Georgia,serif;font-size:11px;letter-spacing:.16em;color:var(--gold-dim);font-style:italic;margin-top:12px;padding-top:12px;border-top:1px solid rgba(201,168,76,.2)}
+
+    /* RESULTS SECTION */
+    .results-section{display:none;max-width:1200px;margin:0 auto;padding:0 40px 60px}
+    .results-section.visible{display:block}
+
+    /* FOOTER */
+    .footer{background:var(--navy-mid);border-top:1px solid var(--gold-dim);padding:40px;margin-top:60px}
+    .footer-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr;gap:48px;margin-bottom:32px}
+    .footer-name{font-family:'Playfair Display',Georgia,serif;font-size:20px;font-weight:700;color:var(--cream);margin-bottom:6px}
+    .footer-tag{font-family:'Crimson Text',Georgia,serif;font-size:13px;color:var(--gold);font-style:italic;letter-spacing:.1em;margin-bottom:14px}
+    .footer-desc{font-family:'Crimson Text',Georgia,serif;font-size:15px;color:var(--text-mid);line-height:1.6}
+    .footer-col-title{font-family:'Libre Baskerville',Georgia,serif;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:14px}
+    .footer-col a{display:block;font-family:'Crimson Text',Georgia,serif;font-size:15px;color:var(--text-mid);text-decoration:none;margin-bottom:8px;transition:color .2s}
+    .footer-col a:hover{color:var(--cream)}
+    .footer-bottom{max-width:1200px;margin:0 auto;padding-top:20px;border-top:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;align-items:center}
+    .footer-latin{font-family:'Libre Baskerville',Georgia,serif;font-size:12px;letter-spacing:.14em;color:var(--gold-dim);font-style:italic}
+    .footer-copy{font-family:'Crimson Text',Georgia,serif;font-size:13px;color:var(--text-mid)}
+
+    /* MOBILE */
     @media(max-width:900px){
-      .topbar-inner{flex-direction:column;align-items:flex-start}
-      .nav{width:100%;justify-content:flex-start;gap:18px}
-      .subnav-inner{grid-template-columns:1fr 1fr}
-      .hero-title{font-size:46px}
-      .split,.model-comparison{grid-template-columns:1fr}
+      .masthead-inner{padding:12px 16px}
+      .masthead-name{font-size:17px}
+      .masthead-nav a:not(.gold-btn){display:none}
+      .methodology{display:none}
+      .main{grid-template-columns:1fr;padding:28px 16px;gap:32px}
+      .sidebar{position:static}
+      .results-section{padding:0 16px 40px}
+      .perspectives-grid{grid-template-columns:1fr}
+      .divergence-grid{grid-template-columns:1fr}
+      .sub-claim-item{grid-template-columns:1fr;gap:8px}
+      .footer{padding:28px 16px}
+      .footer-inner{grid-template-columns:1fr;gap:24px}
+      .footer-bottom{flex-direction:column;gap:8px;text-align:center}
     }
-    @media(max-width:640px){
-      .topbar-inner,.page{padding-left:18px;padding-right:18px}
-      .subnav-inner{padding-left:18px;padding-right:18px;grid-template-columns:1fr;gap:0}
-      .subnav-item{border-right:none;border-bottom:1px solid rgba(208,173,75,.08);padding:10px 0;min-height:auto}
-      .subnav-item:last-child{border-bottom:none}
-      .brand-name{font-size:16px}
-      .hero-title{font-size:34px}
-      .dek{font-size:19px}
-      .bottom-line p,.section-body,.layer-text{font-size:18px}
-      .sub-claim-row{grid-template-columns:1fr;gap:8px}
-      .card-title{font-size:22px}
-      .claim-card{padding:20px}
+    @media(max-width:480px){
+      .masthead-name{font-size:14px}
+      .article-title{font-size:24px}
+      .strip-text{font-size:16px}
     }
   </style>
 </head>
 <body>
 
-<header class="topbar">
-  <div class="topbar-inner">
-    <div class="brand">
-      <div class="seal">◉</div>
+<!-- MASTHEAD -->
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="masthead-logo">
+      <div class="seal-small">👁</div>
       <div>
-        <div class="brand-name">Where the Truth Lies</div>
-        <div class="brand-tag">Beyond the Argument</div>
-        <div class="brand-latin">Ubi Veritas Latet</div>
+        <div class="masthead-name">Where the Truth Lies</div>
+        <div class="masthead-tagline">Beyond the Argument</div>
+        <div class="masthead-latin">Ubi Veritas Latet</div>
       </div>
     </div>
-    <nav class="nav">
+    <nav class="masthead-nav">
       <a href="#claimlab">ClaimLab</a>
       <a href="#archives">Archives</a>
-      <a href="#methodology">Methodology</a>
-      <a href="#about">About</a>
-      <a href="#claimlab" class="run-btn">Run a Claim</a>
-      <a href="/logout" class="run-btn">Logout</a>
+      <a href="#methodology-section">Methodology</a>
+      {% if superuser %}<span class="super-badge">Super User</span>{% endif %}
+      <a href="#claimlab" class="gold-btn">Run a Claim</a>
+      <a href="/logout" style="color:var(--text-mid);font-family:'Libre Baskerville',Georgia,serif;font-size:11px;letter-spacing:.12em;text-transform:uppercase;">Logout</a>
     </nav>
-  </div>
-  <div class="subnav">
-    <div class="subnav-inner">
-      <div class="subnav-item" id="archives">Persistent claim files. Not disposable articles.</div>
-      <div class="subnav-item">Two modes: quick answer or full excavation.</div>
-      <div class="subnav-item" id="about">Where documented facts end and real disagreement lives.</div>
-      <div class="subnav-item" id="methodology">What the founders actually wrote, when it matters.</div>
-    </div>
   </div>
 </header>
 
-<main class="page">
-  <div class="layout">
+<!-- METHODOLOGY STRIP -->
+<div class="methodology">
+  <div class="methodology-inner">
+    <div class="methodology-label">The Excavation</div>
+    <div class="methodology-layers">
+      <div class="m-layer"><div class="m-num">01</div><div class="m-name">Direct Facts</div><div class="m-desc">What the data says</div></div>
+      <div class="m-layer"><div class="m-num">02</div><div class="m-name">Adjacent Facts</div><div class="m-desc">What the claim leaves out</div></div>
+      <div class="m-layer"><div class="m-num">03</div><div class="m-name">Root Concern</div><div class="m-desc">What it is really about</div></div>
+      <div class="m-layer"><div class="m-num">04</div><div class="m-name">Values Divergence</div><div class="m-desc">Where real disagreement lives</div></div>
+      <div class="m-layer"><div class="m-num">05</div><div class="m-name">Constitutional Framework</div><div class="m-desc">What the founders wrote</div></div>
+    </div>
+  </div>
+</div>
 
-    <!-- MAIN ARTICLE -->
-    <section class="main">
-      <div class="tags">
-        <div class="tag active">Active</div>
-        <div class="tag">Iran War</div>
-        <div class="tag">Foreign Policy</div>
-        <div class="tag">Military</div>
-        <div class="tag">March 20, 2026</div>
-      </div>
-      <div class="eyebrow">ClaimLab Full Excavation</div>
-      <h1 class="hero-title">Why Is the US Attacking Iran?</h1>
-      <div class="dek">The stripped claim: The United States entered the Iran war without legitimate justification, driven by external pressure rather than genuine national security necessity.</div>
-      <div class="note">This analysis combines documented facts, intelligence estimates, and analytical interpretation. Where the distinction matters it is identified. This is not a verdict on policy — it is a map of what is actually known, what is contested, and where the real disagreement lives.</div>
-      <div class="bottom-line">
-        <div class="bottom-line-label">30-Second Bottom Line</div>
-        <p>Iran has a documented 45-year record of proxy warfare against US forces and allies, enriching uranium to levels widely considered beyond civilian energy requirements, disrupting global shipping, and rejecting every diplomatic framework offered. The US struck nuclear facilities in June 2025 and conducted a regime change operation in February 2026. The strikes are documented. The threat was real. Whether the administration's specific imminent threat framing was legally sufficient and whether congressional authorization was required are the legitimate unresolved questions.</p>
-      </div>
-      <div class="split">
-        <div class="panel">
-          <div class="panel-title">Where the Real Disagreement Lives</div>
-          <div class="section-body"><p>Whether 45 years of cumulative hostile action justifies preemptive military action outside traditional imminent threat doctrine. Whether the president holds constitutional authority to initiate regime change without congressional authorization. Whether coordinating with a foreign ally is American strategic interest or subordination of American sovereignty.</p></div>
-        </div>
-        <div class="panel">
-          <div class="panel-title">Constitutional Tension</div>
-          <div class="section-body"><p>The issue is not just executive overreach. It is the tension between the founders' war-powers design and a decades-long bipartisan pattern of congressional delegation through AUMFs. Every president since 2001 has operated under this same framework.</p></div>
-        </div>
-      </div>
-      <div class="section" id="methodology">
-        <div class="section-title">What This Platform Does</div>
-        <div class="section-body">
-          <p>Most fact-checkers flatten complex claims into a single verdict. Where the Truth Lies does something different. It splits compound political claims into parts, separates documented facts from interpretation, finds the root concern underneath the rhetoric, and identifies where genuine disagreement stops being factual and becomes a dispute over values, priorities, or constitutional meaning.</p>
-          <p>ClaimLab is the live engine behind that process. Submit any political claim in the sidebar. It does not tell you what to think. It shows you what is there.</p>
-        </div>
-      </div>
-    </section>
+<!-- MAIN -->
+<div class="main">
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar" id="claimlab">
-      <div class="sidebar-card">
-        <div class="panel-title">Run a Claim Through ClaimLab</div>
-        <textarea id="claim-input" class="claim-textarea" placeholder="Paste a claim, quote, or political statement here..."></textarea>
-        <div class="mode-row">
-          <button class="mode-btn active" id="mode-strip" onclick="setMode('strip')">Quick Analysis</button>
-          <button class="mode-btn" id="mode-full" onclick="setMode('full')">Full Excavation</button>
-        </div>
-        <button class="claim-btn" id="run-btn" onclick="runClaim()">Excavate This Claim</button>
-        <div class="sidebar-note">Strip the rhetoric. Find the root. Show the full picture.</div>
-        <div id="loading" class="loading">
-          <div class="sidebar-note" id="loading-text">ClaimLab is excavating...</div>
-          <div class="loading-line"><div class="loading-fill"></div></div>
-        </div>
-        <div id="status-wrap" class="status-wrap">
-          <div id="claude-status" class="status-pill">Claude: waiting</div>
-          <div id="openai-status" class="status-pill">OpenAI: waiting</div>
-          <div id="airtable-status" class="status-pill">Airtable: waiting</div>
-        </div>
+  <!-- ARTICLE COLUMN -->
+  <div>
+    <div class="article-header">
+      <div class="status-row">
+        <span class="status-badge">Active</span>
+        <span class="topic-tag">Iran War</span>
+        <span class="topic-tag">Foreign Policy</span>
+        <span class="topic-tag">Military</span>
+        <span class="topic-tag">March 2026</span>
       </div>
+      <div class="article-eyebrow">ClaimLab Full Excavation</div>
+      <h1 class="article-title">Why Is the US Attacking Iran?</h1>
+      <p class="article-dek">The stripped claim: The United States entered the Iran war without legitimate justification, driven by external pressure rather than genuine national security necessity.</p>
+    </div>
 
-      <div class="sidebar-card" id="about">
-        <div class="panel-title">Recent Claim Files</div>
-        <div class="recent-item">
-          <div class="recent-title">Biden Won the 2020 Election</div>
-          <div class="recent-meta"><span>March 2026</span><span class="pill purple">Contested</span></div>
+    <div class="confidence-note">This analysis combines documented facts, intelligence estimates, and analytical interpretation. Where the distinction matters it is identified. This is not a verdict on policy. It is a map of what is actually known, what is contested, and where the real disagreement lives.</div>
+
+    <div class="strip-mode">
+      <div class="strip-label">30-Second Bottom Line</div>
+      <p class="strip-text">Iran has a documented 45-year record of proxy warfare against US forces and allies, enriching uranium to levels widely considered beyond civilian energy requirements, disrupting global shipping, and rejecting every diplomatic framework offered. The US struck nuclear facilities in June 2025 and conducted a regime change operation in February 2026. The strikes are documented. The threat was real. Whether the administration's specific imminent threat framing was legally sufficient and whether congressional authorization was required are the legitimate unresolved questions.</p>
+    </div>
+
+    <div class="verdict-wrap v-contested">
+      <span class="verdict-label-txt">Overall Verdict</span>
+      <span class="verdict-value" style="color:#c49fd8;">Contested</span>
+    </div>
+
+    <div style="margin-bottom:32px;">
+      <div class="section-title">Sub-Claims — Evaluated Independently</div>
+      <div class="sub-claim-item">
+        <div class="sub-claim-text">The United States struck Iranian nuclear facilities in June 2025.</div>
+        <span class="verdict-pill v-true">True</span>
+      </div>
+      <div class="sub-claim-item">
+        <div class="sub-claim-text">The February 2026 operation constituted regime change resulting in the death of Supreme Leader Ali Khamenei.</div>
+        <span class="verdict-pill v-true">True</span>
+      </div>
+      <div class="sub-claim-item">
+        <div class="sub-claim-text">Iran represented a sustained documented multi-decade threat that had exhausted diplomatic resolution.</div>
+        <span class="verdict-pill v-true">True</span>
+      </div>
+    </div>
+
+    <div class="ornamental"><div class="ornamental-line"></div><div class="ornamental-diamond"></div><div class="ornamental-line"></div></div>
+
+    <div style="margin-bottom:28px;">
+      <div class="section-title">The Full Excavation</div>
+      <div class="layer-block layer-direct">
+        <div class="layer-block-title">Layer 01 — Direct Facts</div>
+        <p class="layer-block-text">Iran enriched uranium to 60%, a level widely considered beyond civilian energy requirements. Ballistic missile program documented on Iran's own state media. 45 years of proxy warfare funding including Hezbollah, Hamas, and Houthi networks. Disrupted Strait of Hormuz shipping carrying 20% of global oil supply. June 2025 US struck three nuclear facilities. February 2026 US and Israel conducted a regime change operation resulting in the death of Supreme Leader Khamenei.</p>
+      </div>
+      <div class="layer-block layer-adjacent">
+        <div class="layer-block-title">Layer 02 — Adjacent Facts</div>
+        <p class="layer-block-text">The DIA assessed Iran was a decade away from missiles capable of reaching the US mainland specifically — that does not apply to regional threat capability which was immediate and documented. Trump stated the June 2025 strikes totally obliterated the nuclear program then launched another round 8 months later. No congressional authorization was sought or granted for either operation. Oman's Foreign Minister publicly indicated a potential diplomatic breakthrough had been reached shortly before the February 2026 strikes began.</p>
+      </div>
+      <div class="layer-block layer-root">
+        <div class="layer-block-title">Layer 03 — Root Concern</div>
+        <p class="layer-block-text">Whether US military commitments in the Middle East reflect transparent American strategic interests or are shaped by allied foreign government influence and domestic lobbying in ways that bypass full democratic accountability and congressional authorization.</p>
+      </div>
+      <div class="layer-block layer-values">
+        <div class="layer-block-title">Layer 04 — Values Divergence</div>
+        <p class="layer-block-text">Whether 45 years of cumulative hostile action justifies preemptive military action outside traditional imminent threat doctrine. Whether the president holds constitutional authority to initiate regime change without congressional authorization. Whether coordinating with a foreign ally is American strategic interest or subordination of American sovereignty.</p>
+      </div>
+      <div class="layer-block layer-constitutional">
+        <div class="layer-block-title">Layer 05 — Constitutional Framework</div>
+        <p class="layer-block-text">The Constitution grants Congress exclusive power to declare war under Article I Section 8. The War Powers Resolution of 1973 limits unauthorized military engagement to 60 days. Neither operation received formal authorization. However Congress has been delegating war-making authority to the executive through AUMF resolutions since 2001 — a decades-long bipartisan pattern that every president has operated within. The genuine constitutional tension is not between this administration and the Constitution. It is between the founders' original war powers design and congressional delegation that has accumulated across multiple administrations.</p>
+      </div>
+    </div>
+
+    <!-- PERSPECTIVES — PAID TIER -->
+    {% if superuser %}
+    <div style="margin-bottom:28px;">
+      <div class="section-title">Left &amp; Right Perspectives</div>
+      <div class="perspectives-grid">
+        <div class="perspective-card perspective-left-card">
+          <div class="layer-block-title" style="color:#6a90c0;margin-bottom:12px;">Left Perspective</div>
+          <p class="layer-block-text">The progressive left views this as an illegal war of choice launched without congressional authorization, driven by Israeli government lobbying that bypassed democratic process. The school strike killing 175 children is the focal point. Their argument is not whether Iran is a bad actor — it is whether the US had legal and moral authority to launch a war without congressional authorization and whether civilian cost is proportionate to the military objective. The risk in this framing is it requires arguing against citizenship verification as a principle while ignoring that their own supply chain replicates exploitation in different geographies.</p>
         </div>
-        <div class="recent-item">
-          <div class="recent-title">60% of Americans Live Paycheck to Paycheck</div>
-          <div class="recent-meta"><span>March 2026</span><span class="pill green">Mostly True</span></div>
-        </div>
-        <div class="recent-item">
-          <div class="recent-title">Pro-ID for Voting Means Pro-ID for Guns</div>
-          <div class="recent-meta"><span>March 2026</span><span class="pill red">Misleading</span></div>
-        </div>
-        <div class="recent-item">
-          <div class="recent-title">Renewable Energy Is Ready to Replace Fossil Fuels</div>
-          <div class="recent-meta"><span>March 2026</span><span class="pill amber">Exaggerated</span></div>
+        <div class="perspective-card perspective-right-card">
+          <div class="layer-block-title" style="color:#c07070;margin-bottom:12px;">Right Perspective</div>
+          <p class="layer-block-text">The mainstream conservative position is that Iran's 45-year documented record of proxy warfare, nuclear acceleration, and direct killing of Americans constituted a cumulative threat that diplomatic frameworks had repeatedly failed to resolve. The strikes were a necessary exercise of executive authority to protect American interests before Iran crossed the nuclear threshold. Congressional authorization, while ideal, is not constitutionally required for executive military action against an active state sponsor of terrorism that has killed Americans. The risk in this framing requires trusting classified intelligence that no independent party has verified.</p>
         </div>
       </div>
-    </aside>
+    </div>
+    {% else %}
+    <div style="margin-bottom:28px;">
+      <div class="section-title">Left &amp; Right Perspectives</div>
+      <div class="paywall-wrap">
+        <div class="perspectives-grid paywall-blur">
+          <div class="perspective-card perspective-left-card">
+            <div class="layer-block-title" style="color:#6a90c0;margin-bottom:12px;">Left Perspective</div>
+            <p class="layer-block-text">The progressive left views this as an illegal war of choice launched without congressional authorization driven by Israeli government lobbying that bypassed the democratic process...</p>
+          </div>
+          <div class="perspective-card perspective-right-card">
+            <div class="layer-block-title" style="color:#c07070;margin-bottom:12px;">Right Perspective</div>
+            <p class="layer-block-text">The mainstream conservative position is that Iran's 45-year documented record constituted a cumulative threat that diplomatic frameworks had repeatedly failed to resolve...</p>
+          </div>
+        </div>
+        <div class="paywall-overlay">
+          <div class="paywall-box">
+            <div class="paywall-lock">🔒</div>
+            <div class="paywall-title">Full Excavation — Paid Tier</div>
+            <div class="paywall-sub">Left perspective, right perspective, and complete sourcing</div>
+            <button class="paywall-btn">Unlock Full Analysis</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <div id="methodology-section" style="margin-top:48px;padding-top:32px;border-top:1px solid rgba(201,168,76,.15);">
+      <div class="section-title">What Where the Truth Lies Does</div>
+      <p style="font-family:'Crimson Text',Georgia,serif;font-size:18px;line-height:1.75;color:var(--text-light);margin-bottom:16px;">Most political analysis flattens complex claims into a single verdict. Where the Truth Lies splits compound claims into parts, separates documented facts from interpretation, finds the root concern underneath the rhetoric, and identifies where genuine disagreement stops being factual and becomes a dispute over values, priorities, or constitutional meaning.</p>
+      <p style="font-family:'Crimson Text',Georgia,serif;font-size:18px;line-height:1.75;color:var(--text-light);">ClaimLab is the live engine. Submit any political claim in the sidebar. We do not tell you what to think. We show you what is actually there.</p>
+    </div>
   </div>
 
-  <!-- RESULTS — rendered below main content -->
-  <section id="results-section" class="results-section">
-    <div class="section-title">ClaimLab Results</div>
-    <div id="results-container"></div>
-  </section>
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="claimlab">
+    <div class="sidebar-card">
+      <div class="sidebar-title">Run a Claim Through ClaimLab</div>
+      <textarea id="claim-input" class="claim-textarea" placeholder="Paste any political claim, quote, or viral post here..."></textarea>
+      <div class="mode-row">
+        <button class="mode-btn active" id="mode-strip" onclick="setMode('strip')">Quick</button>
+        <button class="mode-btn" id="mode-full" onclick="setMode('full')">Full Excavation</button>
+      </div>
+      <button class="excavate-btn" id="run-btn" onclick="runClaim()">Excavate This Claim</button>
+      <div class="sidebar-note">Strip the rhetoric. Find the root. Show the full picture.</div>
+      <div id="loading" class="loading">
+        <div class="loading-text" id="loading-text">ClaimLab is excavating...</div>
+        <div class="loading-bar"><div class="loading-fill"></div></div>
+      </div>
+      <div id="status-wrap" class="status-wrap">
+        <div id="claude-status" class="status-pill">Claude: waiting</div>
+        <div id="openai-status" class="status-pill">OpenAI: waiting</div>
+        <div id="airtable-status" class="status-pill">Airtable: waiting</div>
+      </div>
+    </div>
 
-  <div class="footer">Ubi Veritas Latet — Where the Truth Lies Hidden</div>
-</main>
+    <div class="sidebar-card" id="archives">
+      <div class="sidebar-title">Recent Claim Files</div>
+      <div class="recent-item">
+        <div class="recent-title">Biden Won the 2020 Election</div>
+        <div class="recent-meta"><span class="recent-date">March 2026</span><span class="verdict-pill v-contested" style="font-size:9px;padding:3px 8px;">Contested</span></div>
+      </div>
+      <div class="recent-item">
+        <div class="recent-title">60% of Americans Live Paycheck to Paycheck</div>
+        <div class="recent-meta"><span class="recent-date">March 2026</span><span class="verdict-pill v-mostly-true" style="font-size:9px;padding:3px 8px;">Mostly True</span></div>
+      </div>
+      <div class="recent-item">
+        <div class="recent-title">Pro-ID for Voting Means Pro-ID for Guns</div>
+        <div class="recent-meta"><span class="recent-date">March 2026</span><span class="verdict-pill v-misleading" style="font-size:9px;padding:3px 8px;">Misleading</span></div>
+      </div>
+      <div class="recent-item">
+        <div class="recent-title">Renewable Energy Is Ready to Replace Fossil Fuels</div>
+        <div class="recent-meta"><span class="recent-date">March 2026</span><span class="verdict-pill v-exaggerated" style="font-size:9px;padding:3px 8px;">Exaggerated</span></div>
+      </div>
+      <div class="recent-item">
+        <div class="recent-title">Elon Musk Owns More Than the Bottom 53%</div>
+        <div class="recent-meta"><span class="recent-date">March 2026</span><span class="verdict-pill v-misleading" style="font-size:9px;padding:3px 8px;">Misleading Construction</span></div>
+      </div>
+    </div>
+
+    <div class="sidebar-card">
+      <div class="sidebar-title">About This Platform</div>
+      <p class="about-text">Where the Truth Lies is a political intelligence platform built on an excavation methodology. We do not fact-check. We dig.</p>
+      <p class="about-text">Every claim has layers. Direct facts. Adjacent facts. Root concern. Values divergence. Constitutional framework. We show all of them.</p>
+      <p class="about-text">We do not tell you what to think. We show you what is actually there.</p>
+      <div class="about-seal">Ubi Veritas Latet</div>
+    </div>
+  </aside>
+</div>
+
+<!-- RESULTS SECTION -->
+<section id="results-section" class="results-section">
+  <div class="section-title">ClaimLab Results</div>
+  <div id="results-container"></div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div>
+      <div class="footer-name">Where the Truth Lies</div>
+      <div class="footer-tag">Beyond the Argument</div>
+      <p class="footer-desc">Political intelligence built on an excavation methodology. Not fact-checking — deeper. Strip the rhetoric. Find the root. Show the full picture regardless of where it lands.</p>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-title">Platform</div>
+      <a href="#claimlab">ClaimLab</a>
+      <a href="#methodology-section">Methodology</a>
+      <a href="#archives">Archives</a>
+      <a href="/logout">Logout</a>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-title">Follow</div>
+      <a href="https://x.com/UbiVeritasLatet" target="_blank">X @UbiVeritasLatet</a>
+      <a href="#">Newsletter</a>
+      <a href="#">Podcast</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-latin">Ubi Veritas Latet — Where the Truth Lies Hidden</div>
+    <div class="footer-copy">© 2026 Where the Truth Lies. Beyond the Argument.</div>
+  </div>
+</footer>
 
 <script>
-let currentMode = 'strip';
+  const IS_SUPER = {{ superuser | tojson }};
+  let currentMode = 'strip';
 
-function setMode(mode) {
-  currentMode = mode;
-  document.getElementById('mode-strip').classList.toggle('active', mode === 'strip');
-  document.getElementById('mode-full').classList.toggle('active', mode === 'full');
-}
-
-function getVerdictClass(verdict) {
-  if (!verdict) return 'verdict-unproven';
-  const v = verdict.toLowerCase();
-  if (v === 'true') return 'verdict-true';
-  if (v.includes('mostly true')) return 'verdict-mostly-true';
-  if (v.includes('substantially true')) return 'verdict-substantially-true';
-  if (v.includes('plausible') || v.includes('mixed')) return 'verdict-plausible';
-  if (v === 'contested') return 'verdict-contested';
-  if (v === 'exaggerated') return 'verdict-exaggerated';
-  if (v === 'misleading') return 'verdict-misleading';
-  if (v === 'false') return 'verdict-false';
-  if (v === 'unproven') return 'verdict-unproven';
-  return 'verdict-contested';
-}
-
-function renderClaimCard(data, modelName, originalClaim) {
-  if (!data || data.error) {
-    return `<div class="claim-card"><div class="card-header"><div class="card-eyebrow">${modelName}</div><div class="card-title" style="font-size:20px;color:#d88d8d">Analysis failed: ${data?.error || 'Unknown error'}</div></div></div>`;
+  function setMode(m) {
+    currentMode = m;
+    document.getElementById('mode-strip').classList.toggle('active', m === 'strip');
+    document.getElementById('mode-full').classList.toggle('active', m === 'full');
   }
 
-  const verdict = data['Overall Verdict'] || data['Verdict'] || 'Unproven';
-  const verdictClass = getVerdictClass(verdict);
-  const strippedClaim = data['Stripped Claim'] || originalClaim;
-  const speaker = data['Speaker'] || '';
-  const summary = data['Strip Mode Summary'] || '';
-  const directFacts = data['Direct Facts'] || '';
-  const adjacentFacts = data['Adjacent Facts'] || '';
-  const rootConcern = data['Root Concern'] || '';
-  const valuesDivergence = data['Values Divergence'] || '';
-  const leftPerspective = data['Left Perspective'] || '';
-  const rightPerspective = data['Right Perspective'] || '';
-  const subClaims = data['Sub Claims'] || [];
-
-  let html = `
-    <div class="claim-card">
-      <div class="card-header">
-        <div class="card-eyebrow">${modelName} — ClaimLab ${currentMode === 'strip' ? 'Quick Analysis' : 'Full Excavation'}</div>
-        <div class="card-title">${escapeHtml(strippedClaim)}</div>
-        <div class="card-meta">
-          <span class="verdict-badge ${verdictClass}">${verdict}</span>
-          ${speaker ? `<span class="pill">${escapeHtml(speaker)}</span>` : ''}
-        </div>
-      </div>`;
-
-  if (summary) {
-    html += `
-      <div class="bottom-line-card">
-        <div class="bottom-line-card-label">Bottom Line</div>
-        <p>${escapeHtml(summary)}</p>
-      </div>`;
+  function getVerdictClass(v) {
+    if (!v) return 'v-unproven';
+    const s = v.toLowerCase();
+    if (s === 'true') return 'v-true';
+    if (s.includes('mostly true')) return 'v-mostly-true';
+    if (s.includes('substantially true')) return 'v-substantially-true';
+    if (s.includes('plausible') || s.includes('mixed')) return 'v-plausible';
+    if (s === 'contested') return 'v-contested';
+    if (s === 'exaggerated') return 'v-exaggerated';
+    if (s === 'misleading') return 'v-misleading';
+    if (s === 'false') return 'v-false';
+    if (s === 'unproven') return 'v-unproven';
+    return 'v-contested';
   }
 
-  if (subClaims.length > 0) {
-    html += `<div class="section-title" style="margin-top:20px;">Sub-Claims</div><div class="sub-claims-list">`;
-    subClaims.forEach(sc => {
-      const scVerdict = sc.verdict || 'Unproven';
-      html += `
-        <div class="sub-claim-row">
-          <div class="sub-claim-text">${escapeHtml(sc.claim || '')}</div>
-          <span class="verdict-badge ${getVerdictClass(scVerdict)}" style="font-size:9px;padding:4px 10px;">${scVerdict}</span>
+  function esc(t) {
+    if (!t) return '';
+    return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function renderCard(data, modelName, claim) {
+    if (!data || data.error) {
+      return `<div class="layer-block layer-root"><div class="layer-block-title" style="color:#e87070;">${esc(modelName)} — Analysis Failed</div><p class="layer-block-text" style="color:#e87070;">${esc(data?.error||'Unknown error')}</p></div>`;
+    }
+
+    const verdict = data['Overall Verdict'] || data['Verdict'] || 'Unproven';
+    const vc = getVerdictClass(verdict);
+    const stripped = data['Stripped Claim'] || claim;
+    const speaker = data['Speaker'] || '';
+    const summary = data['Strip Mode Summary'] || '';
+    const directFacts = data['Direct Facts'] || '';
+    const adjacentFacts = data['Adjacent Facts'] || '';
+    const rootConcern = data['Root Concern'] || '';
+    const valuesDivergence = data['Values Divergence'] || '';
+    const leftPerspective = data['Left Perspective'] || '';
+    const rightPerspective = data['Right Perspective'] || '';
+    const constitutional = data['Constitutional Framework'] || '';
+    const subClaims = Array.isArray(data['Sub Claims']) ? data['Sub Claims'] : [];
+
+    let h = `
+      <div style="border:1px solid rgba(201,168,76,.2);background:rgba(255,255,255,.02);padding:28px;margin-bottom:24px;box-shadow:var(--shadow);">
+        <div style="margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid rgba(201,168,76,.15);">
+          <div style="font-family:'Libre Baskerville',Georgia,serif;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:8px;">${esc(modelName)} — ClaimLab Excavation</div>
+          <div style="font-family:'Playfair Display',Georgia,serif;font-size:22px;font-weight:700;color:var(--cream);line-height:1.2;margin-bottom:10px;">${esc(stripped)}</div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <span class="verdict-pill ${vc}" style="font-size:11px;">${esc(verdict)}</span>
+            ${speaker ? `<span class="topic-tag">${esc(speaker)}</span>` : ''}
+          </div>
         </div>`;
-    });
-    html += `</div>`;
-  }
 
-  if (directFacts || adjacentFacts || rootConcern || valuesDivergence) {
-    html += `<div class="ornamental"><div class="ornamental-line"></div><div class="ornamental-diamond"></div><div class="ornamental-line"></div></div>`;
-    html += `<div class="section-title">The Excavation</div>`;
-  }
-
-  if (directFacts) {
-    html += `<div class="layer-block layer-direct"><div class="layer-label">Layer 01 — Direct Facts</div><div class="layer-text">${escapeHtml(directFacts)}</div></div>`;
-  }
-  if (adjacentFacts) {
-    html += `<div class="layer-block layer-adjacent"><div class="layer-label">Layer 02 — Adjacent Facts</div><div class="layer-text">${escapeHtml(adjacentFacts)}</div></div>`;
-  }
-  if (rootConcern) {
-    html += `<div class="layer-block layer-root"><div class="layer-label">Layer 03 — Root Concern</div><div class="layer-text">${escapeHtml(rootConcern)}</div></div>`;
-  }
-  if (valuesDivergence) {
-    html += `<div class="layer-block layer-values"><div class="layer-label">Layer 04 — Values Divergence</div><div class="layer-text">${escapeHtml(valuesDivergence)}</div></div>`;
-  }
-  if (leftPerspective) {
-    html += `<div class="layer-block layer-left"><div class="layer-label">Left Perspective</div><div class="layer-text">${escapeHtml(leftPerspective)}</div></div>`;
-  }
-  if (rightPerspective) {
-    html += `<div class="layer-block layer-right"><div class="layer-label">Right Perspective</div><div class="layer-text">${escapeHtml(rightPerspective)}</div></div>`;
-  }
-
-  html += `</div>`;
-  return html;
-}
-
-function escapeHtml(text) {
-  if (!text) return '';
-  return String(text)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
-async function runClaim() {
-  const claim = document.getElementById('claim-input').value.trim();
-  if (!claim) { document.getElementById('claim-input').focus(); return; }
-
-  const runBtn = document.getElementById('run-btn');
-  const loading = document.getElementById('loading');
-  const statusWrap = document.getElementById('status-wrap');
-  const resultsSection = document.getElementById('results-section');
-  const container = document.getElementById('results-container');
-
-  runBtn.disabled = true;
-  loading.classList.add('visible');
-  statusWrap.classList.add('visible');
-  resultsSection.classList.remove('visible');
-  container.innerHTML = '';
-
-  const msgs = ['ClaimLab is excavating...','Stripping the rhetoric...','Separating sub-claims...','Applying the four layers...','Writing to Airtable...'];
-  let mi = 0;
-  document.getElementById('loading-text').textContent = msgs[0];
-  const interval = setInterval(() => { mi = (mi+1)%msgs.length; document.getElementById('loading-text').textContent = msgs[mi]; }, 1600);
-
-  ['claude','openai','airtable'].forEach(id => {
-    document.getElementById(id+'-status').textContent = id.charAt(0).toUpperCase()+id.slice(1)+': running';
-    document.getElementById(id+'-status').className = 'status-pill';
-  });
-
-  try {
-    const response = await fetch('/analyze', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({claim, mode: currentMode})
-    });
-
-    const contentType = response.headers.get('content-type') || '';
-    if (!contentType.includes('application/json')) {
-      const text = await response.text();
-      throw new Error(text.slice(0,400));
+    if (summary) {
+      h += `<div class="strip-mode" style="margin-bottom:20px;"><div class="strip-label">Bottom Line</div><p class="strip-text">${esc(summary)}</p></div>`;
     }
 
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Server error');
-
-    // Render both model outputs as styled cards
-    let cardsHtml = '';
-
-    // Claude card
-    cardsHtml += renderClaimCard(data.claude, 'Claude', claim);
-
-    // Model comparison for full mode
-    if (currentMode === 'full' && data.openai && !data.openai.error) {
-      cardsHtml += `
-        <div class="ornamental"><div class="ornamental-line"></div><div class="ornamental-diamond"></div><div class="ornamental-line"></div></div>
-        <div class="section-title">OpenAI Cross-Reference</div>`;
-      cardsHtml += renderClaimCard(data.openai, 'OpenAI', claim);
+    if (subClaims.length > 0) {
+      h += `<div style="margin-bottom:20px;"><div class="section-title">Sub-Claims</div>`;
+      subClaims.forEach(sc => {
+        const sv = sc.verdict || 'Unproven';
+        h += `<div class="sub-claim-item"><div class="sub-claim-text">${esc(sc.claim||'')}</div><span class="verdict-pill ${getVerdictClass(sv)}" style="font-size:9px;padding:4px 10px;">${esc(sv)}</span></div>`;
+      });
+      h += `</div>`;
     }
 
-    // Strip mode: show comparison panel
-    if (currentMode === 'strip' && data.openai && !data.openai.error) {
-      const claudeVerdict = data.claude?.['Verdict'] || data.claude?.['Overall Verdict'] || '';
-      const openaiVerdict = data.openai?.['Verdict'] || data.openai?.['Overall Verdict'] || '';
-      if (claudeVerdict && openaiVerdict && claudeVerdict !== openaiVerdict) {
-        cardsHtml += `
-          <div class="claim-card" style="border-color:rgba(126,90,166,.3);">
-            <div class="panel-title" style="color:#c49fd8;">Model Divergence Detected</div>
-            <div class="model-comparison">
-              <div class="model-card">
-                <div class="model-label">Claude</div>
-                <div class="model-text"><span class="verdict-badge ${getVerdictClass(claudeVerdict)}" style="font-size:10px;">${claudeVerdict}</span></div>
-              </div>
-              <div class="model-card">
-                <div class="model-label">OpenAI</div>
-                <div class="model-text"><span class="verdict-badge ${getVerdictClass(openaiVerdict)}" style="font-size:10px;">${openaiVerdict}</span></div>
-              </div>
-            </div>
-            <div class="layer-text" style="margin-top:14px;font-size:16px;color:var(--muted);">The two models reached different verdicts. Where models diverge ClaimLab flags the claim as contested pending human review.</div>
-          </div>`;
+    if (directFacts || adjacentFacts || rootConcern || valuesDivergence) {
+      h += `<div class="ornamental"><div class="ornamental-line"></div><div class="ornamental-diamond"></div><div class="ornamental-line"></div></div>`;
+      h += `<div class="section-title">The Excavation</div>`;
+      if (directFacts) h += `<div class="layer-block layer-direct"><div class="layer-block-title">Layer 01 — Direct Facts</div><p class="layer-block-text">${esc(directFacts)}</p></div>`;
+      if (adjacentFacts) h += `<div class="layer-block layer-adjacent"><div class="layer-block-title">Layer 02 — Adjacent Facts</div><p class="layer-block-text">${esc(adjacentFacts)}</p></div>`;
+      if (rootConcern) h += `<div class="layer-block layer-root"><div class="layer-block-title">Layer 03 — Root Concern</div><p class="layer-block-text">${esc(rootConcern)}</p></div>`;
+      if (valuesDivergence) h += `<div class="layer-block layer-values"><div class="layer-block-title">Layer 04 — Values Divergence</div><p class="layer-block-text">${esc(valuesDivergence)}</p></div>`;
+      if (constitutional) h += `<div class="layer-block layer-constitutional"><div class="layer-block-title">Layer 05 — Constitutional Framework</div><p class="layer-block-text">${esc(constitutional)}</p></div>`;
+    }
+
+    // Perspectives: show if superuser, paywall otherwise
+    if (leftPerspective || rightPerspective) {
+      if (IS_SUPER) {
+        h += `<div class="ornamental"><div class="ornamental-line"></div><div class="ornamental-diamond"></div><div class="ornamental-line"></div></div>`;
+        h += `<div class="section-title">Left &amp; Right Perspectives</div>`;
+        h += `<div class="perspectives-grid">`;
+        if (leftPerspective) h += `<div class="perspective-card perspective-left-card"><div class="layer-block-title" style="color:#6a90c0;margin-bottom:10px;">Left Perspective</div><p class="layer-block-text">${esc(leftPerspective)}</p></div>`;
+        if (rightPerspective) h += `<div class="perspective-card perspective-right-card"><div class="layer-block-title" style="color:#c07070;margin-bottom:10px;">Right Perspective</div><p class="layer-block-text">${esc(rightPerspective)}</p></div>`;
+        h += `</div>`;
+      } else {
+        h += `<div class="ornamental"><div class="ornamental-line"></div><div class="ornamental-diamond"></div><div class="ornamental-line"></div></div>`;
+        h += `<div class="section-title">Left &amp; Right Perspectives</div>`;
+        h += `<div class="paywall-wrap"><div class="perspectives-grid paywall-blur">
+          <div class="perspective-card perspective-left-card"><div class="layer-block-title" style="color:#6a90c0;">Left Perspective</div><p class="layer-block-text">Analysis available in paid tier...</p></div>
+          <div class="perspective-card perspective-right-card"><div class="layer-block-title" style="color:#c07070;">Right Perspective</div><p class="layer-block-text">Analysis available in paid tier...</p></div>
+        </div>
+        <div class="paywall-overlay"><div class="paywall-box"><div class="paywall-lock">🔒</div><div class="paywall-title">Paid Tier</div><div class="paywall-sub">Perspectives and full sourcing</div><button class="paywall-btn">Unlock Full Analysis</button></div></div></div>`;
       }
     }
 
-    container.innerHTML = cardsHtml;
-    resultsSection.classList.add('visible');
-
-    // Update status indicators
-    const claudeOk = data.claude && !data.claude.error;
-    const openaiOk = data.openai && !data.openai.error;
-    document.getElementById('claude-status').textContent = claudeOk ? 'Claude: complete' : 'Claude: failed';
-    document.getElementById('claude-status').className = 'status-pill ' + (claudeOk ? 'ok' : 'bad');
-    document.getElementById('openai-status').textContent = openaiOk ? 'OpenAI: complete' : 'OpenAI: failed';
-    document.getElementById('openai-status').className = 'status-pill ' + (openaiOk ? 'ok' : 'bad');
-
-    if (data.airtable?.saved) {
-      document.getElementById('airtable-status').textContent = 'Airtable: saved';
-      document.getElementById('airtable-status').className = 'status-pill ok';
-    } else {
-      document.getElementById('airtable-status').textContent = 'Airtable: failed';
-      document.getElementById('airtable-status').className = 'status-pill bad';
-    }
-
-    resultsSection.scrollIntoView({behavior:'smooth',block:'start'});
-
-  } catch(err) {
-    container.innerHTML = `<div class="claim-card"><div class="card-title" style="color:#d88d8d;font-size:20px;">Request failed: ${escapeHtml(err.message)}</div></div>`;
-    resultsSection.classList.add('visible');
-    ['claude','openai','airtable'].forEach(id => {
-      document.getElementById(id+'-status').textContent = id.charAt(0).toUpperCase()+id.slice(1)+': failed';
-      document.getElementById(id+'-status').className = 'status-pill bad';
-    });
-  } finally {
-    clearInterval(interval);
-    loading.classList.remove('visible');
-    runBtn.disabled = false;
+    h += `</div>`;
+    return h;
   }
-}
+
+  async function runClaim() {
+    const claim = document.getElementById('claim-input').value.trim();
+    if (!claim) { document.getElementById('claim-input').focus(); return; }
+
+    const btn = document.getElementById('run-btn');
+    const loading = document.getElementById('loading');
+    const statusWrap = document.getElementById('status-wrap');
+    const section = document.getElementById('results-section');
+    const container = document.getElementById('results-container');
+
+    btn.disabled = true;
+    loading.classList.add('visible');
+    statusWrap.classList.add('visible');
+    section.classList.remove('visible');
+    container.innerHTML = '';
+
+    const msgs = ['ClaimLab is excavating...','Stripping the rhetoric...','Applying the four layers...','Writing to Airtable...'];
+    let mi = 0;
+    document.getElementById('loading-text').textContent = msgs[0];
+    const interval = setInterval(() => { mi=(mi+1)%msgs.length; document.getElementById('loading-text').textContent=msgs[mi]; }, 1600);
+
+    ['claude','openai','airtable'].forEach(id => {
+      document.getElementById(id+'-status').textContent = id.charAt(0).toUpperCase()+id.slice(1)+': running';
+      document.getElementById(id+'-status').className = 'status-pill';
+    });
+
+    try {
+      const res = await fetch('/analyze', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({claim, mode: currentMode})
+      });
+      const ct = res.headers.get('content-type') || '';
+      if (!ct.includes('application/json')) { const t = await res.text(); throw new Error(t.slice(0,400)); }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Server error');
+
+      let html = renderCard(data.claude, 'Claude', claim);
+
+      // Model divergence check
+      const cv = data.claude?.['Overall Verdict'] || data.claude?.['Verdict'] || '';
+      const ov = data.openai?.['Overall Verdict'] || data.openai?.['Verdict'] || '';
+      if (cv && ov && cv.toLowerCase() !== ov.toLowerCase() && !data.openai?.error) {
+        html += `<div class="divergence-card">
+          <div class="divergence-title">Model Divergence Detected</div>
+          <div class="divergence-grid">
+            <div><div class="divergence-model">Claude</div><span class="verdict-pill ${getVerdictClass(cv)}" style="font-size:10px;">${esc(cv)}</span></div>
+            <div><div class="divergence-model">OpenAI</div><span class="verdict-pill ${getVerdictClass(ov)}" style="font-size:10px;">${esc(ov)}</span></div>
+          </div>
+          <p class="divergence-note">The two models reached different verdicts. Where models diverge ClaimLab flags the claim as contested pending human review.</p>
+        </div>`;
+      }
+
+      // Full mode: show OpenAI card too
+      if (currentMode === 'full' && data.openai && !data.openai.error) {
+        html += `<div class="ornamental"><div class="ornamental-line"></div><div class="ornamental-diamond"></div><div class="ornamental-line"></div></div>`;
+        html += `<div class="section-title" style="margin-bottom:16px;">OpenAI Cross-Reference</div>`;
+        html += renderCard(data.openai, 'OpenAI', claim);
+      }
+
+      container.innerHTML = html;
+      section.classList.add('visible');
+
+      const cok = data.claude && !data.claude.error;
+      const ook = data.openai && !data.openai.error;
+      document.getElementById('claude-status').textContent = cok ? 'Claude: complete' : 'Claude: failed';
+      document.getElementById('claude-status').className = 'status-pill ' + (cok ? 'ok' : 'bad');
+      document.getElementById('openai-status').textContent = ook ? 'OpenAI: complete' : 'OpenAI: failed';
+      document.getElementById('openai-status').className = 'status-pill ' + (ook ? 'ok' : 'bad');
+      document.getElementById('airtable-status').textContent = data.airtable?.saved ? 'Airtable: saved' : 'Airtable: failed';
+      document.getElementById('airtable-status').className = 'status-pill ' + (data.airtable?.saved ? 'ok' : 'bad');
+
+      section.scrollIntoView({behavior:'smooth',block:'start'});
+
+    } catch(err) {
+      container.innerHTML = `<div class="layer-block layer-root"><p class="layer-block-text" style="color:#e87070;">Request failed: ${esc(err.message)}</p></div>`;
+      section.classList.add('visible');
+      ['claude','openai','airtable'].forEach(id => {
+        document.getElementById(id+'-status').textContent = id.charAt(0).toUpperCase()+id.slice(1)+': failed';
+        document.getElementById(id+'-status').className = 'status-pill bad';
+      });
+    } finally {
+      clearInterval(interval);
+      loading.classList.remove('visible');
+      btn.disabled = false;
+    }
+  }
 </script>
 </body>
 </html>
