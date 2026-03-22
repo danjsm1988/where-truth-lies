@@ -1,28 +1,14 @@
 import os
-print("WTL startup: imported os", flush=True)
-
 import json
 import re
 import unicodedata
-print("WTL startup: imported stdlib", flush=True)
-
 import requests
-print("WTL startup: imported requests", flush=True)
-
 from flask import Flask, request, jsonify, render_template, redirect, session
-print("WTL startup: imported flask", flush=True)
-
 from openai import OpenAI
-print("WTL startup: imported openai", flush=True)
-
 import anthropic
-print("WTL startup: imported anthropic", flush=True)
 
 app = Flask(__name__)
-print("WTL startup: flask app created", flush=True)
-
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "fallback-secret")
-print("WTL startup: secret key set", flush=True)
 
 APP_PASSWORD = os.getenv("APP_PASSWORD")
 SUPER_PASSWORD = os.getenv("SUPER_PASSWORD", APP_PASSWORD)
@@ -31,9 +17,6 @@ ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 AIRTABLE_TOKEN = os.getenv("AIRTABLE_TOKEN")
 AIRTABLE_BASE_ID = os.getenv("AIRTABLE_BASE_ID")
 AIRTABLE_TABLE_NAME = os.getenv("AIRTABLE_TABLE_NAME")
-print("WTL startup: env vars loaded", flush=True)
-
-print("WTL startup: deferred AI client initialization", flush=True)
 
 CLAIMLAB_SYSTEM = """You are ClaimLab, the analytical engine of Where the Truth Lies — a political intelligence platform built on an excavation methodology. Motto: Beyond the Argument. Latin seal: Ubi Veritas Latet.
 
@@ -112,6 +95,10 @@ def normalize_topic(raw_topic):
         return "Energy"
     if "iran" in text:
         return "Iran War"
+    if "foreign policy" in text:
+        return "Foreign Policy"
+    if "crime" in text:
+        return "Crime"
     if "election" in text or "vote" in text or "ballot" in text or "save act" in text:
         return "Elections"
     if "econom" in text or "job" in text or "inflation" in text or "paycheck" in text or "tax" in text or "wage" in text:
@@ -128,6 +115,7 @@ def normalize_topic(raw_topic):
         return "Gender Issues"
     if "constitution" in text or "amendment" in text or "rights" in text or "court" in text:
         return "Constitutional Rights"
+
     return "Other"
 
 
@@ -157,7 +145,7 @@ def extract_primary_record_fields(claim, parsed, mode):
         "Topic": [normalize_topic(parsed.get("Topic"))],
         "Human Reviewed": False,
         "Published": False,
-        "Mode": mode,
+        "Mode": mode if mode in ["strip", "full"] else "strip",
         "URL Slug": build_url_slug(parsed, claim)
     }
 
@@ -178,7 +166,229 @@ def extract_primary_record_fields(claim, parsed, mode):
     if verdict:
         fields["Overall Verdict"] = verdict
 
+    sub_claims = parsed.get("Sub Claims")
+    if isinstance(sub_claims, list):
+        if len(sub_claims) > 0 and sub_claims[0].get("claim"):
+            fields["Sub-Claim 1"] = sub_claims[0]["claim"]
+            if sub_claims[0].get("verdict"):
+                fields["Verdict: Sub-Claim1"] = sub_claims[0]["verdict"]
+
+        if len(sub_claims) > 1 and sub_claims[1].get("claim"):
+            fields["Sub-Claim 2"] = sub_claims[1]["claim"]
+            if sub_claims[1].get("verdict"):
+                fields["Verdict: Sub-Claim 2"] = sub_claims[1]["verdict"]
+
+        if len(sub_claims) > 2 and sub_claims[2].get("claim"):
+            fields["Sub-Claim 3"] = sub_claims[2]["claim"]
+            if sub_claims[2].get("verdict"):
+                fields["Verdict: Sub-Claim 3"] = sub_claims[2]["verdict"]
+
+        if sub_claims:
+            fields["Sub-Claims"] = " ".join(
+                [sc.get("claim", "") for sc in sub_claims if sc.get("claim")]
+            ).strip()
+
     return fields
+
+
+def airtable_headers():
+    return {
+        "Authorization": f"Bearer {AIRTABLE_TOKEN}",
+        "Content-Type": "application/json"
+    }
+
+
+def airtable_url():
+    return f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{AIRTABLE_TABLE_NAME}"
+
+
+def parse_topics(topic_value):
+    if isinstance(topic_value, list):
+        return topic_value
+    if isinstance(topic_value, str) and topic_value.strip():
+        return [topic_value.strip()]
+    return []
+
+
+def try_parse_raw_json(fields):
+    for key in ["Claude Raw JSON", "OpenAI Raw JSON"]:
+        raw = fields.get(key)
+        if raw:
+            parsed = safe_json_parse(raw)
+            if isinstance(parsed, dict) and parsed and "raw" not in parsed:
+                return parsed
+    return {}
+
+
+def build_subclaims(fields, parsed_json):
+    subclaims = []
+
+    parsed_subclaims = parsed_json.get("Sub Claims")
+    if isinstance(parsed_subclaims, list) and parsed_subclaims:
+        for item in parsed_subclaims[:3]:
+            if item.get("claim"):
+                subclaims.append({
+                    "claim": item.get("claim", ""),
+                    "verdict": item.get("verdict", "Unproven")
+                })
+        return subclaims
+
+    sc1 = fields.get("Sub-Claim 1")
+    sc2 = fields.get("Sub-Claim 2")
+    sc3 = fields.get("Sub-Claim 3")
+
+    if sc1:
+        subclaims.append({
+            "claim": sc1,
+            "verdict": fields.get("Verdict: Sub-Claim1", "Unproven")
+        })
+    if sc2:
+        subclaims.append({
+            "claim": sc2,
+            "verdict": fields.get("Verdict: Sub-Claim 2", "Unproven")
+        })
+    if sc3:
+        subclaims.append({
+            "claim": sc3,
+            "verdict": fields.get("Verdict: Sub-Claim 3", "Unproven")
+        })
+
+    return subclaims
+
+
+def build_claim_context(record):
+    if not record:
+        return None
+
+    fields = record.get("fields", {})
+    parsed_json = try_parse_raw_json(fields)
+
+    title = fields.get("Original Quote") or fields.get("Stripped Claim") or "Untitled Claim"
+
+    current_claim = {
+        "record_id": record.get("id"),
+        "slug": fields.get("URL Slug", ""),
+        "title": title,
+        "stripped_claim": fields.get("Stripped Claim", ""),
+        "speaker": fields.get("Speaker", "Unknown"),
+        "topics": parse_topics(fields.get("Topic")),
+        "date": fields.get("Date") or fields.get("Date Added", ""),
+        "overall_verdict": fields.get("Overall Verdict", "Unproven"),
+        "strip_mode_summary": fields.get("Strip Mode Summary", ""),
+        "direct_facts": fields.get("Direct Facts", ""),
+        "adjacent_facts": fields.get("Adjacent Facts", ""),
+        "root_concern": fields.get("Root Concern", ""),
+        "values_divergence": fields.get("Values Divergence", ""),
+        "left_perspective": fields.get("Left Perspective", ""),
+        "right_perspective": fields.get("Right Perspective", ""),
+        "constitutional_framework": fields.get("Constitutional Framework", ""),
+        "scenario_map": fields.get("Scenario Map", ""),
+        "subclaims": build_subclaims(fields, parsed_json),
+        "source_urls": fields.get("Source URLs", ""),
+        "status": fields.get("Status", "Active"),
+        "mode": fields.get("Mode", ""),
+        "published": fields.get("Published", False),
+        "human_reviewed": fields.get("Human Reviewed", False)
+    }
+
+    return current_claim
+
+
+def get_recent_claims(limit=5):
+    if not AIRTABLE_TOKEN or not AIRTABLE_BASE_ID or not AIRTABLE_TABLE_NAME:
+        return []
+
+    try:
+        params = {
+            "maxRecords": limit,
+            "sort[0][field]": "Date Added",
+            "sort[0][direction]": "desc"
+        }
+
+        response = requests.get(
+            airtable_url(),
+            headers={"Authorization": f"Bearer {AIRTABLE_TOKEN}"},
+            params=params,
+            timeout=20
+        )
+        response.raise_for_status()
+
+        records = response.json().get("records", [])
+        recent = []
+
+        for record in records:
+            fields = record.get("fields", {})
+            recent.append({
+                "title": fields.get("Original Quote") or fields.get("Stripped Claim") or "Untitled Claim",
+                "slug": fields.get("URL Slug", ""),
+                "date": fields.get("Date") or fields.get("Date Added", ""),
+                "verdict": fields.get("Overall Verdict", "Unproven")
+            })
+
+        return recent
+
+    except Exception as e:
+        print("RECENT CLAIMS ERROR:", str(e), flush=True)
+        return []
+
+
+def get_claim_by_slug(slug):
+    if not AIRTABLE_TOKEN or not AIRTABLE_BASE_ID or not AIRTABLE_TABLE_NAME or not slug:
+        return None
+
+    try:
+        params = {
+            "filterByFormula": f"{{URL Slug}}='{slug}'",
+            "maxRecords": 1
+        }
+
+        response = requests.get(
+            airtable_url(),
+            headers={"Authorization": f"Bearer {AIRTABLE_TOKEN}"},
+            params=params,
+            timeout=20
+        )
+        response.raise_for_status()
+
+        records = response.json().get("records", [])
+        if not records:
+            return None
+
+        return records[0]
+
+    except Exception as e:
+        print("GET CLAIM BY SLUG ERROR:", str(e), flush=True)
+        return None
+
+
+def get_latest_claim():
+    if not AIRTABLE_TOKEN or not AIRTABLE_BASE_ID or not AIRTABLE_TABLE_NAME:
+        return None
+
+    try:
+        params = {
+            "maxRecords": 1,
+            "sort[0][field]": "Date Added",
+            "sort[0][direction]": "desc"
+        }
+
+        response = requests.get(
+            airtable_url(),
+            headers={"Authorization": f"Bearer {AIRTABLE_TOKEN}"},
+            params=params,
+            timeout=20
+        )
+        response.raise_for_status()
+
+        records = response.json().get("records", [])
+        if not records:
+            return None
+
+        return records[0]
+
+    except Exception as e:
+        print("GET LATEST CLAIM ERROR:", str(e), flush=True)
+        return None
 
 
 @app.route("/health")
@@ -254,7 +464,39 @@ def logout():
 def home():
     if not session.get("logged_in"):
         return redirect("/login")
-    return render_template("index.html", superuser=session.get("superuser", False))
+
+    recent_claims = get_recent_claims(limit=10)
+    latest_record = get_latest_claim()
+    current_claim = build_claim_context(latest_record) if latest_record else None
+
+    return render_template(
+        "index.html",
+        superuser=session.get("superuser", False),
+        recent_claims=recent_claims,
+        current_claim=current_claim
+    )
+
+
+@app.route("/claim/<slug>")
+def claim_detail(slug):
+    if not session.get("logged_in"):
+        return redirect("/login")
+
+    recent_claims = get_recent_claims(limit=10)
+    record = get_claim_by_slug(slug)
+
+    if not record:
+        latest_record = get_latest_claim()
+        current_claim = build_claim_context(latest_record) if latest_record else None
+    else:
+        current_claim = build_claim_context(record)
+
+    return render_template(
+        "index.html",
+        superuser=session.get("superuser", False),
+        recent_claims=recent_claims,
+        current_claim=current_claim
+    )
 
 
 @app.route("/analyze", methods=["POST"])
@@ -311,25 +553,25 @@ def analyze():
         if not AIRTABLE_TOKEN or not AIRTABLE_BASE_ID or not AIRTABLE_TABLE_NAME:
             airtable_result = {"saved": False, "error": "Airtable not configured"}
         else:
-            url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{AIRTABLE_TABLE_NAME}"
-            headers = {
-                "Authorization": f"Bearer {AIRTABLE_TOKEN}",
-                "Content-Type": "application/json"
-            }
-
             primary = claude_json if "error" not in claude_json else openai_json
             fields = extract_primary_record_fields(claim, primary, mode)
-            fields["Claude Raw JSON"] = json.dumps(claude_json, indent=2)
-            fields["OpenAI Raw JSON"] = json.dumps(openai_json, indent=2)
+            fields["Claude Raw JSON"] = json.dumps(claude_json)[:100000]
+            fields["OpenAI Raw JSON"] = json.dumps(openai_json)[:100000]
 
-            response = requests.post(url, headers=headers, json={"fields": fields}, timeout=30)
+            response = requests.post(
+                airtable_url(),
+                headers=airtable_headers(),
+                json={"fields": fields},
+                timeout=30
+            )
 
             if response.status_code == 200:
                 record = response.json()
                 airtable_result = {
                     "saved": True,
                     "record_id": record.get("id"),
-                    "url_slug": fields["URL Slug"]
+                    "url_slug": fields["URL Slug"],
+                    "redirect_to": f"/claim/{fields['URL Slug']}"
                 }
             else:
                 try:
@@ -358,4 +600,6 @@ def analyze():
     })
 
 
-print("WTL startup: app import complete", flush=True)
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
