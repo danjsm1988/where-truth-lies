@@ -4,3 +4,4 @@ anthropic
 openai
 pyairtable
 gunicorn
+requests
