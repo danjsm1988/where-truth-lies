@@ -2,6 +2,8 @@ import os
 import json
 import re
 import unicodedata
+from datetime import datetime
+
 import requests
 from flask import Flask, request, jsonify, render_template, redirect, session
 from openai import OpenAI
@@ -32,6 +34,11 @@ CRITICAL FORMATTING RULES that cannot be violated under any circumstance:
 - Use reportedly or estimated for unconfirmed claims
 - ALL fields must be populated unless truly not applicable
 
+Speaker rule:
+- If the claim explicitly names a speaker, use that person or entity
+- If the claim does not explicitly name a speaker but is strongly associated with a dominant public figure or institution, infer that speaker
+- If there is no clearly dominant speaker, return Unknown
+
 Always return this exact JSON structure:
 
 {
@@ -57,7 +64,8 @@ Always return this exact JSON structure:
     "Alexander Hamilton": "What Hamilton would say, grounded in documented writings. 2 sentences of prose.",
     "Benjamin Franklin": "What Franklin would say, grounded in documented writings. 2 sentences of prose.",
     "John Adams": "What Adams would say, grounded in documented writings. 2 sentences of prose.",
-    "John Jay": "What Jay would say, grounded in documented writings. 2 sentences of prose."
+    "John Jay": "What Jay would say, grounded in documented writings. 2 sentences of prose.",
+    "John Marshall": "What Marshall would say, grounded in Marbury v. Madison, McCulloch v. Maryland, and early Supreme Court constitutional reasoning. 2 sentences of prose."
   },
   "Scenario Map": "MANDATORY — always populate with exactly five scenarios in this exact format: SCENARIO A — [Short Name]: Confidence: [Documented/Mixed/Speculative]. [2-3 sentences.] Analyst Divergence: [Low/Moderate/High]. Repeat through Scenario E. End with NOTE: These are plausible trajectories only. Not predictions. Only actions and time will determine the actual path.",
   "Glossary": [
@@ -153,16 +161,33 @@ def build_url_slug(parsed, claim):
     return slugify(title_source)
 
 
+def now_dates():
+    now = datetime.utcnow()
+    return {
+        "display_date": now.strftime("%B %-d, %Y") if os.name != "nt" else now.strftime("%B %#d, %Y"),
+        "short_date": now.strftime("%m/%d/%Y")
+    }
+
+
+def escape_airtable_formula_value(value):
+    return str(value).replace("\\", "\\\\").replace("'", "\\'")
+
+
 def extract_primary_record_fields(claim, parsed, mode):
+    dates = now_dates()
     fields = {
         "Original Quote": claim,
         "Stripped Claim": parsed.get("Stripped Claim", claim),
-        "Speaker": parsed.get("Speaker", "User Submission"),
+        "Speaker": parsed.get("Speaker") or "Unknown",
         "Topic": [normalize_topic(parsed.get("Topic"))],
         "Human Reviewed": False,
         "Published": False,
+        "Status": "Active",
         "Mode": mode if mode in ["strip", "full"] else "strip",
-        "URL Slug": build_url_slug(parsed, claim)
+        "URL Slug": build_url_slug(parsed, claim),
+        "Date": dates["display_date"],
+        "Date Added": dates["short_date"],
+        "Last Updated": dates["short_date"]
     }
 
     for field in [
@@ -358,7 +383,7 @@ def get_claim_by_slug(slug):
         return None
     try:
         params = {
-            "filterByFormula": f"{{URL Slug}}='{slug}'",
+            "filterByFormula": f"{{URL Slug}}='{escape_airtable_formula_value(slug)}'",
             "maxRecords": 1
         }
         response = requests.get(
@@ -374,6 +399,29 @@ def get_claim_by_slug(slug):
         return records[0]
     except Exception as e:
         print("GET CLAIM BY SLUG ERROR:", str(e), flush=True)
+        return None
+
+
+def get_claim_by_original_quote(claim):
+    if not AIRTABLE_TOKEN or not AIRTABLE_BASE_ID or not AIRTABLE_TABLE_NAME or not claim:
+        return None
+    try:
+        safe_claim = escape_airtable_formula_value(claim.strip())
+        params = {
+            "filterByFormula": f"{{Original Quote}}='{safe_claim}'",
+            "maxRecords": 1
+        }
+        response = requests.get(
+            airtable_url(),
+            headers={"Authorization": f"Bearer {AIRTABLE_TOKEN}"},
+            params=params,
+            timeout=20
+        )
+        response.raise_for_status()
+        records = response.json().get("records", [])
+        return records[0] if records else None
+    except Exception as e:
+        print("GET CLAIM BY ORIGINAL QUOTE ERROR:", str(e), flush=True)
         return None
 
 
@@ -400,6 +448,15 @@ def get_latest_claim():
     except Exception as e:
         print("GET LATEST CLAIM ERROR:", str(e), flush=True)
         return None
+
+
+def update_airtable_record(record_id, fields):
+    return requests.patch(
+        f"{airtable_url()}/{record_id}",
+        headers=airtable_headers(),
+        json={"fields": fields},
+        timeout=30
+    )
 
 
 @app.route("/health")
@@ -526,6 +583,7 @@ def analyze():
             claude_response = anthropic_client.messages.create(
                 model="claude-sonnet-4-6",
                 max_tokens=4000,
+                temperature=0,
                 system=CLAIMLAB_SYSTEM,
                 messages=[{"role": "user", "content": f"Excavate this claim: \"{claim}\""}]
             )
@@ -543,7 +601,8 @@ def analyze():
                     {"role": "system", "content": CLAIMLAB_SYSTEM},
                     {"role": "user", "content": f"Excavate this claim: \"{claim}\""}
                 ],
-                max_tokens=4000
+                max_tokens=4000,
+                temperature=0
             )
             openai_json = safe_json_parse(openai_response.choices[0].message.content)
         else:
@@ -561,34 +620,62 @@ def analyze():
             fields["Claude Raw JSON"] = json.dumps(claude_json)[:100000]
             fields["OpenAI Raw JSON"] = json.dumps(openai_json)[:100000]
 
-            response = requests.post(
-                airtable_url(),
-                headers=airtable_headers(),
-                json={"fields": fields},
-                timeout=30
-            )
+            existing_record = get_claim_by_original_quote(claim)
 
-            if response.status_code == 200:
-                record = response.json()
-                airtable_result = {
-                    "saved": True,
-                    "record_id": record.get("id"),
-                    "url_slug": fields["URL Slug"],
-                    "redirect_to": f"/claim/{fields['URL Slug']}"
-                }
+            if existing_record:
+                response = update_airtable_record(existing_record["id"], fields)
+                if response.status_code == 200:
+                    record = response.json()
+                    airtable_result = {
+                        "saved": True,
+                        "record_id": record.get("id"),
+                        "url_slug": fields["URL Slug"],
+                        "redirect_to": f"/claim/{fields['URL Slug']}",
+                        "updated_existing": True
+                    }
+                else:
+                    try:
+                        airtable_error = response.json()
+                    except Exception:
+                        airtable_error = response.text
+                    print("AIRTABLE STATUS:", response.status_code, flush=True)
+                    print("AIRTABLE ERROR:", airtable_error, flush=True)
+                    print("AIRTABLE FIELDS SENT:", json.dumps(fields, indent=2), flush=True)
+                    airtable_result = {
+                        "saved": False,
+                        "status_code": response.status_code,
+                        "error": airtable_error
+                    }
             else:
-                try:
-                    airtable_error = response.json()
-                except Exception:
-                    airtable_error = response.text
-                print("AIRTABLE STATUS:", response.status_code, flush=True)
-                print("AIRTABLE ERROR:", airtable_error, flush=True)
-                print("AIRTABLE FIELDS SENT:", json.dumps(fields, indent=2), flush=True)
-                airtable_result = {
-                    "saved": False,
-                    "status_code": response.status_code,
-                    "error": airtable_error
-                }
+                response = requests.post(
+                    airtable_url(),
+                    headers=airtable_headers(),
+                    json={"fields": fields},
+                    timeout=30
+                )
+
+                if response.status_code == 200:
+                    record = response.json()
+                    airtable_result = {
+                        "saved": True,
+                        "record_id": record.get("id"),
+                        "url_slug": fields["URL Slug"],
+                        "redirect_to": f"/claim/{fields['URL Slug']}",
+                        "created_new": True
+                    }
+                else:
+                    try:
+                        airtable_error = response.json()
+                    except Exception:
+                        airtable_error = response.text
+                    print("AIRTABLE STATUS:", response.status_code, flush=True)
+                    print("AIRTABLE ERROR:", airtable_error, flush=True)
+                    print("AIRTABLE FIELDS SENT:", json.dumps(fields, indent=2), flush=True)
+                    airtable_result = {
+                        "saved": False,
+                        "status_code": response.status_code,
+                        "error": airtable_error
+                    }
     except Exception as e:
         airtable_result = {"saved": False, "error": str(e)}
 
