@@ -1,0 +1,6 @@
+flask
+python-dotenv
+anthropic
+openai
+pyairtable
+gunicorn

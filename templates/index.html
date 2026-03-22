@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Where Truth Lies Engine</title>
+</head>
+<body style="background:#111;color:white;font-family:Arial;padding:20px">
+
+<h1>Where Truth Lies</h1>
+<p>Beyond the argument</p>
+
+<textarea id="claim" style="width:100%;height:100px;"></textarea>
+<br><br>
+<button onclick="run()">Run</button>
+
+<p id="status">Ready</p>
+<p id="airtableStatus">Airtable: waiting...</p>
+
+<h2>Claude</h2>
+<pre id="claude"></pre>
+
+<h2>OpenAI</h2>
+<pre id="openai"></pre>
+
+<script>
+async function run() {
+  const claim = document.getElementById("claim").value;
+  document.getElementById("status").textContent = "Running...";
+  document.getElementById("airtableStatus").textContent = "Airtable: waiting...";
+  document.getElementById("claude").textContent = "Loading...";
+  document.getElementById("openai").textContent = "Loading...";
+
+  try {
+    const res = await fetch("/analyze", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({claim})
+    });
+
+    const data = await res.json();
+
+    document.getElementById("status").textContent = "Done";
+    document.getElementById("claude").textContent = JSON.stringify(data.claude, null, 2);
+    document.getElementById("openai").textContent = JSON.stringify(data.openai, null, 2);
+
+    if (data.airtable && data.airtable.saved) {
+      document.getElementById("airtableStatus").textContent =
+        "Airtable: saved successfully (" + data.airtable.record_id + ")";
+    } else if (data.airtable) {
+      document.getElementById("airtableStatus").textContent =
+        "Airtable: failed - " + data.airtable.error;
+    } else {
+      document.getElementById("airtableStatus").textContent =
+        "Airtable: no response";
+    }
+
+  } catch (e) {
+    document.getElementById("status").textContent = "Error";
+    document.getElementById("airtableStatus").textContent = "Airtable: error";
+    document.getElementById("claude").textContent = e.toString();
+    document.getElementById("openai").textContent = e.toString();
+  }
+}
+</script>
+
+</body>
+</html>
