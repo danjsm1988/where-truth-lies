@@ -12,13 +12,12 @@ import anthropic
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "fallback-secret")
 
-APP_PASSWORD = os.getenv("APP_PASSWORD")
-SUPER_PASSWORD = os.getenv("SUPER_PASSWORD") or os.getenv("APP_PASSWORD") or ""
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 AIRTABLE_TOKEN = os.getenv("AIRTABLE_TOKEN")
 AIRTABLE_BASE_ID = os.getenv("AIRTABLE_BASE_ID")
-AIRTABLE_TABLE_NAME = os.getenv("AIRTABLE_TABLE_NAME")
+AIRTABLE_TABLE_NAME = os.getenv("AIRTABLE_TABLE_NAME", "Claims")
+AIRTABLE_USERS_TABLE_NAME = os.getenv("AIRTABLE_USERS_TABLE_NAME", "Users")
 
 CLAIMLAB_SYSTEM = """You are ClaimLab, the analytical engine of Where the Truth Lies — a political intelligence platform built on an excavation methodology. Motto: Beyond the Argument. Latin seal: Ubi Veritas Latet.
 
@@ -163,9 +162,14 @@ def build_url_slug(parsed, claim):
 
 def now_dates():
     now = datetime.utcnow()
+    try:
+        display_date = now.strftime("%B %-d, %Y")
+    except Exception:
+        display_date = now.strftime("%B %d, %Y").replace(" 0", " ")
+    short_date = now.strftime("%m/%d/%Y")
     return {
-        "display_date": now.strftime("%B %-d, %Y") if os.name != "nt" else now.strftime("%B %#d, %Y"),
-        "short_date": now.strftime("%m/%d/%Y")
+        "display_date": display_date,
+        "short_date": short_date
     }
 
 
@@ -173,8 +177,121 @@ def escape_airtable_formula_value(value):
     return str(value).replace("\\", "\\\\").replace("'", "\\'")
 
 
-def extract_primary_record_fields(claim, parsed, mode):
+def airtable_headers():
+    return {
+        "Authorization": f"Bearer {AIRTABLE_TOKEN}",
+        "Content-Type": "application/json"
+    }
+
+
+def airtable_url(table_name=None):
+    table = table_name or AIRTABLE_TABLE_NAME
+    return f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{table}"
+
+
+def parse_topics(topic_value):
+    if isinstance(topic_value, list):
+        return topic_value
+    if isinstance(topic_value, str) and topic_value.strip():
+        return [topic_value.strip()]
+    return []
+
+
+def parse_founders(raw):
+    if not raw:
+        return {}
+    if isinstance(raw, dict):
+        return raw
+    try:
+        return json.loads(raw)
+    except Exception:
+        return {}
+
+
+def parse_glossary(raw):
+    if not raw:
+        return []
+    if isinstance(raw, list):
+        return raw
+    try:
+        return json.loads(raw)
+    except Exception:
+        return []
+
+
+def try_parse_raw_json(fields):
+    for key in ["Claude Raw JSON", "OpenAI Raw JSON"]:
+        raw = fields.get(key)
+        if raw:
+            parsed = safe_json_parse(raw)
+            if isinstance(parsed, dict) and parsed and "raw" not in parsed:
+                return parsed
+    return {}
+
+
+def build_subclaims(fields, parsed_json):
+    subclaims = []
+    parsed_subclaims = parsed_json.get("Sub Claims")
+    if isinstance(parsed_subclaims, list) and parsed_subclaims:
+        for item in parsed_subclaims[:3]:
+            if item.get("claim"):
+                subclaims.append({
+                    "claim": item.get("claim", ""),
+                    "verdict": item.get("verdict", "Unproven")
+                })
+        return subclaims
+
+    sc1 = fields.get("Sub-Claim 1")
+    sc2 = fields.get("Sub-Claim 2")
+    sc3 = fields.get("Sub-Claim 3")
+    if sc1:
+        subclaims.append({"claim": sc1, "verdict": fields.get("Verdict: Sub-Claim1", "Unproven")})
+    if sc2:
+        subclaims.append({"claim": sc2, "verdict": fields.get("Verdict: Sub-Claim 2", "Unproven")})
+    if sc3:
+        subclaims.append({"claim": sc3, "verdict": fields.get("Verdict: Sub-Claim 3", "Unproven")})
+    return subclaims
+
+
+def build_claim_context(record):
+    if not record:
+        return None
+    fields = record.get("fields", {})
+    parsed_json = try_parse_raw_json(fields)
+    title = fields.get("Original Quote") or fields.get("Stripped Claim") or "Untitled Claim"
+
+    return {
+        "record_id": record.get("id"),
+        "slug": fields.get("URL Slug", ""),
+        "title": title,
+        "stripped_claim": fields.get("Stripped Claim", ""),
+        "speaker": fields.get("Speaker", "Unknown"),
+        "topics": parse_topics(fields.get("Topic")),
+        "date": fields.get("Date") or fields.get("Date Added", ""),
+        "overall_verdict": fields.get("Overall Verdict", "Unproven"),
+        "strip_mode_summary": fields.get("Strip Mode Summary", ""),
+        "direct_facts": fields.get("Direct Facts", ""),
+        "adjacent_facts": fields.get("Adjacent Facts", ""),
+        "root_concern": fields.get("Root Concern", ""),
+        "values_divergence": fields.get("Values Divergence", ""),
+        "left_perspective": fields.get("Left Perspective", ""),
+        "right_perspective": fields.get("Right Perspective", ""),
+        "constitutional_framework": fields.get("Constitutional Framework", ""),
+        "scenario_map": fields.get("Scenario Map", ""),
+        "source_urls": fields.get("Source URLs", ""),
+        "founders_perspectives": parse_founders(fields.get("Founders Perspectives", "")),
+        "glossary": parse_glossary(fields.get("Glossary", "")),
+        "subclaims": build_subclaims(fields, parsed_json),
+        "status": fields.get("Status", "Active"),
+        "mode": fields.get("Mode", ""),
+        "published": fields.get("Published", False),
+        "human_reviewed": fields.get("Human Reviewed", False)
+    }
+
+
+def extract_primary_record_fields(claim, parsed, mode, is_update=False):
     dates = now_dates()
+
     fields = {
         "Original Quote": claim,
         "Stripped Claim": parsed.get("Stripped Claim", claim),
@@ -186,9 +303,13 @@ def extract_primary_record_fields(claim, parsed, mode):
         "Mode": mode if mode in ["strip", "full"] else "strip",
         "URL Slug": build_url_slug(parsed, claim),
         "Date": dates["display_date"],
-        "Date Added": dates["short_date"],
         "Last Updated": dates["short_date"]
     }
+
+    if is_update:
+        fields["Date Added"] = dates["short_date"]
+    else:
+        fields["Date Added"] = dates["short_date"]
 
     for field in [
         "Strip Mode Summary", "Direct Facts", "Adjacent Facts",
@@ -235,117 +356,6 @@ def extract_primary_record_fields(claim, parsed, mode):
     return fields
 
 
-def airtable_headers():
-    return {
-        "Authorization": f"Bearer {AIRTABLE_TOKEN}",
-        "Content-Type": "application/json"
-    }
-
-
-def airtable_url():
-    return f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{AIRTABLE_TABLE_NAME}"
-
-
-def parse_topics(topic_value):
-    if isinstance(topic_value, list):
-        return topic_value
-    if isinstance(topic_value, str) and topic_value.strip():
-        return [topic_value.strip()]
-    return []
-
-
-def try_parse_raw_json(fields):
-    for key in ["Claude Raw JSON", "OpenAI Raw JSON"]:
-        raw = fields.get(key)
-        if raw:
-            parsed = safe_json_parse(raw)
-            if isinstance(parsed, dict) and parsed and "raw" not in parsed:
-                return parsed
-    return {}
-
-
-def build_subclaims(fields, parsed_json):
-    subclaims = []
-    parsed_subclaims = parsed_json.get("Sub Claims")
-    if isinstance(parsed_subclaims, list) and parsed_subclaims:
-        for item in parsed_subclaims[:3]:
-            if item.get("claim"):
-                subclaims.append({
-                    "claim": item.get("claim", ""),
-                    "verdict": item.get("verdict", "Unproven")
-                })
-        return subclaims
-
-    sc1 = fields.get("Sub-Claim 1")
-    sc2 = fields.get("Sub-Claim 2")
-    sc3 = fields.get("Sub-Claim 3")
-    if sc1:
-        subclaims.append({"claim": sc1, "verdict": fields.get("Verdict: Sub-Claim1", "Unproven")})
-    if sc2:
-        subclaims.append({"claim": sc2, "verdict": fields.get("Verdict: Sub-Claim 2", "Unproven")})
-    if sc3:
-        subclaims.append({"claim": sc3, "verdict": fields.get("Verdict: Sub-Claim 3", "Unproven")})
-    return subclaims
-
-
-def parse_founders(raw):
-    if not raw:
-        return {}
-    if isinstance(raw, dict):
-        return raw
-    try:
-        return json.loads(raw)
-    except Exception:
-        return {}
-
-
-def parse_glossary(raw):
-    if not raw:
-        return []
-    if isinstance(raw, list):
-        return raw
-    try:
-        return json.loads(raw)
-    except Exception:
-        return []
-
-
-def build_claim_context(record):
-    if not record:
-        return None
-    fields = record.get("fields", {})
-    parsed_json = try_parse_raw_json(fields)
-    title = fields.get("Original Quote") or fields.get("Stripped Claim") or "Untitled Claim"
-
-    return {
-        "record_id": record.get("id"),
-        "slug": fields.get("URL Slug", ""),
-        "title": title,
-        "stripped_claim": fields.get("Stripped Claim", ""),
-        "speaker": fields.get("Speaker", "Unknown"),
-        "topics": parse_topics(fields.get("Topic")),
-        "date": fields.get("Date") or fields.get("Date Added", ""),
-        "overall_verdict": fields.get("Overall Verdict", "Unproven"),
-        "strip_mode_summary": fields.get("Strip Mode Summary", ""),
-        "direct_facts": fields.get("Direct Facts", ""),
-        "adjacent_facts": fields.get("Adjacent Facts", ""),
-        "root_concern": fields.get("Root Concern", ""),
-        "values_divergence": fields.get("Values Divergence", ""),
-        "left_perspective": fields.get("Left Perspective", ""),
-        "right_perspective": fields.get("Right Perspective", ""),
-        "constitutional_framework": fields.get("Constitutional Framework", ""),
-        "scenario_map": fields.get("Scenario Map", ""),
-        "source_urls": fields.get("Source URLs", ""),
-        "founders_perspectives": parse_founders(fields.get("Founders Perspectives", "")),
-        "glossary": parse_glossary(fields.get("Glossary", "")),
-        "subclaims": build_subclaims(fields, parsed_json),
-        "status": fields.get("Status", "Active"),
-        "mode": fields.get("Mode", ""),
-        "published": fields.get("Published", False),
-        "human_reviewed": fields.get("Human Reviewed", False)
-    }
-
-
 def get_recent_claims(limit=5):
     if not AIRTABLE_TOKEN or not AIRTABLE_BASE_ID or not AIRTABLE_TABLE_NAME:
         return []
@@ -356,7 +366,7 @@ def get_recent_claims(limit=5):
             "sort[0][direction]": "desc"
         }
         response = requests.get(
-            airtable_url(),
+            airtable_url(AIRTABLE_TABLE_NAME),
             headers={"Authorization": f"Bearer {AIRTABLE_TOKEN}"},
             params=params,
             timeout=20
@@ -387,16 +397,14 @@ def get_claim_by_slug(slug):
             "maxRecords": 1
         }
         response = requests.get(
-            airtable_url(),
+            airtable_url(AIRTABLE_TABLE_NAME),
             headers={"Authorization": f"Bearer {AIRTABLE_TOKEN}"},
             params=params,
             timeout=20
         )
         response.raise_for_status()
         records = response.json().get("records", [])
-        if not records:
-            return None
-        return records[0]
+        return records[0] if records else None
     except Exception as e:
         print("GET CLAIM BY SLUG ERROR:", str(e), flush=True)
         return None
@@ -412,7 +420,7 @@ def get_claim_by_original_quote(claim):
             "maxRecords": 1
         }
         response = requests.get(
-            airtable_url(),
+            airtable_url(AIRTABLE_TABLE_NAME),
             headers={"Authorization": f"Bearer {AIRTABLE_TOKEN}"},
             params=params,
             timeout=20
@@ -435,24 +443,54 @@ def get_latest_claim():
             "sort[0][direction]": "desc"
         }
         response = requests.get(
-            airtable_url(),
+            airtable_url(AIRTABLE_TABLE_NAME),
             headers={"Authorization": f"Bearer {AIRTABLE_TOKEN}"},
             params=params,
             timeout=20
         )
         response.raise_for_status()
         records = response.json().get("records", [])
-        if not records:
-            return None
-        return records[0]
+        return records[0] if records else None
     except Exception as e:
         print("GET LATEST CLAIM ERROR:", str(e), flush=True)
         return None
 
 
+def get_user_by_username(username):
+    if not username:
+        return None
+    try:
+        safe_username = escape_airtable_formula_value(username.strip())
+        params = {
+            "filterByFormula": f"{{Username}}='{safe_username}'",
+            "maxRecords": 1
+        }
+        response = requests.get(
+            airtable_url(AIRTABLE_USERS_TABLE_NAME),
+            headers={"Authorization": f"Bearer {AIRTABLE_TOKEN}"},
+            params=params,
+            timeout=20
+        )
+        response.raise_for_status()
+        records = response.json().get("records", [])
+        return records[0] if records else None
+    except Exception as e:
+        print("GET USER ERROR:", str(e), flush=True)
+        return None
+
+
+def update_user_claims_remaining(user_record_id, remaining):
+    return requests.patch(
+        f"{airtable_url(AIRTABLE_USERS_TABLE_NAME)}/{user_record_id}",
+        headers=airtable_headers(),
+        json={"fields": {"Claims Remaining": remaining}},
+        timeout=20
+    )
+
+
 def update_airtable_record(record_id, fields):
     return requests.patch(
-        f"{airtable_url()}/{record_id}",
+        f"{airtable_url(AIRTABLE_TABLE_NAME)}/{record_id}",
         headers=airtable_headers(),
         json={"fields": fields},
         timeout=30
@@ -470,23 +508,39 @@ def bootcheck():
         "status": "booted",
         "openai_key_present": bool(OPENAI_API_KEY),
         "anthropic_key_present": bool(ANTHROPIC_API_KEY),
-        "airtable_present": bool(AIRTABLE_TOKEN and AIRTABLE_BASE_ID and AIRTABLE_TABLE_NAME)
+        "airtable_present": bool(AIRTABLE_TOKEN and AIRTABLE_BASE_ID and AIRTABLE_TABLE_NAME),
+        "users_table_present": bool(AIRTABLE_USERS_TABLE_NAME)
     }), 200
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
+        username = (request.form.get("username") or "").strip()
         password = (request.form.get("password") or "").strip()
-        if password == SUPER_PASSWORD:
-            session["logged_in"] = True
-            session["superuser"] = True
-            return redirect("/")
-        if password == APP_PASSWORD:
-            session["logged_in"] = True
-            session["superuser"] = False
-            return redirect("/")
-        return "Wrong password", 401
+
+        user = get_user_by_username(username)
+        if not user:
+            return "Invalid login", 401
+
+        fields = user.get("fields", {})
+        if not fields.get("Active", False):
+            return "Account disabled", 403
+
+        if password != fields.get("Password", ""):
+            return "Invalid login", 401
+
+        role = fields.get("Role", "standard")
+        claims_remaining = fields.get("Claims Remaining", 0)
+
+        session["logged_in"] = True
+        session["username"] = username
+        session["user_id"] = user.get("id")
+        session["role"] = role
+        session["superuser"] = role in ["superuser", "limited_superuser"]
+        session["claims_remaining"] = claims_remaining
+
+        return redirect("/")
 
     return """
     <html>
@@ -509,7 +563,8 @@ def login():
             <h2>Where the Truth Lies</h2>
             <div class="sub">Beyond the Argument</div>
             <form method="POST">
-                <input type="password" name="password" placeholder="Enter Password" required autofocus />
+                <input type="text" name="username" placeholder="Username" required autofocus />
+                <input type="password" name="password" placeholder="Password" required />
                 <button type="submit">Enter</button>
             </form>
             <div class="latin">Ubi Veritas Latet</div>
@@ -564,6 +619,12 @@ def analyze():
     if not session.get("logged_in"):
         return jsonify({"error": "Unauthorized"}), 401
 
+    role = session.get("role", "standard")
+    claims_remaining = int(session.get("claims_remaining", 0) or 0)
+
+    if role == "limited_superuser" and claims_remaining <= 0:
+        return jsonify({"error": "Claim limit reached. Access expired."}), 403
+
     openai_client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
     anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY) if ANTHROPIC_API_KEY else None
 
@@ -616,11 +677,10 @@ def analyze():
             airtable_result = {"saved": False, "error": "Airtable not configured"}
         else:
             primary = claude_json if "error" not in claude_json else openai_json
-            fields = extract_primary_record_fields(claim, primary, mode)
+            existing_record = get_claim_by_original_quote(claim)
+            fields = extract_primary_record_fields(claim, primary, mode, is_update=bool(existing_record))
             fields["Claude Raw JSON"] = json.dumps(claude_json)[:100000]
             fields["OpenAI Raw JSON"] = json.dumps(openai_json)[:100000]
-
-            existing_record = get_claim_by_original_quote(claim)
 
             if existing_record:
                 response = update_airtable_record(existing_record["id"], fields)
@@ -648,12 +708,11 @@ def analyze():
                     }
             else:
                 response = requests.post(
-                    airtable_url(),
+                    airtable_url(AIRTABLE_TABLE_NAME),
                     headers=airtable_headers(),
                     json={"fields": fields},
                     timeout=30
                 )
-
                 if response.status_code == 200:
                     record = response.json()
                     airtable_result = {
@@ -676,6 +735,15 @@ def analyze():
                         "status_code": response.status_code,
                         "error": airtable_error
                     }
+
+            if airtable_result.get("saved") and role == "limited_superuser":
+                new_count = max(0, claims_remaining - 1)
+                update_resp = update_user_claims_remaining(session["user_id"], new_count)
+                if update_resp.status_code == 200:
+                    session["claims_remaining"] = new_count
+                else:
+                    print("USER CLAIM COUNT UPDATE FAILED:", update_resp.text, flush=True)
+
     except Exception as e:
         airtable_result = {"saved": False, "error": str(e)}
 
@@ -683,10 +751,11 @@ def analyze():
         "claude": claude_json,
         "openai": openai_json,
         "airtable": airtable_result,
-        "superuser": is_super
+        "superuser": is_super,
+        "claims_remaining": session.get("claims_remaining")
     })
 
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(host="0.0.0.0", port=port, debug=False))
