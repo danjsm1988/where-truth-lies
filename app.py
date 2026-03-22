@@ -132,7 +132,7 @@ def extract_primary_record_fields(claim, parsed, mode):
         "Original Quote": claim,
         "Stripped Claim": parsed.get("Stripped Claim", claim),
         "Speaker": parsed.get("Speaker", "User Submission"),
-        "Topic": [normalize_topic(parsed.get("Topic"))],
+        "Topic": normalize_topic(parsed.get("Topic")),
         "Human Reviewed": False,
         "Published": False,
         "Mode": mode,
