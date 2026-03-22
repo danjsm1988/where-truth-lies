@@ -1,5 +1,7 @@
 import os
 import json
+import re
+import unicodedata
 import requests
 from flask import Flask, request, jsonify, render_template, redirect, session
 
@@ -110,9 +112,36 @@ def home():
 # -------------------------
 
 def safe_json_parse(text):
+    if not text:
+        return {}
+
+    cleaned = text.strip()
+
+    # Remove fenced code blocks
+    if cleaned.startswith("```"):
+        lines = cleaned.splitlines()
+        if lines and lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].startswith("```"):
+            lines = lines[:-1]
+        cleaned = "\n".join(lines).strip()
+
+    # Remove leading "json"
+    if cleaned.lower().startswith("json"):
+        cleaned = cleaned[4:].strip()
+
     try:
-        return json.loads(text)
+        return json.loads(cleaned)
     except Exception:
+        start = cleaned.find("{")
+        end = cleaned.rfind("}")
+        if start != -1 and end != -1 and end > start:
+            possible_json = cleaned[start:end + 1]
+            try:
+                return json.loads(possible_json)
+            except Exception:
+                pass
+
         return {"raw": text}
 
 
@@ -122,30 +151,55 @@ def normalize_topic(raw_topic):
 
     text = str(raw_topic).lower()
 
+    if "social security" in text:
+        return "Social Security"
     if "health" in text:
         return "Healthcare"
-    if "energy" in text or "wind" in text or "power" in text:
+    if "energy" in text or "wind" in text or "power" in text or "electric" in text:
         return "Energy"
     if "iran" in text:
         return "Iran War"
-    if "military" in text or "war" in text or "defense" in text:
-        return "Military"
-    if "social security" in text:
-        return "Social Security"
     if "defense" in text:
         return "Defense"
+    if "military" in text or "war" in text:
+        return "Military"
 
     return "Other"
 
 
-def extract_primary_record_fields(claim, parsed):
+def slugify(text):
+    if not text:
+        return "untitled-claim"
+
+    text = unicodedata.normalize("NFKD", str(text))
+    text = text.encode("ascii", "ignore").decode("ascii")
+    text = text.lower().strip()
+    text = re.sub(r"[^a-z0-9\s-]", "", text)
+    text = re.sub(r"[\s_-]+", "-", text)
+    text = re.sub(r"^-+|-+$", "", text)
+
+    return text[:120] if text else "untitled-claim"
+
+
+def build_url_slug(parsed, claim):
+    title_source = (
+        parsed.get("Original Quote")
+        or parsed.get("Stripped Claim")
+        or claim
+    )
+    return slugify(title_source)
+
+
+def extract_primary_record_fields(claim, parsed, mode):
     return {
         "Original Quote": claim,
         "Stripped Claim": parsed.get("Stripped Claim", claim),
         "Speaker": parsed.get("Speaker", "User Submission"),
         "Topic": normalize_topic(parsed.get("Topic")),
         "Human Reviewed": False,
-        "Published": False
+        "Published": False,
+        "Mode": mode,
+        "URL Slug": build_url_slug(parsed, claim)
     }
 
 
@@ -159,8 +213,11 @@ def analyze():
         return jsonify({"error": "Unauthorized"}), 401
 
     data = request.get_json()
-    claim = data.get("claim")
+    claim = (data.get("claim") or "").strip()
     mode = data.get("mode", "strip")
+
+    if not claim:
+        return jsonify({"error": "Claim is required"}), 400
 
     claude_json = {}
     openai_json = {}
@@ -171,7 +228,7 @@ def analyze():
     try:
         claude_response = anthropic_client.messages.create(
             model="claude-3-5-sonnet-20241022",
-            max_tokens=1500,
+            max_tokens=1800,
             messages=[{
                 "role": "user",
                 "content": f"Analyze this claim in {mode} mode and return JSON:\n\n{claim}"
@@ -216,12 +273,10 @@ def analyze():
         }
 
         primary = openai_json if "error" not in openai_json else claude_json
-        fields = extract_primary_record_fields(claim, primary)
+        fields = extract_primary_record_fields(claim, primary, mode)
 
-        # New raw JSON fields
         fields["Claude Raw JSON"] = json.dumps(claude_json, indent=2)
         fields["OpenAI Raw JSON"] = json.dumps(openai_json, indent=2)
-        fields["Mode"] = mode
 
         response = requests.post(
             url,
@@ -233,7 +288,8 @@ def analyze():
             record = response.json()
             airtable_result = {
                 "saved": True,
-                "record_id": record.get("id")
+                "record_id": record.get("id"),
+                "url_slug": fields["URL Slug"]
             }
         else:
             airtable_result = {
