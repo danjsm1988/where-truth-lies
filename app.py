@@ -42,7 +42,7 @@ def login():
     return """
     <html>
     <head>
-        <title>Where Truth Lies</title>
+        <title>Where the Truth Lies</title>
         <style>
             body {
                 background:#0d1b2a;
@@ -62,7 +62,7 @@ def login():
             input {
                 padding:10px;
                 margin-top:10px;
-                width:200px;
+                width:220px;
             }
             button {
                 margin-top:10px;
@@ -106,6 +106,50 @@ def home():
 
 
 # -------------------------
+# HELPERS
+# -------------------------
+
+def safe_json_parse(text):
+    try:
+        return json.loads(text)
+    except Exception:
+        return {"raw": text}
+
+
+def normalize_topic(raw_topic):
+    if not raw_topic:
+        return "Other"
+
+    text = str(raw_topic).lower()
+
+    if "health" in text:
+        return "Healthcare"
+    if "energy" in text or "wind" in text or "power" in text:
+        return "Energy"
+    if "iran" in text:
+        return "Iran War"
+    if "military" in text or "war" in text or "defense" in text:
+        return "Military"
+    if "social security" in text:
+        return "Social Security"
+    if "defense" in text:
+        return "Defense"
+
+    return "Other"
+
+
+def extract_primary_record_fields(claim, parsed):
+    return {
+        "Original Quote": claim,
+        "Stripped Claim": parsed.get("Stripped Claim", claim),
+        "Speaker": parsed.get("Speaker", "User Submission"),
+        "Topic": normalize_topic(parsed.get("Topic")),
+        "Human Reviewed": False,
+        "Published": False
+    }
+
+
+# -------------------------
 # ANALYZE
 # -------------------------
 
@@ -118,25 +162,24 @@ def analyze():
     claim = data.get("claim")
     mode = data.get("mode", "strip")
 
+    claude_json = {}
+    openai_json = {}
+
+    # -------------------------
+    # CLAUDE
+    # -------------------------
     try:
-        # -------------------------
-        # CLAUDE
-        # -------------------------
         claude_response = anthropic_client.messages.create(
             model="claude-3-5-sonnet-20241022",
             max_tokens=1500,
             messages=[{
                 "role": "user",
-                "content": f"Analyze this claim in {mode} mode:\n\n{claim}"
+                "content": f"Analyze this claim in {mode} mode and return JSON:\n\n{claim}"
             }]
         )
 
         claude_text = claude_response.content[0].text
-
-        try:
-            claude_json = json.loads(claude_text)
-        except:
-            claude_json = {"raw": claude_text}
+        claude_json = safe_json_parse(claude_text)
 
     except Exception as e:
         claude_json = {"error": str(e)}
@@ -148,17 +191,13 @@ def analyze():
         openai_response = openai_client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are a political claim analysis engine."},
-                {"role": "user", "content": f"Analyze this claim in {mode} mode:\n\n{claim}"}
+                {"role": "system", "content": "You are a political claim analysis engine. Return valid JSON."},
+                {"role": "user", "content": f"Analyze this claim in {mode} mode and return JSON:\n\n{claim}"}
             ]
         )
 
         openai_text = openai_response.choices[0].message.content
-
-        try:
-            openai_json = json.loads(openai_text)
-        except:
-            openai_json = {"raw": openai_text}
+        openai_json = safe_json_parse(openai_text)
 
     except Exception as e:
         openai_json = {"error": str(e)}
@@ -176,14 +215,13 @@ def analyze():
             "Content-Type": "application/json"
         }
 
-        fields = {
-            "Original Quote": claim,
-            "Stripped Claim": claude_json.get("Stripped Claim", claim),
-            "Speaker": "User Submission",
-            "Topic": "Other",  # IMPORTANT: must match your Airtable options
-            "Human Reviewed": False,
-            "Published": False
-        }
+        primary = openai_json if "error" not in openai_json else claude_json
+        fields = extract_primary_record_fields(claim, primary)
+
+        # New raw JSON fields
+        fields["Claude Raw JSON"] = json.dumps(claude_json, indent=2)
+        fields["OpenAI Raw JSON"] = json.dumps(openai_json, indent=2)
+        fields["Mode"] = mode
 
         response = requests.post(
             url,
