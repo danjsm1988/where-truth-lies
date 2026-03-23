@@ -2642,7 +2642,7 @@
         .sort((a, b) => b.length - a.length)
         .forEach(key => {
           const entry = glossaryMap[key];
-          const regex = new RegExp('(?<![a-zA-Z])(' + entry.term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')(?![a-zA-Z])', 'i');
+          const regex = new RegExp('\\b(' + entry.term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')\\b', 'i');
           html = html.replace(
             regex,
             `<span class="glossary-term" data-term="${entry.term}" data-def="${entry.definition.replace(/"/g, '&quot;')}">$1</span>`
