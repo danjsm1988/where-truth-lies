@@ -14,6 +14,7 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY", "fallback-secret")
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+XAI_API_KEY = os.getenv("XAI_API_KEY")
 AIRTABLE_TOKEN = os.getenv("AIRTABLE_TOKEN")
 AIRTABLE_BASE_ID = os.getenv("AIRTABLE_BASE_ID")
 AIRTABLE_TABLE_NAME = os.getenv("AIRTABLE_TABLE_NAME", "Claims")
@@ -22,6 +23,7 @@ AIRTABLE_REALITY_TABLE_NAME = os.getenv("AIRTABLE_REALITY_TABLE_NAME", "Reality 
 
 openai_client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
 anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY) if ANTHROPIC_API_KEY else None
+grok_client = OpenAI(api_key=XAI_API_KEY, base_url="https://api.x.ai/v1") if XAI_API_KEY else None
 
 CLAIMLAB_SYSTEM = """You are ClaimLab, the analytical engine of Where the Truth Lies. Motto: Beyond the Argument. Latin seal: Ubi Veritas Latet.
 
@@ -61,7 +63,7 @@ If there is no clearly dominant speaker, return Unknown
 Always return this exact JSON structure:
 
 {
-  "Stripped Claim": "The claim in plain language, with emotional framing and rhetorical decoration removed. One sentence if possible.",
+  "Stripped Claim": "Rewrite the claim in plain, accessible language that any ordinary person can understand immediately. Remove emotional rhetoric, dramatic framing, and inflammatory decoration. Do not substitute or sanitize specific terms — if the original claim uses a particular word or phrase, preserve it unless it is purely emotional amplification with no factual content. One sentence only.",
   "Speaker": "Who made the claim, or Unknown if not specified.",
   "Topic": "Exactly one of: Iran War, Energy, Healthcare, Social Security, Medicare, Medicaid, Defense, Military, Elections, Economy, Immigration, Foreign Policy, Crime, Gender Issues, Constitutional Rights, Education, Other",
   "Sub Claims": [
@@ -95,7 +97,7 @@ Always return this exact JSON structure:
   ],
   "Sources": "Primary sources:\\nSource description one: https://url-one.com\\nSource description two: https://url-two.com\\nSource description three: https://url-three.com\\nSource description four: https://url-four.com\\nSource description five: https://url-five.com\\n\\nInclude 6 to 10 real, verifiable URLs from major news outlets, government sites, institutional bodies, or authoritative sources. Format each line exactly as: Label: URL",
   "Overall Verdict": "Exactly one of: True, Mostly True, Substantially True, Plausible/Mixed, Contested, Exaggerated, Misleading, Unproven, False",
-  "Strip Mode Summary": "Bottom line in 3 to 4 sentences of prose."
+  "Strip Mode Summary": "Write this in the spirit of Thomas Paine's Common Sense — plain language, no jargon, no hedging, accessible to anyone regardless of political background or education level. Answer three things clearly: what is actually happening beneath the claim, why it matters in real terms, and what someone should be paying attention to next. This should reflect the full excavation without referencing the layers directly. 3 to 4 sentences. No bullet points. No dashes. Do not be condescending. Do not be sarcastic. Avoid phrases like obviously or clearly. Do not over-explain uncertainty, but do not present future outcomes as guaranteed. Let the tone reflect that situations evolve. Write with calm, grounded clarity."
 }"""
 
 
@@ -341,6 +343,7 @@ def build_claim_context(record):
 
     claude_parsed = safe_json_parse(fields.get("Claude Raw JSON", ""))
     openai_parsed = safe_json_parse(fields.get("OpenAI Raw JSON", ""))
+    grok_adjudication = safe_json_parse(fields.get("Grok Raw JSON", ""))
 
     claude_verdict = extract_verdict_from_parsed(claude_parsed)
     openai_verdict = extract_verdict_from_parsed(openai_parsed)
@@ -350,6 +353,17 @@ def build_claim_context(record):
         and bool(openai_verdict)
         and claude_verdict.strip().lower() != openai_verdict.strip().lower()
     )
+
+    grok_grounded = False
+    grok_status = "not_run"
+    if isinstance(grok_adjudication, dict) and grok_adjudication:
+        event_status = grok_adjudication.get("event_status", "unclear")
+        requires_grounding = grok_adjudication.get("requires_live_grounding", False)
+        if event_status in ("established", "false", "unverified") or requires_grounding:
+            grok_grounded = True
+            grok_status = "grounded"
+        else:
+            grok_status = "ran_no_anchor"
 
     speaker = fields.get("Speaker", "Unknown")
     attribution = detect_attribution_metadata(fields.get("Original Quote", ""), speaker)
@@ -388,7 +402,10 @@ def build_claim_context(record):
         "attribution_detail": attribution["detail"],
         "claude_verdict": claude_verdict,
         "openai_verdict": openai_verdict,
-        "models_diverged": models_diverged
+        "models_diverged": models_diverged,
+        "grok_adjudication": grok_adjudication,
+        "grok_grounded": grok_grounded,
+        "grok_status": grok_status
     }
 
 
@@ -520,7 +537,9 @@ def get_all_claims():
                 "verdict": f.get("Overall Verdict", "Unproven"),
                 "topics": parse_topics(f.get("Topic")),
                 "speaker": f.get("Speaker", "Unknown"),
-                "entered_by": f.get("Entered By", "")
+                "entered_by": f.get("Entered By", ""),
+                "stripped_claim": f.get("Stripped Claim", ""),
+                "human_reviewed": f.get("Human Reviewed", False)
             })
         return claims
     except Exception as e:
@@ -740,8 +759,147 @@ You MUST treat the above as confirmed reality.
     return ""
 
 
-def build_reality_anchor(claim):
-    return get_reality_anchor_for_claim(claim) or hardcoded_reality_fallback(claim)
+# ── GROK ADJUDICATION LAYER ──
+
+GROK_ADJUDICATION_PROMPT = """You are a live adjudication layer for a political intelligence platform called Where the Truth Lies.
+
+Your job is to determine the current factual status of a claim before deeper analysis begins. You have access to X Search and Web Search. Use them.
+
+You do not write the analysis. You establish what is real, what is attributed, and what is contested so that the analysis engine can operate on grounded facts.
+
+Return ONLY valid JSON. No markdown fences. No preamble.
+
+Search X and the web for the claim. Then return this exact structure:
+
+{
+  "requires_live_grounding": true or false,
+  "event_status": "established" or "unverified" or "false" or "unclear" or "not_applicable",
+  "attribution_status": "verified" or "unverified" or "misattributed" or "no_attribution" or "not_applicable",
+  "risk_level": "high" or "medium" or "low",
+  "ground_truth_summary": "1-2 sentences. What did you actually find? Be direct. If you found nothing, say so.",
+  "established_facts": ["Fact 1 confirmed by sources.", "Fact 2 confirmed by sources."],
+  "contested_points": ["Point 1 that remains unverified or disputed.", "Point 2 still unclear."],
+  "recommended_anchor_text": "The text that should be injected as a Reality Anchor into the excavation prompt. Write this as a direct factual briefing. If nothing was found, write: No live grounding found. Proceed with model knowledge and standard uncertainty.",
+  "sources_found": ["url1", "url2"]
+}
+
+Rules:
+If you find clear evidence the event happened, set event_status to established.
+If you find clear evidence the event did not happen or the quote is fabricated, set event_status to false.
+If you searched and found nothing relevant, set event_status to unclear and say so in ground_truth_summary.
+If the claim quotes a specific person, always check whether that quote is verifiable.
+Never fabricate sources. Only include URLs you actually retrieved.
+recommended_anchor_text is what gets injected into the analysis engine. Make it factual, direct, and useful."""
+
+
+GROK_TRIGGER_PATTERNS = [
+    r'\b[A-Z][a-z]+ [A-Z][a-z]+\b',
+    r'\b(today|yesterday|just|recently|breaking|last night|this week|this morning|hours ago|minutes ago)\b',
+    r'\b(killed|dead|died|murder|shot|arrested|indicted|charged|convicted|resigned|fired|quit|announced|signed|passed|vetoed|invaded|attacked|bombed|launched|declared)\b',
+    r'["\u201c\u201d]',
+    r'\b(said|says|stated|claimed|posted|tweeted|wrote|announced|told|according to)\b',
+    r'\b(viral|trending|went viral|circulating|spreading|posted on|tweet|x post)\b',
+]
+
+
+def should_trigger_grok(claim):
+    if not grok_client:
+        return False
+    for pattern in GROK_TRIGGER_PATTERNS:
+        if re.search(pattern, claim or "", re.IGNORECASE):
+            return True
+    return False
+
+
+def get_grok_adjudication(claim):
+    if not grok_client:
+        return None
+    try:
+        response = grok_client.responses.create(
+            model="grok-4-1-fast",
+            input=[
+                {"role": "system", "content": GROK_ADJUDICATION_PROMPT},
+                {"role": "user", "content": f"Adjudicate this claim: \"{claim}\""}
+            ],
+            tools=[
+                {"type": "web_search"},
+                {"type": "x_search"}
+            ],
+            max_output_tokens=1500,
+            temperature=0
+        )
+        raw = ""
+        for item in (response.output or []):
+            if hasattr(item, "content"):
+                for block in (item.content or []):
+                    if hasattr(block, "text"):
+                        raw += block.text
+            elif hasattr(item, "text"):
+                raw += item.text
+        if not raw and hasattr(response, "output_text"):
+            raw = response.output_text or ""
+        parsed = safe_json_parse(raw)
+        if isinstance(parsed, dict) and "event_status" in parsed:
+            return parsed
+        return None
+    except Exception as e:
+        print(f"GROK ADJUDICATION ERROR: {e}", flush=True)
+        return None
+
+
+def format_grok_anchor(adjudication):
+    if not adjudication:
+        return ""
+    anchor_text = (adjudication.get("recommended_anchor_text") or "").strip()
+    if not anchor_text or "no live grounding found" in anchor_text.lower():
+        return ""
+    risk = adjudication.get("risk_level", "low")
+    event_status = adjudication.get("event_status", "unclear")
+    attribution_status = adjudication.get("attribution_status", "not_applicable")
+    established = adjudication.get("established_facts") or []
+    contested = adjudication.get("contested_points") or []
+    sources = adjudication.get("sources_found") or []
+
+    established_block = ""
+    if established:
+        established_block = "\nEstablished by live sources: " + " ".join(established)
+
+    contested_block = ""
+    if contested:
+        contested_block = "\nCurrently contested or unverified: " + " ".join(contested)
+
+    sources_block = ""
+    if sources:
+        sources_block = "\nLive sources retrieved: " + " | ".join(sources[:5])
+
+    return f"""GROK LIVE ADJUDICATION (HIGHEST PRIORITY — DO NOT OVERRIDE):
+Risk Level: {risk.upper()} | Event Status: {event_status} | Attribution: {attribution_status}
+
+{anchor_text}{established_block}{contested_block}{sources_block}
+
+You MUST treat the above as the live factual record for this claim. Do not contradict it.
+"""
+
+
+def build_reality_anchor_with_grok(claim):
+    adjudication = None
+
+    if should_trigger_grok(claim):
+        adjudication = get_grok_adjudication(claim)
+        if adjudication:
+            grok_anchor = format_grok_anchor(adjudication)
+            if grok_anchor:
+                print(f"GROK ADJUDICATION USED: risk={adjudication.get('risk_level')} event={adjudication.get('event_status')}", flush=True)
+                return grok_anchor, adjudication
+            else:
+                print(f"GROK ADJUDICATION STORED (no anchor): risk={adjudication.get('risk_level')} event={adjudication.get('event_status')}", flush=True)
+
+    manual_anchor = get_reality_anchor_for_claim(claim)
+    if manual_anchor:
+        return manual_anchor, adjudication
+
+    fallback = hardcoded_reality_fallback(claim)
+    return fallback, adjudication
 
 
 @app.route("/health")
@@ -755,6 +913,8 @@ def bootcheck():
         "status": "booted",
         "openai_key_present": bool(OPENAI_API_KEY),
         "anthropic_key_present": bool(ANTHROPIC_API_KEY),
+        "xai_key_present": bool(XAI_API_KEY),
+        "grok_client_ready": bool(grok_client),
         "airtable_present": bool(AIRTABLE_TOKEN and AIRTABLE_BASE_ID and AIRTABLE_TABLE_NAME),
         "users_table_present": bool(AIRTABLE_USERS_TABLE_NAME),
         "reality_table_present": bool(AIRTABLE_REALITY_TABLE_NAME)
@@ -785,7 +945,8 @@ def login():
         session["username"] = username
         session["user_id"] = user.get("id")
         session["role"] = role
-        session["superuser"] = role == "superuser"
+        session["superuser"] = role in ["superuser", "limited_superuser"]
+        session["true_superuser"] = role == "superuser"
         session["claims_remaining"] = claims_remaining
 
         return redirect("/")
@@ -839,6 +1000,7 @@ def home():
         "index.html",
         page_mode="claim",
         superuser=session.get("superuser", False),
+        true_superuser=session.get("true_superuser", False),
         recent_claims=recent_claims,
         current_claim=current_claim,
         archived_claims_by_topic=get_topic_archives(),
@@ -860,6 +1022,7 @@ def archives():
         "index.html",
         page_mode="archives",
         superuser=session.get("superuser", False),
+        true_superuser=session.get("true_superuser", False),
         recent_claims=get_recent_claims(limit=10),
         current_claim=None,
         archived_claims_by_topic=filtered,
@@ -881,6 +1044,7 @@ def claim_detail(slug):
         "index.html",
         page_mode="claim",
         superuser=session.get("superuser", False),
+        true_superuser=session.get("true_superuser", False),
         recent_claims=get_recent_claims(limit=10),
         current_claim=current_claim,
         archived_claims_by_topic={},
@@ -902,7 +1066,8 @@ def analyze():
     claims_remaining = user_info["claims_remaining"]
 
     session["role"] = role
-    session["superuser"] = role == "superuser"
+    session["superuser"] = role in ["superuser", "limited_superuser"]
+    session["true_superuser"] = role == "superuser"
     session["claims_remaining"] = claims_remaining
 
     if role == "standard":
@@ -918,7 +1083,7 @@ def analyze():
     if not claim:
         return jsonify({"error": "Claim is required"}), 400
 
-    reality_anchor = build_reality_anchor(claim)
+    reality_anchor, grok_adjudication = build_reality_anchor_with_grok(claim)
     prompt_text = f"""
 {reality_anchor}
 
@@ -978,9 +1143,9 @@ Now analyze this claim:
                 existing_fields=existing_fields
             )
 
-            fields["Claude Raw JSON"] = json.dumps(claude_json)[:100000]
-            fields["OpenAI Raw JSON"] = json.dumps(openai_json)[:100000]
-            fields["Grok Raw JSON"] = json.dumps(grok_adjudication)[:100000] if grok_adjudication else ""
+            fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
+            fields["OpenAI Raw JSON"] = json.dumps(openai_json, ensure_ascii=False)[:100000]
+            fields["Grok Raw JSON"] = json.dumps(grok_adjudication, ensure_ascii=False)[:100000] if grok_adjudication is not None else ""
 
             if existing_record:
                 response = update_airtable_record(existing_record["id"], fields)
@@ -1032,7 +1197,8 @@ Now analyze this claim:
         "airtable": airtable_result,
         "superuser": session.get("superuser", False),
         "claims_remaining": session.get("claims_remaining"),
-        "reality_anchor_used": bool(reality_anchor)
+        "reality_anchor_used": bool(reality_anchor),
+        "grok_adjudication": grok_adjudication
     })
 
 
