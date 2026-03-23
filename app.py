@@ -32,11 +32,11 @@ Never tell readers what to think
 Apply the same analytical standard regardless of political party or speaker
 Use reportedly or estimated for unconfirmed claims
 ALL fields must be populated unless truly not applicable
+
 Reality anchor rule:
-Before determining that a claim is false, fabricated, or based on a nonexistent event, first verify whether the underlying event actually occurred.
-If the claim depends on a real event, analyze the claim on that real foundation even if the wording resembles misinformation, satire, or fabricated narrative formats.
-If the claim depends on an event that did not occur, the entire claim must be treated as false or structurally invalid rather than merely unproven.
-When a claim contains both a real event and an unverified accusation layered on top of it, treat the real event as established and evaluate the accusation separately.
+When current primary or authoritative sources establish that an underlying event occurred, treat that event as established background and do not contradict it.
+Do not rely on model memory for current events, deaths, arrests, shootings, elections, wars, or other time sensitive facts when a reality anchor is provided.
+If a claim contains a real event plus an unverified accusation layered on top of it, accept the real event as established and evaluate the accusation separately.
 
 Speaker rule:
 If the claim explicitly names a speaker, use that person or entity
@@ -516,6 +516,18 @@ def update_airtable_record(record_id, fields):
     )
 
 
+def reality_override(claim):
+    text = claim.lower()
+
+    if "charlie kirk" in text and "murder" in text:
+        return """Reality Anchor:
+Charlie Kirk was shot and killed at Utah Valley University on September 10, 2025. This is confirmed by FBI reporting and law enforcement sources.
+Treat this as established fact when analyzing the claim.
+"""
+
+    return ""
+
+
 def create_airtable_record(fields):
     return requests.post(
         airtable_url(AIRTABLE_TABLE_NAME),
@@ -651,14 +663,10 @@ def analyze():
     claims_remaining = int(session.get("claims_remaining", 0) or 0)
 
     if role == "standard":
-        return jsonify({
-            "error": "Your account can browse existing claim files, but cannot run new excavations."
-        }), 403
+        return jsonify({"error": "Your account can browse existing claim files, but cannot run new excavations."}), 403
 
     if role == "limited_superuser" and claims_remaining <= 0:
-        return jsonify({
-            "error": "Claim limit reached. You can still browse existing claim files, but new excavations are blocked."
-        }), 403
+        return jsonify({"error": "Claim limit reached. You can still browse existing claim files, but new excavations are blocked."}), 403
 
     openai_client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
     anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY) if ANTHROPIC_API_KEY else None
@@ -666,6 +674,7 @@ def analyze():
     data = request.get_json() or {}
     claim = (data.get("claim") or "").strip()
     mode = data.get("mode", "strip")
+    anchor = reality_override(claim)
 
     if not claim:
         return jsonify({"error": "Claim is required"}), 400
@@ -680,7 +689,10 @@ def analyze():
                 max_tokens=4000,
                 temperature=0,
                 system=CLAIMLAB_SYSTEM,
-                messages=[{"role": "user", "content": f'Excavate this claim: "{claim}"'}]
+                messages=[{
+                    "role": "user",
+                    "content": f"{anchor}\n\nExcavate this claim: \"{claim}\""
+                }]
             )
             claude_json = safe_json_parse(claude_response.content[0].text)
         else:
@@ -694,7 +706,7 @@ def analyze():
                 model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": CLAIMLAB_SYSTEM},
-                    {"role": "user", "content": f'Excavate this claim: "{claim}"'}
+                    {"role": "user", "content": f"{anchor}\n\nExcavate this claim: \"{claim}\""}
                 ],
                 max_tokens=4000,
                 temperature=0
@@ -720,6 +732,7 @@ def analyze():
                 mode=mode,
                 existing_fields=existing_fields
             )
+
             fields["Claude Raw JSON"] = json.dumps(claude_json)[:100000]
             fields["OpenAI Raw JSON"] = json.dumps(openai_json)[:100000]
 
