@@ -20,6 +20,9 @@ AIRTABLE_TABLE_NAME = os.getenv("AIRTABLE_TABLE_NAME", "Claims")
 AIRTABLE_USERS_TABLE_NAME = os.getenv("AIRTABLE_USERS_TABLE_NAME", "Users")
 AIRTABLE_REALITY_TABLE_NAME = os.getenv("AIRTABLE_REALITY_TABLE_NAME", "Reality Anchors")
 
+openai_client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
+anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY) if ANTHROPIC_API_KEY else None
+
 CLAIMLAB_SYSTEM = """You are ClaimLab, the analytical engine of Where the Truth Lies. Motto: Beyond the Argument. Latin seal: Ubi Veritas Latet.
 
 You do not fact check. You excavate. Your job is to remove what a claim is NOT so that what it actually IS becomes visible.
@@ -41,6 +44,14 @@ You are not allowed to replace it with prior knowledge.
 You are not allowed to downgrade it to uncertainty.
 If your internal knowledge conflicts with the Reality Anchor, the Reality Anchor MUST win.
 If the analysis contradicts a provided Reality Anchor, the response is invalid and must not be generated.
+
+ATTRIBUTION RULE:
+If a claim states that a public figure said something, evaluate whether the statement exists separately from whether it is true.
+Do not collapse attribution and truth into one question.
+If the input explicitly attributes a statement to a named speaker, preserve that distinction in the analysis.
+
+COMMON GROUND RULE:
+Common Ground must be narrow, specific, and real. It must be grounded in what the documented facts support, lawful within the relevant constitutional and institutional framework, practically achievable through existing institutions without waiting for either side to win a political argument, and likely to produce better measurable outcomes for citizens than the current trajectory of each side's preferred approach. It is not the midpoint between two talking points. It is not a rhetorical gesture toward unity. Do not manufacture false consensus. If no genuine common ground exists in the documented record, state that explicitly.
 
 Speaker rule:
 If the claim explicitly names a speaker, use that person or entity
@@ -114,6 +125,45 @@ def safe_json_parse(text):
         return {"raw": text}
 
 
+def extract_verdict_from_parsed(parsed):
+    if not isinstance(parsed, dict):
+        return ""
+    return (parsed.get("Overall Verdict") or parsed.get("Verdict") or "").strip()
+
+
+def detect_attribution_metadata(original_quote, speaker):
+    text = (original_quote or "").strip()
+    speaker = (speaker or "").strip()
+
+    if not text:
+        return {"status": "Unknown", "detail": "No input text available."}
+
+    lowered = text.lower()
+    patterns = [
+        r"\bsaid\b", r"\bsays\b", r"\bclaims\b", r"\bclaimed\b", r"\bstated\b",
+        r"\bposted\b", r"\bwrote\b", r"\bargued\b", r"\bannounced\b", r"\btold\b",
+        r"\baccording to\b"
+    ]
+    explicitly_attributed = any(re.search(p, lowered) for p in patterns)
+
+    if explicitly_attributed and speaker and speaker != "Unknown":
+        return {
+            "status": "Attributed",
+            "detail": "The input explicitly attributes the statement to the named speaker."
+        }
+
+    if speaker and speaker != "Unknown":
+        return {
+            "status": "Inferred",
+            "detail": "The system assigned a speaker, but the input did not explicitly attribute the statement."
+        }
+
+    return {
+        "status": "Unknown",
+        "detail": "No clear speaker attribution was identified."
+    }
+
+
 def normalize_topic(raw_topic):
     if not raw_topic:
         return "Other"
@@ -132,7 +182,7 @@ def normalize_topic(raw_topic):
         return "Iran War"
     if "foreign policy" in text or "foreign" in text:
         return "Foreign Policy"
-    if "crime" in text or "criminal" in text or "murder" in text or "shoot" in text:
+    if "crime" in text or "criminal" in text or "murder" in text or "shoot" in text or "assass" in text:
         return "Crime"
     if "election" in text or "vote" in text or "ballot" in text or "save act" in text:
         return "Elections"
@@ -194,6 +244,28 @@ def airtable_headers():
 def airtable_url(table_name=None):
     table = table_name or AIRTABLE_TABLE_NAME
     return f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{table}"
+
+
+def airtable_get_all(table_name, params=None):
+    all_records = []
+    offset = None
+    while True:
+        use_params = dict(params or {})
+        if offset:
+            use_params["offset"] = offset
+        response = requests.get(
+            airtable_url(table_name),
+            headers={"Authorization": f"Bearer {AIRTABLE_TOKEN}"},
+            params=use_params,
+            timeout=30
+        )
+        response.raise_for_status()
+        payload = response.json()
+        all_records.extend(payload.get("records", []))
+        offset = payload.get("offset")
+        if not offset:
+            break
+    return all_records
 
 
 def parse_topics(topic_value):
@@ -263,16 +335,32 @@ def build_subclaims(fields, parsed_json):
 def build_claim_context(record):
     if not record:
         return None
+
     fields = record.get("fields", {})
-    parsed_json = try_parse_raw_json(fields)
     title = fields.get("Original Quote") or fields.get("Stripped Claim") or "Untitled Claim"
+
+    claude_parsed = safe_json_parse(fields.get("Claude Raw JSON", ""))
+    openai_parsed = safe_json_parse(fields.get("OpenAI Raw JSON", ""))
+
+    claude_verdict = extract_verdict_from_parsed(claude_parsed)
+    openai_verdict = extract_verdict_from_parsed(openai_parsed)
+
+    models_diverged = (
+        bool(claude_verdict)
+        and bool(openai_verdict)
+        and claude_verdict.strip().lower() != openai_verdict.strip().lower()
+    )
+
+    speaker = fields.get("Speaker", "Unknown")
+    attribution = detect_attribution_metadata(fields.get("Original Quote", ""), speaker)
+    parsed_json = try_parse_raw_json(fields)
 
     return {
         "record_id": record.get("id"),
         "slug": fields.get("URL Slug", ""),
         "title": title,
         "stripped_claim": fields.get("Stripped Claim", ""),
-        "speaker": fields.get("Speaker", "Unknown"),
+        "speaker": speaker,
         "topics": parse_topics(fields.get("Topic")),
         "date": fields.get("Date") or fields.get("Date Added", ""),
         "overall_verdict": fields.get("Overall Verdict", "Unproven"),
@@ -293,11 +381,18 @@ def build_claim_context(record):
         "status": fields.get("Status", "Active"),
         "mode": fields.get("Mode", ""),
         "published": fields.get("Published", False),
-        "human_reviewed": fields.get("Human Reviewed", False)
+        "human_reviewed": fields.get("Human Reviewed", False),
+        "entered_by": fields.get("Entered By", ""),
+
+        "attribution_status": attribution["status"],
+        "attribution_detail": attribution["detail"],
+        "claude_verdict": claude_verdict,
+        "openai_verdict": openai_verdict,
+        "models_diverged": models_diverged
     }
 
 
-def extract_primary_record_fields(claim, parsed, mode, existing_fields=None):
+def extract_primary_record_fields(claim, parsed, mode, username, existing_fields=None):
     dates = now_dates()
     existing_fields = existing_fields or {}
     is_full_reexcavate = mode == "full"
@@ -308,6 +403,8 @@ def extract_primary_record_fields(claim, parsed, mode, existing_fields=None):
     else:
         human_reviewed_value = False
         published_value = False
+
+    entered_by = existing_fields.get("Entered By") or username or "Unknown"
 
     fields = {
         "Original Quote": claim,
@@ -320,8 +417,9 @@ def extract_primary_record_fields(claim, parsed, mode, existing_fields=None):
         "Mode": mode if mode in ["strip", "full"] else "strip",
         "URL Slug": build_url_slug(parsed, claim),
         "Date": dates["display_date"],
-        "Date Added": dates["short_date"],
-        "Last Updated": dates["short_date"]
+        "Date Added": existing_fields.get("Date Added", dates["short_date"]),
+        "Last Updated": dates["short_date"],
+        "Entered By": entered_by
     }
 
     for field in [
@@ -383,27 +481,61 @@ def get_recent_claims(limit=10):
             "sort[0][field]": "Date Added",
             "sort[0][direction]": "desc"
         }
-        response = requests.get(
-            airtable_url(AIRTABLE_TABLE_NAME),
-            headers={"Authorization": f"Bearer {AIRTABLE_TOKEN}"},
-            params=params,
-            timeout=20
-        )
-        response.raise_for_status()
-        records = response.json().get("records", [])
+        records = airtable_get_all(AIRTABLE_TABLE_NAME, params=params)
         recent = []
-        for record in records:
+        for record in records[:limit]:
             f = record.get("fields", {})
             recent.append({
-                "title": f.get("Original Quote") or f.get("Stripped Claim") or "Untitled Claim",
-                "slug": f.get("URL Slug", ""),
-                "date": f.get("Date") or f.get("Date Added", ""),
-                "verdict": f.get("Overall Verdict", "Unproven")
-            })
+    "title": f.get("Original Quote") or f.get("Stripped Claim") or "Untitled Claim",
+    "slug": f.get("URL Slug", ""),
+    "date": f.get("Date") or f.get("Date Added", ""),
+    "verdict": f.get("Overall Verdict", "Unproven"),
+    "topics": parse_topics(f.get("Topic")),
+    "speaker": f.get("Speaker", "Unknown"),
+    "entered_by": f.get("Entered By", "")
+})
         return recent
     except Exception as e:
         print("RECENT CLAIMS ERROR:", str(e), flush=True)
         return []
+
+
+def get_all_claims():
+    if not AIRTABLE_TOKEN or not AIRTABLE_BASE_ID or not AIRTABLE_TABLE_NAME:
+        return []
+    try:
+        params = {
+            "sort[0][field]": "Date Added",
+            "sort[0][direction]": "desc"
+        }
+        records = airtable_get_all(AIRTABLE_TABLE_NAME, params=params)
+        claims = []
+        for record in records:
+            f = record.get("fields", {})
+            claims.append({
+                "record_id": record.get("id"),
+                "title": f.get("Original Quote") or f.get("Stripped Claim") or "Untitled Claim",
+                "slug": f.get("URL Slug", ""),
+                "date": f.get("Date") or f.get("Date Added", ""),
+                "verdict": f.get("Overall Verdict", "Unproven"),
+                "topics": parse_topics(f.get("Topic")),
+                "speaker": f.get("Speaker", "Unknown"),
+                "entered_by": f.get("Entered By", "")
+            })
+        return claims
+    except Exception as e:
+        print("ALL CLAIMS ERROR:", str(e), flush=True)
+        return []
+
+
+def get_topic_archives():
+    grouped = {}
+    all_claims = get_all_claims()
+    for claim in all_claims:
+        topics = claim.get("topics") or ["Other"]
+        topic = topics[0] if topics else "Other"
+        grouped.setdefault(topic, []).append(claim)
+    return dict(sorted(grouped.items(), key=lambda x: x[0].lower()))
 
 
 def get_claim_by_slug(slug):
@@ -497,6 +629,20 @@ def get_user_by_username(username):
         return None
 
 
+def get_fresh_user_session_info():
+    username = session.get("username")
+    user = get_user_by_username(username) if username else None
+    if not user:
+        return None
+    fields = user.get("fields", {})
+    return {
+        "record_id": user.get("id"),
+        "role": fields.get("Role", "standard"),
+        "claims_remaining": int(fields.get("Claims Remaining", 0) or 0),
+        "active": fields.get("Active", False)
+    }
+
+
 def update_user_claims_remaining(user_record_id, remaining):
     return requests.patch(
         f"{airtable_url(AIRTABLE_USERS_TABLE_NAME)}/{user_record_id}",
@@ -534,14 +680,7 @@ def get_active_reality_anchors():
             "sort[0][direction]": "desc",
             "maxRecords": 100
         }
-        response = requests.get(
-            airtable_url(AIRTABLE_REALITY_TABLE_NAME),
-            headers={"Authorization": f"Bearer {AIRTABLE_TOKEN}"},
-            params=params,
-            timeout=20
-        )
-        response.raise_for_status()
-        return response.json().get("records", [])
+        return airtable_get_all(AIRTABLE_REALITY_TABLE_NAME, params=params)
     except Exception as e:
         print("REALITY ANCHORS ERROR:", str(e), flush=True)
         return []
@@ -575,23 +714,23 @@ def get_reality_anchor_for_claim(claim):
     if best_match and best_score > 0:
         anchor_text = (best_match.get("Anchor Text") or "").strip()
         source_urls = (best_match.get("Source URLs") or "").strip()
+        anchor_key = (best_match.get("Anchor Key") or "").strip()
 
         if anchor_text:
             source_block = f"\nSupporting sources:\n{source_urls}" if source_urls else ""
+            label = f"\nReality Anchor Key: {anchor_key}" if anchor_key else ""
             return f"""REALITY ANCHOR (HIGHEST PRIORITY FACT — DO NOT OVERRIDE):
-{anchor_text}{source_block}
+{anchor_text}{label}{source_block}
 
 You MUST treat the above as confirmed reality.
 """
-
     return ""
 
 
 def hardcoded_reality_fallback(claim):
     text = (claim or "").lower()
-    if "charlie kirk" in text or "erika kirk" in text:
-        if "murder" in text or "killed" in text or "assassinated" in text or "death" in text:
-            return """REALITY ANCHOR (HIGHEST PRIORITY FACT — DO NOT OVERRIDE):
+    if ("charlie kirk" in text or "erika kirk" in text) and any(k in text for k in ["murder", "killed", "assassinated", "death"]):
+        return """REALITY ANCHOR (HIGHEST PRIORITY FACT — DO NOT OVERRIDE):
 Charlie Kirk was shot and killed at Utah Valley University on September 10, 2025. This event is established and must be treated as real background fact when analyzing related claims. Any analysis should evaluate whether a person said something about the event or was involved in the event, not whether the event itself occurred.
 Supporting sources:
 FBI update: https://www.fbi.gov/news/press-releases/utah-valley-shooting-updates
@@ -646,7 +785,7 @@ def login():
         session["username"] = username
         session["user_id"] = user.get("id")
         session["role"] = role
-        session["superuser"] = role in ["superuser", "limited_superuser"]
+        session["superuser"] = role == "superuser"
         session["claims_remaining"] = claims_remaining
 
         return redirect("/")
@@ -698,9 +837,33 @@ def home():
     current_claim = build_claim_context(latest_record) if latest_record else None
     return render_template(
         "index.html",
+        page_mode="claim",
         superuser=session.get("superuser", False),
         recent_claims=recent_claims,
-        current_claim=current_claim
+        current_claim=current_claim,
+        archived_claims_by_topic={},
+        selected_topic=""
+    )
+
+
+@app.route("/archives")
+def archives():
+    if not session.get("logged_in"):
+        return redirect("/login")
+    topic = (request.args.get("topic") or "").strip()
+    archives_by_topic = get_topic_archives()
+    if topic:
+        filtered = {topic: archives_by_topic.get(topic, [])}
+    else:
+        filtered = archives_by_topic
+    return render_template(
+        "index.html",
+        page_mode="archives",
+        superuser=session.get("superuser", False),
+        recent_claims=get_recent_claims(limit=10),
+        current_claim=None,
+        archived_claims_by_topic=filtered,
+        selected_topic=topic
     )
 
 
@@ -708,7 +871,6 @@ def home():
 def claim_detail(slug):
     if not session.get("logged_in"):
         return redirect("/login")
-    recent_claims = get_recent_claims(limit=10)
     record = get_claim_by_slug(slug)
     if not record:
         latest_record = get_latest_claim()
@@ -717,9 +879,12 @@ def claim_detail(slug):
         current_claim = build_claim_context(record)
     return render_template(
         "index.html",
+        page_mode="claim",
         superuser=session.get("superuser", False),
-        recent_claims=recent_claims,
-        current_claim=current_claim
+        recent_claims=get_recent_claims(limit=10),
+        current_claim=current_claim,
+        archived_claims_by_topic={},
+        selected_topic=""
     )
 
 
@@ -728,8 +893,17 @@ def analyze():
     if not session.get("logged_in"):
         return jsonify({"error": "Unauthorized"}), 401
 
-    role = session.get("role", "standard")
-    claims_remaining = int(session.get("claims_remaining", 0) or 0)
+    user_info = get_fresh_user_session_info()
+    if not user_info or not user_info.get("active"):
+        session.clear()
+        return jsonify({"error": "Account unavailable or inactive."}), 403
+
+    role = user_info["role"]
+    claims_remaining = user_info["claims_remaining"]
+
+    session["role"] = role
+    session["superuser"] = role == "superuser"
+    session["claims_remaining"] = claims_remaining
 
     if role == "standard":
         return jsonify({"error": "Your account can browse existing claim files, but cannot run new excavations."}), 403
@@ -744,13 +918,9 @@ def analyze():
     if not claim:
         return jsonify({"error": "Claim is required"}), 400
 
-    anchor = build_reality_anchor(claim)
-
-    openai_client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
-    anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY) if ANTHROPIC_API_KEY else None
-
+    reality_anchor = build_reality_anchor(claim)
     prompt_text = f"""
-{anchor}
+{reality_anchor}
 
 Now analyze this claim:
 "{claim}"
@@ -804,6 +974,7 @@ Now analyze this claim:
                 claim=claim,
                 parsed=primary,
                 mode=mode,
+                username=session.get("username", "Unknown"),
                 existing_fields=existing_fields
             )
 
@@ -847,7 +1018,7 @@ Now analyze this claim:
 
             if airtable_result.get("saved") and role == "limited_superuser":
                 new_count = max(0, claims_remaining - 1)
-                update_resp = update_user_claims_remaining(session["user_id"], new_count)
+                update_resp = update_user_claims_remaining(user_info["record_id"], new_count)
                 if update_resp.status_code == 200:
                     session["claims_remaining"] = new_count
 
@@ -860,7 +1031,7 @@ Now analyze this claim:
         "airtable": airtable_result,
         "superuser": session.get("superuser", False),
         "claims_remaining": session.get("claims_remaining"),
-        "reality_anchor_used": bool(anchor)
+        "reality_anchor_used": bool(reality_anchor)
     })
 
 
