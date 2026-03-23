@@ -61,7 +61,7 @@ If there is no clearly dominant speaker, return Unknown
 Always return this exact JSON structure:
 
 {
-  "Stripped Claim": "The claim in plain language, with emotional framing and rhetorical decoration removed. One sentence if possible.",
+  "Stripped Claim": "Rewrite the claim in plain, accessible language that any ordinary person can understand immediately. Remove emotional rhetoric, dramatic framing, and inflammatory decoration. Do not substitute or sanitize specific terms — if the original claim uses a particular word or phrase, preserve it unless it is purely emotional amplification with no factual content. One sentence only.",
   "Speaker": "Who made the claim, or Unknown if not specified.",
   "Topic": "Exactly one of: Iran War, Energy, Healthcare, Social Security, Medicare, Medicaid, Defense, Military, Elections, Economy, Immigration, Foreign Policy, Crime, Gender Issues, Constitutional Rights, Education, Other",
   "Sub Claims": [
@@ -95,7 +95,7 @@ Always return this exact JSON structure:
   ],
   "Sources": "Primary sources:\\nSource description one: https://url-one.com\\nSource description two: https://url-two.com\\nSource description three: https://url-three.com\\nSource description four: https://url-four.com\\nSource description five: https://url-five.com\\n\\nInclude 6 to 10 real, verifiable URLs from major news outlets, government sites, institutional bodies, or authoritative sources. Format each line exactly as: Label: URL",
   "Overall Verdict": "Exactly one of: True, Mostly True, Substantially True, Plausible/Mixed, Contested, Exaggerated, Misleading, Unproven, False",
-  "Strip Mode Summary": "Bottom line in 3 to 4 sentences of prose."
+  "Strip Mode Summary": "Write this in the spirit of Thomas Paine's Common Sense — plain language, no jargon, no hedging, accessible to anyone regardless of political background or education level. Answer three things clearly: what is actually happening beneath the claim, why it matters in real terms, and what someone should be paying attention to next. This should reflect the full excavation without referencing the layers directly. 3 to 4 sentences. No bullet points. No dashes. Do not be condescending. Do not be sarcastic. Avoid phrases like obviously or clearly. Do not over-explain uncertainty, but do not present future outcomes as guaranteed. Let the tone reflect that situations evolve. Write with calm, grounded clarity."
 }"""
 
 
@@ -785,7 +785,8 @@ def login():
         session["username"] = username
         session["user_id"] = user.get("id")
         session["role"] = role
-        session["superuser"] = role == "superuser"
+        session["superuser"] = role in ["superuser", "limited_superuser"]
+        session["true_superuser"] = role == "superuser"
         session["claims_remaining"] = claims_remaining
 
         return redirect("/")
@@ -839,6 +840,7 @@ def home():
         "index.html",
         page_mode="claim",
         superuser=session.get("superuser", False),
+        true_superuser=session.get("true_superuser", False),
         recent_claims=recent_claims,
         current_claim=current_claim,
         archived_claims_by_topic=get_topic_archives(),
@@ -860,6 +862,7 @@ def archives():
         "index.html",
         page_mode="archives",
         superuser=session.get("superuser", False),
+        true_superuser=session.get("true_superuser", False),
         recent_claims=get_recent_claims(limit=10),
         current_claim=None,
         archived_claims_by_topic=filtered,
@@ -881,6 +884,7 @@ def claim_detail(slug):
         "index.html",
         page_mode="claim",
         superuser=session.get("superuser", False),
+        true_superuser=session.get("true_superuser", False),
         recent_claims=get_recent_claims(limit=10),
         current_claim=current_claim,
         archived_claims_by_topic={},
@@ -902,7 +906,8 @@ def analyze():
     claims_remaining = user_info["claims_remaining"]
 
     session["role"] = role
-    session["superuser"] = role == "superuser"
+    session["superuser"] = role in ["superuser", "limited_superuser"]
+    session["true_superuser"] = role == "superuser"
     session["claims_remaining"] = claims_remaining
 
     if role == "standard":
