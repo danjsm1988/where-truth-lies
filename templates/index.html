@@ -2279,7 +2279,7 @@
                   <div class="archive-topic-chevron">▼</div>
                 </div>
 
-                <div class="archive-topic-body {% if loop.first %}open{% endif %}">
+                <div class="archive-topic-body open">
                   <div class="archive-cards">
                     {% for claim in topic_claims %}
                       {% set card_verdict = claim.verdict or claim.overall_verdict or 'Unproven' %}
