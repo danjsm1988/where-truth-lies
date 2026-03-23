@@ -18,10 +18,11 @@ AIRTABLE_TOKEN = os.getenv("AIRTABLE_TOKEN")
 AIRTABLE_BASE_ID = os.getenv("AIRTABLE_BASE_ID")
 AIRTABLE_TABLE_NAME = os.getenv("AIRTABLE_TABLE_NAME", "Claims")
 AIRTABLE_USERS_TABLE_NAME = os.getenv("AIRTABLE_USERS_TABLE_NAME", "Users")
+AIRTABLE_REALITY_TABLE_NAME = os.getenv("AIRTABLE_REALITY_TABLE_NAME", "Reality Anchors")
 
-CLAIMLAB_SYSTEM = """You are ClaimLab, the analytical engine of Where the Truth Lies — a political intelligence platform built on an excavation methodology. Motto: Beyond the Argument. Latin seal: Ubi Veritas Latet.
+CLAIMLAB_SYSTEM = """You are ClaimLab, the analytical engine of Where the Truth Lies. Motto: Beyond the Argument. Latin seal: Ubi Veritas Latet.
 
-You do not fact-check. You excavate. Your job is to remove what a claim is NOT so that what it actually IS becomes visible.
+You do not fact check. You excavate. Your job is to remove what a claim is NOT so that what it actually IS becomes visible.
 
 Return ONLY valid JSON. No markdown fences. No preamble. No explanation outside the JSON.
 
@@ -33,10 +34,13 @@ Apply the same analytical standard regardless of political party or speaker
 Use reportedly or estimated for unconfirmed claims
 ALL fields must be populated unless truly not applicable
 
-Reality anchor rule:
-When current primary or authoritative sources establish that an underlying event occurred, treat that event as established background and do not contradict it.
-Do not rely on model memory for current events, deaths, arrests, shootings, elections, wars, or other time sensitive facts when a reality anchor is provided.
-If a claim contains a real event plus an unverified accusation layered on top of it, accept the real event as established and evaluate the accusation separately.
+REALITY ANCHOR OVERRIDE RULE:
+If a Reality Anchor is provided in the input, it MUST be treated as the highest authority in the analysis.
+You are not allowed to contradict the Reality Anchor.
+You are not allowed to replace it with prior knowledge.
+You are not allowed to downgrade it to uncertainty.
+If your internal knowledge conflicts with the Reality Anchor, the Reality Anchor MUST win.
+If the analysis contradicts a provided Reality Anchor, the response is invalid and must not be generated.
 
 Speaker rule:
 If the claim explicitly names a speaker, use that person or entity
@@ -54,12 +58,12 @@ Always return this exact JSON structure:
     {"claim": "Second distinct falsifiable claim", "verdict": "Contested"},
     {"claim": "Third distinct falsifiable claim if present", "verdict": "Unproven"}
   ],
-  "Direct Facts": "What the documented record actually shows. 3 to 4 sentences of prose. Cite specific figures, dates, and institutional confirmations where available. Use reportedly or estimated for unconfirmed items.",
-  "Adjacent Facts": "What the claim omits or ignores on BOTH sides equally. 2 to 3 sentences of prose. Complicate the primary narrative from the left and from the right.",
+  "Direct Facts": "What the documented record actually shows. 3 to 4 sentences of prose.",
+  "Adjacent Facts": "What the claim omits or ignores on BOTH sides equally. 2 to 3 sentences of prose.",
   "Root Concern": "The legitimate underlying concern that exists even beneath a false or misleading claim. 1 to 2 sentences of prose.",
   "Values Divergence": "Where the real disagreement lives. Usually not in the facts themselves but in what people prioritize. 2 to 3 sentences of prose identifying the competing values.",
   "Constitutional Framework": "If the claim touches government action, rights, authority, public funds, war, law enforcement, elections, or institutional power, identify the specific Article, Section, or Amendment that applies and explain relevant founder intent. If not applicable, explain briefly why not.",
-  "Common Ground": "Layer 06. Identify the narrow but genuine overlap between opposing sides. What are both sides actually trying to protect, prevent, preserve, or solve even if they disagree sharply on means. 2 to 3 sentences of prose.",
+  "Common Ground": "Layer 06. Identify the narrow but genuine overlap between opposing sides. 2 to 3 sentences of prose.",
   "Left Perspective": "How the political left frames this claim, what their framing gets right, and where it fails or overstates. 2 to 3 sentences of prose.",
   "Right Perspective": "How the political right frames this claim, what their framing gets right, and where it fails or overstates. 2 to 3 sentences of prose.",
   "Founders Perspectives": {
@@ -72,7 +76,7 @@ Always return this exact JSON structure:
     "John Jay": "What Jay would say, grounded in documented writings. 2 sentences of prose.",
     "John Marshall": "What Marshall would say, grounded in Marbury v. Madison, McCulloch v. Maryland, and early Supreme Court constitutional reasoning. 2 sentences of prose."
   },
-  "Scenario Map": "MANDATORY — always populate with exactly five scenarios in this exact format: SCENARIO A — [Short Name]: Confidence: [Documented/Mixed/Speculative]. [2 to 3 sentences.] Analyst Divergence: [Low/Moderate/High]. Repeat through Scenario E. End with NOTE: These are plausible trajectories only. Not predictions. Only actions and time will determine the actual path.",
+  "Scenario Map": "MANDATORY. Always populate with exactly five scenarios in this exact format: SCENARIO A — [Short Name]: Confidence: [Documented/Mixed/Speculative]. [2 to 3 sentences.] Analyst Divergence: [Low/Moderate/High]. Repeat through Scenario E. End with NOTE: These are plausible trajectories only. Not predictions. Only actions and time will determine the actual path.",
   "Glossary": [
     {"term": "A term, name, or concept that general readers may not recognize", "definition": "Plain language definition in 1 to 2 sentences."},
     {"term": "Another term", "definition": "Plain language definition."},
@@ -80,7 +84,7 @@ Always return this exact JSON structure:
   ],
   "Sources": "Primary sources:\\nSource description one: https://url-one.com\\nSource description two: https://url-two.com\\nSource description three: https://url-three.com\\nSource description four: https://url-four.com\\nSource description five: https://url-five.com\\n\\nInclude 6 to 10 real, verifiable URLs from major news outlets, government sites, institutional bodies, or authoritative sources. Format each line exactly as: Label: URL",
   "Overall Verdict": "Exactly one of: True, Mostly True, Substantially True, Plausible/Mixed, Contested, Exaggerated, Misleading, Unproven, False",
-  "Strip Mode Summary": "Bottom line in 3 to 4 sentences of prose. What is documented. What remains contested. What the real question underneath this claim actually is."
+  "Strip Mode Summary": "Bottom line in 3 to 4 sentences of prose."
 }"""
 
 
@@ -128,7 +132,7 @@ def normalize_topic(raw_topic):
         return "Iran War"
     if "foreign policy" in text or "foreign" in text:
         return "Foreign Policy"
-    if "crime" in text or "criminal" in text:
+    if "crime" in text or "criminal" in text or "murder" in text or "shoot" in text:
         return "Crime"
     if "election" in text or "vote" in text or "ballot" in text or "save act" in text:
         return "Elections"
@@ -173,10 +177,7 @@ def now_dates():
     except Exception:
         display_date = now.strftime("%B %d, %Y").replace(" 0", " ")
     short_date = now.strftime("%m/%d/%Y")
-    return {
-        "display_date": display_date,
-        "short_date": short_date
-    }
+    return {"display_date": display_date, "short_date": short_date}
 
 
 def escape_airtable_formula_value(value):
@@ -368,9 +369,7 @@ def extract_primary_record_fields(claim, parsed, mode, existing_fields=None):
             if sub_claims[2].get("verdict"):
                 fields["Verdict: Sub-Claim 3"] = sub_claims[2]["verdict"]
         if sub_claims:
-            fields["Sub-Claims"] = " | ".join(
-                [sc.get("claim", "") for sc in sub_claims if sc.get("claim")]
-            ).strip()
+            fields["Sub-Claims"] = " | ".join([sc.get("claim", "") for sc in sub_claims if sc.get("claim")]).strip()
 
     return fields
 
@@ -516,18 +515,6 @@ def update_airtable_record(record_id, fields):
     )
 
 
-def reality_override(claim):
-    text = claim.lower()
-
-    if "charlie kirk" in text and "murder" in text:
-        return """Reality Anchor:
-Charlie Kirk was shot and killed at Utah Valley University on September 10, 2025. This is confirmed by FBI reporting and law enforcement sources.
-Treat this as established fact when analyzing the claim.
-"""
-
-    return ""
-
-
 def create_airtable_record(fields):
     return requests.post(
         airtable_url(AIRTABLE_TABLE_NAME),
@@ -535,6 +522,87 @@ def create_airtable_record(fields):
         json={"fields": fields},
         timeout=30
     )
+
+
+def get_active_reality_anchors():
+    if not AIRTABLE_TOKEN or not AIRTABLE_BASE_ID or not AIRTABLE_REALITY_TABLE_NAME:
+        return []
+    try:
+        params = {
+            "filterByFormula": "{Status}='Active'",
+            "sort[0][field]": "Last Updated",
+            "sort[0][direction]": "desc",
+            "maxRecords": 100
+        }
+        response = requests.get(
+            airtable_url(AIRTABLE_REALITY_TABLE_NAME),
+            headers={"Authorization": f"Bearer {AIRTABLE_TOKEN}"},
+            params=params,
+            timeout=20
+        )
+        response.raise_for_status()
+        return response.json().get("records", [])
+    except Exception as e:
+        print("REALITY ANCHORS ERROR:", str(e), flush=True)
+        return []
+
+
+def split_phrases(raw_value):
+    if not raw_value:
+        return []
+    if isinstance(raw_value, list):
+        return [str(x).strip().lower() for x in raw_value if str(x).strip()]
+    return [line.strip().lower() for line in str(raw_value).splitlines() if line.strip()]
+
+
+def get_reality_anchor_for_claim(claim):
+    claim_text = (claim or "").lower()
+    anchors = get_active_reality_anchors()
+    best_match = None
+    best_score = 0
+
+    for record in anchors:
+        fields = record.get("fields", {})
+        phrases = split_phrases(fields.get("Match Any Phrases", ""))
+        if not phrases:
+            continue
+
+        matches = sum(1 for phrase in phrases if phrase in claim_text)
+        if matches > best_score:
+            best_score = matches
+            best_match = fields
+
+    if best_match and best_score > 0:
+        anchor_text = (best_match.get("Anchor Text") or "").strip()
+        source_urls = (best_match.get("Source URLs") or "").strip()
+
+        if anchor_text:
+            source_block = f"\nSupporting sources:\n{source_urls}" if source_urls else ""
+            return f"""REALITY ANCHOR (HIGHEST PRIORITY FACT — DO NOT OVERRIDE):
+{anchor_text}{source_block}
+
+You MUST treat the above as confirmed reality.
+"""
+
+    return ""
+
+
+def hardcoded_reality_fallback(claim):
+    text = (claim or "").lower()
+    if "charlie kirk" in text or "erika kirk" in text:
+        if "murder" in text or "killed" in text or "assassinated" in text or "death" in text:
+            return """REALITY ANCHOR (HIGHEST PRIORITY FACT — DO NOT OVERRIDE):
+Charlie Kirk was shot and killed at Utah Valley University on September 10, 2025. This event is established and must be treated as real background fact when analyzing related claims. Any analysis should evaluate whether a person said something about the event or was involved in the event, not whether the event itself occurred.
+Supporting sources:
+FBI update: https://www.fbi.gov/news/press-releases/utah-valley-shooting-updates
+
+You MUST treat the above as confirmed reality.
+"""
+    return ""
+
+
+def build_reality_anchor(claim):
+    return get_reality_anchor_for_claim(claim) or hardcoded_reality_fallback(claim)
 
 
 @app.route("/health")
@@ -549,7 +617,8 @@ def bootcheck():
         "openai_key_present": bool(OPENAI_API_KEY),
         "anthropic_key_present": bool(ANTHROPIC_API_KEY),
         "airtable_present": bool(AIRTABLE_TOKEN and AIRTABLE_BASE_ID and AIRTABLE_TABLE_NAME),
-        "users_table_present": bool(AIRTABLE_USERS_TABLE_NAME)
+        "users_table_present": bool(AIRTABLE_USERS_TABLE_NAME),
+        "reality_table_present": bool(AIRTABLE_REALITY_TABLE_NAME)
     }), 200
 
 
@@ -668,16 +737,24 @@ def analyze():
     if role == "limited_superuser" and claims_remaining <= 0:
         return jsonify({"error": "Claim limit reached. You can still browse existing claim files, but new excavations are blocked."}), 403
 
-    openai_client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
-    anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY) if ANTHROPIC_API_KEY else None
-
     data = request.get_json() or {}
     claim = (data.get("claim") or "").strip()
     mode = data.get("mode", "strip")
-    anchor = reality_override(claim)
 
     if not claim:
         return jsonify({"error": "Claim is required"}), 400
+
+    anchor = build_reality_anchor(claim)
+
+    openai_client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
+    anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY) if ANTHROPIC_API_KEY else None
+
+    prompt_text = f"""
+{anchor}
+
+Now analyze this claim:
+"{claim}"
+""".strip()
 
     claude_json = {}
     openai_json = {}
@@ -689,10 +766,7 @@ def analyze():
                 max_tokens=4000,
                 temperature=0,
                 system=CLAIMLAB_SYSTEM,
-                messages=[{
-                    "role": "user",
-                    "content": f"{anchor}\n\nExcavate this claim: \"{claim}\""
-                }]
+                messages=[{"role": "user", "content": prompt_text}]
             )
             claude_json = safe_json_parse(claude_response.content[0].text)
         else:
@@ -706,7 +780,7 @@ def analyze():
                 model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": CLAIMLAB_SYSTEM},
-                    {"role": "user", "content": f"{anchor}\n\nExcavate this claim: \"{claim}\""}
+                    {"role": "user", "content": prompt_text}
                 ],
                 max_tokens=4000,
                 temperature=0
@@ -752,14 +826,7 @@ def analyze():
                         airtable_error = response.json()
                     except Exception:
                         airtable_error = response.text
-                    print("AIRTABLE STATUS:", response.status_code, flush=True)
-                    print("AIRTABLE ERROR:", airtable_error, flush=True)
-                    print("AIRTABLE FIELDS SENT:", json.dumps(fields, indent=2), flush=True)
-                    airtable_result = {
-                        "saved": False,
-                        "status_code": response.status_code,
-                        "error": airtable_error
-                    }
+                    airtable_result = {"saved": False, "status_code": response.status_code, "error": airtable_error}
             else:
                 response = create_airtable_record(fields)
                 if response.status_code == 200:
@@ -776,22 +843,13 @@ def analyze():
                         airtable_error = response.json()
                     except Exception:
                         airtable_error = response.text
-                    print("AIRTABLE STATUS:", response.status_code, flush=True)
-                    print("AIRTABLE ERROR:", airtable_error, flush=True)
-                    print("AIRTABLE FIELDS SENT:", json.dumps(fields, indent=2), flush=True)
-                    airtable_result = {
-                        "saved": False,
-                        "status_code": response.status_code,
-                        "error": airtable_error
-                    }
+                    airtable_result = {"saved": False, "status_code": response.status_code, "error": airtable_error}
 
             if airtable_result.get("saved") and role == "limited_superuser":
                 new_count = max(0, claims_remaining - 1)
                 update_resp = update_user_claims_remaining(session["user_id"], new_count)
                 if update_resp.status_code == 200:
                     session["claims_remaining"] = new_count
-                else:
-                    print("USER CLAIM COUNT UPDATE FAILED:", update_resp.text, flush=True)
 
     except Exception as e:
         airtable_result = {"saved": False, "error": str(e)}
@@ -801,7 +859,8 @@ def analyze():
         "openai": openai_json,
         "airtable": airtable_result,
         "superuser": session.get("superuser", False),
-        "claims_remaining": session.get("claims_remaining")
+        "claims_remaining": session.get("claims_remaining"),
+        "reality_anchor_used": bool(anchor)
     })
 
 

@@ -97,17 +97,16 @@
     }
 
     .seal-small {
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      background: var(--navy-mid);
-      border: 1.5px solid var(--gold-dim);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      flex: 0 0 auto;
-    }
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--navy-mid);
+  border: 1.5px solid var(--gold-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
 
     .masthead-name {
       font-family: 'Playfair Display', Georgia, serif;
@@ -117,6 +116,47 @@
       letter-spacing: 0.02em;
       line-height: 1.1;
     }
+
+
+.eye-seal {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.eye-triangle {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-left: 13px solid transparent;
+  border-right: 13px solid transparent;
+  border-bottom: 22px solid rgba(201,168,76,.85);
+  top: 8px;
+  left: 13px;
+  opacity: 0.9;
+}
+
+.eye-shape {
+  position: absolute;
+  width: 18px;
+  height: 10px;
+  border: 1.5px solid #0d1b2a;
+  border-radius: 50% / 60%;
+  background: #f5f0e8;
+  top: 18px;
+  left: 17px;
+  z-index: 2;
+}
+
+.eye-pupil {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  background: #0d1b2a;
+  border-radius: 50%;
+  top: 2px;
+  left: 6px;
+}
 
     .masthead-tagline {
       font-family: 'Crimson Text', Georgia, serif;
@@ -1088,10 +1128,22 @@
     }
 
     .empty-seal {
-      font-size: 40px;
-      margin-bottom: 20px;
-      opacity: .3;
-    }
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 20px;
+  opacity: .55;
+  position: relative;
+}
+
+.empty-eye .eye-triangle {
+  top: 12px;
+  left: 19px;
+}
+
+.empty-eye .eye-shape {
+  top: 24px;
+  left: 23px;
+}
 
     .empty-title {
       font-family: 'Playfair Display', Georgia, serif;
@@ -1247,7 +1299,14 @@
 <header class="masthead">
   <div class="masthead-inner">
     <div class="masthead-logo">
-      <div class="seal-small">⚖</div>
+      <div class="seal-small" aria-hidden="true">
+  <div class="eye-seal">
+    <div class="eye-triangle"></div>
+    <div class="eye-shape">
+      <div class="eye-pupil"></div>
+    </div>
+  </div>
+</div>
       <div>
         <div class="masthead-name">Where the Truth Lies</div>
         <div class="masthead-tagline">Beyond the Argument</div>
@@ -1599,7 +1658,14 @@
 
     {% else %}
       <div class="empty-state">
-        <div class="empty-seal">⚖</div>
+        <div class="empty-seal empty-eye" aria-hidden="true">
+  <div class="eye-seal">
+    <div class="eye-triangle"></div>
+    <div class="eye-shape">
+      <div class="eye-pupil"></div>
+    </div>
+  </div>
+</div>
         <div class="empty-title">Where the Truth Lies</div>
         <div class="empty-sub">Paste a claim in the sidebar to begin excavation.</div>
       </div>
