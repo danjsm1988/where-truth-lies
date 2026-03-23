@@ -1815,8 +1815,10 @@
           <a href="/archives">Archives</a>
           <a href="#methodology-section">Methodology</a>
 
-          {% if superuser %}
+          {% if true_superuser %}
             <span class="super-badge">Super User</span>
+          {% elif superuser %}
+            <span class="super-badge">Full Access</span>
           {% endif %}
 
           {% if session.get("role") == "limited_superuser" %}
@@ -1843,8 +1845,10 @@
             <a href="/archives" onclick="closeMobileMenu()">Archives</a>
             <a href="#methodology-section" onclick="closeMobileMenu()">Methodology</a>
 
-            {% if superuser %}
+            {% if true_superuser %}
               <button type="button" disabled>Super User</button>
+            {% elif superuser %}
+              <button type="button" disabled>Full Access</button>
             {% endif %}
 
             {% if session.get("role") == "limited_superuser" %}
@@ -1960,7 +1964,7 @@
   <p class="article-dek">{{ current_claim.stripped_claim }}</p>
 {% endif %}
 
-{% if superuser %}
+{% if true_superuser %}
   <div class="entered-by-line">
     <span class="entered-label">Entered By</span>
     <span class="entered-value">
@@ -2251,7 +2255,7 @@
         </section>
 
         {% if page_mode == "archives" %}
-        <section class="main-card" id="archives">                                             
+        <section class="main-card" id="archives">
           <div class="archives-header">
             <div class="archives-title-wrap">
               <div class="section-kicker">Archives</div>
@@ -2264,14 +2268,14 @@
             <div class="archives-utility">
               <span class="utility-chip">Recent = last 10 only</span>
               <span class="utility-chip">Topic grouped</span>
-              <span class="utility-chip">Attribution for superuser</span>
+              <span class="utility-chip">Attribution for admin</span>
             </div>
           </div>
 
           {% if archived_claims_by_topic %}
             {% for topic_name, topic_claims in archived_claims_by_topic.items() %}
               <div class="archive-topic-group">
-                <div class="archive-topic-header {% if loop.first %}open{% endif %}" onclick="toggleArchiveTopic(this)">
+                <div class="archive-topic-header open" onclick="toggleArchiveTopic(this)">
                   <div class="archive-topic-left">
                     <div class="archive-topic-name">{{ topic_name }}</div>
                     <div class="archive-topic-count">{{ topic_claims|length }} Claim{% if topic_claims|length != 1 %}s{% endif %}</div>
@@ -2319,7 +2323,7 @@
                         </div>
 
                         <div class="archive-card-footer">
-  {% if superuser %}
+  {% if true_superuser %}
     <div class="archive-byline">
       Entered by <strong>{{ claim.entered_by or claim.created_by or claim.username or 'Unknown' }}</strong>
     </div>
@@ -2341,7 +2345,7 @@
             </div>
           {% endif %}
         </section>
-        {% endif %}                                                                         
+        {% endif %}
 
         <section class="main-card methodology-section" id="methodology-section">
           <div class="section-kicker">Methodology</div>
@@ -2421,6 +2425,7 @@
           </div>
 
           <div id="status-wrap" class="status-wrap">
+            <div id="grok-status" class="status-pill">Grok: waiting</div>
             <div id="claude-status" class="status-pill">Claude: waiting</div>
             <div id="openai-status" class="status-pill">OpenAI: waiting</div>
             <div id="airtable-status" class="status-pill">Airtable: waiting</div>
@@ -2449,7 +2454,7 @@
                       <span class="recent-date">{{ claim.speaker }}</span>
                     {% endif %}
 
-                    {% if superuser %}
+                    {% if true_superuser %}
   <span class="recent-date">
     By {{ claim.entered_by or claim.created_by or claim.username or 'Unknown' }}
   </span>
@@ -2804,7 +2809,7 @@
         loadingText.textContent = msgs[mi];
       }, 1500);
 
-      ['claude', 'openai', 'airtable'].forEach(id => {
+      ['grok', 'claude', 'openai', 'airtable'].forEach(id => {
         const el = document.getElementById(id + '-status');
         if (el) {
           el.textContent = id.charAt(0).toUpperCase() + id.slice(1) + ': running';
@@ -2843,13 +2848,17 @@
         document.getElementById('airtable-status').textContent = data.airtable?.saved ? 'Airtable: saved' : 'Airtable: failed';
         document.getElementById('airtable-status').className = 'status-pill ' + (data.airtable?.saved ? 'ok' : 'bad');
 
+        const grokRan = !!data.grok_adjudication;
+        document.getElementById('grok-status').textContent = grokRan ? 'Grok: grounded' : 'Grok: skipped';
+        document.getElementById('grok-status').className = 'status-pill ' + (grokRan ? 'ok' : '');
+
         if (data.airtable?.saved && data.airtable?.redirect_to) {
           window.location.href = data.airtable.redirect_to;
           return;
         }
       } catch (err) {
         alert('Request failed: ' + err.message);
-        ['claude', 'openai', 'airtable'].forEach(id => {
+        ['grok', 'claude', 'openai', 'airtable'].forEach(id => {
           const el = document.getElementById(id + '-status');
           if (el) {
             el.textContent = id.charAt(0).toUpperCase() + id.slice(1) + ': failed';
