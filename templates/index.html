@@ -526,12 +526,33 @@
     }
 
     .sidebar {
-      position: sticky;
-      top: 94px;
-      display: grid;
-      gap: 18px;
-      align-self: start;
-    }
+  position: sticky;
+  top: 94px;
+  display: grid;
+  gap: 18px;
+  align-self: start;
+  max-height: calc(100vh - 110px);
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: rgba(255,255,255,.03);
+  border-radius: 8px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(201,168,76,.35);
+  border-radius: 8px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(201,168,76,.55);
+}
 
     .sidebar-card {
       padding: 22px;
@@ -1654,9 +1675,12 @@
       }
 
       .sidebar {
-        position: static;
-        order: -1;
-      }
+  position: static;
+  order: -1;
+  max-height: none;
+  overflow: visible;
+  padding-right: 0;
+}
     }
 
     @media (max-width: 980px) {
