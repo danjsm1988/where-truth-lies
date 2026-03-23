@@ -26,17 +26,17 @@ You do not fact-check. You excavate. Your job is to remove what a claim is NOT s
 Return ONLY valid JSON. No markdown fences. No preamble. No explanation outside the JSON.
 
 CRITICAL FORMATTING RULES that cannot be violated under any circumstance:
-- Never use bullet points, dashes, or hyphens in ANY text field
-- Write ALL text fields as flowing prose with complete sentences
-- Never tell readers what to think
-- Apply the same analytical standard regardless of political party or speaker
-- Use reportedly or estimated for unconfirmed claims
-- ALL fields must be populated unless truly not applicable
+Never use bullet points, dashes, or hyphens in ANY text field
+Write ALL text fields as flowing prose with complete sentences
+Never tell readers what to think
+Apply the same analytical standard regardless of political party or speaker
+Use reportedly or estimated for unconfirmed claims
+ALL fields must be populated unless truly not applicable
 
 Speaker rule:
-- If the claim explicitly names a speaker, use that person or entity
-- If the claim does not explicitly name a speaker but is strongly associated with a dominant public figure or institution, infer that speaker
-- If there is no clearly dominant speaker, return Unknown
+If the claim explicitly names a speaker, use that person or entity
+If the claim does not explicitly name a speaker but is strongly associated with a dominant public figure or institution, infer that speaker
+If there is no clearly dominant speaker, return Unknown
 
 Always return this exact JSON structure:
 
@@ -49,13 +49,14 @@ Always return this exact JSON structure:
     {"claim": "Second distinct falsifiable claim", "verdict": "Contested"},
     {"claim": "Third distinct falsifiable claim if present", "verdict": "Unproven"}
   ],
-  "Direct Facts": "What the documented record actually shows. 3-4 sentences of prose. Cite specific figures, dates, and institutional confirmations where available. Use reportedly or estimated for unconfirmed items.",
-  "Adjacent Facts": "What the claim omits or ignores on BOTH sides equally. 2-3 sentences of prose. Complicate the primary narrative from the left and from the right.",
-  "Root Concern": "The legitimate underlying concern that exists even beneath a false or misleading claim. 1-2 sentences of prose.",
-  "Values Divergence": "Where the real disagreement lives. Usually not in the facts themselves but in what people prioritize. 2-3 sentences of prose identifying the competing values.",
-  "Left Perspective": "How the political left frames this claim, what their framing gets right, and where it fails or overstates. 2-3 sentences of prose.",
-  "Right Perspective": "How the political right frames this claim, what their framing gets right, and where it fails or overstates. 2-3 sentences of prose.",
+  "Direct Facts": "What the documented record actually shows. 3 to 4 sentences of prose. Cite specific figures, dates, and institutional confirmations where available. Use reportedly or estimated for unconfirmed items.",
+  "Adjacent Facts": "What the claim omits or ignores on BOTH sides equally. 2 to 3 sentences of prose. Complicate the primary narrative from the left and from the right.",
+  "Root Concern": "The legitimate underlying concern that exists even beneath a false or misleading claim. 1 to 2 sentences of prose.",
+  "Values Divergence": "Where the real disagreement lives. Usually not in the facts themselves but in what people prioritize. 2 to 3 sentences of prose identifying the competing values.",
   "Constitutional Framework": "If the claim touches government action, rights, authority, public funds, war, law enforcement, elections, or institutional power, identify the specific Article, Section, or Amendment that applies and explain relevant founder intent. If not applicable, explain briefly why not.",
+  "Common Ground": "Layer 06. Identify the narrow but genuine overlap between opposing sides. What are both sides actually trying to protect, prevent, preserve, or solve even if they disagree sharply on means. 2 to 3 sentences of prose.",
+  "Left Perspective": "How the political left frames this claim, what their framing gets right, and where it fails or overstates. 2 to 3 sentences of prose.",
+  "Right Perspective": "How the political right frames this claim, what their framing gets right, and where it fails or overstates. 2 to 3 sentences of prose.",
   "Founders Perspectives": {
     "George Washington": "What Washington would say, grounded in documented writings. 2 sentences of prose.",
     "Thomas Jefferson": "What Jefferson would say, grounded in documented writings. 2 sentences of prose.",
@@ -66,15 +67,15 @@ Always return this exact JSON structure:
     "John Jay": "What Jay would say, grounded in documented writings. 2 sentences of prose.",
     "John Marshall": "What Marshall would say, grounded in Marbury v. Madison, McCulloch v. Maryland, and early Supreme Court constitutional reasoning. 2 sentences of prose."
   },
-  "Scenario Map": "MANDATORY — always populate with exactly five scenarios in this exact format: SCENARIO A — [Short Name]: Confidence: [Documented/Mixed/Speculative]. [2-3 sentences.] Analyst Divergence: [Low/Moderate/High]. Repeat through Scenario E. End with NOTE: These are plausible trajectories only. Not predictions. Only actions and time will determine the actual path.",
+  "Scenario Map": "MANDATORY — always populate with exactly five scenarios in this exact format: SCENARIO A — [Short Name]: Confidence: [Documented/Mixed/Speculative]. [2 to 3 sentences.] Analyst Divergence: [Low/Moderate/High]. Repeat through Scenario E. End with NOTE: These are plausible trajectories only. Not predictions. Only actions and time will determine the actual path.",
   "Glossary": [
-    {"term": "A term, name, or concept that general readers may not recognize", "definition": "Plain language definition in 1-2 sentences."},
+    {"term": "A term, name, or concept that general readers may not recognize", "definition": "Plain language definition in 1 to 2 sentences."},
     {"term": "Another term", "definition": "Plain language definition."},
     {"term": "A third term", "definition": "Plain language definition."}
   ],
-  "Sources": "Primary sources:\\nSource description one: https://url-one.com\\nSource description two: https://url-two.com\\nSource description three: https://url-three.com\\nSource description four: https://url-four.com\\nSource description five: https://url-five.com\\n\\nInclude 6-10 real, verifiable URLs from major news outlets, government sites, institutional bodies, or authoritative sources. Format each line exactly as: Label: URL",
+  "Sources": "Primary sources:\\nSource description one: https://url-one.com\\nSource description two: https://url-two.com\\nSource description three: https://url-three.com\\nSource description four: https://url-four.com\\nSource description five: https://url-five.com\\n\\nInclude 6 to 10 real, verifiable URLs from major news outlets, government sites, institutional bodies, or authoritative sources. Format each line exactly as: Label: URL",
   "Overall Verdict": "Exactly one of: True, Mostly True, Substantially True, Plausible/Mixed, Contested, Exaggerated, Misleading, Unproven, False",
-  "Strip Mode Summary": "Bottom line in 3-4 sentences of prose. What is documented. What remains contested. What the real question underneath this claim actually is."
+  "Strip Mode Summary": "Bottom line in 3 to 4 sentences of prose. What is documented. What remains contested. What the real question underneath this claim actually is."
 }"""
 
 
@@ -274,9 +275,10 @@ def build_claim_context(record):
         "adjacent_facts": fields.get("Adjacent Facts", ""),
         "root_concern": fields.get("Root Concern", ""),
         "values_divergence": fields.get("Values Divergence", ""),
+        "constitutional_framework": fields.get("Constitutional Framework", ""),
+        "common_ground": fields.get("Common Ground", ""),
         "left_perspective": fields.get("Left Perspective", ""),
         "right_perspective": fields.get("Right Perspective", ""),
-        "constitutional_framework": fields.get("Constitutional Framework", ""),
         "scenario_map": fields.get("Scenario Map", ""),
         "source_urls": fields.get("Source URLs", ""),
         "founders_perspectives": parse_founders(fields.get("Founders Perspectives", "")),
@@ -289,32 +291,44 @@ def build_claim_context(record):
     }
 
 
-def extract_primary_record_fields(claim, parsed, mode, is_update=False):
+def extract_primary_record_fields(claim, parsed, mode, existing_fields=None):
     dates = now_dates()
+    existing_fields = existing_fields or {}
+    is_full_reexcavate = mode == "full"
+
+    if existing_fields and not is_full_reexcavate:
+        human_reviewed_value = existing_fields.get("Human Reviewed", False)
+        published_value = existing_fields.get("Published", False)
+    else:
+        human_reviewed_value = False
+        published_value = False
 
     fields = {
         "Original Quote": claim,
         "Stripped Claim": parsed.get("Stripped Claim", claim),
         "Speaker": parsed.get("Speaker") or "Unknown",
         "Topic": [normalize_topic(parsed.get("Topic"))],
-        "Human Reviewed": False,
-        "Published": False,
+        "Human Reviewed": human_reviewed_value,
+        "Published": published_value,
         "Status": "Active",
         "Mode": mode if mode in ["strip", "full"] else "strip",
         "URL Slug": build_url_slug(parsed, claim),
         "Date": dates["display_date"],
+        "Date Added": dates["short_date"],
         "Last Updated": dates["short_date"]
     }
 
-    if is_update:
-        fields["Date Added"] = dates["short_date"]
-    else:
-        fields["Date Added"] = dates["short_date"]
-
     for field in [
-        "Strip Mode Summary", "Direct Facts", "Adjacent Facts",
-        "Root Concern", "Values Divergence", "Left Perspective",
-        "Right Perspective", "Constitutional Framework", "Scenario Map"
+        "Strip Mode Summary",
+        "Direct Facts",
+        "Adjacent Facts",
+        "Root Concern",
+        "Values Divergence",
+        "Constitutional Framework",
+        "Common Ground",
+        "Left Perspective",
+        "Right Perspective",
+        "Scenario Map"
     ]:
         if parsed.get(field):
             fields[field] = parsed[field]
@@ -356,7 +370,7 @@ def extract_primary_record_fields(claim, parsed, mode, is_update=False):
     return fields
 
 
-def get_recent_claims(limit=5):
+def get_recent_claims(limit=10):
     if not AIRTABLE_TOKEN or not AIRTABLE_BASE_ID or not AIRTABLE_TABLE_NAME:
         return []
     try:
@@ -497,6 +511,15 @@ def update_airtable_record(record_id, fields):
     )
 
 
+def create_airtable_record(fields):
+    return requests.post(
+        airtable_url(AIRTABLE_TABLE_NAME),
+        headers=airtable_headers(),
+        json={"fields": fields},
+        timeout=30
+    )
+
+
 @app.route("/health")
 def health():
     return "ok", 200
@@ -531,7 +554,7 @@ def login():
             return "Invalid login", 401
 
         role = fields.get("Role", "standard")
-        claims_remaining = fields.get("Claims Remaining", 0)
+        claims_remaining = int(fields.get("Claims Remaining", 0) or 0)
 
         session["logged_in"] = True
         session["username"] = username
@@ -622,8 +645,15 @@ def analyze():
     role = session.get("role", "standard")
     claims_remaining = int(session.get("claims_remaining", 0) or 0)
 
+    if role == "standard":
+        return jsonify({
+            "error": "Your account can browse existing claim files, but cannot run new excavations."
+        }), 403
+
     if role == "limited_superuser" and claims_remaining <= 0:
-        return jsonify({"error": "Claim limit reached. Access expired."}), 403
+        return jsonify({
+            "error": "Claim limit reached. You can still browse existing claim files, but new excavations are blocked."
+        }), 403
 
     openai_client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
     anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY) if ANTHROPIC_API_KEY else None
@@ -635,7 +665,6 @@ def analyze():
     if not claim:
         return jsonify({"error": "Claim is required"}), 400
 
-    is_super = session.get("superuser", False)
     claude_json = {}
     openai_json = {}
 
@@ -646,7 +675,7 @@ def analyze():
                 max_tokens=4000,
                 temperature=0,
                 system=CLAIMLAB_SYSTEM,
-                messages=[{"role": "user", "content": f"Excavate this claim: \"{claim}\""}]
+                messages=[{"role": "user", "content": f'Excavate this claim: "{claim}"'}]
             )
             claude_json = safe_json_parse(claude_response.content[0].text)
         else:
@@ -660,7 +689,7 @@ def analyze():
                 model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": CLAIMLAB_SYSTEM},
-                    {"role": "user", "content": f"Excavate this claim: \"{claim}\""}
+                    {"role": "user", "content": f'Excavate this claim: "{claim}"'}
                 ],
                 max_tokens=4000,
                 temperature=0
@@ -678,7 +707,14 @@ def analyze():
         else:
             primary = claude_json if "error" not in claude_json else openai_json
             existing_record = get_claim_by_original_quote(claim)
-            fields = extract_primary_record_fields(claim, primary, mode, is_update=bool(existing_record))
+            existing_fields = existing_record.get("fields", {}) if existing_record else {}
+
+            fields = extract_primary_record_fields(
+                claim=claim,
+                parsed=primary,
+                mode=mode,
+                existing_fields=existing_fields
+            )
             fields["Claude Raw JSON"] = json.dumps(claude_json)[:100000]
             fields["OpenAI Raw JSON"] = json.dumps(openai_json)[:100000]
 
@@ -707,12 +743,7 @@ def analyze():
                         "error": airtable_error
                     }
             else:
-                response = requests.post(
-                    airtable_url(AIRTABLE_TABLE_NAME),
-                    headers=airtable_headers(),
-                    json={"fields": fields},
-                    timeout=30
-                )
+                response = create_airtable_record(fields)
                 if response.status_code == 200:
                     record = response.json()
                     airtable_result = {
@@ -751,7 +782,7 @@ def analyze():
         "claude": claude_json,
         "openai": openai_json,
         "airtable": airtable_result,
-        "superuser": is_super,
+        "superuser": session.get("superuser", False),
         "claims_remaining": session.get("claims_remaining")
     })
 

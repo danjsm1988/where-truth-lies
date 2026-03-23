@@ -156,6 +156,56 @@
 
     .masthead-nav a:hover { color: var(--gold); }
 
+    .mobile-menu-btn {
+      display: none;
+      background: transparent;
+      border: 1px solid rgba(201,168,76,.35);
+      color: var(--gold);
+      padding: 8px 12px;
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 11px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .mobile-nav-panel {
+      display: none;
+      border-top: 1px solid rgba(201,168,76,.2);
+      background: var(--navy-mid);
+      padding: 14px 16px 18px;
+    }
+
+    .mobile-nav-panel.open { display: block; }
+
+    .mobile-nav-links {
+      display: grid;
+      gap: 10px;
+    }
+
+    .mobile-nav-links a,
+    .mobile-nav-links button {
+      width: 100%;
+      text-align: left;
+      background: rgba(255,255,255,.02);
+      border: 1px solid rgba(255,255,255,.08);
+      color: var(--cream);
+      padding: 12px 14px;
+      text-decoration: none;
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 11px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .mobile-nav-links .gold-btn-mobile {
+      background: var(--gold);
+      color: var(--navy);
+      font-weight: 700;
+      border: none;
+    }
+
     .super-badge,
     .quota-badge,
     .user-badge {
@@ -541,6 +591,10 @@
     .layer-constitutional .layer-block-header,
     .layer-constitutional .layer-block-body { border-color: #4a7060; }
     .layer-constitutional .layer-block-title { color: #6a9080; }
+
+    .layer-common-ground .layer-block-header,
+    .layer-common-ground .layer-block-body { border-color: #70885a; }
+    .layer-common-ground .layer-block-title { color: #a8c884; }
 
     .ornamental {
       display: flex;
@@ -1141,7 +1195,8 @@
     @media (max-width: 900px) {
       .masthead-inner { padding: 12px 16px; }
       .masthead-name { font-size: 17px; }
-      .masthead-nav a:not(.gold-btn) { display: none; }
+      .masthead-nav { display: none; }
+      .mobile-menu-btn { display: inline-block; }
       .methodology { display: none; }
       .main {
         grid-template-columns: 1fr;
@@ -1220,6 +1275,18 @@
       <a href="#claimlab" class="gold-btn">Run a Claim</a>
       <a href="/logout">Logout</a>
     </nav>
+
+    <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu()">Menu</button>
+  </div>
+
+  <div class="mobile-nav-panel" id="mobileNavPanel">
+    <div class="mobile-nav-links">
+      <a href="/" onclick="closeMobileMenu()">ClaimLab</a>
+      <a href="#archives" onclick="closeMobileMenu()">Archives</a>
+      <a href="#methodology-section" onclick="closeMobileMenu()">Methodology</a>
+      <a href="#claimlab" class="gold-btn-mobile" onclick="closeMobileMenu()">Run a Claim</a>
+      <a href="/logout">Logout</a>
+    </div>
   </div>
 </header>
 
@@ -1232,6 +1299,7 @@
       <div class="m-layer"><div class="m-num">03</div><div class="m-name">Root Concern</div><div class="m-desc">What it is really about</div></div>
       <div class="m-layer"><div class="m-num">04</div><div class="m-name">Values Divergence</div><div class="m-desc">Where real disagreement lives</div></div>
       <div class="m-layer"><div class="m-num">05</div><div class="m-name">Constitutional Framework</div><div class="m-desc">What the founders wrote</div></div>
+      <div class="m-layer"><div class="m-num">06</div><div class="m-name">Common Ground</div><div class="m-desc">Where honest overlap still exists</div></div>
     </div>
   </div>
 </div>
@@ -1397,6 +1465,21 @@
         </div>
       {% endif %}
 
+      {% if current_claim.common_ground %}
+        <div class="layer-block layer-common-ground">
+          <div class="layer-block-header open" onclick="toggleLayer(this)">
+            <div class="layer-block-header-left">
+              <span class="layer-block-title">Layer 06 — Common Ground</span>
+              <span class="layer-block-subtitle">Where honest overlap still exists</span>
+            </div>
+            <span class="layer-chevron">▼</span>
+          </div>
+          <div class="layer-block-body open">
+            <div class="layer-block-text" id="commonGroundText">{{ current_claim.common_ground }}</div>
+          </div>
+        </div>
+      {% endif %}
+
       {% if current_claim.left_perspective or current_claim.right_perspective %}
         <div class="ornamental">
           <div class="ornamental-line"></div>
@@ -1507,7 +1590,7 @@
       <div id="methodology-section" style="margin-top:48px;padding-top:32px;border-top:1px solid rgba(201,168,76,.15);">
         <div class="section-title">What Where the Truth Lies Does</div>
         <p style="font-family:'Crimson Text',Georgia,serif;font-size:18px;line-height:1.75;color:var(--text-light);margin-bottom:16px;">
-          Most political analysis flattens complex claims into a single verdict. Where the Truth Lies splits compound claims into parts, separates documented facts from interpretation, finds the root concern underneath the rhetoric, and identifies where genuine disagreement stops being factual and becomes a dispute over values, priorities, or constitutional meaning.
+          Most political analysis flattens complex claims into a single verdict. Where the Truth Lies splits compound claims into parts, separates documented facts from interpretation, finds the root concern underneath the rhetoric, identifies where genuine disagreement stops being factual and becomes a dispute over values, priorities, or constitutional meaning, and then looks for any real common ground that still exists.
         </p>
         <p style="font-family:'Crimson Text',Georgia,serif;font-size:18px;line-height:1.75;color:var(--text-light);">
           ClaimLab is the live engine. Submit any political claim in the sidebar. We do not tell you what to think. We show you what is actually there.
@@ -1556,6 +1639,9 @@
       {% if session.get("role") == "limited_superuser" and (session.get("claims_remaining", 0) | int) <= 0 %}
         <button class="excavate-btn" id="run-btn" disabled>Claim Limit Reached</button>
         <div class="sidebar-note">You can still browse existing claim files, but new excavations are blocked.</div>
+      {% elif session.get("role") == "standard" %}
+        <button class="excavate-btn" id="run-btn" disabled>Excavation Disabled</button>
+        <div class="sidebar-note">Your account can browse existing claim files, but cannot run new excavations.</div>
       {% else %}
         <button class="excavate-btn" id="run-btn" onclick="runClaim()">Excavate This Claim</button>
         <div class="sidebar-note">Strip the rhetoric. Find the root. Show the full picture.</div>
@@ -1611,7 +1697,7 @@
     <div class="sidebar-card">
       <div class="sidebar-title">About This Platform</div>
       <p class="about-text">Where the Truth Lies is a political intelligence platform built on an excavation methodology. We do not fact-check. We dig.</p>
-      <p class="about-text">Every claim has layers. Direct facts. Adjacent facts. Root concern. Values divergence. Constitutional framework. We show all of them.</p>
+      <p class="about-text">Every claim has layers. Direct facts. Adjacent facts. Root concern. Values divergence. Constitutional framework. Common ground. We show all of them.</p>
       <p class="about-text">We do not tell you what to think. We show you what is actually there.</p>
       <div class="about-seal">Ubi Veritas Latet</div>
     </div>
@@ -1661,6 +1747,14 @@
     'john jay': 'First Chief Justice of the United States and co-author of the Federalist Papers. Important on law, diplomacy, and union.',
     'john marshall': 'Long-serving Chief Justice who established judicial review in Marbury v. Madison and shaped early constitutional law.'
   };
+
+  function toggleMobileMenu() {
+    document.getElementById('mobileNavPanel')?.classList.toggle('open');
+  }
+
+  function closeMobileMenu() {
+    document.getElementById('mobileNavPanel')?.classList.remove('open');
+  }
 
   function setMode(m) {
     currentMode = m;
@@ -1766,6 +1860,7 @@
     'rootConcernText',
     'valuesDivText',
     'constText',
+    'commonGroundText',
     'summaryText',
     'leftPerspText',
     'rightPerspText'
@@ -1867,6 +1962,11 @@
   renderSources(rawSources);
 
   async function runClaim() {
+    if (USER_ROLE === 'standard') {
+      alert('Your account can browse existing claim files, but cannot run new excavations.');
+      return;
+    }
+
     if (USER_ROLE === 'limited_superuser' && CLAIMS_REMAINING <= 0) {
       alert('Claim limit reached. You can still browse existing claims, but new excavations are blocked.');
       return;
