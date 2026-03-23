@@ -2572,10 +2572,15 @@
     }
 
     function toggleArchiveTopic(header) {
-      const body = header.nextElementSibling;
-      header.classList.toggle('open');
-      body.classList.toggle('open');
-    }
+  const group = header.closest('.archive-topic-group');
+  if (!group) return;
+
+  const body = group.querySelector('.archive-topic-body');
+  if (!body) return;
+
+  header.classList.toggle('open');
+  body.classList.toggle('open');
+}
 
     function esc(text) {
       if (!text) return '';
