@@ -841,7 +841,7 @@ def home():
         superuser=session.get("superuser", False),
         recent_claims=recent_claims,
         current_claim=current_claim,
-        archived_claims_by_topic={},
+        archived_claims_by_topic=get_topic_archives(),
         selected_topic=""
     )
 
