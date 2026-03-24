@@ -1672,39 +1672,53 @@
     }
 
     @media (max-width: 1180px) {
-      .hero-inner {
-        grid-template-columns: 1fr;
-      }
+  .hero-inner {
+    grid-template-columns: 1fr;
+  }
 
-      .main-grid {
-        grid-template-columns: 1fr;
-      }
+  .main-grid {
+    grid-template-columns: 1fr;
+  }
 
-      .sidebar {
-  position: static;
-  order: -1;
-  max-height: none;
-  overflow: visible;
-  padding-right: 0;
+  .sidebar {
+    position: static;
+    order: 2;
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
 }
-    }
 
     @media (max-width: 980px) {
-      .desktop-nav { display: none; }
-      .mobile-menu-btn { display: inline-flex; }
-      .methodology-band { display: none; }
+  .desktop-nav { display: none; }
+  .mobile-menu-btn { display: inline-flex; }
+  .methodology-band { display: none; }
 
-      .archive-cards,
-      .perspectives-grid,
-      .founders-grid,
-      .methodology-points {
-        grid-template-columns: 1fr;
-      }
+  .archive-cards,
+  .perspectives-grid,
+  .founders-grid,
+  .methodology-points {
+    grid-template-columns: 1fr;
+  }
 
-      .brand-name { font-size: 18px; }
-      .brand-tagline { font-size: 10px; letter-spacing: .18em; }
-      .brand-latin { font-size: 12px; }
-    }
+  .brand-name { font-size: 18px; }
+  .brand-tagline { font-size: 10px; letter-spacing: .18em; }
+  .brand-latin { font-size: 12px; }
+
+  .mobile-user {
+    display: inline-flex;
+    margin-left: auto;
+    margin-right: 10px;
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+
+    .sidebar-card:first-child,
+  .sidebar-card:nth-child(2),
+  .sidebar-card:last-child {
+    display: none;
+  }
+}
 
     @media (max-width: 640px) {
       .container,
@@ -2137,74 +2151,71 @@
   </div>
 
   <div class="page-shell">
-    <header class="masthead">
-      <div class="masthead-inner">
-        <a class="brand-wrap" href="/" aria-label="Where the Truth Lies home">
-          <div class="seal-small" aria-hidden="true">
-            <div class="seal-eye"></div>
-          </div>
-          <div class="brand-text">
-            <div class="brand-name">Where the Truth Lies</div>
-            <div class="brand-tagline">Beyond the Argument</div>
-            <div class="brand-latin">Ubi Veritas Latet</div>
-          </div>
-        </a>
-
-        <nav class="desktop-nav" aria-label="Primary">
-          <a href="/">ClaimLab</a>
-          <a href="/archives">Archives</a>
-          <a href="#methodology-section">Methodology</a>
-
-          {% if true_superuser %}
-            <span class="super-badge">Super User</span>
-          {% elif superuser %}
-            <span class="super-badge">Full Access</span>
-          {% endif %}
-
-          {% if session.get("role") == "limited_superuser" %}
-            <span class="quota-badge">{{ session.get("claims_remaining", 0) }} Claims Left</span>
-          {% endif %}
-
-          {% if session.get("username") %}
-            <span class="user-badge">{{ session.get("username") }}</span>
-          {% endif %}
-
-          <a href="#claim-entry-module" class="gold-btn">Run a Claim</a>
-          <a href="/logout">Logout</a>
-        </nav>
-
-        <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu()" aria-expanded="false" aria-controls="mobileNavPanel">
-          Menu
-        </button>
+   <header class="masthead">
+  <div class="masthead-inner">
+    <a class="brand-wrap" href="/" aria-label="Where the Truth Lies home">
+      <div class="seal-small" aria-hidden="true">
+        <div class="seal-eye"></div>
       </div>
-
-      <div class="mobile-nav-panel" id="mobileNavPanel">
-        <div class="mobile-nav-inner">
-          <div class="mobile-nav-links">
-            <a href="/" onclick="closeMobileMenu()">ClaimLab</a>
-            <a href="/archives" onclick="closeMobileMenu()">Archives</a>
-            <a href="#methodology-section" onclick="closeMobileMenu()">Methodology</a>
-
-            {% if true_superuser %}
-              <button type="button" disabled>Super User</button>
-            {% elif superuser %}
-              <button type="button" disabled>Full Access</button>
-            {% endif %}
-
-            {% if session.get("role") == "limited_superuser" %}
-              <button type="button" disabled>{{ session.get("claims_remaining", 0) }} Claims Left</button>
-            {% endif %}
-
-            {% if session.get("username") %}
-              <button type="button" disabled>{{ session.get("username") }}</button>
-            {% endif %}
-
-            <a href="#claim-entry-module" class="gold-btn-mobile" onclick="closeMobileMenu()">Run a Claim</a>
-            <a href="/logout">Logout</a>
-          </div>
-        </div>
+      <div class="brand-text">
+        <div class="brand-name">Where the Truth Lies</div>
+        <div class="brand-tagline">Beyond the Argument</div>
+        <div class="brand-latin">Ubi Veritas Latet</div>
       </div>
-    </header>
+    </a>
+
+    <!-- Desktop Navigation -->
+    <nav class="desktop-nav" aria-label="Primary">
+      <a href="/">ClaimLab</a>
+      <a href="/archives">Archives</a>
+      <a href="#methodology-section">Methodology</a>
+
+      {% if true_superuser %}
+        <span class="super-badge">Super User</span>
+      {% elif superuser %}
+        <span class="super-badge">Full Access</span>
+      {% endif %}
+
+      {% if session.get("role") == "limited_superuser" %}
+        <span class="quota-badge">{{ session.get("claims_remaining", 0) }} Claims Left</span>
+      {% endif %}
+
+      {% if session.get("username") %}
+        <span class="user-badge">{{ session.get("username") }}</span>
+      {% endif %}
+
+      <a href="#claim-entry-module" class="gold-btn">Run a Claim</a>
+      <a href="/logout">Logout</a>
+    </nav>
+
+    {% if session.get("username") %}
+  <span class="user-badge mobile-user">{{ session.get("username") }}</span>
+{% endif %}
+
+    <!-- Mobile Menu Button -->
+    <button
+      class="mobile-menu-btn"
+      id="mobileMenuBtn"
+      onclick="toggleMobileMenu()"
+      aria-expanded="false"
+      aria-controls="mobileNavPanel">
+      Menu
+    </button>
+  </div>
+
+  <!-- Mobile Navigation Panel -->
+  <div class="mobile-nav-panel" id="mobileNavPanel">
+    <div class="mobile-nav-inner">
+      <div class="mobile-nav-links">
+        <a href="/" onclick="closeMobileMenu()">ClaimLab</a>
+        <a href="/archives" onclick="closeMobileMenu()">Archives</a>
+        <a href="#methodology-section" onclick="closeMobileMenu()">Methodology</a>
+        <a href="#claim-entry-module" class="gold-btn-mobile" onclick="closeMobileMenu()">Run a Claim</a>
+        <a href="/logout">Logout</a>
+      </div>
+    </div>
+  </div>
+</header>
 
     <section class="hero-band">
       <div class="hero-inner">
