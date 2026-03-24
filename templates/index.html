@@ -2040,29 +2040,30 @@
 
     /* ── TABS ── */
     .excavation-tabs {
-      display: flex;
-      gap: 2px;
-      border-bottom: 1px solid rgba(201,168,76,.14);
-      margin-bottom: 0;
-    }
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid rgba(201,168,76,.14);
+  margin-bottom: 18px;
+  padding-bottom: 0;
+}
     .tab-btn {
-      appearance: none;
-      background: transparent;
-      border: none;
-      border-bottom: 3px solid transparent;
-      padding: 14px 22px 12px;
-      font-family: 'Libre Baskerville', Georgia, serif;
-      font-size: 11px;
-      letter-spacing: .16em;
-      text-transform: uppercase;
-      color: var(--text-mid);
-      cursor: pointer;
-      transition: color .18s ease, border-color .18s ease;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: -1px;
-    }
+  appearance: none;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 14px 22px 12px;
+  font-family: 'Libre Baskerville', Georgia, serif;
+  font-size: 11px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--text-light);
+  cursor: pointer;
+  transition: color .18s ease, border-color .18s ease, background .18s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: -1px;
+}
     .tab-btn:hover { color: var(--cream); }
     .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
     .tab-lock-icon { font-size: 12px; opacity: .6; }
@@ -2634,6 +2635,16 @@
             <!-- ALWAYS VISIBLE TOP SUMMARY -->
             <div class="claim-top-summary">
               <div class="article-header">
+
+            <!-- TABS -->
+            <div class="excavation-tabs">
+              <button class="tab-btn active" id="tab-quick-btn" onclick="switchTab('quick')">Quick View</button>
+              <button class="tab-btn" id="tab-full-btn" onclick="switchTab('full')">
+                Full Excavation
+                {% if not superuser %}<span class="tab-lock-icon">🔒</span>{% endif %}
+              </button>
+            </div>
+
               <div class="claim-header-top">
   <div class="status-row">
                 <span class="status-badge">{{ current_claim.status or 'Active' }}</span>
@@ -2751,15 +2762,6 @@
 
             </div>
             <!-- END TOP SUMMARY -->
-
-            <!-- TABS -->
-            <div class="excavation-tabs">
-              <button class="tab-btn active" id="tab-quick-btn" onclick="switchTab('quick')">Quick Excavation</button>
-              <button class="tab-btn" id="tab-full-btn" onclick="switchTab('full')">
-                Full Excavation
-                {% if not superuser %}<span class="tab-lock-icon">🔒</span>{% endif %}
-              </button>
-            </div>
 
             <!-- QUICK TAB -->
             <div class="tab-panel" id="tab-quick">
