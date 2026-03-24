@@ -2098,6 +2098,221 @@
       border-bottom: 1px solid rgba(201,168,76,.14);
     }
 
+    /* ── DISPUTE BUTTON + MODAL ── */
+    .claim-header-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .claim-header-top .status-row {
+      margin-bottom: 0;
+      flex: 1;
+    }
+
+    .dispute-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(201,168,76,.24);
+  background: rgba(255,255,255,.025);
+  color: var(--text-light);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-family: 'Libre Baskerville', Georgia, serif;
+  font-size: 10px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color .15s ease, color .15s ease, background .15s ease;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+    .dispute-btn:hover {
+      border-color: rgba(201,168,76,.45);
+      color: var(--gold);
+      background: rgba(201,168,76,.06);
+    }
+
+    .dispute-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 8100;
+      background: rgba(6,17,27,.84);
+      backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .dispute-modal-overlay.visible {
+      display: flex;
+    }
+
+    .dispute-modal-box {
+      background: linear-gradient(180deg, #0f2133, #091b2c);
+      border: var(--border);
+      border-radius: var(--radius);
+      padding: 30px 28px 24px;
+      max-width: 760px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 32px 64px rgba(0,0,0,.6);
+    }
+
+    .dispute-modal-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 28px;
+      line-height: 1.15;
+      color: var(--cream);
+      margin-bottom: 10px;
+    }
+
+    .dispute-modal-sub {
+      font-size: 16px;
+      color: var(--text-light);
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+
+    .dispute-modal-note {
+      background: rgba(201,168,76,.055);
+      border-left: 3px solid rgba(201,168,76,.42);
+      border-radius: 0 12px 12px 0;
+      padding: 14px 16px;
+      color: var(--text-light);
+      font-size: 14px;
+      line-height: 1.55;
+      margin-bottom: 18px;
+    }
+
+    .dispute-section-label {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 10px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 10px;
+    }
+
+    .dispute-sections-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .dispute-check {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: rgba(255,255,255,.02);
+      border: var(--border-soft);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 15px;
+      color: var(--cream-soft);
+      line-height: 1.4;
+    }
+
+    .dispute-check input {
+      margin-top: 2px;
+      flex: 0 0 auto;
+    }
+
+    .dispute-textarea,
+    .dispute-input {
+      width: 100%;
+      background: rgba(255,255,255,.035);
+      border: 1px solid rgba(255,255,255,.11);
+      border-radius: 12px;
+      color: var(--cream);
+      font-family: 'Crimson Text', Georgia, serif;
+      font-size: 17px;
+      line-height: 1.55;
+      padding: 14px 15px;
+      outline: none;
+      transition: border-color .18s ease, background .18s ease;
+      margin-bottom: 16px;
+    }
+
+    .dispute-textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+
+    .dispute-textarea:focus,
+    .dispute-input:focus {
+      border-color: rgba(201,168,76,.48);
+      background: rgba(255,255,255,.045);
+    }
+
+    .dispute-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+
+    .dispute-submit-btn {
+      appearance: none;
+      border: none;
+      background: linear-gradient(180deg, #d8b85a, #c9a84c);
+      color: var(--navy);
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      padding: 13px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .dispute-cancel-btn {
+      appearance: none;
+      border: 1px solid rgba(201,168,76,.28);
+      background: transparent;
+      color: var(--text-light);
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 11px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      padding: 13px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .dispute-status-msg {
+      margin-top: 12px;
+      font-size: 15px;
+      color: var(--text-light);
+      line-height: 1.5;
+    }
+
+    @media (max-width: 980px) {
+      .claim-header-top {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .dispute-btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .dispute-sections-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     /* ── LOCKED FULL TAB ── */
     .full-tab-locked {
       background: linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,.015));
@@ -2147,6 +2362,61 @@
         <button class="modal-btn-primary" id="modalConfirmBtn" onclick="submitClaim()">Continue</button>
       </div>
       <button class="modal-btn-switch" id="modalSwitchBtn" style="display:none;" onclick="switchToQuickFromModal()">Switch to Quick instead</button>
+    </div>
+  </div>
+
+  <!-- DISPUTE MODAL -->
+  <div class="dispute-modal-overlay" id="disputeModal">
+    <div class="dispute-modal-box">
+      <div class="modal-kicker">Dispute Claim Section</div>
+      <div class="dispute-modal-title">Challenge part of this excavation</div>
+      <div class="dispute-modal-sub">
+        Pick the section or sections you believe are wrong, incomplete, or unfairly framed. Be specific. If you have a source, include it.
+      </div>
+
+      <div class="dispute-modal-note" id="disputeTierNote">
+        Standard users get one dispute round before escalation to a human editor. Paid users get up to three pushback rounds before escalation. Human editor review may take 24 to 72 hours.
+      </div>
+
+      <div class="dispute-section-label">What part are you disputing?</div>
+      <div class="dispute-sections-grid">
+        <label class="dispute-check"><input type="checkbox" value="Quick Explanation"> <span>Quick Explanation</span></label>
+        <label class="dispute-check"><input type="checkbox" value="Overall Verdict"> <span>Overall Verdict</span></label>
+        <label class="dispute-check"><input type="checkbox" value="Sub Claims"> <span>Sub Claims</span></label>
+        <label class="dispute-check"><input type="checkbox" value="Direct Facts"> <span>Direct Facts</span></label>
+        <label class="dispute-check"><input type="checkbox" value="Adjacent Facts"> <span>Adjacent Facts</span></label>
+        <label class="dispute-check"><input type="checkbox" value="Root Concern"> <span>Root Concern</span></label>
+        <label class="dispute-check"><input type="checkbox" value="Values Divergence"> <span>Values Divergence</span></label>
+        <label class="dispute-check"><input type="checkbox" value="Constitutional Framework"> <span>Constitutional Framework</span></label>
+        <label class="dispute-check"><input type="checkbox" value="Common Ground"> <span>Common Ground</span></label>
+        <label class="dispute-check"><input type="checkbox" value="Left Perspective"> <span>Left Perspective</span></label>
+        <label class="dispute-check"><input type="checkbox" value="Right Perspective"> <span>Right Perspective</span></label>
+        <label class="dispute-check"><input type="checkbox" value="Founders Perspectives"> <span>Founders Perspectives</span></label>
+        <label class="dispute-check"><input type="checkbox" value="Scenario Map"> <span>Scenario Map</span></label>
+        <label class="dispute-check"><input type="checkbox" value="Sources"> <span>Sources</span></label>
+      </div>
+
+      <div class="dispute-section-label">Why are you disputing it?</div>
+      <textarea
+        id="disputeText"
+        class="dispute-textarea"
+        placeholder="Explain what you believe is wrong, incomplete, or misleading."
+      ></textarea>
+
+      <div class="dispute-section-label">Source URL (optional)</div>
+      <input
+        id="disputeSourceUrl"
+        class="dispute-input"
+        type="url"
+        placeholder="https://example.com/source"
+      />
+
+      <div class="dispute-actions">
+        <button class="dispute-cancel-btn" type="button" onclick="closeDisputeModal()">Cancel</button>
+        <button class="dispute-submit-btn" type="button" onclick="submitDispute()">Submit Dispute</button>
+      </div>
+
+      <div class="dispute-status-msg" id="disputeStatusMsg"></div>
     </div>
   </div>
 
@@ -2355,7 +2625,8 @@
             <!-- ALWAYS VISIBLE TOP SUMMARY -->
             <div class="claim-top-summary">
               <div class="article-header">
-              <div class="status-row">
+              <div class="claim-header-top">
+  <div class="status-row">
                 <span class="status-badge">{{ current_claim.status or 'Active' }}</span>
 
                 {% if current_claim.topics %}
@@ -2376,9 +2647,21 @@
                   <span class="topic-tag">Reviewed</span>
                 {% endif %}
                 {% if current_claim.grok_grounded %}
-                  <span class="topic-tag">Live Grounded</span>
-                {% endif %}
-              </div>
+  <span class="topic-tag">Live Grounded</span>
+{% endif %}
+  </div>
+
+  <button
+    class="dispute-btn"
+    type="button"
+    onclick="openDisputeModal()"
+    data-claim-id="{{ current_claim.record_id }}"
+    data-claim-slug="{{ current_claim.slug }}"
+    data-claim-title="{{ current_claim.title }}"
+  >
+    Dispute
+  </button>
+</div>
 
         <div class="article-eyebrow">ClaimLab Excavation</div>
 <h1 class="article-title">{{ current_claim.title }}</h1>
@@ -3067,6 +3350,104 @@
     document.getElementById('confirmModal').addEventListener('click', function(e) {
       if (e.target === this) closeModal();
     });
+
+    function openDisputeModal() {
+      const modal = document.getElementById('disputeModal');
+      const msg = document.getElementById('disputeStatusMsg');
+      const text = document.getElementById('disputeText');
+      const source = document.getElementById('disputeSourceUrl');
+
+      if (msg) msg.textContent = '';
+      if (text) text.value = '';
+      if (source) source.value = '';
+
+      document.querySelectorAll('#disputeModal input[type="checkbox"]').forEach(box => {
+        box.checked = false;
+      });
+
+      const tierNote = document.getElementById('disputeTierNote');
+      if (tierNote) {
+        if (USER_ROLE === 'superuser' || USER_ROLE === 'limited_superuser') {
+          tierNote.textContent = 'Paid users get up to three pushback rounds before escalation to a human editor. Human editor review may take 24 to 72 hours.';
+        } else {
+          tierNote.textContent = 'Standard users get one dispute round before escalation to a human editor. Human editor review may take 24 to 72 hours.';
+        }
+      }
+
+      modal.classList.add('visible');
+    }
+
+    function closeDisputeModal() {
+      document.getElementById('disputeModal').classList.remove('visible');
+    }
+
+    document.getElementById('disputeModal').addEventListener('click', function(e) {
+      if (e.target === this) closeDisputeModal();
+    });
+
+    async function submitDispute() {
+      const checked = Array.from(
+        document.querySelectorAll('#disputeModal input[type="checkbox"]:checked')
+      ).map(el => el.value);
+
+      const disputeText = (document.getElementById('disputeText').value || '').trim();
+      const sourceUrl = (document.getElementById('disputeSourceUrl').value || '').trim();
+      const statusMsg = document.getElementById('disputeStatusMsg');
+      const disputeBtn = document.querySelector('.dispute-btn');
+
+      if (!disputeBtn) {
+        if (statusMsg) statusMsg.textContent = 'Could not identify the current claim.';
+        return;
+      }
+
+      const claimId = disputeBtn.dataset.claimId || '';
+      const claimSlug = disputeBtn.dataset.claimSlug || '';
+      const claimTitle = disputeBtn.dataset.claimTitle || '';
+
+      if (!checked.length) {
+        statusMsg.textContent = 'Pick at least one section to dispute.';
+        return;
+      }
+
+      if (!disputeText) {
+        statusMsg.textContent = 'Explain what you are disputing before submitting.';
+        return;
+      }
+
+      statusMsg.textContent = 'Submitting dispute...';
+
+      try {
+        const res = await fetch('/submit_dispute', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            claim_id: claimId,
+            claim_slug: claimSlug,
+            claim_title: claimTitle,
+            sections_disputed: checked,
+            dispute_text: disputeText,
+            source_url: sourceUrl
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || 'Failed to submit dispute.');
+        }
+
+        statusMsg.textContent = 'Dispute submitted successfully. A human editor may take 24 to 72 hours if escalation is needed.';
+
+        setTimeout(() => {
+          closeDisputeModal();
+        }, 1400);
+
+      } catch (err) {
+        statusMsg.textContent = 'Submission failed: ' + err.message;
+      }
+    }
 
     function switchTab(tab) {
       document.getElementById('tab-quick').classList.toggle('hidden', tab !== 'quick');

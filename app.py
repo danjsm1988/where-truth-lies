@@ -20,6 +20,7 @@ AIRTABLE_BASE_ID = os.getenv("AIRTABLE_BASE_ID")
 AIRTABLE_TABLE_NAME = os.getenv("AIRTABLE_TABLE_NAME", "Claims")
 AIRTABLE_USERS_TABLE_NAME = os.getenv("AIRTABLE_USERS_TABLE_NAME", "Users")
 AIRTABLE_REALITY_TABLE_NAME = os.getenv("AIRTABLE_REALITY_TABLE_NAME", "Reality Anchors")
+AIRTABLE_DISPUTES_TABLE_NAME = os.getenv("AIRTABLE_DISPUTES_TABLE_NAME", "Disputes")
 
 openai_client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
 anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY) if ANTHROPIC_API_KEY else None
@@ -1264,6 +1265,75 @@ Now analyze this claim:
         "grok_adjudication": grok_adjudication
     })
 
+@app.route("/submit_dispute", methods=["POST"])
+def submit_dispute():
+    if not session.get("logged_in"):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    try:
+        data = request.get_json() or {}
+
+        claim_id = data.get("claim_id")
+        claim_slug = data.get("claim_slug")
+        claim_title = data.get("claim_title")
+        dispute_text = (data.get("dispute_text") or "").strip()
+        sections = data.get("sections_disputed")
+        source_url = (data.get("source_url") or "").strip()
+
+        if not claim_id:
+            return jsonify({"error": "Claim record ID is required"}), 400
+
+        if not claim_slug:
+            return jsonify({"error": "Claim slug is required"}), 400
+
+        if not claim_title:
+            return jsonify({"error": "Claim title is required"}), 400
+
+        if not dispute_text:
+            return jsonify({"error": "Dispute text is required"}), 400
+
+        if not sections:
+            return jsonify({"error": "At least one disputed section is required"}), 400
+
+        if not isinstance(sections, list):
+            return jsonify({"error": "Sections disputed must be a list"}), 400
+
+        username = session.get("username", "Unknown")
+        role = session.get("role", "standard")
+
+        payload = {
+            "fields": {
+                "Claim Record ID": [claim_id],
+                "Claim Slug": claim_slug,
+                "Original Claim Title": claim_title,
+                "Username": username,
+                "User Role at Submission": role,
+                "Sections Disputed": sections,
+                "Dispute Text": dispute_text,
+                "User Source URL": source_url,
+                "Dispute Type": "Initial Dispute",
+                "Pushback Round Count": 0,
+                "Status": "Open",
+                "Date Submitted": datetime.utcnow().isoformat(),
+                "Last Updated": datetime.utcnow().isoformat(),
+                "Escalated To Human": False
+            }
+        }
+
+        res = requests.post(
+            f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{AIRTABLE_DISPUTES_TABLE_NAME}",
+            json=payload,
+            headers=airtable_headers(),
+            timeout=30
+        )
+
+        if not res.ok:
+            return jsonify({"error": res.text}), 500
+
+        return jsonify({"success": True})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
