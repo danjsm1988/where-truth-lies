@@ -2115,29 +2115,38 @@
 
     .dispute-btn {
   appearance: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(201,168,76,.24);
-  background: rgba(255,255,255,.025);
-  color: var(--text-light);
-  border-radius: 10px;
-  padding: 10px 14px;
+  border: 1px solid rgba(201,168,76,.45);
+  background: linear-gradient(180deg, rgba(201,168,76,.12), rgba(201,168,76,.06));
+  color: var(--gold);
+  border-radius: 12px;
+
+  padding: 12px 18px;            /* bigger click target */
   font-family: 'Libre Baskerville', Georgia, serif;
-  font-size: 10px;
-  letter-spacing: .14em;
+  font-size: 11px;
+  letter-spacing: .16em;
   text-transform: uppercase;
+  font-weight: 700;              /* stronger */
+
   cursor: pointer;
-  transition: border-color .15s ease, color .15s ease, background .15s ease;
   white-space: nowrap;
   flex: 0 0 auto;
+
+  box-shadow:
+    0 6px 14px rgba(0,0,0,.25),
+    inset 0 0 0 1px rgba(255,255,255,.04);
+
+  transition: all .18s ease;
 }
 
     .dispute-btn:hover {
-      border-color: rgba(201,168,76,.45);
-      color: var(--gold);
-      background: rgba(201,168,76,.06);
-    }
+  border-color: var(--gold);
+  color: #fff;
+  background: linear-gradient(180deg, rgba(201,168,76,.28), rgba(201,168,76,.12));
+  transform: translateY(-1px);
+  box-shadow:
+    0 10px 22px rgba(0,0,0,.35),
+    0 0 12px rgba(201,168,76,.25);
+}
 
     .dispute-modal-overlay {
       display: none;
@@ -2659,7 +2668,7 @@
     data-claim-slug="{{ current_claim.slug }}"
     data-claim-title="{{ current_claim.title }}"
   >
-    Dispute
+    ◉ Dispute
   </button>
 </div>
 
