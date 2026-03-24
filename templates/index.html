@@ -1779,6 +1779,18 @@
         padding: 14px;
       }
 
+      .mode-cards { grid-template-columns: 1fr; }
+
+      .claim-submit-row { flex-direction: column; align-items: stretch; }
+
+      .modal-box { padding: 24px 20px 20px; }
+
+      .modal-actions { flex-direction: column; }
+
+      .tab-btn { padding: 12px 14px 10px; font-size: 10px; }
+
+      .excavation-tabs { overflow-x: auto; }
+
       .footer-inner {
         grid-template-columns: 1fr;
       }
@@ -1788,12 +1800,340 @@
         align-items: flex-start;
       }
     }
+
+    /* ── CONFIRMATION MODAL ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 8000;
+      background: rgba(6,17,27,.82);
+      backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.visible { display: flex; }
+    .modal-box {
+      background: linear-gradient(180deg, #0f2133, #091b2c);
+      border: var(--border);
+      border-radius: var(--radius);
+      padding: 32px 30px 28px;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 32px 64px rgba(0,0,0,.6);
+    }
+    .modal-kicker {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 10px;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 10px;
+    }
+    .modal-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--cream);
+      margin-bottom: 12px;
+      line-height: 1.15;
+    }
+    .modal-body {
+      font-size: 17px;
+      color: var(--text-light);
+      line-height: 1.62;
+      margin-bottom: 20px;
+    }
+    .modal-claim-preview {
+      background: rgba(255,255,255,.04);
+      border: var(--border-soft);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 15px;
+      color: var(--cream-soft);
+      font-style: italic;
+      line-height: 1.5;
+      margin-bottom: 22px;
+      max-height: 80px;
+      overflow: hidden;
+    }
+    .modal-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .modal-btn-primary {
+      flex: 1;
+      min-width: 120px;
+      appearance: none;
+      border: none;
+      background: linear-gradient(180deg, #d8b85a, #c9a84c);
+      color: var(--navy);
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      padding: 13px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: filter .15s ease, transform .15s ease;
+    }
+    .modal-btn-primary:hover { filter: brightness(1.05); transform: translateY(-1px); }
+    .modal-btn-secondary {
+      appearance: none;
+      border: 1px solid rgba(201,168,76,.28);
+      background: transparent;
+      color: var(--text-light);
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 11px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      padding: 13px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: border-color .15s ease, color .15s ease;
+    }
+    .modal-btn-secondary:hover { border-color: var(--gold-dim); color: var(--cream); }
+    .modal-btn-switch {
+      width: 100%;
+      appearance: none;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.03);
+      color: var(--text-mid);
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 10px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: color .15s, border-color .15s;
+    }
+    .modal-btn-switch:hover { color: var(--gold); border-color: rgba(201,168,76,.22); }
+
+    /* ── CLAIM ENTRY MODULE ── */
+    .claim-entry-band {
+      background: rgba(255,255,255,.012);
+      border-bottom: 1px solid rgba(201,168,76,.12);
+    }
+    .claim-entry-inner {
+      width: min(var(--content-width), calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0;
+    }
+    .claim-entry-card {
+      background: linear-gradient(180deg, rgba(255,255,255,.032), rgba(255,255,255,.018));
+      border: var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 28px 30px 24px;
+    }
+    .claim-entry-heading {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--cream);
+      margin-bottom: 6px;
+    }
+    .claim-entry-sub {
+      font-size: 16px;
+      color: var(--text-mid);
+      font-style: italic;
+      margin-bottom: 16px;
+    }
+    .claim-entry-role-note {
+      font-size: 14px;
+      color: var(--text-dim);
+      font-style: italic;
+      margin-bottom: 12px;
+    }
+    .mode-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .mode-card {
+      position: relative;
+      background: rgba(255,255,255,.02);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: border-color .18s ease, background .18s ease;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .mode-card.active {
+      background: rgba(201,168,76,.07);
+      border-color: rgba(201,168,76,.38);
+    }
+    .mode-card:hover:not(.active) { border-color: rgba(255,255,255,.16); }
+    .mode-card-body { flex: 1; min-width: 0; }
+    .mode-card-title {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--cream);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .mode-card.active .mode-card-title { color: var(--gold); }
+    .mode-card-desc { font-size: 14px; color: var(--text-mid); line-height: 1.45; }
+    .mode-card.active .mode-card-desc { color: var(--text-light); }
+    .mode-info-btn {
+      appearance: none;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,.14);
+      color: var(--text-dim);
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      font-size: 11px;
+      font-family: 'Libre Baskerville', Georgia, serif;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      transition: color .15s, border-color .15s;
+      line-height: 1;
+      padding: 0;
+    }
+    .mode-info-btn:hover { color: var(--gold); border-color: rgba(201,168,76,.4); }
+    .mode-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-size: 9px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      font-family: 'Libre Baskerville', Georgia, serif;
+    }
+    .mode-badge-free { background: rgba(117,194,141,.12); border: 1px solid rgba(117,194,141,.28); color: #75c28d; }
+    .mode-badge-paid { background: rgba(201,168,76,.12); border: 1px solid rgba(201,168,76,.28); color: var(--gold); }
+    .claim-submit-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    /* ── TABS ── */
+    .excavation-tabs {
+      display: flex;
+      gap: 2px;
+      border-bottom: 1px solid rgba(201,168,76,.14);
+      margin-bottom: 0;
+    }
+    .tab-btn {
+      appearance: none;
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      padding: 14px 22px 12px;
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 11px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--text-mid);
+      cursor: pointer;
+      transition: color .18s ease, border-color .18s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: -1px;
+    }
+    .tab-btn:hover { color: var(--cream); }
+    .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+    .tab-lock-icon { font-size: 12px; opacity: .6; }
+    .tab-panel { padding-top: 26px; }
+    .tab-panel.hidden { display: none; }
+
+    /* ── QUICK EXPLANATION ── */
+    .quick-explanation-block {
+      background: rgba(255,255,255,.025);
+      border: 1px solid rgba(201,168,76,.2);
+      border-radius: 14px;
+      padding: 18px 20px;
+      margin-bottom: 20px;
+    }
+    .quick-explanation-label {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 10px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+    .quick-explanation-text {
+      font-size: 18px;
+      line-height: 1.62;
+      color: var(--cream);
+    }
+
+    /* ── CLAIM TOP SUMMARY ── */
+    .claim-top-summary {
+      margin-bottom: 26px;
+      padding-bottom: 26px;
+      border-bottom: 1px solid rgba(201,168,76,.14);
+    }
+
+    /* ── LOCKED FULL TAB ── */
+    .full-tab-locked {
+      background: linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,.015));
+      border: var(--border);
+      border-radius: var(--radius);
+      padding: 32px 28px;
+      text-align: center;
+    }
+    .locked-preview-sections {
+      display: grid;
+      gap: 8px;
+      margin: 20px 0;
+      text-align: left;
+      filter: blur(3px);
+      pointer-events: none;
+      user-select: none;
+    }
+    .locked-preview-item {
+      background: rgba(255,255,255,.025);
+      border: var(--border-soft);
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 10px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--text-mid);
+    }
   </style>
 </head>
 <body>
   <div class="tooltip-popup" id="tooltipPopup">
     <div class="tooltip-term-label" id="tooltipLabel"></div>
     <div class="tooltip-body" id="tooltipBody"></div>
+  </div>
+
+
+  <!-- CONFIRMATION MODAL -->
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal-box">
+      <div class="modal-kicker">Confirm Excavation</div>
+      <div class="modal-title" id="modalTitle">Run Quick Claim?</div>
+      <div class="modal-body" id="modalBody">You will get the verdict, a short explanation, and sub-claims. You can still edit the wording before continuing.</div>
+      <div class="modal-claim-preview" id="modalClaimPreview"></div>
+      <div class="modal-actions">
+        <button class="modal-btn-secondary" onclick="closeModal()">Edit Claim</button>
+        <button class="modal-btn-primary" id="modalConfirmBtn" onclick="submitClaim()">Continue</button>
+      </div>
+      <button class="modal-btn-switch" id="modalSwitchBtn" style="display:none;" onclick="switchToQuickFromModal()">Switch to Quick instead</button>
+    </div>
   </div>
 
   <div class="page-shell">
@@ -1829,7 +2169,7 @@
             <span class="user-badge">{{ session.get("username") }}</span>
           {% endif %}
 
-          <a href="#claimlab" class="gold-btn">Run a Claim</a>
+          <a href="#claim-entry-module" class="gold-btn">Run a Claim</a>
           <a href="/logout">Logout</a>
         </nav>
 
@@ -1859,7 +2199,7 @@
               <button type="button" disabled>{{ session.get("username") }}</button>
             {% endif %}
 
-            <a href="#claimlab" class="gold-btn-mobile" onclick="closeMobileMenu()">Run a Claim</a>
+            <a href="#claim-entry-module" class="gold-btn-mobile" onclick="closeMobileMenu()">Run a Claim</a>
             <a href="/logout">Logout</a>
           </div>
         </div>
@@ -1930,11 +2270,80 @@
       </div>
     </section>
 
+
+    <!-- MAIN CLAIM ENTRY MODULE -->
+    <section class="claim-entry-band" id="claim-entry-module">
+      <div class="claim-entry-inner">
+        <div class="claim-entry-card">
+          <div class="claim-entry-heading">Run a Claim Through ClaimLab</div>
+          <div class="claim-entry-sub">Paste any political claim, quote, or viral post. Strip the rhetoric. Find the root. Show the full picture.</div>
+
+          {% if session.get("role") == "standard" %}
+            <div class="claim-entry-role-note">Your account can browse existing claim files, but cannot run new excavations.</div>
+          {% elif session.get("role") == "limited_superuser" and (session.get("claims_remaining", 0) | int) <= 0 %}
+            <div class="claim-entry-role-note">Claim limit reached. You can still browse archived claim files, but new excavations are blocked.</div>
+          {% endif %}
+
+          <textarea id="claim-input" class="claim-textarea" placeholder="Paste any political claim, quote, or viral post here..."></textarea>
+
+          <!-- Mode selection cards -->
+          <div class="mode-cards">
+            <div class="mode-card active" id="card-strip" onclick="setMode('strip')">
+              <div class="mode-card-body">
+                <div class="mode-card-title">
+                  Quick Claim
+                  <span class="mode-badge mode-badge-free">Quick</span>
+                  <button class="mode-info-btn" type="button" onclick="showModeInfo(event,'quick')" title="What is Quick Claim?">i</button>
+                </div>
+                <div class="mode-card-desc">Fast verdict with a short explanation and sub-claims. Best for everyday use.</div>
+              </div>
+            </div>
+
+            <div class="mode-card" id="card-full" onclick="setMode('full')">
+              <div class="mode-card-body">
+                <div class="mode-card-title">
+                  Full Excavation
+                  <span class="mode-badge mode-badge-paid">Paid</span>
+                  <button class="mode-info-btn" type="button" onclick="showModeInfo(event,'full')" title="What is Full Excavation?">i</button>
+                </div>
+                <div class="mode-card-desc">Full excavation with deeper factual analysis, common ground, perspectives, scenario map, and sources.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit row -->
+          <div class="claim-submit-row">
+            {% if session.get("role") == "limited_superuser" and (session.get("claims_remaining", 0) | int) <= 0 %}
+              <button class="excavate-btn" disabled>Claim Limit Reached</button>
+            {% elif session.get("role") == "standard" %}
+              <button class="excavate-btn" disabled>Excavation Disabled</button>
+            {% else %}
+              <button class="excavate-btn" id="run-btn" onclick="openConfirmModal()">Excavate This Claim</button>
+            {% endif %}
+            <div id="loading" class="loading">
+              <div class="loading-text" id="loading-text">ClaimLab is excavating...</div>
+              <div class="loading-bar"><div class="loading-fill"></div></div>
+            </div>
+          </div>
+
+          <div id="status-wrap" class="status-wrap">
+            <div id="grok-status" class="status-pill">Grok: waiting</div>
+            <div id="claude-status" class="status-pill">Claude: waiting</div>
+            <div id="openai-status" class="status-pill">OpenAI: waiting</div>
+            <div id="airtable-status" class="status-pill">Airtable: waiting</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <main class="main-grid">
       <div class="content-stack">
         <section class="main-card" id="current-claim-section">
           {% if current_claim %}
-            <div class="article-header">
+
+            <!-- ALWAYS VISIBLE TOP SUMMARY -->
+            <div class="claim-top-summary">
+              <div class="article-header">
               <div class="status-row">
                 <span class="status-badge">{{ current_claim.status or 'Active' }}</span>
 
@@ -1955,9 +2364,12 @@
                 {% if current_claim.human_reviewed %}
                   <span class="topic-tag">Reviewed</span>
                 {% endif %}
+                {% if current_claim.grok_grounded %}
+                  <span class="topic-tag">Live Grounded</span>
+                {% endif %}
               </div>
 
-        <div class="article-eyebrow">ClaimLab Full Excavation</div>
+        <div class="article-eyebrow">ClaimLab Excavation</div>
 <h1 class="article-title">{{ current_claim.title }}</h1>
 
 {% if current_claim.stripped_claim and current_claim.stripped_claim != current_claim.title %}
@@ -1984,10 +2396,10 @@
               This analysis separates documented facts from interpretation wherever that distinction matters. The trust foundation comes first: recent factual contradictions are unacceptable. Where high-risk claims require stronger grounding, reality anchors are intended to prevent confident drift from known reality.
             </div>
 
-            {% if current_claim.strip_mode_summary %}
-              <div class="strip-mode">
-                <div class="strip-label">Bottom Line</div>
-                <div class="strip-text" id="summaryText">{{ current_claim.strip_mode_summary }}</div>
+            {% if current_claim.quick_explanation %}
+              <div class="quick-explanation-block">
+                <div class="quick-explanation-label">Quick Explanation</div>
+                <div class="quick-explanation-text" id="quickExplanationText">{{ current_claim.quick_explanation }}</div>
               </div>
             {% endif %}
 
@@ -2034,11 +2446,35 @@
               </div>
             {% endif %}
 
-            <div class="ornamental">
-              <div class="ornamental-line"></div>
-              <div class="ornamental-diamond"></div>
-              <div class="ornamental-line"></div>
             </div>
+            <!-- END TOP SUMMARY -->
+
+            <!-- TABS -->
+            <div class="excavation-tabs">
+              <button class="tab-btn active" id="tab-quick-btn" onclick="switchTab('quick')">Quick Excavation</button>
+              <button class="tab-btn" id="tab-full-btn" onclick="switchTab('full')">
+                Full Excavation
+                {% if not superuser %}<span class="tab-lock-icon">🔒</span>{% endif %}
+              </button>
+            </div>
+
+            <!-- QUICK TAB -->
+            <div class="tab-panel" id="tab-quick">
+              <div class="ornamental"><div class="ornamental-line"></div><div class="ornamental-diamond"></div><div class="ornamental-line"></div></div>
+              <p style="font-size:16px; color:var(--text-mid); font-style:italic; text-align:center; padding: 12px 0 4px;">The full excavation and deeper analysis are available in the Full Excavation tab.</p>
+            </div>
+
+            <!-- FULL TAB -->
+            <div class="tab-panel hidden" id="tab-full">
+              {% if superuser %}
+                <div class="ornamental"><div class="ornamental-line"></div><div class="ornamental-diamond"></div><div class="ornamental-line"></div></div>
+
+                {% if current_claim.strip_mode_summary %}
+                  <div class="strip-mode">
+                    <div class="strip-label">Bottom Line</div>
+                    <div class="strip-text" id="summaryText">{{ current_claim.strip_mode_summary }}</div>
+                  </div>
+                {% endif %}
 
             {% if current_claim.direct_facts %}
               <div class="layer-block layer-direct">
@@ -2243,6 +2679,30 @@
               <div class="section-title">Source URLs</div>
               <div class="sources-block" id="sourcesContainer"></div>
             {% endif %}
+              {% else %}
+                <!-- LOCKED FULL TAB for free users -->
+                <div class="full-tab-locked">
+                  <div class="paywall-lock">🔒</div>
+                  <div class="paywall-title">Unlock Full Excavation</div>
+                  <div class="paywall-sub">See the full breakdown including direct facts, common ground, scenario analysis, perspectives, and sources.</div>
+                  <div class="locked-preview-sections">
+                    <div class="locked-preview-item">Bottom Line — Full analytical paragraph</div>
+                    <div class="locked-preview-item">Layer 01 — Direct Facts</div>
+                    <div class="locked-preview-item">Layer 02 — Adjacent Facts</div>
+                    <div class="locked-preview-item">Layer 03 — Root Concern</div>
+                    <div class="locked-preview-item">Layer 04 — Values Divergence</div>
+                    <div class="locked-preview-item">Layer 05 — Constitutional Framework</div>
+                    <div class="locked-preview-item">Layer 06 — Common Ground</div>
+                    <div class="locked-preview-item">Left and Right Perspectives</div>
+                    <div class="locked-preview-item">Founders Perspectives</div>
+                    <div class="locked-preview-item">Scenario Map</div>
+                    <div class="locked-preview-item">Sources</div>
+                  </div>
+                </div>
+              {% endif %}
+            </div>
+            <!-- END FULL TAB -->
+
           {% else %}
             <div class="empty-state">
               <div class="empty-seal" aria-hidden="true">
@@ -2399,40 +2859,6 @@
         </div>
 
         <div class="sidebar-card">
-          <div class="sidebar-title">Run a Claim Through ClaimLab</div>
-
-          <textarea id="claim-input" class="claim-textarea" placeholder="Paste any political claim, quote, or viral post here..."></textarea>
-
-          <div class="mode-row">
-            <button class="mode-btn active" id="mode-strip" onclick="setMode('strip')">Quick</button>
-            <button class="mode-btn" id="mode-full" onclick="setMode('full')">Full Excavation</button>
-          </div>
-
-          {% if session.get("role") == "limited_superuser" and (session.get("claims_remaining", 0) | int) <= 0 %}
-            <button class="excavate-btn" id="run-btn" disabled>Claim Limit Reached</button>
-            <div class="sidebar-note">You can still browse archived claim files, but new excavations are blocked.</div>
-          {% elif session.get("role") == "standard" %}
-            <button class="excavate-btn" id="run-btn" disabled>Excavation Disabled</button>
-            <div class="sidebar-note">Your account can browse existing claim files, but cannot run new excavations.</div>
-          {% else %}
-            <button class="excavate-btn" id="run-btn" onclick="runClaim()">Excavate This Claim</button>
-            <div class="sidebar-note">Strip the rhetoric. Find the root. Show the full picture.</div>
-          {% endif %}
-
-          <div id="loading" class="loading">
-            <div class="loading-text" id="loading-text">ClaimLab is excavating...</div>
-            <div class="loading-bar"><div class="loading-fill"></div></div>
-          </div>
-
-          <div id="status-wrap" class="status-wrap">
-            <div id="grok-status" class="status-pill">Grok: waiting</div>
-            <div id="claude-status" class="status-pill">Claude: waiting</div>
-            <div id="openai-status" class="status-pill">OpenAI: waiting</div>
-            <div id="airtable-status" class="status-pill">Airtable: waiting</div>
-          </div>
-        </div>
-
-        <div class="sidebar-card">
           <div class="sidebar-title">Recent Claims</div>
 
           {% if recent_claims %}
@@ -2534,6 +2960,7 @@
 
   <script>
     const IS_SUPER = {{ superuser | tojson }};
+    const TRUE_SUPER = {{ true_superuser | tojson }};
     const CLAIMS_REMAINING = {{ session.get("claims_remaining", 0) | tojson }};
     const USER_ROLE = {{ session.get("role", "standard") | tojson }};
     let currentMode = 'strip';
@@ -2568,8 +2995,73 @@
 
     function setMode(mode) {
       currentMode = mode;
-      document.getElementById('mode-strip')?.classList.toggle('active', mode === 'strip');
-      document.getElementById('mode-full')?.classList.toggle('active', mode === 'full');
+      document.getElementById('card-strip')?.classList.toggle('active', mode === 'strip');
+      document.getElementById('card-full')?.classList.toggle('active', mode === 'full');
+    }
+
+    const modeInfoText = {
+      quick: { title: 'Quick Claim', body: 'Fast verdict with a short explanation and sub-claims. Best for everyday use.' },
+      full: { title: 'Full Excavation', body: 'Full excavation with deeper factual analysis, common ground, perspectives, scenario map, and sources. Part of the paid experience.' }
+    };
+
+    function showModeInfo(e, type) {
+      e.stopPropagation();
+      const info = modeInfoText[type];
+      showTooltip(e, info.title, info.body);
+    }
+
+    function openConfirmModal() {
+      if (USER_ROLE === 'standard') {
+        alert('Your account can browse existing claim files, but cannot run new excavations.');
+        return;
+      }
+      if (USER_ROLE === 'limited_superuser' && CLAIMS_REMAINING <= 0) {
+        alert('Claim limit reached. You can still browse existing claims, but new excavations are blocked.');
+        return;
+      }
+      const claim = document.getElementById('claim-input').value.trim();
+      if (!claim) { document.getElementById('claim-input').focus(); return; }
+
+      document.getElementById('modalClaimPreview').textContent = claim.length > 200 ? claim.slice(0, 200) + '...' : claim;
+
+      const title = document.getElementById('modalTitle');
+      const body = document.getElementById('modalBody');
+      const switchBtn = document.getElementById('modalSwitchBtn');
+      const confirmBtn = document.getElementById('modalConfirmBtn');
+
+      if (currentMode === 'full') {
+        title.textContent = 'Run Full Excavation?';
+        body.textContent = 'Full Excavation includes the complete layered analysis and is part of the paid experience. You can still edit the wording before continuing.';
+        confirmBtn.textContent = 'Continue to Full';
+        switchBtn.style.display = 'block';
+      } else {
+        title.textContent = 'Run Quick Claim?';
+        body.textContent = 'You will get the verdict, a short explanation, and sub-claims. You can still edit the wording before continuing.';
+        confirmBtn.textContent = 'Continue';
+        switchBtn.style.display = 'none';
+      }
+
+      document.getElementById('confirmModal').classList.add('visible');
+    }
+
+    function closeModal() {
+      document.getElementById('confirmModal').classList.remove('visible');
+    }
+
+    function switchToQuickFromModal() {
+      setMode('strip');
+      closeModal();
+    }
+
+    document.getElementById('confirmModal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
+    function switchTab(tab) {
+      document.getElementById('tab-quick').classList.toggle('hidden', tab !== 'quick');
+      document.getElementById('tab-full').classList.toggle('hidden', tab !== 'full');
+      document.getElementById('tab-quick-btn').classList.toggle('active', tab === 'quick');
+      document.getElementById('tab-full-btn').classList.toggle('active', tab === 'full');
     }
 
     function toggleLayer(header) {
@@ -2626,6 +3118,10 @@
       if (tooltipEl.classList.contains('visible')) positionTooltip(e);
     });
 
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.mode-info-btn') && !e.target.closest('.glossary-term') && !e.target.closest('.glossary-founder')) hideTooltip();
+    });
+
     document.querySelectorAll('.glossary-founder').forEach(el => {
       const name = (el.dataset.founder || '').toLowerCase();
       const bio = founderBios[name] || el.dataset.founder;
@@ -2662,6 +3158,7 @@
     }
 
     [
+      'quickExplanationText',
       'summaryText',
       'directFactsText',
       'adjacentFactsText',
@@ -2768,7 +3265,7 @@
 
     renderSources(rawSources);
 
-    async function runClaim() {
+    async function submitClaim() {
       if (USER_ROLE === 'standard') {
         alert('Your account can browse existing claim files, but cannot run new excavations.');
         return;
@@ -2784,6 +3281,8 @@
         document.getElementById('claim-input').focus();
         return;
       }
+      
+      closeModal();
 
       const btn = document.getElementById('run-btn');
       const loading = document.getElementById('loading');

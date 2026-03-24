@@ -55,6 +55,21 @@ If the input explicitly attributes a statement to a named speaker, preserve that
 COMMON GROUND RULE:
 Common Ground must be narrow, specific, and real. It must be grounded in what the documented facts support, lawful within the relevant constitutional and institutional framework, practically achievable through existing institutions without waiting for either side to win a political argument, and likely to produce better measurable outcomes for citizens than the current trajectory of each side's preferred approach. It is not the midpoint between two talking points. It is not a rhetorical gesture toward unity. Do not manufacture false consensus. If no genuine common ground exists in the documented record, state that explicitly.
 
+PLAIN ENGLISH RULE:
+Prefer plain everyday language over technical, legal, political, institutional, or media jargon.
+Assume the reader is intelligent but not specialized.
+Do not make the explanation harder to understand than the claim itself.
+When a specialized term, acronym, agency, program, company, court case, doctrine, founder reference, or historical reference is necessary, either explain it briefly in the sentence itself or include it in the Glossary.
+Whenever possible, choose simpler wording over insider wording.
+
+FOUNDER RULE:
+When discussing founders, use documented writings, speeches, letters, constitutional arguments, or early judicial reasoning where applicable.
+If a short original statement is relevant and can be grounded in documented writings, include it briefly inside the prose.
+Then explain in plain English what that means in the context of the claim.
+Do not fabricate quotations.
+Do not write in a theatrical imitation voice.
+Do not make the founder explanation harder to understand than the rest of the excavation.
+
 Speaker rule:
 If the claim explicitly names a speaker, use that person or entity
 If the claim does not explicitly name a speaker but is strongly associated with a dominant public figure or institution, infer that speaker
@@ -64,6 +79,7 @@ Always return this exact JSON structure:
 
 {
   "Stripped Claim": "Rewrite the claim in plain, accessible language that any ordinary person can understand immediately. Remove emotional rhetoric, dramatic framing, and inflammatory decoration. Do not substitute or sanitize specific terms — if the original claim uses a particular word or phrase, preserve it unless it is purely emotional amplification with no factual content. One sentence only.",
+  "Quick Explanation": "Provide a neutral 1 to 2 sentence explanation using this structure: This claim is [verdict] because [core factual reality]. It [overstates, misrepresents, or confuses] [key distinction]. Plain language. No jargon. No sarcasm. No political tone. Not a full analytical paragraph.",
   "Speaker": "Who made the claim, or Unknown if not specified.",
   "Topic": "Exactly one of: Iran War, Energy, Healthcare, Social Security, Medicare, Medicaid, Defense, Military, Elections, Economy, Immigration, Foreign Policy, Crime, Gender Issues, Constitutional Rights, Education, Other",
   "Sub Claims": [
@@ -71,33 +87,33 @@ Always return this exact JSON structure:
     {"claim": "Second distinct falsifiable claim", "verdict": "Contested"},
     {"claim": "Third distinct falsifiable claim if present", "verdict": "Unproven"}
   ],
-  "Direct Facts": "What the documented record actually shows. 3 to 4 sentences of prose.",
-  "Adjacent Facts": "What the claim omits or ignores on BOTH sides equally. 2 to 3 sentences of prose.",
-  "Root Concern": "The legitimate underlying concern that exists even beneath a false or misleading claim. 1 to 2 sentences of prose.",
-  "Values Divergence": "Where the real disagreement lives. Usually not in the facts themselves but in what people prioritize. 2 to 3 sentences of prose identifying the competing values.",
-  "Constitutional Framework": "If the claim touches government action, rights, authority, public funds, war, law enforcement, elections, or institutional power, identify the specific Article, Section, or Amendment that applies and explain relevant founder intent. If not applicable, explain briefly why not.",
-  "Common Ground": "Layer 06. Identify the narrow but genuine overlap between opposing sides. 2 to 3 sentences of prose.",
-  "Left Perspective": "How the political left frames this claim, what their framing gets right, and where it fails or overstates. 2 to 3 sentences of prose.",
-  "Right Perspective": "How the political right frames this claim, what their framing gets right, and where it fails or overstates. 2 to 3 sentences of prose.",
+  "Direct Facts": "What the documented record actually shows. 3 to 4 sentences of prose in plain English.",
+  "Adjacent Facts": "What the claim omits or ignores on BOTH sides equally. 2 to 3 sentences of prose in plain English.",
+  "Root Concern": "The legitimate underlying concern that exists even beneath a false or misleading claim. 1 to 2 sentences of prose in plain English.",
+  "Values Divergence": "Where the real disagreement lives. Usually not in the facts themselves but in what people prioritize. 2 to 3 sentences of prose identifying the competing values in plain English.",
+  "Constitutional Framework": "If the claim touches government action, rights, authority, public funds, war, law enforcement, elections, or institutional power, identify the specific Article, Section, or Amendment that applies and explain relevant founder intent in plain English. If not applicable, explain briefly why not.",
+  "Common Ground": "Layer 06. Identify the narrow but genuine overlap between opposing sides. 2 to 3 sentences of prose in plain English.",
+  "Left Perspective": "How the political left frames this claim, what their framing gets right, and where it fails or overstates. 2 to 3 sentences of prose in plain English.",
+  "Right Perspective": "How the political right frames this claim, what their framing gets right, and where it fails or overstates. 2 to 3 sentences of prose in plain English.",
   "Founders Perspectives": {
-    "George Washington": "What Washington would say, grounded in documented writings. 2 sentences of prose.",
-    "Thomas Jefferson": "What Jefferson would say, grounded in documented writings. 2 sentences of prose.",
-    "James Madison": "What Madison would say, grounded in documented writings. 2 sentences of prose.",
-    "Alexander Hamilton": "What Hamilton would say, grounded in documented writings. 2 sentences of prose.",
-    "Benjamin Franklin": "What Franklin would say, grounded in documented writings. 2 sentences of prose.",
-    "John Adams": "What Adams would say, grounded in documented writings. 2 sentences of prose.",
-    "John Jay": "What Jay would say, grounded in documented writings. 2 sentences of prose.",
-    "John Marshall": "What Marshall would say, grounded in Marbury v. Madison, McCulloch v. Maryland, and early Supreme Court constitutional reasoning. 2 sentences of prose."
+    "George Washington": "Use source grounded prose. If applicable, briefly include a documented Washington line or idea and then explain in plain English what it means here. 2 sentences.",
+    "Thomas Jefferson": "Use source grounded prose. If applicable, briefly include a documented Jefferson line or idea and then explain in plain English what it means here. 2 sentences.",
+    "James Madison": "Use source grounded prose. If applicable, briefly include a documented Madison line or idea and then explain in plain English what it means here. 2 sentences.",
+    "Alexander Hamilton": "Use source grounded prose. If applicable, briefly include a documented Hamilton line or idea and then explain in plain English what it means here. 2 sentences.",
+    "Benjamin Franklin": "Use source grounded prose. If applicable, briefly include a documented Franklin line or idea and then explain in plain English what it means here. 2 sentences.",
+    "John Adams": "Use source grounded prose. If applicable, briefly include a documented Adams line or idea and then explain in plain English what it means here. 2 sentences.",
+    "John Jay": "Use source grounded prose. If applicable, briefly include a documented Jay line or idea and then explain in plain English what it means here. 2 sentences.",
+    "John Marshall": "Use source grounded prose from Marbury v. Madison, McCulloch v. Maryland, and early Supreme Court constitutional reasoning where applicable, then explain in plain English what it means here. 2 sentences."
   },
   "Scenario Map": "MANDATORY. Always populate with exactly five scenarios in this exact format: SCENARIO A — [Short Name]: Confidence: [Documented/Mixed/Speculative]. [2 to 3 sentences.] Analyst Divergence: [Low/Moderate/High]. Repeat through Scenario E. End with NOTE: These are plausible trajectories only. Not predictions. Only actions and time will determine the actual path.",
   "Glossary": [
-    {"term": "A term, name, or concept that general readers may not recognize", "definition": "Plain language definition in 1 to 2 sentences."},
+    {"term": "A term, acronym, agency, company, program, court case, founder reference, or concept that general readers may not recognize", "definition": "Plain language definition in 1 to 2 sentences."},
     {"term": "Another term", "definition": "Plain language definition."},
     {"term": "A third term", "definition": "Plain language definition."}
   ],
   "Sources": "Primary sources:\\nSource description one: https://url-one.com\\nSource description two: https://url-two.com\\nSource description three: https://url-three.com\\nSource description four: https://url-four.com\\nSource description five: https://url-five.com\\n\\nInclude 6 to 10 real, verifiable URLs from major news outlets, government sites, institutional bodies, or authoritative sources. Format each line exactly as: Label: URL",
   "Overall Verdict": "Exactly one of: True, Mostly True, Substantially True, Plausible/Mixed, Contested, Exaggerated, Misleading, Unproven, False",
-  "Strip Mode Summary": "Write this in the spirit of Thomas Paine's Common Sense — plain language, no jargon, no hedging, accessible to anyone regardless of political background or education level. Answer three things clearly: what is actually happening beneath the claim, why it matters in real terms, and what someone should be paying attention to next. This should reflect the full excavation without referencing the layers directly. 3 to 4 sentences. No bullet points. No dashes. Do not be condescending. Do not be sarcastic. Avoid phrases like obviously or clearly. Do not over-explain uncertainty, but do not present future outcomes as guaranteed. Let the tone reflect that situations evolve. Write with calm, grounded clarity."
+  "Strip Mode Summary": "This is the full paid analytical paragraph, not the short Quick Explanation. Write this in the spirit of Thomas Paine's Common Sense — plain language, no jargon, no hedging, accessible to anyone regardless of political background or education level. Answer three things clearly: what is actually happening beneath the claim, why it matters in real terms, and what someone should be paying attention to next. This should reflect the full excavation without referencing the layers directly. 3 to 4 sentences. No bullet points. No dashes. Do not be condescending. Do not be sarcastic. Avoid phrases like obviously or clearly. Do not over-explain uncertainty, but do not present future outcomes as guaranteed. Let the tone reflect that situations evolve. Write with calm, grounded clarity."
 }"""
 
 
@@ -369,34 +385,80 @@ def build_claim_context(record):
     attribution = detect_attribution_metadata(fields.get("Original Quote", ""), speaker)
     parsed_json = try_parse_raw_json(fields)
 
+    quick_explanation = fields.get("Quick Explanation", "") or parsed_json.get("Quick Explanation", "")
+    stripped_claim = fields.get("Stripped Claim", "") or parsed_json.get("Stripped Claim", "")
+    overall_verdict = fields.get("Overall Verdict", "Unproven") or parsed_json.get("Overall Verdict", "Unproven")
+    subclaims = build_subclaims(fields, parsed_json)
+
+    direct_facts = fields.get("Direct Facts", "") or parsed_json.get("Direct Facts", "")
+    adjacent_facts = fields.get("Adjacent Facts", "") or parsed_json.get("Adjacent Facts", "")
+    root_concern = fields.get("Root Concern", "") or parsed_json.get("Root Concern", "")
+    values_divergence = fields.get("Values Divergence", "") or parsed_json.get("Values Divergence", "")
+    constitutional_framework = fields.get("Constitutional Framework", "") or parsed_json.get("Constitutional Framework", "")
+    common_ground = fields.get("Common Ground", "") or parsed_json.get("Common Ground", "")
+    left_perspective = fields.get("Left Perspective", "") or parsed_json.get("Left Perspective", "")
+    right_perspective = fields.get("Right Perspective", "") or parsed_json.get("Right Perspective", "")
+    scenario_map = fields.get("Scenario Map", "") or parsed_json.get("Scenario Map", "")
+    strip_mode_summary = fields.get("Strip Mode Summary", "") or parsed_json.get("Strip Mode Summary", "")
+    source_urls = fields.get("Source URLs", "") or parsed_json.get("Sources", "")
+    founders_perspectives = parse_founders(fields.get("Founders Perspectives", "") or parsed_json.get("Founders Perspectives", {}))
+    glossary = parse_glossary(fields.get("Glossary", "") or parsed_json.get("Glossary", []))
+
+    quick_view = {
+        "stripped_claim": stripped_claim,
+        "overall_verdict": overall_verdict,
+        "quick_explanation": quick_explanation,
+        "subclaims": subclaims
+    }
+
+    full_view = {
+        "bottom_line": strip_mode_summary,
+        "direct_facts": direct_facts,
+        "adjacent_facts": adjacent_facts,
+        "root_concern": root_concern,
+        "values_divergence": values_divergence,
+        "constitutional_framework": constitutional_framework,
+        "common_ground": common_ground,
+        "left_perspective": left_perspective,
+        "right_perspective": right_perspective,
+        "founders_perspectives": founders_perspectives,
+        "scenario_map": scenario_map,
+        "source_urls": source_urls,
+        "glossary": glossary,
+        "subclaims": subclaims
+    }
+
     return {
         "record_id": record.get("id"),
         "slug": fields.get("URL Slug", ""),
         "title": title,
-        "stripped_claim": fields.get("Stripped Claim", ""),
+        "stripped_claim": stripped_claim,
+        "quick_explanation": quick_explanation,
         "speaker": speaker,
         "topics": parse_topics(fields.get("Topic")),
         "date": fields.get("Date") or fields.get("Date Added", ""),
-        "overall_verdict": fields.get("Overall Verdict", "Unproven"),
-        "strip_mode_summary": fields.get("Strip Mode Summary", ""),
-        "direct_facts": fields.get("Direct Facts", ""),
-        "adjacent_facts": fields.get("Adjacent Facts", ""),
-        "root_concern": fields.get("Root Concern", ""),
-        "values_divergence": fields.get("Values Divergence", ""),
-        "constitutional_framework": fields.get("Constitutional Framework", ""),
-        "common_ground": fields.get("Common Ground", ""),
-        "left_perspective": fields.get("Left Perspective", ""),
-        "right_perspective": fields.get("Right Perspective", ""),
-        "scenario_map": fields.get("Scenario Map", ""),
-        "source_urls": fields.get("Source URLs", ""),
-        "founders_perspectives": parse_founders(fields.get("Founders Perspectives", "")),
-        "glossary": parse_glossary(fields.get("Glossary", "")),
-        "subclaims": build_subclaims(fields, parsed_json),
+        "overall_verdict": overall_verdict,
+        "strip_mode_summary": strip_mode_summary,
+        "direct_facts": direct_facts,
+        "adjacent_facts": adjacent_facts,
+        "root_concern": root_concern,
+        "values_divergence": values_divergence,
+        "constitutional_framework": constitutional_framework,
+        "common_ground": common_ground,
+        "left_perspective": left_perspective,
+        "right_perspective": right_perspective,
+        "scenario_map": scenario_map,
+        "source_urls": source_urls,
+        "founders_perspectives": founders_perspectives,
+        "glossary": glossary,
+        "subclaims": subclaims,
         "status": fields.get("Status", "Active"),
         "mode": fields.get("Mode", ""),
         "published": fields.get("Published", False),
         "human_reviewed": fields.get("Human Reviewed", False),
         "entered_by": fields.get("Entered By", ""),
+        "quick_view": quick_view,
+        "full_view": full_view,
 
         "attribution_status": attribution["status"],
         "attribution_detail": attribution["detail"],
@@ -426,6 +488,7 @@ def extract_primary_record_fields(claim, parsed, mode, username, existing_fields
     fields = {
         "Original Quote": claim,
         "Stripped Claim": parsed.get("Stripped Claim", claim),
+        "Quick Explanation": parsed.get("Quick Explanation", ""),
         "Speaker": parsed.get("Speaker") or "Unknown",
         "Topic": [normalize_topic(parsed.get("Topic"))],
         "Human Reviewed": human_reviewed_value,
