@@ -356,6 +356,8 @@ def build_claim_context(record):
         return None
 
     fields = record.get("fields", {})
+    claim_record_id = record.get("id")
+    claim_disputes = get_disputes_for_claim(claim_record_id)
     title = fields.get("Original Quote") or fields.get("Stripped Claim") or "Untitled Claim"
 
     claude_parsed = safe_json_parse(fields.get("Claude Raw JSON", ""))
@@ -458,6 +460,7 @@ def build_claim_context(record):
         "published": fields.get("Published", False),
         "human_reviewed": fields.get("Human Reviewed", False),
         "entered_by": fields.get("Entered By", ""),
+        "disputes": claim_disputes,
         "quick_view": quick_view,
         "full_view": full_view,
 
@@ -620,6 +623,8 @@ def get_topic_archives():
         grouped.setdefault(topic, []).append(claim)
     return dict(sorted(grouped.items(), key=lambda x: x[0].lower()))
 
+def get_disputes_for_user(username):
+    return []
 
 def get_claim_by_slug(slug):
     if not AIRTABLE_TOKEN or not AIRTABLE_BASE_ID or not AIRTABLE_TABLE_NAME or not slug:
@@ -642,6 +647,47 @@ def get_claim_by_slug(slug):
         print("GET CLAIM BY SLUG ERROR:", str(e), flush=True)
         return None
 
+def get_disputes_for_claim(claim_record_id):
+    if not AIRTABLE_TOKEN or not AIRTABLE_BASE_ID or not AIRTABLE_DISPUTES_TABLE_NAME or not claim_record_id:
+        return []
+
+    try:
+        params = {
+            "filterByFormula": f"FIND('{escape_airtable_formula_value(claim_record_id)}', ARRAYJOIN({{Claim Record ID}}))",
+            "sort[0][field]": "Last Updated",
+            "sort[0][direction]": "desc"
+        }
+
+        records = airtable_get_all(AIRTABLE_DISPUTES_TABLE_NAME, params=params)
+
+        disputes = []
+        for record in records:
+            f = record.get("fields", {})
+            disputes.append({
+                "record_id": record.get("id"),
+                "title": f.get("Original Claim Title", "Untitled Claim"),
+                "claim_slug": f.get("Claim Slug", ""),
+                "sections_disputed": f.get("Sections Disputed", []),
+                "dispute_text": f.get("Dispute Text", ""),
+                "user_source_url": f.get("User Source URL", ""),
+                "pushback_round_count": f.get("Pushback Round Count", 0),
+                "status": f.get("Status", "Open"),
+                "date_submitted": f.get("Date Submitted", ""),
+                "last_updated": f.get("Last Updated", ""),
+                "ai_response": f.get("AI Response", ""),
+                "escalated_to_human": f.get("Escalated To Human", False),
+                "editor_notes": f.get("Editor Notes", ""),
+                "editor_resolution": f.get("Editor Resolution", ""),
+                "dispute_type": f.get("Dispute Type", ""),
+                "parent_dispute": f.get("Parent Dispute", []),
+                "quick_view_outcome": f.get("Quick View Outcome", ""),
+                "full_excavation_outcome": f.get("Full Excavation Outcome", "")
+            })
+        return disputes
+
+    except Exception as e:
+        print("GET DISPUTES FOR CLAIM ERROR:", str(e), flush=True)
+        return []
 
 def get_claim_by_original_quote(claim):
     if not AIRTABLE_TOKEN or not AIRTABLE_BASE_ID or not AIRTABLE_TABLE_NAME or not claim:

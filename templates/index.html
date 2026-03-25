@@ -2351,6 +2351,84 @@
       text-transform: uppercase;
       color: var(--text-mid);
     }
+
+Fair. That’s on me — I skipped the precision.
+
+EXACTLY where to put Step 6 (CSS)
+
+Open index.html
+
+Find your <style> block at the top. It will look like:
+
+<style>
+  ...
+</style>
+Do this:
+
+👉 Scroll all the way to the bottom of that <style> section, right before </style>
+
+Paste the dispute CSS right above </style>
+
+Like this:
+
+<style>
+  ...your existing styles...
+
+  /* ===== DISPUTES ===== */
+  .dispute-card {
+    border: 1px solid rgba(201,168,76,.18);
+    background: rgba(255,255,255,.02);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin: 18px 0;
+  }
+
+  .dispute-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 12px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--text-mid);
+  }
+
+  .dispute-status {
+    color: #c9a84c;
+    font-weight: 600;
+  }
+
+  .dispute-date {
+    opacity: 0.7;
+  }
+
+  .dispute-section {
+    margin-top: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .dispute-section strong {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--text-light);
+  }
+
+  .ai-response {
+    margin-top: 14px;
+    padding: 10px 12px;
+    border-left: 2px solid #c9a84c;
+    background: rgba(201,168,76,.05);
+  }
+
+  .dispute-outcome {
+    margin-top: 14px;
+    padding: 10px 12px;
+    border-left: 2px solid #4caf50;
+    background: rgba(76,175,80,.05);
+  }
+
   </style>
 </head>
 <body>
@@ -2638,12 +2716,18 @@
 
             <!-- TABS -->
             <div class="excavation-tabs">
-              <button class="tab-btn active" id="tab-quick-btn" onclick="switchTab('quick')">Quick View</button>
-              <button class="tab-btn" id="tab-full-btn" onclick="switchTab('full')">
-                Full Excavation
-                {% if not superuser %}<span class="tab-lock-icon">🔒</span>{% endif %}
-              </button>
-            </div>
+  <button class="tab-btn active" id="tab-quick-btn" onclick="switchTab('quick')">Quick Excavation</button>
+  <button class="tab-btn" id="tab-full-btn" onclick="switchTab('full')">
+    Full Excavation
+    {% if not superuser %}<span class="tab-lock-icon">🔒</span>{% endif %}
+  </button>
+  <button class="tab-btn" id="tab-disputes-btn" onclick="switchTab('disputes')">
+    Disputes
+    {% if current_claim.disputes and current_claim.disputes|length > 0 %}
+      <span class="tab-lock-icon">{{ current_claim.disputes|length }}</span>
+    {% endif %}
+  </button>
+</div>
 
               <div class="claim-header-top">
   <div class="status-row">
@@ -3007,6 +3091,71 @@
               {% endif %}
             </div>
             <!-- END FULL TAB -->
+
+<!-- DISPUTES TAB -->
+<div class="tab-panel hidden" id="tab-disputes">
+
+  <div class="ornamental">
+    <div class="ornamental-line"></div>
+    <div class="ornamental-diamond"></div>
+    <div class="ornamental-line"></div>
+  </div>
+
+  {% if current_claim.disputes and current_claim.disputes|length > 0 %}
+
+    {% for dispute in current_claim.disputes %}
+      <div class="dispute-card">
+
+        <div class="dispute-header">
+          <span class="dispute-status">{{ dispute.status }}</span>
+          <span class="dispute-date">{{ dispute.date_submitted }}</span>
+        </div>
+
+        <div class="dispute-section">
+          <strong>Sections Disputed:</strong>
+          {{ dispute.sections_disputed | join(", ") }}
+        </div>
+
+        <div class="dispute-section">
+          <strong>User Argument:</strong>
+          <p>{{ dispute.dispute_text }}</p>
+        </div>
+
+        {% if dispute.user_source_url %}
+        <div class="dispute-section">
+          <strong>User Source:</strong>
+          <a href="{{ dispute.user_source_url }}" target="_blank">{{ dispute.user_source_url }}</a>
+        </div>
+        {% endif %}
+
+        {% if dispute.ai_response %}
+        <div class="dispute-section ai-response">
+          <strong>AI Response:</strong>
+          <p>{{ dispute.ai_response }}</p>
+        </div>
+        {% endif %}
+
+        {% if dispute.quick_view_outcome or dispute.full_excavation_outcome %}
+        <div class="dispute-outcome">
+          <strong>Outcome:</strong>
+          <p>
+            {{ dispute.quick_view_outcome or "No change to Quick View." }}
+            <br>
+            {{ dispute.full_excavation_outcome or "No change to Full Excavation." }}
+          </p>
+        </div>
+        {% endif %}
+
+      </div>
+    {% endfor %}
+
+  {% else %}
+    <p style="text-align:center; color:var(--text-mid); padding:20px;">
+      No disputes have been made for this claim.
+    </p>
+  {% endif %}
+
+</div>
 
           {% else %}
             <div class="empty-state">
@@ -3461,11 +3610,14 @@
     }
 
     function switchTab(tab) {
-      document.getElementById('tab-quick').classList.toggle('hidden', tab !== 'quick');
-      document.getElementById('tab-full').classList.toggle('hidden', tab !== 'full');
-      document.getElementById('tab-quick-btn').classList.toggle('active', tab === 'quick');
-      document.getElementById('tab-full-btn').classList.toggle('active', tab === 'full');
-    }
+  document.getElementById('tab-quick').classList.toggle('hidden', tab !== 'quick');
+  document.getElementById('tab-full').classList.toggle('hidden', tab !== 'full');
+  document.getElementById('tab-disputes').classList.toggle('hidden', tab !== 'disputes');
+
+  document.getElementById('tab-quick-btn').classList.toggle('active', tab === 'quick');
+  document.getElementById('tab-full-btn').classList.toggle('active', tab === 'full');
+  document.getElementById('tab-disputes-btn').classList.toggle('active', tab === 'disputes');
+}
 
     function toggleLayer(header) {
       const body = header.nextElementSibling;
