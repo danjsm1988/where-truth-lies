@@ -2798,20 +2798,34 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .m-chip {
   display: inline-flex;
   align-items: center;
+  max-width: 100%;
+  min-width: 0;
   padding: 5px 8px;
   border-radius: 999px;
   background: rgba(255,255,255,.03);
   border: 1px solid rgba(255,255,255,.1);
   font-family: 'Libre Baskerville', Georgia, serif;
   font-size: 8px;
-  letter-spacing: .1em;
+  letter-spacing: .08em;
   text-transform: uppercase;
   color: var(--text-light);
+  white-space: nowrap;
+}
+
+.m-claim-detail {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .active-chip {
@@ -3052,6 +3066,7 @@
   background: rgba(8,23,38,.98);
   border-top: 1px solid rgba(201,168,76,.16);
   backdrop-filter: blur(10px);
+  box-shadow: 0 -6px 20px rgba(0,0,0,.22);
 }
 
 .m-nav-link {
@@ -3059,22 +3074,37 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  text-decoration: none;
-  color: var(--text-mid);
+  gap: 4px;
+  text-decoration: none !important;
+  color: var(--text-mid) !important;
   font-family: 'Libre Baskerville', Georgia, serif;
   font-size: 9px;
-  letter-spacing: .1em;
+  letter-spacing: .08em;
   text-transform: uppercase;
+  line-height: 1;
+}
+
+.m-nav-link:visited,
+.m-nav-link:hover,
+.m-nav-link:active {
+  text-decoration: none !important;
+  color: var(--text-mid) !important;
 }
 
 .m-nav-link.active {
-  color: var(--gold);
+  color: var(--gold) !important;
+}
+
+.m-nav-link.active .m-nav-icon {
+  color: var(--gold) !important;
 }
 
 .m-nav-icon {
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1;
+  color: var(--cream-soft);
+  display: block;
+  margin-bottom: 2px;
 }
 
 html, body {
@@ -3655,22 +3685,25 @@ html, body {
 
     <!-- BOTTOM NAV -->
     <nav class="m-bottom-nav">
-      <a class="m-nav-item {% if page_mode in ['claim', 'home'] %}active{% endif %}" href="/">
-        <div class="m-nav-icon">⌂</div>
-        <span class="m-nav-label">Home</span>
-      </a>
-      <a class="m-nav-item {% if page_mode == 'search' %}active{% endif %}" href="/search">
-        <div class="m-nav-icon">🔍</div>
-        <span class="m-nav-label">Search</span>
-      </a>
-      <a class="m-nav-item {% if page_mode == 'disputes' %}active{% endif %}" href="/disputes">
-        <div class="m-nav-icon">⚖</div>
-        <span class="m-nav-label">Disputes</span>
-      </a>
-      <a class="m-nav-item {% if page_mode == 'profile' %}active{% endif %}" href="/profile">
-        <div class="m-nav-icon">◎</div>
-        <span class="m-nav-label">Profile</span>
-      </a>
+      <a class="m-nav-link {% if page_mode == 'claim' %}active{% endif %}" href="/">
+    <span class="m-nav-icon">⌂</span>
+    <span>Home</span>
+  </a>
+
+  <a class="m-nav-link {% if page_mode == 'search' %}active{% endif %}" href="/search">
+    <span class="m-nav-icon">▤</span>
+    <span>Claims</span>
+  </a>
+
+  <a class="m-nav-link {% if page_mode == 'disputes' %}active{% endif %}" href="/disputes">
+    <span class="m-nav-icon">✦</span>
+    <span>Disputes</span>
+  </a>
+
+  <a class="m-nav-link {% if page_mode == 'profile' %}active{% endif %}" href="/profile">
+    <span class="m-nav-icon">◉</span>
+    <span>Profile</span>
+  </a>
     </nav>
 
   </div><!-- end mobile-shell -->
@@ -3804,6 +3837,68 @@ html, body {
             <div class="m-desc">Where real overlap still exists</div>
           </div>
         </div>
+        Perfect — this is exactly what I needed.
+
+✅ EXACT placement (no guessing)
+
+You are putting it inside .methodology-inner, but OUTSIDE .methodology-layers
+
+🔧 Modify your code like this
+
+Right now you have:
+
+<div class="methodology-inner">
+  <div class="methodology-label">The Excavation</div>
+  <div class="methodology-layers">
+    ...
+  </div>
+</div>
+👉 Change it to THIS
+<div class="methodology-inner">
+  <div class="methodology-label">The Excavation</div>
+
+  <div class="methodology-layers">
+    <div class="m-layer">
+      <div class="m-num">01</div>
+      <div class="m-name">Direct Facts</div>
+      <div class="m-desc">What the documented record actually shows</div>
+    </div>
+    <div class="m-layer">
+      <div class="m-num">02</div>
+      <div class="m-name">Adjacent Facts</div>
+      <div class="m-desc">What the claim leaves out</div>
+    </div>
+    <div class="m-layer">
+      <div class="m-num">03</div>
+      <div class="m-name">Root Concern</div>
+      <div class="m-desc">What the argument is really about</div>
+    </div>
+    <div class="m-layer">
+      <div class="m-num">04</div>
+      <div class="m-name">Values Divergence</div>
+      <div class="m-desc">Where factual debate becomes values conflict</div>
+    </div>
+    <div class="m-layer">
+      <div class="m-num">05</div>
+      <div class="m-name">Constitutional Framework</div>
+      <div class="m-desc">What the founders wrote and why it matters</div>
+    </div>
+    <div class="m-layer">
+      <div class="m-num">06</div>
+      <div class="m-name">Common Ground</div>
+      <div class="m-desc">Where real overlap still exists</div>
+    </div>
+  </div>
+  <div class="methodology-live-grounded">
+    <div class="mlg-title">Live Grounded</div>
+    <div class="mlg-text">
+      When triggered, the system performs a live retrieval of current public information before analysis begins. Verified findings are injected as a factual baseline.
+      <br><br>
+      This does not determine truth. It establishes what is currently documented so the excavation does not operate on outdated or fabricated context.
+      <br><br>
+      If no reliable live information is found, the system proceeds using existing knowledge and marks uncertainty accordingly.
+    </div>
+  </div>
       </div>
     </section>
 
