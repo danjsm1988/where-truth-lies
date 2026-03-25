@@ -2830,15 +2830,16 @@
 
 .m-claim-title {
   font-family: 'Playfair Display', Georgia, serif;
-  font-size: 34px;
-  line-height: 1.12;
+  font-size: 22px;
+  line-height: 1.18;
   color: var(--cream);
   margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .m-claim-dek {
-  font-size: 18px;
-  line-height: 1.58;
+  font-size: 15px;
+  line-height: 1.55;
   color: var(--text-light);
 }
 
@@ -3076,6 +3077,70 @@
   line-height: 1;
 }
 
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.mobile-shell,
+.m-content,
+.m-home,
+.m-claim-detail,
+.m-preview-strip,
+.m-scanner,
+.m-qe-card,
+.m-expand-section,
+.m-locked-section,
+.m-preview-card,
+.m-subclaim,
+.m-bottom-line,
+.m-layer-item,
+.m-founder-item {
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.m-claim-title,
+.m-claim-dek,
+.m-qe-text,
+.m-bl-text,
+.m-layer-text,
+.m-founder-text,
+.m-subclaim-text,
+.m-card-title,
+.m-card-date,
+.m-user-chip,
+.m-chip,
+.m-verdict-value {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.m-cards-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+}
+
+.m-preview-card {
+  min-width: 78vw;
+  max-width: 78vw;
+}
+
+.m-topbar,
+.m-bottom-nav {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.m-expand-header,
+.m-strip-header,
+.m-card-meta,
+.m-claim-chips {
+  min-width: 0;
+}
+
 </style>
 </head>
 <body>
@@ -3200,7 +3265,7 @@
 
         <!-- SCANNER: primary action -->
         <div class="m-scanner">
-          <div class="m-scanner-label">Truth Scanner</div>
+          <div class="m-scanner-label">Start an Excavation</div>
 
           {% if session.get("role") == "standard" %}
             <div style="font-size:15px; color:var(--text-mid); font-style:italic; margin-bottom:10px;">Browse existing claims below. Excavation requires a paid account.</div>
