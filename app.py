@@ -1620,6 +1620,7 @@ def submit_dispute():
                     "source_url": source_url
                 }
             )
+            print("AI REVIEW RESULT:", ai_review, flush=True)
 
             if ai_review and dispute_record_id:
                 decision = ai_review.get("decision", "").strip()
