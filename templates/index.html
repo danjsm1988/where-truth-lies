@@ -2084,7 +2084,9 @@
   font-size: 11px;
   border-radius: 6px;
   border: 1px solid rgba(201,168,76,0.2);
-  white-space: nowrap;
+  white-space: normal;
+  max-width: 220px;
+  text-align: center;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease;
@@ -3641,6 +3643,30 @@
     }
 
     function switchTab(tab) {
+  const quickPanel = document.getElementById('tab-quick');
+  const fullPanel = document.getElementById('tab-full');
+  const disputesPanel = document.getElementById('tab-disputes');
+
+  const quickBtn = document.getElementById('tab-quick-btn');
+  const fullBtn = document.getElementById('tab-full-btn');
+  const disputesBtn = document.getElementById('tab-disputes-btn');
+
+  quickPanel.classList.toggle('hidden', tab !== 'quick');
+  fullPanel.classList.toggle('hidden', tab !== 'full');
+  disputesPanel.classList.toggle('hidden', tab !== 'disputes');
+
+  quickBtn.classList.toggle('active', tab === 'quick');
+  fullBtn.classList.toggle('active', tab === 'full');
+  disputesBtn.classList.toggle('active', tab === 'disputes');
+
+  let targetPanel = quickPanel;
+  if (tab === 'full') targetPanel = fullPanel;
+  if (tab === 'disputes') targetPanel = disputesPanel;
+
+  setTimeout(() => {
+    targetPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 80);
+}
 
     function toggleLayer(header) {
       const body = header.nextElementSibling;
