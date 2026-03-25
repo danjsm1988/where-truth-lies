@@ -2528,6 +2528,22 @@
     </div>
   </div>
 
+ <!-- DISPUTE RESULT MODAL -->
+  <div class="modal-overlay" id="disputeResultModal">
+    <div class="modal-box">
+      <div class="modal-kicker">Dispute Status</div>
+      <div class="modal-title" id="disputeResultTitle">Dispute Submitted</div>
+      <div class="modal-body" id="disputeResultBody">
+        Your dispute was submitted successfully.
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn-primary" type="button" onclick="closeDisputeResultModal()">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="page-shell">
    <header class="masthead">
   <div class="masthead-inner">
@@ -3574,9 +3590,28 @@
       document.getElementById('disputeModal').classList.remove('visible');
     }
 
+function openDisputeResultModal(title, body) {
+  const modal = document.getElementById('disputeResultModal');
+  const titleEl = document.getElementById('disputeResultTitle');
+  const bodyEl = document.getElementById('disputeResultBody');
+
+  if (titleEl) titleEl.textContent = title;
+  if (bodyEl) bodyEl.textContent = body;
+  if (modal) modal.classList.add('visible');
+}
+
+function closeDisputeResultModal() {
+  const modal = document.getElementById('disputeResultModal');
+  if (modal) modal.classList.remove('visible');
+}
+
     document.getElementById('disputeModal').addEventListener('click', function(e) {
       if (e.target === this) closeDisputeModal();
     });
+
+    document.getElementById('disputeResultModal').addEventListener('click', function(e) {
+     if (e.target === this) closeDisputeResultModal();
+   });
 
     async function submitDispute() {
       const checked = Array.from(
@@ -3631,18 +3666,23 @@
           throw new Error(data.error || 'Failed to submit dispute.');
         }
 
-        statusMsg.textContent = 'Dispute submitted successfully. A human editor may take 24 to 72 hours if escalation is needed.';
-
-        setTimeout(() => {
-          closeDisputeModal();
-        }, 1400);
+        closeDisputeModal();
+openDisputeResultModal(
+  'Dispute Submitted',
+  'Your dispute was submitted successfully. You can review its status in the Disputes tab. A human editor may take 24 to 72 hours if escalation is needed.'
+);
 
       } catch (err) {
-        statusMsg.textContent = 'Submission failed: ' + err.message;
+        closeDisputeModal();
+openDisputeResultModal(
+  'Submission Error',
+  'There was a problem submitting your dispute. Please contact support if this continues.'
+);
+console.error('Dispute submission failed:', err);
       }
     }
 
-    function switchTab(tab) {
+   function switchTab(tab) {
   const quickPanel = document.getElementById('tab-quick');
   const fullPanel = document.getElementById('tab-full');
   const disputesPanel = document.getElementById('tab-disputes');
@@ -3659,13 +3699,17 @@
   fullBtn.classList.toggle('active', tab === 'full');
   disputesBtn.classList.toggle('active', tab === 'disputes');
 
-  let targetPanel = quickPanel;
-  if (tab === 'full') targetPanel = fullPanel;
-  if (tab === 'disputes') targetPanel = disputesPanel;
+  if (tab === 'disputes') {
+    const subclaimsSection = document.querySelector('.subclaims-list');
+    const targetY = subclaimsSection
+      ? subclaimsSection.getBoundingClientRect().bottom + window.scrollY + 14
+      : disputesPanel.getBoundingClientRect().top + window.scrollY - 110;
 
-  setTimeout(() => {
-    targetPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 80);
+    window.scrollTo({
+      top: targetY,
+      behavior: 'smooth'
+    });
+  }
 }
 
     function toggleLayer(header) {

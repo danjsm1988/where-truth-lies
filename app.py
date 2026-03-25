@@ -356,8 +356,8 @@ def build_claim_context(record):
         return None
 
     fields = record.get("fields", {})
-    claim_record_id = record.get("id")
-    claim_disputes = get_disputes_for_claim(claim_record_id)
+    claim_slug = fields.get("URL Slug", "")
+    claim_disputes = get_disputes_for_claim(claim_slug)
     title = fields.get("Original Quote") or fields.get("Stripped Claim") or "Untitled Claim"
 
     claude_parsed = safe_json_parse(fields.get("Claude Raw JSON", ""))
@@ -647,13 +647,14 @@ def get_claim_by_slug(slug):
         print("GET CLAIM BY SLUG ERROR:", str(e), flush=True)
         return None
 
-def get_disputes_for_claim(claim_record_id):
-    if not AIRTABLE_TOKEN or not AIRTABLE_BASE_ID or not AIRTABLE_DISPUTES_TABLE_NAME or not claim_record_id:
+def get_disputes_for_claim(claim_slug):
+    if not AIRTABLE_TOKEN or not AIRTABLE_BASE_ID or not AIRTABLE_DISPUTES_TABLE_NAME or not claim_slug:
         return []
 
     try:
+        safe_slug = escape_airtable_formula_value(claim_slug)
         params = {
-            "filterByFormula": f"FIND('{escape_airtable_formula_value(claim_record_id)}', ARRAYJOIN({{Claim Record ID}}))",
+            "filterByFormula": f"{{Claim Slug}}='{safe_slug}'",
             "sort[0][field]": "Last Updated",
             "sort[0][direction]": "desc"
         }
