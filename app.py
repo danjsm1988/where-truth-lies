@@ -1658,8 +1658,13 @@ def submit_dispute():
                     update_fields["Full Excavation Outcome"] = ai_review.get("full_excavation_outcome", "")
 
                 update_res = update_dispute_record(dispute_record_id, update_fields)
-                if not update_res.ok:
-                    print("DISPUTE AI UPDATE ERROR:", update_res.text, flush=True)
+print("DISPUTE UPDATE STATUS:", update_res.status_code, flush=True)
+print("DISPUTE UPDATE BODY:", update_res.text, flush=True)
+
+if not update_res.ok:
+    print("DISPUTE AI UPDATE ERROR:", update_res.text, flush=True)
+else:
+    print("DISPUTE AI UPDATE SUCCESS", flush=True)
 
         return jsonify({
             "success": True,
