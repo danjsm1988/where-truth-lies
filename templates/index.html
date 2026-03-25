@@ -1690,130 +1690,455 @@
 }
 
     @media (max-width: 980px) {
-  .desktop-nav { display: none; }
-  .mobile-menu-btn { display: inline-flex; }
-  .methodology-band { display: none; }
+      .desktop-nav { display: none; }
+      .mobile-menu-btn { display: inline-flex; }
+      .methodology-band { display: none; }
 
-  .archive-cards,
-  .perspectives-grid,
-  .founders-grid,
-  .methodology-points {
-    grid-template-columns: 1fr;
-  }
+      .archive-cards,
+      .perspectives-grid,
+      .founders-grid,
+      .methodology-points {
+        grid-template-columns: 1fr;
+      }
 
-  .brand-name { font-size: 18px; }
-  .brand-tagline { font-size: 10px; letter-spacing: .18em; }
-  .brand-latin { font-size: 12px; }
+      .brand-name { font-size: 18px; }
+      .brand-tagline { font-size: 10px; letter-spacing: .18em; }
+      .brand-latin { font-size: 12px; }
 
-  .mobile-user {
-    display: inline-flex;
-    margin-left: auto;
-    margin-right: 10px;
-    font-size: 10px;
-    padding: 4px 8px;
-  }
+      .mobile-user {
+        display: inline-flex;
+        margin-left: auto;
+        margin-right: 10px;
+        font-size: 10px;
+        padding: 5px 8px;
+      }
 
-    .sidebar-card:first-child,
-  .sidebar-card:nth-child(2),
-  .sidebar-card:last-child {
-    display: none;
-  }
-}
+      /* Hide entire sidebar on mobile — content takes full width */
+      .sidebar { display: none; }
+
+      /* Single column grid at tablet */
+      .main-grid { grid-template-columns: 1fr; }
+
+      /* Slightly larger body text on tablet */
+      body { font-size: 18px; }
+
+      /* Layer text more readable */
+      .layer-block-text { font-size: 17px; }
+    }
+
+    /* ══════════════════════════════════════════
+       MOBILE — TRUE MOBILE-FIRST EXPERIENCE
+       This is NOT desktop shrunk down.
+       This is a different reading experience.
+       ══════════════════════════════════════════ */
 
     @media (max-width: 640px) {
+
+      /* ── BASE LAYOUT ── */
+      body {
+        font-size: 18px;
+        line-height: 1.78;
+      }
+
       .container,
       .masthead-inner,
       .hero-inner,
       .main-grid,
       .footer-inner,
       .footer-bottom,
-      .mobile-nav-inner {
-        width: min(var(--content-width), calc(100% - 20px));
+      .mobile-nav-inner,
+      .claim-entry-inner {
+        width: calc(100% - 32px);
       }
 
-      .hero-card,
-      .trust-card,
-      .main-card,
-      .sidebar-card {
-        padding: 20px;
-        border-radius: 16px;
+      /* ── MASTHEAD: tight and clean ── */
+      .masthead-inner {
+        padding: 10px 0;
+        gap: 10px;
       }
 
-      .seal-small {
-        width: 50px;
-        height: 50px;
-      }
-
-      .seal-eye {
-        width: 21px;
-        height: 12px;
-      }
+      .seal-small { width: 42px; height: 42px; }
+      .seal-eye { width: 18px; height: 10px; }
 
       .brand-name {
-        font-size: 16px;
+        font-size: 15px;
         white-space: normal;
+        line-height: 1.2;
+      }
+      .brand-tagline { font-size: 9px; letter-spacing: .14em; white-space: normal; }
+      .brand-latin { font-size: 11px; white-space: normal; }
+
+      /* ── HERO: stripped down, just the pitch ── */
+      .hero-band { padding: 0; }
+
+      .hero-inner {
+        padding: 16px 0 14px;
+        gap: 14px;
       }
 
-      .brand-tagline,
-      .brand-latin {
-        white-space: normal;
+      .hero-card {
+        padding: 18px 16px;
+        border-radius: 14px;
       }
+
+      .hero-kicker { font-size: 9px; margin-bottom: 8px; }
 
       .hero-title {
-        font-size: 29px;
+        font-size: 24px;
+        line-height: 1.15;
+        margin-bottom: 10px;
       }
 
-      .archives-title-wrap h2,
-      .methodology-section h2 {
-        font-size: 27px;
+      .hero-text {
+        font-size: 16px;
+        line-height: 1.62;
+        margin-bottom: 10px;
       }
 
+      /* Hide editorial standard card on mobile — it clutters the flow */
+      .trust-card { display: none; }
+
+      /* ── CLAIM ENTRY MODULE: compose-box feel ── */
+      .claim-entry-band { padding: 0; border-bottom: none; }
+
+      .claim-entry-inner { padding: 14px 0 10px; }
+
+      .claim-entry-card {
+        padding: 18px 16px 16px;
+        border-radius: 14px;
+      }
+
+      .claim-entry-heading {
+        font-size: 18px;
+        margin-bottom: 4px;
+      }
+
+      .claim-entry-sub {
+        font-size: 14px;
+        margin-bottom: 12px;
+      }
+
+      .claim-textarea {
+        font-size: 16px;
+        min-height: 88px;
+        padding: 12px 13px;
+        margin-bottom: 12px;
+      }
+
+      /* Mode cards stack vertically */
+      .mode-cards {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .mode-card { padding: 12px 14px; }
+      .mode-card-title { font-size: 11px; }
+      .mode-card-desc { font-size: 13px; }
+
+      /* Submit row full width */
+      .claim-submit-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+
+      .excavate-btn {
+        padding: 15px 20px;
+        font-size: 12px;
+        border-radius: 12px;
+        text-align: center;
+      }
+
+      /* ── MAIN GRID: single column, no sidebar ── */
+      .main-grid {
+        padding: 14px 0 48px;
+        gap: 16px;
+        grid-template-columns: 1fr;
+      }
+
+      .content-stack { gap: 16px; }
+
+      /* Sidebar completely hidden on mobile — it lives in the nav */
+      .sidebar { display: none; }
+
+      /* ── CLAIM CARD: article reading experience ── */
+      .main-card {
+        padding: 18px 16px;
+        border-radius: 14px;
+      }
+
+      /* Status chips: smaller, wrap naturally */
+      .status-row {
+        gap: 6px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+      }
+
+      .status-badge,
+      .topic-tag,
+      .meta-chip {
+        font-size: 9px;
+        padding: 5px 8px;
+        letter-spacing: .1em;
+      }
+
+      .article-eyebrow {
+        font-size: 9px;
+        letter-spacing: .14em;
+        margin-bottom: 8px;
+      }
+
+      /* Claim title: big and bold — this is the hook */
       .article-title {
-        font-size: 28px;
+        font-size: 26px;
+        line-height: 1.15;
+        margin-bottom: 12px;
+      }
+
+      /* Stripped claim dek: comfortable reading size */
+      .article-dek {
+        font-size: 17px;
+        line-height: 1.6;
+      }
+
+      .entered-by-line {
+        margin-top: 12px;
+        gap: 8px;
+      }
+
+      /* Confidence note: readable */
+      .confidence-note {
+        font-size: 14px;
+        line-height: 1.55;
+        padding: 12px 14px;
+        margin-bottom: 16px;
+      }
+
+      /* ── QUICK EXPLANATION: prominent card ── */
+      .quick-explanation-block {
+        padding: 16px;
+        margin-bottom: 16px;
+        border-radius: 12px;
+      }
+
+      .quick-explanation-label { font-size: 9px; margin-bottom: 6px; }
+
+      .quick-explanation-text {
+        font-size: 17px;
+        line-height: 1.65;
+      }
+
+      /* ── VERDICT: full width on mobile ── */
+      .verdict-wrap {
+        display: flex;
+        width: 100%;
+        justify-content: flex-start;
+        margin-bottom: 18px;
+        padding: 12px 16px;
+        border-radius: 12px;
+      }
+
+      .verdict-label-txt { font-size: 9px; }
+      .verdict-value { font-size: 17px; }
+
+      /* ── SUB-CLAIMS: one column, clear separation ── */
+      .subclaims-list { gap: 10px; }
+
+      .sub-claim-item {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        padding: 14px;
+        border-radius: 12px;
+      }
+
+      .sub-claim-text {
+        font-size: 16px;
+        line-height: 1.55;
+      }
+
+      .verdict-pill {
+        align-self: flex-start;
+        font-size: 9px;
+        padding: 5px 9px;
+      }
+
+      /* ── TABS: large tap targets, scroll if needed ── */
+      .excavation-tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        gap: 0;
+        border-bottom-width: 1px;
+        margin: 0 -16px;
+        padding: 0 16px;
+      }
+
+      .excavation-tabs::-webkit-scrollbar { display: none; }
+
+      .tab-btn {
+        padding: 14px 18px 12px;
+        font-size: 10px;
+        letter-spacing: .12em;
+        white-space: nowrap;
+        flex: 0 0 auto;
+        min-width: 100px;
+      }
+
+      .tab-panel { padding-top: 20px; }
+
+      /* ── LAYER BLOCKS: generous spacing, clear hierarchy ── */
+      .layer-block { border-radius: 12px; margin-bottom: 10px; }
+
+      .layer-block-header {
+        padding: 15px 14px 15px 16px;
+      }
+
+      .layer-block-title { font-size: 9px; letter-spacing: .16em; }
+      .layer-block-subtitle { font-size: 13px; }
+      .layer-chevron { font-size: 10px; }
+
+      .layer-block-body { padding: 0 16px 18px; }
+
+      .layer-block-text {
+        font-size: 17px;
+        line-height: 1.72;
+      }
+
+      /* ── BOTTOM LINE (paid) ── */
+      .strip-mode {
+        padding: 22px 16px 18px;
+        border-radius: 12px;
+        margin-bottom: 18px;
       }
 
       .strip-text {
-        font-size: 18px;
+        font-size: 17px;
+        line-height: 1.65;
       }
 
-      .sub-claim-item {
+      /* ── PERSPECTIVES ── */
+      .perspectives-grid,
+      .founders-grid {
         grid-template-columns: 1fr;
         gap: 10px;
       }
 
-      .archive-topic-header {
+      .perspective-card,
+      .founder-card {
         padding: 16px;
+        border-radius: 12px;
       }
 
-      .archive-topic-name {
-        font-size: 20px;
-      }
+      .founder-text { font-size: 15px; line-height: 1.62; }
 
-      .archive-topic-body {
+      /* ── SCENARIO MAP ── */
+      .scenario-item {
         padding: 14px;
+        border-radius: 12px;
+        margin-bottom: 10px;
       }
 
-      .mode-cards { grid-template-columns: 1fr; }
+      .scenario-name { font-size: 16px; }
+      .scenario-text { font-size: 14px; line-height: 1.58; }
 
-      .claim-submit-row { flex-direction: column; align-items: stretch; }
+      /* ── SOURCES ── */
+      .sources-block { padding: 14px; border-radius: 12px; }
+      .source-line { font-size: 13px; }
 
-      .modal-box { padding: 24px 20px 20px; }
+      /* ── ORNAMENTAL DIVIDER ── */
+      .ornamental { margin: 18px 0; }
 
-      .modal-actions { flex-direction: column; }
+      /* ── SECTION TITLE ── */
+      .section-title { font-size: 9px; margin-bottom: 12px; padding-bottom: 10px; }
 
-      .tab-btn { padding: 12px 14px 10px; font-size: 10px; }
+      /* ── DISPUTE BUTTON ── */
+      .dispute-btn {
+        font-size: 9px;
+        font-size: 10px;
+        padding: 10px 14px;
+        border-radius: 10px;
+      }
 
-      .excavation-tabs { overflow-x: auto; }
+      /* Dispute modal */
+      .modal-box {
+        padding: 22px 18px 18px;
+        border-radius: 16px;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
 
+      .modal-title { font-size: 22px; }
+      .modal-body { font-size: 16px; }
+
+      .modal-actions {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .modal-btn-primary,
+      .modal-btn-secondary {
+        width: 100%;
+        text-align: center;
+        padding: 14px 16px;
+      }
+
+      /* Dispute sections grid: single column */
+      .dispute-sections-grid { grid-template-columns: 1fr; }
+
+      /* Dispute cards */
+      .dispute-card { padding: 14px; border-radius: 10px; }
+      .dispute-section { font-size: 15px; line-height: 1.6; }
+
+      /* ── LOCKED FULL TAB ── */
+      .full-tab-locked { padding: 24px 16px; border-radius: 12px; }
+      .paywall-title { font-size: 21px; }
+      .paywall-sub { font-size: 15px; }
+      .locked-preview-item { font-size: 9px; padding: 10px 12px; }
+
+      /* ── ARCHIVES ── */
+      .archive-cards { grid-template-columns: 1fr; gap: 10px; }
+      .archive-topic-header { padding: 14px; }
+      .archive-topic-name { font-size: 19px; }
+      .archive-topic-body { padding: 12px; }
+      .archive-card { padding: 14px; border-radius: 12px; }
+      .archive-card-title { font-size: 17px; }
+      .archive-card-dek { font-size: 14px; }
+      .archives-title-wrap h2 { font-size: 25px; }
+      .archives-sub { font-size: 16px; }
+
+      /* ── METHODOLOGY ── */
+      .methodology-section h2 { font-size: 25px; }
+      .methodology-section p { font-size: 16px; }
+      .methodology-points { grid-template-columns: 1fr; gap: 10px; }
+      .methodology-point { padding: 14px; border-radius: 12px; }
+      .methodology-point p { font-size: 15px; }
+
+      /* ── FOOTER: minimal on mobile ── */
       .footer-inner {
         grid-template-columns: 1fr;
+        gap: 24px;
+        padding: 24px 0 20px;
       }
+
+      /* Hide footer link columns on mobile — not essential */
+      .footer-col { display: none; }
+
+      .footer-name { font-size: 18px; }
+      .footer-tag { font-size: 13px; }
+      .footer-desc { font-size: 14px; }
 
       .footer-bottom {
         flex-direction: column;
         align-items: flex-start;
+        gap: 6px;
+        padding: 14px 0 20px;
       }
-    }
+
+      .footer-latin { font-size: 10px; }
+      .footer-copy { font-size: 12px; }
+
+    } /* end @media 640px */
 
     /* ── CONFIRMATION MODAL ── */
     .modal-overlay {
