@@ -47,6 +47,28 @@
       min-height: 100vh;
     }
 
+.desktop-shell {
+  display: block;
+}
+
+.mobile-shell {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .desktop-shell {
+    display: none;
+  }
+
+  .mobile-shell {
+    display: block;
+  }
+
+  body {
+    overflow-x: hidden;
+  }
+}
+
     a { color: inherit; }
 
     .tooltip-popup {
