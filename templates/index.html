@@ -1690,455 +1690,130 @@
 }
 
     @media (max-width: 980px) {
-      .desktop-nav { display: none; }
-      .mobile-menu-btn { display: inline-flex; }
-      .methodology-band { display: none; }
+  .desktop-nav { display: none; }
+  .mobile-menu-btn { display: inline-flex; }
+  .methodology-band { display: none; }
 
-      .archive-cards,
-      .perspectives-grid,
-      .founders-grid,
-      .methodology-points {
-        grid-template-columns: 1fr;
-      }
+  .archive-cards,
+  .perspectives-grid,
+  .founders-grid,
+  .methodology-points {
+    grid-template-columns: 1fr;
+  }
 
-      .brand-name { font-size: 18px; }
-      .brand-tagline { font-size: 10px; letter-spacing: .18em; }
-      .brand-latin { font-size: 12px; }
+  .brand-name { font-size: 18px; }
+  .brand-tagline { font-size: 10px; letter-spacing: .18em; }
+  .brand-latin { font-size: 12px; }
 
-      .mobile-user {
-        display: inline-flex;
-        margin-left: auto;
-        margin-right: 10px;
-        font-size: 10px;
-        padding: 5px 8px;
-      }
+  .mobile-user {
+    display: inline-flex;
+    margin-left: auto;
+    margin-right: 10px;
+    font-size: 10px;
+    padding: 4px 8px;
+  }
 
-      /* Hide entire sidebar on mobile — content takes full width */
-      .sidebar { display: none; }
-
-      /* Single column grid at tablet */
-      .main-grid { grid-template-columns: 1fr; }
-
-      /* Slightly larger body text on tablet */
-      body { font-size: 18px; }
-
-      /* Layer text more readable */
-      .layer-block-text { font-size: 17px; }
-    }
-
-    /* ══════════════════════════════════════════
-       MOBILE — TRUE MOBILE-FIRST EXPERIENCE
-       This is NOT desktop shrunk down.
-       This is a different reading experience.
-       ══════════════════════════════════════════ */
+    .sidebar-card:first-child,
+  .sidebar-card:nth-child(2),
+  .sidebar-card:last-child {
+    display: none;
+  }
+}
 
     @media (max-width: 640px) {
-
-      /* ── BASE LAYOUT ── */
-      body {
-        font-size: 18px;
-        line-height: 1.78;
-      }
-
       .container,
       .masthead-inner,
       .hero-inner,
       .main-grid,
       .footer-inner,
       .footer-bottom,
-      .mobile-nav-inner,
-      .claim-entry-inner {
-        width: calc(100% - 32px);
+      .mobile-nav-inner {
+        width: min(var(--content-width), calc(100% - 20px));
       }
 
-      /* ── MASTHEAD: tight and clean ── */
-      .masthead-inner {
-        padding: 10px 0;
-        gap: 10px;
+      .hero-card,
+      .trust-card,
+      .main-card,
+      .sidebar-card {
+        padding: 20px;
+        border-radius: 16px;
       }
 
-      .seal-small { width: 42px; height: 42px; }
-      .seal-eye { width: 18px; height: 10px; }
+      .seal-small {
+        width: 50px;
+        height: 50px;
+      }
+
+      .seal-eye {
+        width: 21px;
+        height: 12px;
+      }
 
       .brand-name {
-        font-size: 15px;
+        font-size: 16px;
         white-space: normal;
-        line-height: 1.2;
-      }
-      .brand-tagline { font-size: 9px; letter-spacing: .14em; white-space: normal; }
-      .brand-latin { font-size: 11px; white-space: normal; }
-
-      /* ── HERO: stripped down, just the pitch ── */
-      .hero-band { padding: 0; }
-
-      .hero-inner {
-        padding: 16px 0 14px;
-        gap: 14px;
       }
 
-      .hero-card {
-        padding: 18px 16px;
-        border-radius: 14px;
+      .brand-tagline,
+      .brand-latin {
+        white-space: normal;
       }
-
-      .hero-kicker { font-size: 9px; margin-bottom: 8px; }
 
       .hero-title {
-        font-size: 24px;
-        line-height: 1.15;
-        margin-bottom: 10px;
+        font-size: 29px;
       }
 
-      .hero-text {
-        font-size: 16px;
-        line-height: 1.62;
-        margin-bottom: 10px;
+      .archives-title-wrap h2,
+      .methodology-section h2 {
+        font-size: 27px;
       }
 
-      /* Hide editorial standard card on mobile — it clutters the flow */
-      .trust-card { display: none; }
-
-      /* ── CLAIM ENTRY MODULE: compose-box feel ── */
-      .claim-entry-band { padding: 0; border-bottom: none; }
-
-      .claim-entry-inner { padding: 14px 0 10px; }
-
-      .claim-entry-card {
-        padding: 18px 16px 16px;
-        border-radius: 14px;
-      }
-
-      .claim-entry-heading {
-        font-size: 18px;
-        margin-bottom: 4px;
-      }
-
-      .claim-entry-sub {
-        font-size: 14px;
-        margin-bottom: 12px;
-      }
-
-      .claim-textarea {
-        font-size: 16px;
-        min-height: 88px;
-        padding: 12px 13px;
-        margin-bottom: 12px;
-      }
-
-      /* Mode cards stack vertically */
-      .mode-cards {
-        grid-template-columns: 1fr;
-        gap: 8px;
-        margin-bottom: 12px;
-      }
-
-      .mode-card { padding: 12px 14px; }
-      .mode-card-title { font-size: 11px; }
-      .mode-card-desc { font-size: 13px; }
-
-      /* Submit row full width */
-      .claim-submit-row {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 10px;
-      }
-
-      .excavate-btn {
-        padding: 15px 20px;
-        font-size: 12px;
-        border-radius: 12px;
-        text-align: center;
-      }
-
-      /* ── MAIN GRID: single column, no sidebar ── */
-      .main-grid {
-        padding: 14px 0 48px;
-        gap: 16px;
-        grid-template-columns: 1fr;
-      }
-
-      .content-stack { gap: 16px; }
-
-      /* Sidebar completely hidden on mobile — it lives in the nav */
-      .sidebar { display: none; }
-
-      /* ── CLAIM CARD: article reading experience ── */
-      .main-card {
-        padding: 18px 16px;
-        border-radius: 14px;
-      }
-
-      /* Status chips: smaller, wrap naturally */
-      .status-row {
-        gap: 6px;
-        margin-bottom: 12px;
-        flex-wrap: wrap;
-      }
-
-      .status-badge,
-      .topic-tag,
-      .meta-chip {
-        font-size: 9px;
-        padding: 5px 8px;
-        letter-spacing: .1em;
-      }
-
-      .article-eyebrow {
-        font-size: 9px;
-        letter-spacing: .14em;
-        margin-bottom: 8px;
-      }
-
-      /* Claim title: big and bold — this is the hook */
       .article-title {
-        font-size: 26px;
-        line-height: 1.15;
-        margin-bottom: 12px;
-      }
-
-      /* Stripped claim dek: comfortable reading size */
-      .article-dek {
-        font-size: 17px;
-        line-height: 1.6;
-      }
-
-      .entered-by-line {
-        margin-top: 12px;
-        gap: 8px;
-      }
-
-      /* Confidence note: readable */
-      .confidence-note {
-        font-size: 14px;
-        line-height: 1.55;
-        padding: 12px 14px;
-        margin-bottom: 16px;
-      }
-
-      /* ── QUICK EXPLANATION: prominent card ── */
-      .quick-explanation-block {
-        padding: 16px;
-        margin-bottom: 16px;
-        border-radius: 12px;
-      }
-
-      .quick-explanation-label { font-size: 9px; margin-bottom: 6px; }
-
-      .quick-explanation-text {
-        font-size: 17px;
-        line-height: 1.65;
-      }
-
-      /* ── VERDICT: full width on mobile ── */
-      .verdict-wrap {
-        display: flex;
-        width: 100%;
-        justify-content: flex-start;
-        margin-bottom: 18px;
-        padding: 12px 16px;
-        border-radius: 12px;
-      }
-
-      .verdict-label-txt { font-size: 9px; }
-      .verdict-value { font-size: 17px; }
-
-      /* ── SUB-CLAIMS: one column, clear separation ── */
-      .subclaims-list { gap: 10px; }
-
-      .sub-claim-item {
-        grid-template-columns: 1fr;
-        gap: 8px;
-        padding: 14px;
-        border-radius: 12px;
-      }
-
-      .sub-claim-text {
-        font-size: 16px;
-        line-height: 1.55;
-      }
-
-      .verdict-pill {
-        align-self: flex-start;
-        font-size: 9px;
-        padding: 5px 9px;
-      }
-
-      /* ── TABS: large tap targets, scroll if needed ── */
-      .excavation-tabs {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-        gap: 0;
-        border-bottom-width: 1px;
-        margin: 0 -16px;
-        padding: 0 16px;
-      }
-
-      .excavation-tabs::-webkit-scrollbar { display: none; }
-
-      .tab-btn {
-        padding: 14px 18px 12px;
-        font-size: 10px;
-        letter-spacing: .12em;
-        white-space: nowrap;
-        flex: 0 0 auto;
-        min-width: 100px;
-      }
-
-      .tab-panel { padding-top: 20px; }
-
-      /* ── LAYER BLOCKS: generous spacing, clear hierarchy ── */
-      .layer-block { border-radius: 12px; margin-bottom: 10px; }
-
-      .layer-block-header {
-        padding: 15px 14px 15px 16px;
-      }
-
-      .layer-block-title { font-size: 9px; letter-spacing: .16em; }
-      .layer-block-subtitle { font-size: 13px; }
-      .layer-chevron { font-size: 10px; }
-
-      .layer-block-body { padding: 0 16px 18px; }
-
-      .layer-block-text {
-        font-size: 17px;
-        line-height: 1.72;
-      }
-
-      /* ── BOTTOM LINE (paid) ── */
-      .strip-mode {
-        padding: 22px 16px 18px;
-        border-radius: 12px;
-        margin-bottom: 18px;
+        font-size: 28px;
       }
 
       .strip-text {
-        font-size: 17px;
-        line-height: 1.65;
+        font-size: 18px;
       }
 
-      /* ── PERSPECTIVES ── */
-      .perspectives-grid,
-      .founders-grid {
+      .sub-claim-item {
         grid-template-columns: 1fr;
         gap: 10px;
       }
 
-      .perspective-card,
-      .founder-card {
+      .archive-topic-header {
         padding: 16px;
-        border-radius: 12px;
       }
 
-      .founder-text { font-size: 15px; line-height: 1.62; }
+      .archive-topic-name {
+        font-size: 20px;
+      }
 
-      /* ── SCENARIO MAP ── */
-      .scenario-item {
+      .archive-topic-body {
         padding: 14px;
-        border-radius: 12px;
-        margin-bottom: 10px;
       }
 
-      .scenario-name { font-size: 16px; }
-      .scenario-text { font-size: 14px; line-height: 1.58; }
+      .mode-cards { grid-template-columns: 1fr; }
 
-      /* ── SOURCES ── */
-      .sources-block { padding: 14px; border-radius: 12px; }
-      .source-line { font-size: 13px; }
+      .claim-submit-row { flex-direction: column; align-items: stretch; }
 
-      /* ── ORNAMENTAL DIVIDER ── */
-      .ornamental { margin: 18px 0; }
+      .modal-box { padding: 24px 20px 20px; }
 
-      /* ── SECTION TITLE ── */
-      .section-title { font-size: 9px; margin-bottom: 12px; padding-bottom: 10px; }
+      .modal-actions { flex-direction: column; }
 
-      /* ── DISPUTE BUTTON ── */
-      .dispute-btn {
-        font-size: 9px;
-        font-size: 10px;
-        padding: 10px 14px;
-        border-radius: 10px;
-      }
+      .tab-btn { padding: 12px 14px 10px; font-size: 10px; }
 
-      /* Dispute modal */
-      .modal-box {
-        padding: 22px 18px 18px;
-        border-radius: 16px;
-        max-height: 90vh;
-        overflow-y: auto;
-      }
+      .excavation-tabs { overflow-x: auto; }
 
-      .modal-title { font-size: 22px; }
-      .modal-body { font-size: 16px; }
-
-      .modal-actions {
-        flex-direction: column;
-        gap: 8px;
-      }
-
-      .modal-btn-primary,
-      .modal-btn-secondary {
-        width: 100%;
-        text-align: center;
-        padding: 14px 16px;
-      }
-
-      /* Dispute sections grid: single column */
-      .dispute-sections-grid { grid-template-columns: 1fr; }
-
-      /* Dispute cards */
-      .dispute-card { padding: 14px; border-radius: 10px; }
-      .dispute-section { font-size: 15px; line-height: 1.6; }
-
-      /* ── LOCKED FULL TAB ── */
-      .full-tab-locked { padding: 24px 16px; border-radius: 12px; }
-      .paywall-title { font-size: 21px; }
-      .paywall-sub { font-size: 15px; }
-      .locked-preview-item { font-size: 9px; padding: 10px 12px; }
-
-      /* ── ARCHIVES ── */
-      .archive-cards { grid-template-columns: 1fr; gap: 10px; }
-      .archive-topic-header { padding: 14px; }
-      .archive-topic-name { font-size: 19px; }
-      .archive-topic-body { padding: 12px; }
-      .archive-card { padding: 14px; border-radius: 12px; }
-      .archive-card-title { font-size: 17px; }
-      .archive-card-dek { font-size: 14px; }
-      .archives-title-wrap h2 { font-size: 25px; }
-      .archives-sub { font-size: 16px; }
-
-      /* ── METHODOLOGY ── */
-      .methodology-section h2 { font-size: 25px; }
-      .methodology-section p { font-size: 16px; }
-      .methodology-points { grid-template-columns: 1fr; gap: 10px; }
-      .methodology-point { padding: 14px; border-radius: 12px; }
-      .methodology-point p { font-size: 15px; }
-
-      /* ── FOOTER: minimal on mobile ── */
       .footer-inner {
         grid-template-columns: 1fr;
-        gap: 24px;
-        padding: 24px 0 20px;
       }
-
-      /* Hide footer link columns on mobile — not essential */
-      .footer-col { display: none; }
-
-      .footer-name { font-size: 18px; }
-      .footer-tag { font-size: 13px; }
-      .footer-desc { font-size: 14px; }
 
       .footer-bottom {
         flex-direction: column;
         align-items: flex-start;
-        gap: 6px;
-        padding: 14px 0 20px;
       }
-
-      .footer-latin { font-size: 10px; }
-      .footer-copy { font-size: 12px; }
-
-    } /* end @media 640px */
+    }
 
     /* ── CONFIRMATION MODAL ── */
     .modal-overlay {
@@ -2774,6 +2449,12 @@
   margin-bottom: 10px;
 }
 
+/* On true mobile (768px), hide legacy desktop-shell hamburger nav */
+    @media (max-width: 768px) {
+      .mobile-menu-btn { display: none !important; }
+      .mobile-nav-panel { display: none !important; }
+    }
+
 </style>
 </head>
 <body>
@@ -2869,6 +2550,446 @@
     </div>
   </div>
 
+
+  <!-- ═══════════════════════════════════════════════
+       MOBILE SHELL — Distinct mobile experience
+       Hidden on desktop via CSS, shown only on mobile
+       ═══════════════════════════════════════════════ -->
+  <div class="mobile-shell" id="mobileShell">
+
+    <!-- TOP BAR -->
+    <header class="m-topbar">
+      <a class="m-topbar-brand" href="/">
+        <div class="m-seal"><div class="m-seal-eye"></div></div>
+        <span class="m-topbar-title">Where the Truth Lies</span>
+      </a>
+      <div class="m-topbar-right">
+        {% if session.get("username") %}
+          <span class="m-user-chip">{{ session.get("username") }}</span>
+        {% endif %}
+      </div>
+    </header>
+
+    <!-- SCROLLABLE CONTENT -->
+    <div class="m-content" id="mContent">
+
+      <!-- ── HOME PAGE ── -->
+      {% if page_mode in ["claim", "home"] or (page_mode == "claim" and not current_claim) %}
+      <div class="m-home" id="mHome">
+
+        <!-- SCANNER: primary action -->
+        <div class="m-scanner">
+          <div class="m-scanner-label">Truth Scanner</div>
+
+          {% if session.get("role") == "standard" %}
+            <div style="font-size:15px; color:var(--text-mid); font-style:italic; margin-bottom:10px;">Browse existing claims below. Excavation requires a paid account.</div>
+          {% elif session.get("role") == "limited_superuser" and (session.get("claims_remaining", 0) | int) <= 0 %}
+            <div style="font-size:15px; color:var(--text-mid); font-style:italic; margin-bottom:10px;">Claim limit reached. You can still browse the archive.</div>
+          {% endif %}
+
+          <textarea id="mClaimInput" class="m-scanner-textarea" placeholder="Paste any political claim, quote, or viral post..."></textarea>
+
+          {% if session.get("role") == "standard" %}
+            <button class="m-run-btn" disabled>Excavation Disabled</button>
+          {% elif session.get("role") == "limited_superuser" and (session.get("claims_remaining", 0) | int) <= 0 %}
+            <button class="m-run-btn" disabled>Limit Reached</button>
+          {% else %}
+            <button class="m-run-btn" id="mRunBtn" onclick="mOpenConfirm()">Excavate This Claim</button>
+          {% endif %}
+
+          <div id="mLoading" class="m-loading">
+            <div class="m-loading-text" id="mLoadingText">ClaimLab is excavating...</div>
+            <div class="m-loading-bar"><div class="m-loading-fill"></div></div>
+          </div>
+
+          <div id="mStatusPills" class="m-status-pills">
+            <span id="mGrokPill" class="m-spill">Grok: waiting</span>
+            <span id="mClaudePill" class="m-spill">Claude: waiting</span>
+            <span id="mOpenAIPill" class="m-spill">OpenAI: waiting</span>
+            <span id="mAirtablePill" class="m-spill">Airtable: waiting</span>
+          </div>
+        </div>
+
+        <!-- CLAIM PREVIEW STRIP: passive discovery -->
+        <div class="m-preview-strip">
+          <div class="m-strip-header">
+            <span>Recent Claims</span>
+            <a class="m-strip-see-all" href="/archives">See all claims →</a>
+          </div>
+
+          {% if recent_claims %}
+            <div class="m-cards-scroll">
+              {% for claim in recent_claims[:10] %}
+                {% set rv = claim.verdict or 'Unproven' %}
+                {% set rv_lower = rv|lower %}
+                <a class="m-preview-card" href="/claim/{{ claim.slug }}">
+                  <div class="m-card-title">{{ claim.title }}</div>
+                  <div class="m-card-meta">
+                    <span class="verdict-pill {% if rv_lower == 'true' %}v-true{% elif 'mostly true' in rv_lower %}v-mostly-true{% elif 'substantially true' in rv_lower %}v-substantially-true{% elif 'plausible' in rv_lower or 'mixed' in rv_lower %}v-plausible{% elif rv_lower == 'contested' %}v-contested{% elif rv_lower == 'exaggerated' %}v-exaggerated{% elif rv_lower == 'misleading' %}v-misleading{% elif rv_lower == 'false' %}v-false{% else %}v-unproven{% endif %}" style="font-size:8px; padding:4px 8px;">{{ rv }}</span>
+                    {% if claim.date %}<span class="m-card-date">{{ claim.date }}</span>{% endif %}
+                  </div>
+                </a>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div style="font-size:15px; color:var(--text-mid); font-style:italic; text-align:center; padding:20px 0;">No claims yet. Be the first to excavate one.</div>
+          {% endif %}
+        </div>
+
+      </div>
+      {% endif %}
+
+      <!-- ── CLAIM DETAIL PAGE ── -->
+      {% if page_mode == "claim" and current_claim %}
+      <div class="m-claim-detail" id="mClaimDetail">
+
+        <!-- Status chips row with dispute button -->
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:14px;">
+          <div class="m-claim-chips">
+            <span class="m-chip active-chip">{{ current_claim.status or 'Active' }}</span>
+            {% if current_claim.topics %}{% for topic in current_claim.topics %}<span class="m-chip">{{ topic }}</span>{% endfor %}{% endif %}
+            {% if current_claim.grok_grounded %}<span class="m-chip" style="color:#75c28d; border-color:rgba(117,194,141,.28);">Live Grounded</span>{% endif %}
+            {% if current_claim.human_reviewed %}<span class="m-chip">Reviewed</span>{% endif %}
+          </div>
+          {% if current_claim %}
+            {% if current_claim %}<button class="dispute-btn" onclick="openDisputeModal()" style="flex:0 0 auto; font-size:10px; padding:8px 12px; white-space:nowrap; border-radius:10px;" data-claim-id="{{ current_claim.record_id }}" data-claim-slug="{{ current_claim.slug }}" data-claim-title="{{ current_claim.title }}">Dispute</button>{% endif %}
+          {% endif %}
+        </div>
+
+        <div class="m-claim-eyebrow">ClaimLab Excavation</div>
+        <h1 class="m-claim-title">{{ current_claim.title }}</h1>
+
+        {% if current_claim.stripped_claim and current_claim.stripped_claim != current_claim.title %}
+          <div class="m-claim-dek">{{ current_claim.stripped_claim }}</div>
+        {% endif %}
+
+        {% if true_superuser and current_claim.entered_by %}
+          <div class="m-entered-by">Entered by <strong>{{ current_claim.entered_by }}</strong></div>
+        {% endif %}
+
+        <!-- Quick Explanation -->
+        {% if current_claim.quick_explanation %}
+          <div class="m-qe-card">
+            <div class="m-qe-label">Quick Explanation</div>
+            <div class="m-qe-text">{{ current_claim.quick_explanation }}</div>
+          </div>
+        {% endif %}
+
+        <!-- Verdict -->
+        {% set mv = current_claim.overall_verdict or 'Unproven' %}
+        {% set mv_lower = mv|lower %}
+        <div class="m-verdict {% if mv_lower == 'true' %}v-true{% elif 'mostly true' in mv_lower %}v-mostly-true{% elif 'substantially true' in mv_lower %}v-substantially-true{% elif 'plausible' in mv_lower or 'mixed' in mv_lower %}v-plausible{% elif mv_lower == 'contested' %}v-contested{% elif mv_lower == 'exaggerated' %}v-exaggerated{% elif mv_lower == 'misleading' %}v-misleading{% elif mv_lower == 'false' %}v-false{% else %}v-unproven{% endif %}">
+          <span class="m-verdict-label">Verdict</span>
+          <span class="m-verdict-value">{{ mv }}</span>
+        </div>
+
+        <!-- Sub-claims -->
+        {% if current_claim.subclaims %}
+          <div class="m-subclaims">
+            {% for sc in current_claim.subclaims %}
+              {% set sv = sc.verdict or 'Unproven' %}
+              {% set sv_lower = sv|lower %}
+              <div class="m-subclaim">
+                <div class="m-subclaim-text">{{ sc.claim }}</div>
+                <span class="verdict-pill {% if sv_lower == 'true' %}v-true{% elif 'mostly true' in sv_lower %}v-mostly-true{% elif 'substantially true' in sv_lower %}v-substantially-true{% elif 'plausible' in sv_lower or 'mixed' in sv_lower %}v-plausible{% elif sv_lower == 'contested' %}v-contested{% elif sv_lower == 'exaggerated' %}v-exaggerated{% elif sv_lower == 'misleading' %}v-misleading{% elif sv_lower == 'false' %}v-false{% else %}v-unproven{% endif %}" style="font-size:8px; padding:4px 9px; align-self:flex-start;">{{ sv }}</span>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <!-- DEEPER ANALYSIS: expandable section 1 -->
+        {% if superuser %}
+          {% if current_claim.strip_mode_summary or current_claim.direct_facts or current_claim.adjacent_facts or current_claim.root_concern or current_claim.values_divergence or current_claim.constitutional_framework or current_claim.common_ground %}
+            <div class="m-expand-section" id="mExpandAnalysis">
+              <div class="m-expand-header" onclick="mToggleExpand('mExpandAnalysis')">
+                <div class="m-expand-header-left">
+                  <span class="m-expand-title">Deeper Analysis</span>
+                  <span class="m-expand-subtitle">Direct facts, root concern, common ground</span>
+                </div>
+                <span class="m-expand-chevron">▼</span>
+              </div>
+              <div class="m-expand-body">
+                {% if current_claim.strip_mode_summary %}
+                  <div class="m-bottom-line">
+                    <div class="m-bl-label">Bottom Line</div>
+                    <div class="m-bl-text">{{ current_claim.strip_mode_summary }}</div>
+                  </div>
+                {% endif %}
+                {% if current_claim.direct_facts %}
+                  <div class="m-layer-item m-layer-direct">
+                    <div class="m-layer-label">Layer 01 — Direct Facts</div>
+                    <div class="m-layer-text">{{ current_claim.direct_facts }}</div>
+                  </div>
+                {% endif %}
+                {% if current_claim.adjacent_facts %}
+                  <div class="m-layer-item m-layer-adjacent">
+                    <div class="m-layer-label">Layer 02 — Adjacent Facts</div>
+                    <div class="m-layer-text">{{ current_claim.adjacent_facts }}</div>
+                  </div>
+                {% endif %}
+                {% if current_claim.root_concern %}
+                  <div class="m-layer-item m-layer-root">
+                    <div class="m-layer-label">Layer 03 — Root Concern</div>
+                    <div class="m-layer-text">{{ current_claim.root_concern }}</div>
+                  </div>
+                {% endif %}
+                {% if current_claim.values_divergence %}
+                  <div class="m-layer-item m-layer-values">
+                    <div class="m-layer-label">Layer 04 — Values Divergence</div>
+                    <div class="m-layer-text">{{ current_claim.values_divergence }}</div>
+                  </div>
+                {% endif %}
+                {% if current_claim.constitutional_framework %}
+                  <div class="m-layer-item m-layer-constitutional">
+                    <div class="m-layer-label">Layer 05 — Constitutional Framework</div>
+                    <div class="m-layer-text">{{ current_claim.constitutional_framework }}</div>
+                  </div>
+                {% endif %}
+                {% if current_claim.common_ground %}
+                  <div class="m-layer-item m-layer-common">
+                    <div class="m-layer-label">Layer 06 — Common Ground</div>
+                    <div class="m-layer-text">{{ current_claim.common_ground }}</div>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          {% endif %}
+
+          <!-- PERSPECTIVES & SCENARIOS: expandable section 2 -->
+          {% if current_claim.left_perspective or current_claim.right_perspective or current_claim.founders_perspectives or current_claim.scenario_map %}
+            <div class="m-expand-section" id="mExpandPerspectives">
+              <div class="m-expand-header" onclick="mToggleExpand('mExpandPerspectives')">
+                <div class="m-expand-header-left">
+                  <span class="m-expand-title">Perspectives &amp; Scenarios</span>
+                  <span class="m-expand-subtitle">Founders, left/right views, trajectory</span>
+                </div>
+                <span class="m-expand-chevron">▼</span>
+              </div>
+              <div class="m-expand-body">
+                {% if current_claim.left_perspective %}
+                  <div class="m-layer-item m-layer-left">
+                    <div class="m-layer-label">Left Perspective</div>
+                    <div class="m-layer-text">{{ current_claim.left_perspective }}</div>
+                  </div>
+                {% endif %}
+                {% if current_claim.right_perspective %}
+                  <div class="m-layer-item m-layer-right">
+                    <div class="m-layer-label">Right Perspective</div>
+                    <div class="m-layer-text">{{ current_claim.right_perspective }}</div>
+                  </div>
+                {% endif %}
+                {% if current_claim.founders_perspectives %}
+                  {% for name, text in current_claim.founders_perspectives.items() %}
+                    <div class="m-founder-item">
+                      <div class="m-founder-name">{{ name }}</div>
+                      <div class="m-founder-text">{{ text }}</div>
+                    </div>
+                  {% endfor %}
+                {% endif %}
+                {% if current_claim.scenario_map %}
+                  <div style="margin-top:12px;">
+                    <div class="m-layer-label" style="color:var(--purple); font-family:'Libre Baskerville',serif; font-size:9px; letter-spacing:.14em; text-transform:uppercase; margin-bottom:10px;">Scenario Map</div>
+                    <div id="mScenarioContainer"></div>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          {% endif %}
+
+        {% else %}
+          <!-- Locked for free users -->
+          <div class="m-locked-section">
+            <div class="m-locked-icon">🔒</div>
+            <div class="m-locked-title">Unlock Full Analysis</div>
+            <div class="m-locked-sub">See direct facts, common ground, perspectives, and scenario map.</div>
+            <div class="m-locked-preview">
+              <div class="m-locked-item">Direct Facts</div>
+              <div class="m-locked-item">Root Concern</div>
+              <div class="m-locked-item">Common Ground</div>
+              <div class="m-locked-item">Perspectives</div>
+              <div class="m-locked-item">Scenario Map</div>
+            </div>
+          </div>
+        {% endif %}
+
+        <!-- Dispute button -->
+        {% if current_claim %}<button class="m-dispute-btn dispute-btn" onclick="openDisputeModal()" data-claim-id="{{ current_claim.record_id }}" data-claim-slug="{{ current_claim.slug }}" data-claim-title="{{ current_claim.title }}">Dispute This Claim</button>{% endif %}
+
+        <!-- Sources -->
+        {% if superuser and current_claim.source_urls %}
+          <div style="margin-top:16px;">
+            <div style="font-family:'Libre Baskerville',serif; font-size:9px; letter-spacing:.18em; text-transform:uppercase; color:#a78643; margin-bottom:10px;">Sources</div>
+            <div class="sources-block" id="mSourcesContainer"></div>
+          </div>
+        {% endif %}
+
+      </div>
+      {% endif %}
+
+      <!-- ── CLAIMS ARCHIVE PAGE ── -->
+      {% if page_mode == "archives" %}
+      <div class="m-archive" id="mArchive">
+        <div class="m-archive-title">Claims Archive</div>
+        <div class="m-archive-sub">All excavated claims, organized by topic.</div>
+
+        {% if archived_claims_by_topic %}
+          {% for topic_name, topic_claims in archived_claims_by_topic.items() %}
+            <div class="m-archive-group">
+              <div class="m-archive-topic-header open" onclick="mToggleArchive(this)">
+                <span class="m-archive-topic-name">{{ topic_name }}</span>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span class="m-archive-topic-count">{{ topic_claims|length }}</span>
+                  <span class="m-archive-topic-chevron">▼</span>
+                </div>
+              </div>
+              <div class="m-archive-topic-body open">
+                {% for claim in topic_claims %}
+                  {% set cv = claim.verdict or 'Unproven' %}
+                  {% set cv_lower = cv|lower %}
+                  <a class="m-archive-claim-card" href="/claim/{{ claim.slug }}">
+                    <div class="m-archive-claim-title">{{ claim.title }}</div>
+                    <div class="m-archive-claim-meta">
+                      <span class="verdict-pill {% if cv_lower == 'true' %}v-true{% elif 'mostly true' in cv_lower %}v-mostly-true{% elif 'substantially true' in cv_lower %}v-substantially-true{% elif 'plausible' in cv_lower or 'mixed' in cv_lower %}v-plausible{% elif cv_lower == 'contested' %}v-contested{% elif cv_lower == 'exaggerated' %}v-exaggerated{% elif cv_lower == 'misleading' %}v-misleading{% elif cv_lower == 'false' %}v-false{% else %}v-unproven{% endif %}" style="font-size:8px; padding:4px 8px;">{{ cv }}</span>
+                      {% if claim.date %}<span class="m-card-date">{{ claim.date }}</span>{% endif %}
+                    </div>
+                  </a>
+                {% endfor %}
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div style="text-align:center;padding:40px 0;color:var(--text-mid);font-style:italic;">No archived claims yet.</div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      <!-- ── SEARCH PAGE ── -->
+      {% if page_mode == "search" %}
+      <div class="m-search" id="mSearch">
+        <div class="m-search-title">Search Claims</div>
+        <form class="m-search-form" method="GET" action="/search">
+          <input class="m-search-input" type="text" name="q" placeholder="Search by claim, speaker..." value="{{ search_query or '' }}" autofocus />
+          <button class="m-search-btn" type="submit">Search</button>
+        </form>
+
+        {% if search_query %}
+          {% if search_results %}
+            <div style="font-family:'Libre Baskerville',serif;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-mid);margin-bottom:12px;">{{ search_results|length }} result{% if search_results|length != 1 %}s{% endif %} for "{{ search_query }}"</div>
+            {% for claim in search_results %}
+              {% set sv = claim.verdict or 'Unproven' %}
+              {% set sv_lower = sv|lower %}
+              <a class="m-search-result" href="/claim/{{ claim.slug }}">
+                <div class="m-search-result-title">{{ claim.title }}</div>
+                <div class="m-archive-claim-meta">
+                  <span class="verdict-pill {% if sv_lower == 'true' %}v-true{% elif 'mostly true' in sv_lower %}v-mostly-true{% elif 'substantially true' in sv_lower %}v-substantially-true{% elif 'plausible' in sv_lower or 'mixed' in sv_lower %}v-plausible{% elif sv_lower == 'contested' %}v-contested{% elif sv_lower == 'exaggerated' %}v-exaggerated{% elif sv_lower == 'misleading' %}v-misleading{% elif sv_lower == 'false' %}v-false{% else %}v-unproven{% endif %}" style="font-size:8px;padding:4px 8px;">{{ sv }}</span>
+                  {% if claim.speaker and claim.speaker != 'Unknown' %}<span class="m-card-date">{{ claim.speaker }}</span>{% endif %}
+                </div>
+              </a>
+            {% endfor %}
+          {% else %}
+            <div class="m-search-empty">No claims found for "{{ search_query }}".</div>
+          {% endif %}
+        {% else %}
+          <div class="m-search-empty">Type a claim, speaker name, or topic to search the archive.</div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      <!-- ── DISPUTES PAGE ── -->
+      {% if page_mode == "disputes" %}
+      <div class="m-disputes" id="mDisputes">
+        <div class="m-disputes-title">My Disputes</div>
+        <div class="m-disputes-sub">Claims you have challenged and their current status.</div>
+
+        {% if user_disputes %}
+          {% for d in user_disputes %}
+            <div class="m-dispute-card">
+              <div class="m-dispute-card-header">
+                <div class="m-dispute-claim-title">
+                  <a href="/claim/{{ d.claim_slug }}" style="color:var(--cream);text-decoration:none;">{{ d.title }}</a>
+                </div>
+                <span class="m-dispute-status-badge">{{ d.status or 'Open' }}</span>
+              </div>
+              {% if d.sections_disputed %}
+                <div class="m-dispute-sections">
+                  Disputing: {{ d.sections_disputed | join(', ') }}
+                </div>
+              {% endif %}
+              <div class="m-dispute-text">{{ d.dispute_text[:200] }}{% if d.dispute_text|length > 200 %}...{% endif %}</div>
+              {% if d.ai_response %}
+                <div style="margin-top:10px; padding:10px 12px; background:rgba(255,255,255,.025); border-radius:8px; border-left:3px solid rgba(201,168,76,.3);">
+                  <div style="font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:4px;">Platform Response</div>
+                  <div style="font-size:14px;color:var(--cream-soft);line-height:1.55;">{{ d.ai_response[:300] }}{% if d.ai_response|length > 300 %}...{% endif %}</div>
+                </div>
+              {% endif %}
+              {% if d.editor_resolution %}
+                <div style="margin-top:8px;font-size:13px;color:var(--gold);">Editor: {{ d.editor_resolution }}</div>
+              {% endif %}
+              <div class="m-dispute-date">{{ d.date_submitted[:10] if d.date_submitted else '' }}</div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="m-disputes-empty">You have not filed any disputes yet. If you believe a claim analysis is incorrect, use the Dispute button on any claim page.</div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      <!-- ── PROFILE PAGE ── -->
+      {% if page_mode == "profile" %}
+      <div class="m-profile" id="mProfile">
+        <div class="m-profile-title">Profile</div>
+
+        <div class="m-profile-card">
+          <div class="m-profile-label">Username</div>
+          <div class="m-profile-value">{{ session.get("username", "Unknown") }}</div>
+        </div>
+
+        <div class="m-profile-card">
+          <div class="m-profile-label">Account Role</div>
+          <div class="m-profile-value">{{ session.get("role", "standard") | replace("_", " ") | title }}</div>
+        </div>
+
+        {% if session.get("role") == "limited_superuser" %}
+          <div class="m-profile-card">
+            <div class="m-profile-label">Claims Remaining</div>
+            <div class="m-profile-value">{{ session.get("claims_remaining", 0) }}</div>
+          </div>
+        {% endif %}
+
+        <div class="m-profile-card">
+          <div class="m-profile-label">Platform</div>
+          <div class="m-profile-value" style="font-size:15px; color:var(--text-light); font-style:italic;">Where the Truth Lies — Beyond the Argument</div>
+        </div>
+
+        <a href="/logout" class="m-logout-btn" style="display:block;text-align:center;text-decoration:none;">Log Out</a>
+      </div>
+      {% endif %}
+
+    </div><!-- end m-content -->
+
+    <!-- BOTTOM NAV -->
+    <nav class="m-bottom-nav">
+      <a class="m-nav-item {% if page_mode in ['claim', 'home'] %}active{% endif %}" href="/">
+        <div class="m-nav-icon">⌂</div>
+        <span class="m-nav-label">Home</span>
+      </a>
+      <a class="m-nav-item {% if page_mode == 'search' %}active{% endif %}" href="/search">
+        <div class="m-nav-icon">🔍</div>
+        <span class="m-nav-label">Search</span>
+      </a>
+      <a class="m-nav-item {% if page_mode == 'disputes' %}active{% endif %}" href="/disputes">
+        <div class="m-nav-icon">⚖</div>
+        <span class="m-nav-label">Disputes</span>
+      </a>
+      <a class="m-nav-item {% if page_mode == 'profile' %}active{% endif %}" href="/profile">
+        <div class="m-nav-icon">◎</div>
+        <span class="m-nav-label">Profile</span>
+      </a>
+    </nav>
+
+  </div><!-- end mobile-shell -->
+
+  <div class="desktop-shell">
   <div class="page-shell">
    <header class="masthead">
   <div class="masthead-inner">
@@ -2886,7 +3007,7 @@
     <!-- Desktop Navigation -->
     <nav class="desktop-nav" aria-label="Primary">
       <a href="/">ClaimLab</a>
-      <a href="/archives">Archives</a>
+      <a href="/archives">Claims Archive</a>
       <a href="#methodology-section">Methodology</a>
 
       {% if true_superuser %}
@@ -2927,7 +3048,7 @@
     <div class="mobile-nav-inner">
       <div class="mobile-nav-links">
         <a href="/" onclick="closeMobileMenu()">ClaimLab</a>
-        <a href="/archives" onclick="closeMobileMenu()">Archives</a>
+        <a href="/archives" onclick="closeMobileMenu()">Claims Archive</a>
         <a href="#methodology-section" onclick="closeMobileMenu()">Methodology</a>
         <a href="#claim-entry-module" class="gold-btn-mobile" onclick="closeMobileMenu()">Run a Claim</a>
         <a href="/logout">Logout</a>
@@ -3546,8 +3667,8 @@
         <section class="main-card" id="archives">
           <div class="archives-header">
             <div class="archives-title-wrap">
-              <div class="section-kicker">Archives</div>
-              <h2>The claim record, organized for browsing.</h2>
+              <div class="section-kicker">Claims Archive</div>
+              <h2>Claims Archive</h2>
               <p class="archives-sub">
                 Recent Claims should stay recent. The full archive should be navigable. Claims are grouped by topic so the platform can scale without turning into a pile of links.
               </p>
@@ -3766,7 +3887,7 @@
         <div class="footer-col">
           <div class="footer-col-title">Platform</div>
           <a href="/">ClaimLab</a>
-          <a href="/archives">Archives</a>
+          <a href="/archives">Claims Archive</a>
           <a href="#methodology-section">Methodology</a>
           <a href="/logout">Logout</a>
         </div>
@@ -3785,6 +3906,7 @@
       </div>
     </footer>
   </div>
+  </div><!-- end desktop-shell -->
 
   <script>
     const IS_SUPER = {{ superuser | tojson }};
@@ -3946,7 +4068,7 @@ function closeDisputeResultModal() {
       const disputeText = (document.getElementById('disputeText').value || '').trim();
       const sourceUrl = (document.getElementById('disputeSourceUrl').value || '').trim();
       const statusMsg = document.getElementById('disputeStatusMsg');
-      const disputeBtn = document.querySelector('.dispute-btn');
+      const disputeBtn = document.querySelector('.dispute-btn[data-claim-id]') || document.querySelector('.dispute-btn');
 
       if (!disputeBtn) {
         if (statusMsg) statusMsg.textContent = 'Could not identify the current claim.';
@@ -4343,6 +4465,178 @@ console.error('Dispute submission failed:', err);
         btn.disabled = false;
       }
     }
+
+    /* ══════════════════════════════════
+       MOBILE SHELL JAVASCRIPT
+       ══════════════════════════════════ */
+
+    // Mobile toggle expand sections
+    function mToggleExpand(id) {
+      const section = document.getElementById(id);
+      if (!section) return;
+      section.classList.toggle('open');
+    }
+
+    // Mobile archive topic toggle
+    function mToggleArchive(header) {
+      const body = header.nextElementSibling;
+      header.classList.toggle('open');
+      if (body) body.classList.toggle('open');
+    }
+
+    // Mobile confirm modal
+    function mOpenConfirm() {
+      const claim = document.getElementById('mClaimInput')?.value.trim();
+      if (!claim) {
+        document.getElementById('mClaimInput')?.focus();
+        return;
+      }
+      // Reuse the existing confirm modal
+      const preview = document.getElementById('modalClaimPreview');
+      if (preview) preview.textContent = claim.length > 200 ? claim.slice(0, 200) + '...' : claim;
+      const title = document.getElementById('modalTitle');
+      const body = document.getElementById('modalBody');
+      const switchBtn = document.getElementById('modalSwitchBtn');
+      const confirmBtn = document.getElementById('modalConfirmBtn');
+      if (title) title.textContent = 'Run Full Excavation?';
+      if (body) body.textContent = 'The full analysis will run in the background. You will see the Quick Explanation, verdict, and sub-claims immediately.';
+      if (confirmBtn) { confirmBtn.textContent = 'Excavate'; confirmBtn.onclick = mSubmitClaim; }
+      if (switchBtn) switchBtn.style.display = 'none';
+      document.getElementById('confirmModal')?.classList.add('visible');
+    }
+
+    // Mobile submit claim — always full mode
+    async function mSubmitClaim() {
+      document.getElementById('confirmModal')?.classList.remove('visible');
+
+      const claim = document.getElementById('mClaimInput')?.value.trim();
+      if (!claim) return;
+
+      const runBtn = document.getElementById('mRunBtn');
+      const loading = document.getElementById('mLoading');
+      const pills = document.getElementById('mStatusPills');
+
+      if (runBtn) runBtn.disabled = true;
+      if (loading) loading.classList.add('visible');
+      if (pills) pills.classList.add('visible');
+
+      const msgs = ['ClaimLab is excavating...', 'Stripping the rhetoric...', 'Applying the layers...', 'Writing to record...'];
+      let mi = 0;
+      const loadingText = document.getElementById('mLoadingText');
+      if (loadingText) loadingText.textContent = msgs[0];
+      const interval = setInterval(() => {
+        mi = (mi + 1) % msgs.length;
+        if (loadingText) loadingText.textContent = msgs[mi];
+      }, 1500);
+
+      ['mGrokPill', 'mClaudePill', 'mOpenAIPill', 'mAirtablePill'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.textContent = id.replace('m', '').replace('Pill', '') + ': running'; el.className = 'm-spill'; }
+      });
+
+      try {
+        const res = await fetch('/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ claim, mode: 'full' })
+        });
+
+        const ct = res.headers.get('content-type') || '';
+        if (!ct.includes('application/json')) throw new Error('Server error');
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Server error');
+
+        const cok = data.claude && !data.claude.error;
+        const ook = data.openai && !data.openai.error;
+        const grokRan = !!data.grok_adjudication;
+
+        const grokEl = document.getElementById('mGrokPill');
+        const claudeEl = document.getElementById('mClaudePill');
+        const openaiEl = document.getElementById('mOpenAIPill');
+        const airtableEl = document.getElementById('mAirtablePill');
+
+        if (grokEl) { grokEl.textContent = grokRan ? 'Grok: grounded' : 'Grok: skipped'; grokEl.className = 'm-spill' + (grokRan ? ' ok' : ''); }
+        if (claudeEl) { claudeEl.textContent = cok ? 'Claude: done' : 'Claude: failed'; claudeEl.className = 'm-spill ' + (cok ? 'ok' : 'bad'); }
+        if (openaiEl) { openaiEl.textContent = ook ? 'OpenAI: done' : 'OpenAI: failed'; openaiEl.className = 'm-spill ' + (ook ? 'ok' : 'bad'); }
+        if (airtableEl) { airtableEl.textContent = data.airtable?.saved ? 'Saved' : 'Save failed'; airtableEl.className = 'm-spill ' + (data.airtable?.saved ? 'ok' : 'bad'); }
+
+        if (data.airtable?.saved && data.airtable?.redirect_to) {
+          window.location.href = data.airtable.redirect_to;
+          return;
+        }
+      } catch (err) {
+        alert('Request failed: ' + err.message);
+      } finally {
+        clearInterval(interval);
+        if (loading) loading.classList.remove('visible');
+        if (runBtn) runBtn.disabled = false;
+      }
+    }
+
+    // Mobile scenario renderer (reuses rawScenario from desktop)
+    const mScenarioContainer = document.getElementById('mScenarioContainer');
+    if (mScenarioContainer && typeof rawScenario !== 'undefined' && rawScenario) {
+      const scenarioRegex = /SCENARIO\s+([A-E])\s*[—-]+\s*([^:]+):\s*Confidence:\s*([\w\/]+)\.([\ \S]*?)(?=SCENARIO\s+[A-E]|NOTE:|$)/gi;
+      const scenarios = [];
+      let sm;
+      while ((sm = scenarioRegex.exec(rawScenario)) !== null) {
+        const rest = sm[4].trim();
+        const divM = rest.match(/Analyst Divergence:\s*([A-Za-z0-9 _-]+)\.?/i);
+        const text = rest.replace(/Analyst Divergence:\s*[A-Za-z0-9 _-]+\.?/i, '').trim();
+        scenarios.push({ letter: sm[1], name: sm[2].trim(), conf: sm[3].trim(), text, divergence: divM ? divM[1] : '' });
+      }
+      if (scenarios.length) {
+        mScenarioContainer.innerHTML = scenarios.map(s =>
+          `<div class="m-scenario-item"><div class="m-scenario-letter">Scenario ${esc(s.letter)}</div><div class="m-scenario-name">${esc(s.name)}</div><div class="m-scenario-text">${esc(s.text)}</div></div>`
+        ).join('');
+      }
+    }
+
+    // Mobile sources renderer
+    const mSourcesContainer = document.getElementById('mSourcesContainer');
+    if (mSourcesContainer && typeof rawSources !== 'undefined' && rawSources) {
+      renderSources(rawSources);
+      // Move sources block into mobile container
+      const sourcesBlock = document.getElementById('sourcesContainer');
+      if (sourcesBlock) mSourcesContainer.innerHTML = sourcesBlock.innerHTML;
+    }
+
+    // Clipboard detection — check on page load if clipboard has a claim-like text
+    // If so, offer to use it via a tap-friendly banner above the textarea
+    async function mCheckClipboard() {
+      if (!navigator.clipboard || !navigator.clipboard.readText) return;
+      const mInput = document.getElementById('mClaimInput');
+      if (!mInput || mInput.value) return;
+      try {
+        const text = await navigator.clipboard.readText();
+        if (!text || text.length < 20 || text.length > 5000) return;
+        // Show a paste offer button above the textarea
+        const scanner = document.querySelector('.m-scanner');
+        if (!scanner || document.getElementById('mPasteOffer')) return;
+        const offer = document.createElement('div');
+        offer.id = 'mPasteOffer';
+        offer.style.cssText = 'background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.28);border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;';
+        offer.innerHTML = '<span style="font-size:14px;color:var(--text-light);font-style:italic;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + text.slice(0, 60) + (text.length > 60 ? '...' : '') + '</span><button onclick="mUsePastedText()" style="appearance:none;border:none;background:rgba(201,168,76,.18);color:var(--gold);font-family:&quot;Libre Baskerville&quot;,serif;font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:7px 12px;border-radius:8px;cursor:pointer;white-space:nowrap;flex:0 0 auto;">Use This</button>';
+        mInput.parentNode.insertBefore(offer, mInput);
+        window._mClipboardText = text;
+      } catch (e) { /* clipboard permission not granted or unavailable */ }
+    }
+
+    function mUsePastedText() {
+      const mInput = document.getElementById('mClaimInput');
+      if (mInput && window._mClipboardText) {
+        mInput.value = window._mClipboardText;
+        const offer = document.getElementById('mPasteOffer');
+        if (offer) offer.remove();
+        mInput.focus();
+      }
+    }
+
+    // Run clipboard check when mobile shell is visible
+    if (window.innerWidth <= 768) {
+      document.addEventListener('DOMContentLoaded', mCheckClipboard);
+    }
+
   </script>
 </body>
 </html>

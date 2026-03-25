@@ -624,7 +624,36 @@ def get_topic_archives():
     return dict(sorted(grouped.items(), key=lambda x: x[0].lower()))
 
 def get_disputes_for_user(username):
-    return []
+    if not AIRTABLE_TOKEN or not AIRTABLE_BASE_ID or not AIRTABLE_DISPUTES_TABLE_NAME or not username:
+        return []
+    try:
+        safe_username = escape_airtable_formula_value(username.strip())
+        params = {
+            "filterByFormula": f"{{Username}}='{safe_username}'",
+            "sort[0][field]": "Last Updated",
+            "sort[0][direction]": "desc",
+            "maxRecords": 50
+        }
+        records = airtable_get_all(AIRTABLE_DISPUTES_TABLE_NAME, params=params)
+        disputes = []
+        for record in records:
+            f = record.get("fields", {})
+            disputes.append({
+                "record_id": record.get("id"),
+                "title": f.get("Original Claim Title", "Untitled Claim"),
+                "claim_slug": f.get("Claim Slug", ""),
+                "sections_disputed": f.get("Sections Disputed", []),
+                "dispute_text": f.get("Dispute Text", ""),
+                "status": f.get("Status", "Open"),
+                "date_submitted": (f.get("Date Submitted", "") or "")[:10],
+                "ai_response": f.get("AI Response", ""),
+                "editor_resolution": f.get("Editor Resolution", ""),
+                "escalated_to_human": f.get("Escalated To Human", False),
+            })
+        return disputes
+    except Exception as e:
+        print("GET DISPUTES FOR USER ERROR:", str(e), flush=True)
+        return []
 
 def get_claim_by_slug(slug):
     if not AIRTABLE_TOKEN or not AIRTABLE_BASE_ID or not AIRTABLE_TABLE_NAME or not slug:
@@ -673,7 +702,7 @@ def get_disputes_for_claim(claim_slug):
                 "user_source_url": f.get("User Source URL", ""),
                 "pushback_round_count": f.get("Pushback Round Count", 0),
                 "status": f.get("Status", "Open"),
-                "date_submitted": f.get("Date Submitted", ""),
+                "date_submitted": (f.get("Date Submitted", "") or "")[:10],
                 "last_updated": f.get("Last Updated", ""),
                 "ai_response": f.get("AI Response", ""),
                 "escalated_to_human": f.get("Escalated To Human", False),
@@ -1115,7 +1144,10 @@ def home():
         recent_claims=recent_claims,
         current_claim=current_claim,
         archived_claims_by_topic=get_topic_archives(),
-        selected_topic=""
+        selected_topic="",
+        user_disputes=[],
+        search_query="",
+        search_results=[]
     )
 
 
@@ -1137,7 +1169,10 @@ def archives():
         recent_claims=get_recent_claims(limit=10),
         current_claim=None,
         archived_claims_by_topic=filtered,
-        selected_topic=topic
+        selected_topic=topic,
+        user_disputes=[],
+        search_query="",
+        search_results=[]
     )
 
 
@@ -1159,7 +1194,75 @@ def claim_detail(slug):
         recent_claims=get_recent_claims(limit=10),
         current_claim=current_claim,
         archived_claims_by_topic={},
-        selected_topic=""
+        selected_topic="",
+        user_disputes=[],
+        search_query="",
+        search_results=[]
+    )
+
+
+@app.route("/disputes")
+def disputes_page():
+    if not session.get("logged_in"):
+        return redirect("/login")
+    username = session.get("username", "")
+    user_disputes = get_disputes_for_user(username)
+    return render_template(
+        "index.html",
+        page_mode="disputes",
+        superuser=session.get("superuser", False),
+        true_superuser=session.get("true_superuser", False),
+        recent_claims=get_recent_claims(limit=10),
+        current_claim=None,
+        archived_claims_by_topic={},
+        selected_topic="",
+        user_disputes=user_disputes,
+        search_query="",
+        search_results=[]
+    )
+
+
+@app.route("/search")
+def search_page():
+    if not session.get("logged_in"):
+        return redirect("/login")
+    query = (request.args.get("q") or "").strip()
+    results = []
+    if query:
+        all_claims = get_all_claims()
+        query_lower = query.lower()
+        results = [c for c in all_claims if query_lower in (c.get("title") or "").lower() or query_lower in (c.get("stripped_claim") or "").lower() or query_lower in (c.get("speaker") or "").lower()]
+    return render_template(
+        "index.html",
+        page_mode="search",
+        superuser=session.get("superuser", False),
+        true_superuser=session.get("true_superuser", False),
+        recent_claims=get_recent_claims(limit=10),
+        current_claim=None,
+        archived_claims_by_topic={},
+        selected_topic="",
+        search_query=query,
+        search_results=results,
+        user_disputes=[]
+    )
+
+
+@app.route("/profile")
+def profile_page():
+    if not session.get("logged_in"):
+        return redirect("/login")
+    return render_template(
+        "index.html",
+        page_mode="profile",
+        superuser=session.get("superuser", False),
+        true_superuser=session.get("true_superuser", False),
+        recent_claims=get_recent_claims(limit=5),
+        current_claim=None,
+        archived_claims_by_topic={},
+        selected_topic="",
+        user_disputes=[],
+        search_query="",
+        search_results=[]
     )
 
 
