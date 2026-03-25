@@ -828,6 +828,129 @@ def create_airtable_record(fields):
         timeout=30
     )
 
+def get_claim_by_record_id(record_id):
+    if not AIRTABLE_TOKEN or not AIRTABLE_BASE_ID or not AIRTABLE_TABLE_NAME or not record_id:
+        return None
+    try:
+        response = requests.get(
+            f"{airtable_url(AIRTABLE_TABLE_NAME)}/{record_id}",
+            headers={"Authorization": f"Bearer {AIRTABLE_TOKEN}"},
+            timeout=20
+        )
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        print("GET CLAIM BY RECORD ID ERROR:", str(e), flush=True)
+        return None
+
+
+def update_dispute_record(record_id, fields):
+    return requests.patch(
+        f"{airtable_url(AIRTABLE_DISPUTES_TABLE_NAME)}/{record_id}",
+        headers=airtable_headers(),
+        json={"fields": fields},
+        timeout=30
+    )
+
+
+DISPUTE_REVIEW_SYSTEM = """You are the dispute review layer for Where the Truth Lies.
+
+Your job is to review a user dispute against an existing claim excavation.
+
+You are not rewriting the claim. You are deciding whether the dispute appears strong enough to:
+1. uphold the existing claim as written
+2. recommend correction
+3. escalate for human review
+
+Return ONLY valid JSON.
+
+Use this exact structure:
+
+{
+  "decision": "uphold" or "recommend_correction" or "needs_human_review",
+  "ai_response": "A direct 2 to 4 sentence response to the user explaining what the review found.",
+  "quick_view_outcome": "No change to Quick View." or "Recommend updating Quick View." or "Quick View should be reviewed by a human editor.",
+  "full_excavation_outcome": "No change to Full Excavation." or "Recommend updating Full Excavation." or "Full Excavation should be reviewed by a human editor.",
+  "editor_notes": "Short internal note summarizing why the AI reached this conclusion.",
+  "escalate": true or false
+}
+
+Rules:
+Be plainspoken and specific.
+Do not claim certainty if the underlying issue is unresolved.
+If the user is clearly pointing out a real problem in wording, verdict, or subclaims, prefer recommend_correction.
+If the issue is high risk, ambiguous, or could materially alter the claim record, prefer needs_human_review.
+If the dispute is weak or unsupported by the current claim context, prefer uphold.
+"""
+
+
+def review_dispute_with_ai(claim_context, dispute_payload):
+    if not openai_client:
+        return None
+
+    try:
+        prompt = f"""
+Claim title:
+{claim_context.get('title', '')}
+
+Stripped claim:
+{claim_context.get('stripped_claim', '')}
+
+Overall verdict:
+{claim_context.get('overall_verdict', '')}
+
+Quick explanation:
+{claim_context.get('quick_explanation', '')}
+
+Subclaims:
+{json.dumps(claim_context.get('subclaims', []), ensure_ascii=False)}
+
+Direct facts:
+{claim_context.get('direct_facts', '')}
+
+Adjacent facts:
+{claim_context.get('adjacent_facts', '')}
+
+Root concern:
+{claim_context.get('root_concern', '')}
+
+Values divergence:
+{claim_context.get('values_divergence', '')}
+
+Constitutional framework:
+{claim_context.get('constitutional_framework', '')}
+
+Common ground:
+{claim_context.get('common_ground', '')}
+
+User dispute sections:
+{json.dumps(dispute_payload.get('sections_disputed', []), ensure_ascii=False)}
+
+User dispute text:
+{dispute_payload.get('dispute_text', '')}
+
+User source URL:
+{dispute_payload.get('source_url', '')}
+""".strip()
+
+        response = openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": DISPUTE_REVIEW_SYSTEM},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0,
+            max_tokens=900
+        )
+
+        parsed = safe_json_parse(response.choices[0].message.content)
+        if isinstance(parsed, dict) and parsed.get("decision"):
+            return parsed
+        return None
+
+    except Exception as e:
+        print("DISPUTE REVIEW AI ERROR:", str(e), flush=True)
+        return None
 
 def get_active_reality_anchors():
     if not AIRTABLE_TOKEN or not AIRTABLE_BASE_ID or not AIRTABLE_REALITY_TABLE_NAME:
@@ -1470,17 +1593,72 @@ def submit_dispute():
             }
         }
 
-        res = requests.post(
+        create_res = requests.post(
             f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{AIRTABLE_DISPUTES_TABLE_NAME}",
             json=payload,
             headers=airtable_headers(),
             timeout=30
         )
 
-        if not res.ok:
-            return jsonify({"error": res.text}), 500
+        if not create_res.ok:
+            return jsonify({"error": create_res.text}), 500
 
-        return jsonify({"success": True})
+        dispute_record = create_res.json()
+        dispute_record_id = dispute_record.get("id")
+
+        ai_review = None
+
+        claim_record = get_claim_by_record_id(claim_id)
+        if claim_record:
+            claim_context = build_claim_context(claim_record)
+
+            ai_review = review_dispute_with_ai(
+                claim_context,
+                {
+                    "sections_disputed": sections,
+                    "dispute_text": dispute_text,
+                    "source_url": source_url
+                }
+            )
+
+            if ai_review and dispute_record_id:
+                decision = ai_review.get("decision", "").strip()
+                escalate = bool(ai_review.get("escalate", False))
+
+                update_fields = {
+                    "AI Response": ai_review.get("ai_response", ""),
+                    "Editor Notes": ai_review.get("editor_notes", ""),
+                    "Last Updated": datetime.utcnow().isoformat(),
+                    "Escalated To Human": escalate
+                }
+
+                # Only set Status if you already have these Airtable options created.
+                # Safer for today: leave Status as Open and rely on AI Response + Escalated To Human.
+                # If you already created these options, uncomment below:
+                #
+                # if decision == "uphold":
+                #     update_fields["Status"] = "AI Upheld"
+                # elif decision == "recommend_correction":
+                #     update_fields["Status"] = "AI Recommends Correction"
+                # elif decision == "needs_human_review":
+                #     update_fields["Status"] = "Needs Human Review"
+
+                # Same warning here: only use these if those fields are plain text or
+                # you already matched Airtable single select options exactly.
+                if "quick_view_outcome" in ai_review:
+                    update_fields["Quick View Outcome"] = ai_review.get("quick_view_outcome", "")
+                if "full_excavation_outcome" in ai_review:
+                    update_fields["Full Excavation Outcome"] = ai_review.get("full_excavation_outcome", "")
+
+                update_res = update_dispute_record(dispute_record_id, update_fields)
+                if not update_res.ok:
+                    print("DISPUTE AI UPDATE ERROR:", update_res.text, flush=True)
+
+        return jsonify({
+            "success": True,
+            "dispute_id": dispute_record_id,
+            "ai_review": ai_review
+        })
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500

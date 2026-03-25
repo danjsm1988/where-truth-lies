@@ -4947,9 +4947,15 @@ function closeDisputeResultModal() {
         }
 
         closeDisputeModal();
+
+const aiBody =
+  data.ai_review && data.ai_review.ai_response
+    ? 'Initial AI review completed. You can now review it in the Disputes tab.'
+    : 'Your dispute was submitted successfully. You can review its status in the Disputes tab.';
+
 openDisputeResultModal(
   'Dispute Submitted',
-  'Your dispute was submitted successfully. You can review its status in the Disputes tab. A human editor may take 24 to 72 hours if escalation is needed.'
+  aiBody
 );
 
       } catch (err) {
