@@ -3360,16 +3360,14 @@ html, body {
       <div class="m-claim-detail" id="mClaimDetail">
 
         <!-- Status chips row with dispute button -->
-        <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:14px;">
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
           <div class="m-claim-chips">
             <span class="m-chip active-chip">{{ current_claim.status or 'Active' }}</span>
             {% if current_claim.topics %}{% for topic in current_claim.topics %}<span class="m-chip">{{ topic }}</span>{% endfor %}{% endif %}
             {% if current_claim.grok_grounded %}<span class="m-chip" style="color:#75c28d; border-color:rgba(117,194,141,.28);">Live Grounded</span>{% endif %}
             {% if current_claim.human_reviewed %}<span class="m-chip">Reviewed</span>{% endif %}
           </div>
-          {% if current_claim %}
-            {% if current_claim %}<button class="dispute-btn" onclick="openDisputeModal()" style="flex:0 0 auto; font-size:10px; padding:8px 12px; white-space:nowrap; border-radius:10px;" data-claim-id="{{ current_claim.record_id }}" data-claim-slug="{{ current_claim.slug }}" data-claim-title="{{ current_claim.title }}">Dispute</button>{% endif %}
-          {% endif %}
+            <button class="dispute-btn" onclick="openDisputeModal()" style="flex:0 0 auto; font-size:10px; padding:8px 12px; white-space:nowrap; border-radius:10px;" data-claim-id="{{ current_claim.record_id }}" data-claim-slug="{{ current_claim.slug }}" data-claim-title="{{ current_claim.title }}">Dispute</button>
         </div>
 
         <div class="m-claim-eyebrow">ClaimLab Excavation</div>
@@ -3803,92 +3801,43 @@ html, body {
     </section>
 
     <section class="methodology-band" aria-label="Methodology summary">
-      <div class="methodology-inner">
-        <div class="methodology-label">The Excavation</div>
-        <div class="methodology-layers">
-          <div class="m-layer">
-            <div class="m-num">01</div>
-            <div class="m-name">Direct Facts</div>
-            <div class="m-desc">What the documented record actually shows</div>
-          </div>
-          <div class="m-layer">
-            <div class="m-num">02</div>
-            <div class="m-name">Adjacent Facts</div>
-            <div class="m-desc">What the claim leaves out</div>
-          </div>
-          <div class="m-layer">
-            <div class="m-num">03</div>
-            <div class="m-name">Root Concern</div>
-            <div class="m-desc">What the argument is really about</div>
-          </div>
-          <div class="m-layer">
-            <div class="m-num">04</div>
-            <div class="m-name">Values Divergence</div>
-            <div class="m-desc">Where factual debate becomes values conflict</div>
-          </div>
-          <div class="m-layer">
-            <div class="m-num">05</div>
-            <div class="m-name">Constitutional Framework</div>
-            <div class="m-desc">What the founders wrote and why it matters</div>
-          </div>
-          <div class="m-layer">
-            <div class="m-num">06</div>
-            <div class="m-name">Common Ground</div>
-            <div class="m-desc">Where real overlap still exists</div>
-          </div>
-        </div>
-        Perfect — this is exactly what I needed.
-
-✅ EXACT placement (no guessing)
-
-You are putting it inside .methodology-inner, but OUTSIDE .methodology-layers
-
-🔧 Modify your code like this
-
-Right now you have:
-
-<div class="methodology-inner">
-  <div class="methodology-label">The Excavation</div>
-  <div class="methodology-layers">
-    ...
-  </div>
-</div>
-👉 Change it to THIS
-<div class="methodology-inner">
-  <div class="methodology-label">The Excavation</div>
-
-  <div class="methodology-layers">
-    <div class="m-layer">
-      <div class="m-num">01</div>
-      <div class="m-name">Direct Facts</div>
-      <div class="m-desc">What the documented record actually shows</div>
-    </div>
-    <div class="m-layer">
-      <div class="m-num">02</div>
-      <div class="m-name">Adjacent Facts</div>
-      <div class="m-desc">What the claim leaves out</div>
-    </div>
-    <div class="m-layer">
-      <div class="m-num">03</div>
-      <div class="m-name">Root Concern</div>
-      <div class="m-desc">What the argument is really about</div>
-    </div>
-    <div class="m-layer">
-      <div class="m-num">04</div>
-      <div class="m-name">Values Divergence</div>
-      <div class="m-desc">Where factual debate becomes values conflict</div>
-    </div>
-    <div class="m-layer">
-      <div class="m-num">05</div>
-      <div class="m-name">Constitutional Framework</div>
-      <div class="m-desc">What the founders wrote and why it matters</div>
-    </div>
-    <div class="m-layer">
-      <div class="m-num">06</div>
-      <div class="m-name">Common Ground</div>
-      <div class="m-desc">Where real overlap still exists</div>
+  <div class="methodology-inner">
+    <div class="methodology-label">The Excavation</div>
+    <div class="methodology-layers">
+      <div class="m-layer">
+        <div class="m-num">01</div>
+        <div class="m-name">Direct Facts</div>
+        <div class="m-desc">What the documented record actually shows</div>
+      </div>
+      <div class="m-layer">
+        <div class="m-num">02</div>
+        <div class="m-name">Adjacent Facts</div>
+        <div class="m-desc">What the claim leaves out</div>
+      </div>
+      <div class="m-layer">
+        <div class="m-num">03</div>
+        <div class="m-name">Root Concern</div>
+        <div class="m-desc">What the argument is really about</div>
+      </div>
+      <div class="m-layer">
+        <div class="m-num">04</div>
+        <div class="m-name">Values Divergence</div>
+        <div class="m-desc">Where factual debate becomes values conflict</div>
+      </div>
+      <div class="m-layer">
+        <div class="m-num">05</div>
+        <div class="m-name">Constitutional Framework</div>
+        <div class="m-desc">What the founders wrote and why it matters</div>
+      </div>
+      <div class="m-layer">
+        <div class="m-num">06</div>
+        <div class="m-name">Common Ground</div>
+        <div class="m-desc">Where real overlap still exists</div>
+      </div>
     </div>
   </div>
+</section>
+        
   <div class="methodology-live-grounded">
     <div class="mlg-title">Live Grounded</div>
     <div class="mlg-text">
@@ -3900,7 +3849,6 @@ Right now you have:
     </div>
   </div>
       </div>
-    </section>
 
 
     <!-- MAIN CLAIM ENTRY MODULE -->
@@ -4555,6 +4503,7 @@ Right now you have:
               </p>
             </div>
 
+
             <div class="methodology-point">
               <h4>Trust Direction</h4>
               <p>
@@ -4562,8 +4511,20 @@ Right now you have:
               </p>
             </div>
           </div>
+
+    <div class="methodology-live-grounded">
+    <div class="mlg-title">Live Grounded</div>
+    <div class="mlg-text">
+      When triggered, the system performs a live retrieval of current public information before analysis begins. Verified findings are injected      as a factual baseline.
+      <br><br>
+      This does not determine truth. It establishes what is currently documented so the excavation does not operate on outdated or fabricated context.
+      <br><br>
+      If no reliable live information is found, the system proceeds using existing knowledge and marks uncertainty accordingly.
+    </div>
+  </div>
+</div>
         </section>
-      </div>
+      
 
       <aside class="sidebar" id="claimlab">
         <div class="sidebar-card">
