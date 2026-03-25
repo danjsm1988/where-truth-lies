@@ -3233,15 +3233,17 @@ html, body {
 /* ===== MOBILE / DESKTOP VISIBILITY CONTROL ===== */
 
 /* Hide mobile UI on desktop */
-.mobile-shell,
-.m-bottom-nav {
-  display: none;
+@media (min-width: 769px) {
+  .mobile-shell,
+  .m-bottom-nav {
+    display: none !important;
+  }
 }
 
 /* Mobile only */
 @media (max-width: 768px) {
   .desktop-shell {
-    display: none;
+    display: none !important;
   }
 
   .dispute-close-x {
@@ -3448,18 +3450,7 @@ html, body {
       {% if page_mode == "claim" and current_claim %}
       <div class="m-claim-detail" id="mClaimDetail">
 
-        <!-- Status chips row -->
-<div class="m-claim-chips-wrap">
-  <div class="m-claim-chips">
-    <span class="m-chip active-chip">{{ current_claim.status or 'Active' }}</span>
-    {% if current_claim.topics %}{% for topic in current_claim.topics %}<span class="m-chip">{{ topic }}</span>{% endfor %}{% endif %}
-    {% if current_claim.grok_grounded %}<span class="m-chip" style="color:#75c28d; border-color:rgba(117,194,141,.28);">Live Grounded</span>{% endif %}
-    {% if current_claim.human_reviewed %}<span class="m-chip">Reviewed</span>{% endif %}
-  </div>
-</div>
-            
-        </div>
-
+        <!-- Active claim divider and status chips -->
         <div class="m-claim-divider"></div>
 
 <div class="m-claim-chips-wrap">
