@@ -1658,23 +1658,23 @@ def submit_dispute():
                     update_fields["Full Excavation Outcome"] = ai_review.get("full_excavation_outcome", "")
 
                 try:
-    update_res = update_dispute_record(dispute_record_id, update_fields)
-    print("DISPUTE UPDATE STATUS:", update_res.status_code, flush=True)
-    print("DISPUTE UPDATE BODY:", update_res.text, flush=True)
+                    update_res = update_dispute_record(dispute_record_id, update_fields)
+                    print("DISPUTE UPDATE STATUS:", update_res.status_code, flush=True)
+                    print("DISPUTE UPDATE BODY:", update_res.text, flush=True)
 
-    if not update_res.ok:
-        print("DISPUTE AI UPDATE ERROR:", update_res.text, flush=True)
-    else:
-        print("DISPUTE AI UPDATE SUCCESS", flush=True)
+                    if not update_res.ok:
+                    print("DISPUTE AI UPDATE ERROR:", update_res.text, flush=True)
+                    else:
+                    print("DISPUTE AI UPDATE SUCCESS", flush=True)
 
-    return jsonify({
-        "success": True,
-        "dispute_id": dispute_record_id,
-        "ai_review": ai_review
-    })
+                    return jsonify({
+                        "success": True,
+                        "dispute_id": dispute_record_id,
+                        "ai_review": ai_review
+                    })
 
-except Exception as e:
-    return jsonify({"error": str(e)}), 500
+                except Exception as e:
+                    return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
