@@ -2822,6 +2822,29 @@
   white-space: nowrap;
 }
 
+.methodology-live-grounded {
+  margin-top: 16px;
+  background: rgba(255,255,255,.022);
+  border: var(--border-soft);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.mlg-title {
+  font-family: 'Libre Baskerville', Georgia, serif;
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+
+.mlg-text {
+  color: var(--text-light);
+  font-size: 16px;
+  line-height: 1.58;
+}
+
 .m-claim-detail {
   min-width: 0;
   max-width: 100%;
@@ -3169,6 +3192,29 @@ html, body {
 .m-card-meta,
 .m-claim-chips {
   min-width: 0;
+}
+
+/* ===== MOBILE / DESKTOP VISIBILITY CONTROL ===== */
+
+/* Hide mobile UI on desktop */
+.mobile-shell,
+.m-bottom-nav {
+  display: none;
+}
+
+/* Mobile only */
+@media (max-width: 768px) {
+  .desktop-shell {
+    display: none;
+  }
+
+  .mobile-shell {
+    display: block;
+  }
+
+  .m-bottom-nav {
+    display: grid;
+  }
 }
 
 </style>
@@ -4506,6 +4552,10 @@ html, body {
       When triggered, the system performs a live retrieval of current public information before analysis begins. Verified findings are injected      as a factual baseline.
       <br><br>
       This does not determine truth. It establishes what is currently documented so the excavation does not operate on outdated or fabricated context.
+      <strong style="color: var(--text-mid);">
+       Claims marked in green are Live Grounded.
+       Claims without this marker were not live-verified at the time of analysis.
+      </strong>
       <br><br>
       If no reliable live information is found, the system proceeds using existing knowledge and marks uncertainty accordingly.
     </div>
