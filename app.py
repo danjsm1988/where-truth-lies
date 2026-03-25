@@ -1626,38 +1626,26 @@ def submit_dispute():
                     "source_url": source_url
                 }
             )
+
             print("AI REVIEW RESULT:", ai_review, flush=True)
 
             if ai_review and dispute_record_id:
-                decision = ai_review.get("decision", "").strip()
                 escalate = bool(ai_review.get("escalate", False))
 
                 update_fields = {
                     "AI Response": ai_review.get("ai_response", ""),
                     "Editor Notes": ai_review.get("editor_notes", ""),
                     "Last Updated": datetime.utcnow().isoformat(),
-                    "Escalated To Human": escalate
+                    "Escalated To Human": escalate,
+                    "Status": "AI Responded"
                 }
 
-                # Only set Status if you already have these Airtable options created.
-                # Safer for today: leave Status as Open and rely on AI Response + Escalated To Human.
-                # If you already created these options, uncomment below:
-                #
-                # if decision == "uphold":
-                #     update_fields["Status"] = "AI Upheld"
-                # elif decision == "recommend_correction":
-                #     update_fields["Status"] = "AI Recommends Correction"
-                # elif decision == "needs_human_review":
-                #     update_fields["Status"] = "Needs Human Review"
-
-                # Same warning here: only use these if those fields are plain text or
-                # you already matched Airtable single select options exactly.
                 if "quick_view_outcome" in ai_review:
                     update_fields["Quick View Outcome"] = ai_review.get("quick_view_outcome", "")
-                if "full_excavation_outcome" in ai_review:
-                update_fields["Full Excavation Outcome"] = ai_review.get("full_excavation_outcome", "")
 
-            try:
+                if "full_excavation_outcome" in ai_review:
+                    update_fields["Full Excavation Outcome"] = ai_review.get("full_excavation_outcome", "")
+
                 update_res = update_dispute_record(dispute_record_id, update_fields)
                 print("DISPUTE UPDATE STATUS:", update_res.status_code, flush=True)
                 print("DISPUTE UPDATE BODY:", update_res.text, flush=True)
@@ -1667,14 +1655,14 @@ def submit_dispute():
                 else:
                     print("DISPUTE AI UPDATE SUCCESS", flush=True)
 
-                return jsonify({
-                    "success": True,
-                    "dispute_id": dispute_record_id,
-                    "ai_review": ai_review
-                })
+        return jsonify({
+            "success": True,
+            "dispute_id": dispute_record_id,
+            "ai_review": ai_review
+        })
 
-            except Exception as e:
-                return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
