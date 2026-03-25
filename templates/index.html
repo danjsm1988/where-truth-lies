@@ -2797,12 +2797,12 @@
 .m-claim-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  align-items: flex-start;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  overflow: hidden;
+  gap: 8px;
+  align-items: center;
+}
+
+.m-claim-chips-wrap {
+  margin-bottom: 14px;
 }
 
 .m-chip {
@@ -3359,14 +3359,15 @@ html, body {
       {% if page_mode == "claim" and current_claim %}
       <div class="m-claim-detail" id="mClaimDetail">
 
-        <!-- Status chips row with dispute button -->
-        <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
-          <div class="m-claim-chips">
-            <span class="m-chip active-chip">{{ current_claim.status or 'Active' }}</span>
-            {% if current_claim.topics %}{% for topic in current_claim.topics %}<span class="m-chip">{{ topic }}</span>{% endfor %}{% endif %}
-            {% if current_claim.grok_grounded %}<span class="m-chip" style="color:#75c28d; border-color:rgba(117,194,141,.28);">Live Grounded</span>{% endif %}
-            {% if current_claim.human_reviewed %}<span class="m-chip">Reviewed</span>{% endif %}
-          </div>
+        <!-- Status chips row -->
+<div class="m-claim-chips-wrap">
+  <div class="m-claim-chips">
+    <span class="m-chip active-chip">{{ current_claim.status or 'Active' }}</span>
+    {% if current_claim.topics %}{% for topic in current_claim.topics %}<span class="m-chip">{{ topic }}</span>{% endfor %}{% endif %}
+    {% if current_claim.grok_grounded %}<span class="m-chip" style="color:#75c28d; border-color:rgba(117,194,141,.28);">Live Grounded</span>{% endif %}
+    {% if current_claim.human_reviewed %}<span class="m-chip">Reviewed</span>{% endif %}
+  </div>
+</div>
             <button class="dispute-btn" onclick="openDisputeModal()" style="flex:0 0 auto; font-size:10px; padding:8px 12px; white-space:nowrap; border-radius:10px;" data-claim-id="{{ current_claim.record_id }}" data-claim-slug="{{ current_claim.slug }}" data-claim-title="{{ current_claim.title }}">Dispute</button>
         </div>
 
@@ -3837,19 +3838,6 @@ html, body {
     </div>
   </div>
 </section>
-        
-  <div class="methodology-live-grounded">
-    <div class="mlg-title">Live Grounded</div>
-    <div class="mlg-text">
-      When triggered, the system performs a live retrieval of current public information before analysis begins. Verified findings are injected as a factual baseline.
-      <br><br>
-      This does not determine truth. It establishes what is currently documented so the excavation does not operate on outdated or fabricated context.
-      <br><br>
-      If no reliable live information is found, the system proceeds using existing knowledge and marks uncertainty accordingly.
-    </div>
-  </div>
-      </div>
-
 
     <!-- MAIN CLAIM ENTRY MODULE -->
     <section class="claim-entry-band" id="claim-entry-module">
