@@ -3338,6 +3338,18 @@ html, body {
   border-top: 1px solid rgba(255,255,255,0.06);
 }
 
+.dispute-thread-block {
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.dispute-thread-block:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
 </style>
 </head>
 <body>
@@ -4515,97 +4527,112 @@ html, body {
     <div class="ornamental-line"></div>
   </div>
 
-  {% if current_claim.disputes and current_claim.disputes|length > 0 %}
+  {% if current_claim.dispute_threads and current_claim.dispute_threads|length > 0 %}
 
-    {% for dispute in current_claim.disputes %}
-      <div class="dispute-card">
-     
-        <div class="dispute-thread">
-
+  {% for thread in current_claim.dispute_threads %}
+    <div class="dispute-card">
       <div class="dispute-current-status">
-        Current Status: Initial Dispute → {{ dispute.status }}
-      </div> 
+        Current Status: {{ thread.current_entry_label }} → {{ thread.current_status }}
+      </div>
 
-        <div class="dispute-thread-header">
-  <div>
-    <strong>Initial Dispute</strong><br>
-    <span class="thread-status">{{ dispute.status }}</span>
-  </div>
-  <div class="thread-meta">
-    {{ dispute.entered_by or 'User' }} • {{ dispute.date_submitted }}
-  </div>
-</div>
+      <div class="dispute-thread">
+        {% for entry in thread.entries %}
+          <div class="dispute-thread-block">
+            <div class="dispute-thread-header">
+              <div>
+                <strong>{{ entry.entry_label }}</strong><br>
+                <span class="thread-status">{{ entry.status }}</span>
+              </div>
+              <div class="thread-meta">
+                {{ entry.entered_by or 'User' }} • {{ entry.date_submitted }}
+              </div>
+            </div>
 
-        <div class="dispute-section">
-          <strong>Sections Disputed:</strong>
-          {{ dispute.sections_disputed | join(", ") }}
-        </div>
+            {% if entry.sections_disputed and entry.entry_label == "Initial Dispute" %}
+              <div class="dispute-section">
+                <strong>Sections Disputed:</strong>
+                {{ entry.sections_disputed | join(", ") }}
+              </div>
+            {% endif %}
 
-        <div class="dispute-section">
-          <strong>User Argument:</strong>
-          <p>{{ dispute.dispute_text }}</p>
-        </div>
+            {% if entry.response_text %}
+              <div class="dispute-section">
+                <strong>
+                  {% if entry.entry_label == "Initial Dispute" %}
+                    User Argument:
+                  {% elif "Pushback" in entry.entry_label %}
+                    Pushback:
+                  {% elif entry.entered_by_type == "Human Editor" %}
+                    Human Response:
+                  {% else %}
+                    Response:
+                  {% endif %}
+                </strong>
+                <p>{{ entry.response_text }}</p>
+              </div>
+            {% elif entry.dispute_text and entry.entry_label == "Initial Dispute" %}
+              <div class="dispute-section">
+                <strong>User Argument:</strong>
+                <p>{{ entry.dispute_text }}</p>
+              </div>
+            {% endif %}
 
-        {% if dispute.user_source_url %}
-        <div class="dispute-section">
-          <strong>User Source:</strong>
-          <a href="{{ dispute.user_source_url }}" target="_blank">{{ dispute.user_source_url }}</a>
-        </div>
+            {% if entry.user_source_url %}
+              <div class="dispute-section">
+                <strong>User Source:</strong>
+                <a href="{{ entry.user_source_url }}" target="_blank">{{ entry.user_source_url }}</a>
+              </div>
+            {% endif %}
+
+            {% if entry.ai_response %}
+              <div class="dispute-section ai-response thread-reply">
+                <strong>AI Response:</strong>
+                <p>{{ entry.ai_response }}</p>
+              </div>
+            {% endif %}
+
+            {% if entry.status == "Human Override" and entry.human_response %}
+              <div class="dispute-section human-override thread-reply">
+                <strong>Human Override:</strong>
+                <p>{{ entry.human_response }}</p>
+              </div>
+            {% endif %}
+
+            {% if entry.quick_view_outcome or entry.full_excavation_outcome %}
+              <div class="dispute-outcome">
+                <strong>Outcome:</strong>
+                <p>
+                  {{ entry.quick_view_outcome or "No change to Quick View." }}
+                  <br>
+                  {{ entry.full_excavation_outcome or "No change to Full Excavation." }}
+                </p>
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+
+        {% set latest_entry = thread.entries[-1] %}
+        {% if latest_entry.ai_response and latest_entry.status == "AI Responded" and (latest_entry.pushback_round_count or 0) < (3 if superuser else 1) %}
+          <div class="dispute-section thread-entry">
+            <div class="dispute-actions">
+              <button
+                class="dispute-btn pushback-btn"
+                type="button"
+                onclick="openPushbackModal('{{ latest_entry.record_id }}')">
+                Submit Pushback
+              </button>
+            </div>
+          </div>
         {% endif %}
-
-        {% if dispute.ai_response %}
-        <div class="dispute-section ai-response thread-reply">
-          <strong>AI Response:</strong>
-          <p>{{ dispute.ai_response }}</p>
-        </div>
-        {% endif %}
-
-        {% if dispute.status == "Human Override" %}
-  <div class="dispute-section human-override thread-reply">
-    <strong>Human Override:</strong>
-    <p>{{ dispute.human_response }}</p>
-  </div>
-{% endif %}
-
-        {% if dispute.quick_view_outcome or dispute.full_excavation_outcome %}
-<div class="dispute-outcome">
-  <strong>Outcome:</strong>
-  <p>
-    {{ dispute.quick_view_outcome or "No change to Quick View." }}
-    <br>
-    {{ dispute.full_excavation_outcome or "No change to Full Excavation." }}
-  </p>
-</div>
-{% endif %}
-
-{% if (dispute.pushback_round_count or 0) > 0 %}
-  <div class="dispute-section thread-entry">
-    <strong>Pushback {{ dispute.pushback_round_count }}</strong>
-  </div>
-{% endif %}
-
-{% if dispute.ai_response and dispute.status == "AI Responded" and (dispute.pushback_round_count or 0) < (3 if superuser else 1) %}
-  <div class="dispute-section thread-entry">
-    <div class="dispute-actions">
-      <button
-        class="dispute-btn pushback-btn"
-        type="button"
-        onclick="openPushbackModal('{{ dispute.record_id }}')">
-        Submit Pushback
-      </button>
+      </div>
     </div>
-  </div>
+  {% endfor %}
+
+{% else %}
+  <p style="text-align:center; color:var(--text-mid); padding:20px;">
+    No disputes yet. Be the first to challenge this claim.
+  </p>
 {% endif %}
-
-      </div> <!-- end dispute-thread -->
-    </div> <!-- end dispute-card -->
-    {% endfor %}
-
-  {% else %}
-    <p style="text-align:center; color:var(--text-mid); padding:20px;">
-      No disputes yet. Be the first to challenge this claim.
-    </p>
-  {% endif %}
 
 </div>
 

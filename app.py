@@ -364,6 +364,7 @@ def build_claim_context(record):
     fields = record.get("fields", {})
     claim_slug = fields.get("URL Slug", "")
     claim_disputes = get_disputes_for_claim(claim_slug)
+    dispute_threads = group_disputes_into_threads(claim_disputes)
     title = fields.get("Original Quote") or fields.get("Stripped Claim") or "Untitled Claim"
 
     claude_parsed = safe_json_parse(fields.get("Claude Raw JSON", ""))
@@ -466,6 +467,7 @@ def build_claim_context(record):
         "published": fields.get("Published", False),
         "human_reviewed": fields.get("Human Reviewed", False),
         "entered_by": fields.get("Entered By", ""),
+        "dispute_threads": dispute_threads,
         "disputes": claim_disputes,
         "quick_view": quick_view,
         "full_view": full_view,
@@ -689,9 +691,7 @@ def get_disputes_for_claim(claim_slug):
     try:
         safe_slug = escape_airtable_formula_value(claim_slug)
         params = {
-            "filterByFormula": f"{{Claim Slug}}='{safe_slug}'",
-            "sort[0][field]": "Last Updated",
-            "sort[0][direction]": "desc"
+            "filterByFormula": f"{{Claim Slug}}='{safe_slug}'"
         }
 
         records = airtable_get_all(AIRTABLE_DISPUTES_TABLE_NAME, params=params)
@@ -699,30 +699,110 @@ def get_disputes_for_claim(claim_slug):
         disputes = []
         for record in records:
             f = record.get("fields", {})
+
+            parent_dispute = f.get("Parent Dispute", [])
+            if isinstance(parent_dispute, list):
+                parent_dispute_id = parent_dispute[0] if parent_dispute else ""
+            else:
+                parent_dispute_id = parent_dispute or ""
+
             disputes.append({
                 "record_id": record.get("id"),
+                "thread_root_id": (f.get("Thread Root ID") or "").strip() or record.get("id"),
+                "thread_sequence": int(f.get("Thread Sequence", 0) or 0),
+                "entry_label": f.get("Entry Label", f.get("Dispute Type", "Dispute")),
+                "entered_by": f.get("Entered By", f.get("Username", "User")),
+                "entered_by_type": f.get("Entered By Type", "User"),
+                "thread_title": f.get("Thread Title", f.get("Dispute Title", "Dispute Thread")),
+
                 "title": f.get("Original Claim Title", "Untitled Claim"),
                 "claim_slug": f.get("Claim Slug", ""),
                 "sections_disputed": f.get("Sections Disputed", []),
                 "dispute_text": f.get("Dispute Text", ""),
+                "response_text": f.get("Response Text", ""),
                 "user_source_url": f.get("User Source URL", ""),
-                "pushback_round_count": f.get("Pushback Round Count", 0),
+                "pushback_round_count": int(f.get("Pushback Round Count", 0) or 0),
                 "status": f.get("Status", "Open"),
                 "date_submitted": (f.get("Date Submitted", "") or "")[:10],
                 "last_updated": f.get("Last Updated", ""),
                 "ai_response": f.get("AI Response", ""),
+                "human_response": f.get("Editor Resolution", ""),
                 "escalated_to_human": f.get("Escalated To Human", False),
                 "editor_notes": f.get("Editor Notes", ""),
                 "editor_resolution": f.get("Editor Resolution", ""),
+                "resolution_type": f.get("Resolution Type", ""),
                 "dispute_type": f.get("Dispute Type", ""),
-                "parent_dispute": f.get("Parent Dispute", []),
+                "parent_dispute": parent_dispute_id,
+                "update_scope": f.get("Update Scope", []),
+                "applied_update_scope": f.get("Applied Update Scope", []),
                 "quick_view_outcome": f.get("Quick View Outcome", ""),
                 "full_excavation_outcome": f.get("Full Excavation Outcome", "")
             })
+
+        disputes.sort(
+            key=lambda d: (
+                (d.get("thread_title") or "").lower(),
+                d.get("thread_root_id") or "",
+                d.get("thread_sequence", 0),
+                d.get("date_submitted") or ""
+            )
+        )
+
         return disputes
 
     except Exception as e:
         print("GET DISPUTES FOR CLAIM ERROR:", str(e), flush=True)
+        return []
+
+def group_disputes_into_threads(disputes):
+    threads_by_root = {}
+
+    for dispute in disputes:
+        root_id = dispute.get("thread_root_id") or dispute.get("record_id")
+        threads_by_root.setdefault(root_id, []).append(dispute)
+
+    threads = []
+    for root_id, entries in threads_by_root.items():
+        entries.sort(key=lambda d: d.get("thread_sequence", 0))
+
+        root_entry = entries[0]
+        latest_entry = entries[-1]
+
+        threads.append({
+            "thread_root_id": root_id,
+            "thread_title": root_entry.get("thread_title") or root_entry.get("title") or "Dispute Thread",
+            "current_status": latest_entry.get("status", "Open"),
+            "current_entry_label": latest_entry.get("entry_label", latest_entry.get("dispute_type", "Dispute")),
+            "entries": entries
+        })
+
+    threads.sort(
+        key=lambda t: (
+            t["entries"][-1].get("thread_sequence", 0),
+            t["entries"][-1].get("date_submitted") or ""
+        ),
+        reverse=True
+    )
+
+    return threads
+
+def get_disputes_for_claim_record_id(claim_record_id):
+    if not AIRTABLE_TOKEN or not AIRTABLE_BASE_ID or not AIRTABLE_DISPUTES_TABLE_NAME or not claim_record_id:
+        return []
+
+    try:
+        safe_claim_id = escape_airtable_formula_value(claim_record_id)
+        params = {
+            "filterByFormula": f"FIND('{safe_claim_id}', ARRAYJOIN({{Claim Record ID}}))",
+            "sort[0][field]": "Thread Sequence",
+            "sort[0][direction]": "asc"
+        }
+
+        records = airtable_get_all(AIRTABLE_DISPUTES_TABLE_NAME, params=params)
+        return records
+
+    except Exception as e:
+        print("GET DISPUTES FOR CLAIM RECORD ID ERROR:", str(e), flush=True)
         return []
 
 def get_claim_by_original_quote(claim):
@@ -1724,9 +1804,30 @@ def submit_dispute():
             return jsonify({"error": create_res.text}), 500
 
         dispute_record = create_res.json()
-        dispute_record_id = dispute_record.get("id")
+dispute_record_id = dispute_record.get("id")
 
-        ai_review = None
+created_fields = dispute_record.get("fields", {})
+
+thread_title = (
+    (created_fields.get("Stripped Claim") or "").strip()[:140]
+    or (claim_title[:140] if claim_title else "Dispute Thread")
+)
+
+thread_init_fields = {
+    "Thread Root ID": dispute_record_id,
+    "Thread Sequence": 1,
+    "Entry Label": "Initial Dispute",
+    "Entered By": session.get("username", "Unknown"),
+    "Entered By Type": "User",
+    "Response Text": dispute_text,
+    "Thread Title": thread_title
+}
+
+thread_init_res = update_dispute_record(dispute_record_id, thread_init_fields)
+if not thread_init_res.ok:
+    return jsonify({"error": thread_init_res.text}), 500
+
+ai_review = None
 
         claim_record = get_claim_by_record_id(claim_id)
         if claim_record:
@@ -1799,12 +1900,10 @@ def pushback_dispute():
             return jsonify({"error": "Dispute not found"}), 404
 
         fields = dispute_record.get("fields", {})
-        role = (fields.get("User Role at Submission") or "standard").lower()
-        current_round = int(fields.get("Pushback Round Count", 0) or 0)
-        max_allowed = MAX_PUSHBACKS.get(role, 1)
 
-        if current_round >= max_allowed:
-            return jsonify({"error": "Pushback limit reached for this dispute."}), 403
+        root_dispute_id = (fields.get("Thread Root ID") or "").strip() or dispute_id
+        role = (fields.get("User Role at Submission") or "standard").lower()
+        max_allowed = MAX_PUSHBACKS.get(role, 1)
 
         claim_links = fields.get("Claim Record ID", [])
         claim_id = claim_links[0] if claim_links else None
@@ -1816,38 +1915,104 @@ def pushback_dispute():
             return jsonify({"error": "Claim record not found."}), 404
 
         claim_context = build_claim_context(claim_record)
+
+        # Pull all dispute records tied to this claim so we can determine thread history
+        all_disputes = get_disputes_for_claim(claim_id)
+
+        thread_entries = []
+        for record in all_disputes:
+            record_fields = record.get("fields", {})
+            record_root_id = (record_fields.get("Thread Root ID") or "").strip()
+
+            # include the root record itself even if old records don't yet have Thread Root ID populated
+            if record_root_id == root_dispute_id or record.get("id") == root_dispute_id:
+                thread_entries.append(record)
+
+        current_round = sum(
+            1
+            for record in thread_entries
+            if (record.get("fields", {}).get("Dispute Type") or "").strip().lower() == "pushback"
+        )
+
+        if current_round >= max_allowed:
+            return jsonify({"error": "Pushback limit reached for this dispute."}), 403
+
+        max_sequence = max(
+            int(record.get("fields", {}).get("Thread Sequence", 0) or 0)
+            for record in thread_entries
+        ) if thread_entries else 1
+
+        new_round = current_round + 1
+        new_sequence = max_sequence + 1
+
         ai_review = review_pushback_with_ai(claim_context, dispute_record, pushback_text)
 
         if not ai_review:
             return jsonify({"error": "AI pushback review failed."}), 500
 
         escalate = bool(ai_review.get("escalate", False))
-        new_round = current_round + 1
 
-        existing_notes = fields.get("Editor Notes", "") or ""
-        appended_notes = existing_notes
-        if appended_notes:
-            appended_notes += "\n\n"
-        appended_notes += f"Pushback Round {new_round}: {ai_review.get('editor_notes', '')}"
+        root_record = None
+        for record in thread_entries:
+            if record.get("id") == root_dispute_id:
+                root_record = record
+                break
 
-        update_fields = {
-            "AI Response": ai_review.get("ai_response", ""),
-            "Editor Notes": appended_notes,
-            "Last Updated": datetime.utcnow().isoformat(),
-            "Escalated To Human": escalate,
-            "Pushback Round Count": new_round,
-            "Dispute Type": "Pushback",
-            "Status": "Escalated to Human" if escalate else "AI Responded",
-            "Quick View Outcome": ai_review.get("quick_view_outcome", ""),
-            "Full Excavation Outcome": ai_review.get("full_excavation_outcome", "")
+        root_fields = root_record.get("fields", {}) if root_record else fields
+
+        payload = {
+            "fields": {
+                "Thread Title": root_fields.get("Thread Title") or (fields.get("Thread Title") or "Dispute Thread"),
+                "Thread Root ID": root_dispute_id,
+                "Thread Sequence": new_sequence,
+                "Entry Label": f"Pushback {new_round}",
+                "Entered By": session.get("username", "Unknown"),
+                "Entered By Type": "User",
+                "Response Text": pushback_text,
+                "Dispute Title": root_fields.get("Thread Title") or (fields.get("Thread Title") or "Dispute Thread"),
+                "Claim Record ID": [claim_id],
+                "Claim Slug": fields.get("Claim Slug", ""),
+                "Original Claim Title": fields.get("Original Claim Title", ""),
+                "Stripped Claim": fields.get("Stripped Claim", ""),
+                "Quick Explanation": fields.get("Quick Explanation", ""),
+                "Original Quote (from Claim Record ID)": fields.get("Original Quote (from Claim Record ID)", ""),
+                "Stripped Claim (from Claim Record ID)": fields.get("Stripped Claim (from Claim Record ID)", ""),
+                "Username": session.get("username", "Unknown"),
+                "User Role at Submission": role,
+                "Sections Disputed": fields.get("Sections Disputed", []),
+                "Dispute Text": pushback_text,
+                "User Source URL": "",
+                "Parent Dispute": [root_dispute_id],
+                "Dispute Type": "Pushback",
+                "Pushback Round Count": new_round,
+                "Status": "Escalated to Human" if escalate else "AI Responded",
+                "Date Submitted": datetime.utcnow().isoformat(),
+                "Last Updated": datetime.utcnow().isoformat(),
+                "AI Response": ai_review.get("ai_response", ""),
+                "Escalated To Human": escalate,
+                "Editor Notes": ai_review.get("editor_notes", ""),
+                "Editor Resolution": "",
+                "Quick View Outcome": ai_review.get("quick_view_outcome", ""),
+                "Full Excavation Outcome": ai_review.get("full_excavation_outcome", "")
+            }
         }
 
-        update_res = update_dispute_record(dispute_id, update_fields)
-        if not update_res.ok:
-            return jsonify({"error": update_res.text}), 500
+        create_res = requests.post(
+            f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{AIRTABLE_DISPUTES_TABLE_NAME}",
+            json=payload,
+            headers=airtable_headers(),
+            timeout=30
+        )
+
+        if not create_res.ok:
+            return jsonify({"error": create_res.text}), 500
+
+        new_pushback_record = create_res.json()
 
         return jsonify({
             "success": True,
+            "dispute_id": new_pushback_record.get("id"),
+            "thread_root_id": root_dispute_id,
             "ai_review": ai_review,
             "pushback_round_count": new_round,
             "max_pushbacks": max_allowed,
