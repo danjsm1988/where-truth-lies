@@ -1804,30 +1804,29 @@ def submit_dispute():
             return jsonify({"error": create_res.text}), 500
 
         dispute_record = create_res.json()
-dispute_record_id = dispute_record.get("id")
+        dispute_record_id = dispute_record.get("id")
+        created_fields = dispute_record.get("fields", {})
 
-created_fields = dispute_record.get("fields", {})
+        thread_title = (
+            (created_fields.get("Stripped Claim") or "").strip()[:140]
+            or (claim_title[:140] if claim_title else "Dispute Thread")
+        )
 
-thread_title = (
-    (created_fields.get("Stripped Claim") or "").strip()[:140]
-    or (claim_title[:140] if claim_title else "Dispute Thread")
-)
+        thread_init_fields = {
+            "Thread Root ID": dispute_record_id,
+            "Thread Sequence": 1,
+            "Entry Label": "Initial Dispute",
+            "Entered By": session.get("username", "Unknown"),
+            "Entered By Type": "User",
+            "Response Text": dispute_text,
+            "Thread Title": thread_title
+        }
 
-thread_init_fields = {
-    "Thread Root ID": dispute_record_id,
-    "Thread Sequence": 1,
-    "Entry Label": "Initial Dispute",
-    "Entered By": session.get("username", "Unknown"),
-    "Entered By Type": "User",
-    "Response Text": dispute_text,
-    "Thread Title": thread_title
-}
+        thread_init_res = update_dispute_record(dispute_record_id, thread_init_fields)
+        if not thread_init_res.ok:
+            return jsonify({"error": thread_init_res.text}), 500
 
-thread_init_res = update_dispute_record(dispute_record_id, thread_init_fields)
-if not thread_init_res.ok:
-    return jsonify({"error": thread_init_res.text}), 500
-
-ai_review = None
+        ai_review = None
 
         claim_record = get_claim_by_record_id(claim_id)
         if claim_record:
@@ -1917,7 +1916,7 @@ def pushback_dispute():
         claim_context = build_claim_context(claim_record)
 
         # Pull all dispute records tied to this claim so we can determine thread history
-        all_disputes = get_disputes_for_claim(claim_id)
+        all_disputes = get_disputes_for_claim_record_id(claim_id)
 
         thread_entries = []
         for record in all_disputes:
