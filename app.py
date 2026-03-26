@@ -1968,7 +1968,6 @@ def pushback_dispute():
                 "Entered By": session.get("username", "Unknown"),
                 "Entered By Type": "User",
                 "Response Text": pushback_text,
-                "Dispute Title": root_fields.get("Thread Title") or (fields.get("Thread Title") or "Dispute Thread"),
                 "Claim Record ID": [claim_id],
                 "Claim Slug": fields.get("Claim Slug", ""),
                 "Original Claim Title": fields.get("Original Claim Title", ""),
