@@ -3261,6 +3261,21 @@ html, body {
   }
 }
 
+/* Trademark styling */
+.tm {
+  font-size: 0.55em;
+  vertical-align: super;
+  margin-left: 2px;
+  letter-spacing: 0.08em;
+  opacity: 0.85;
+}
+
+/* Slightly smaller in navigation */
+.desktop-nav .tm {
+  font-size: 0.45em;
+  opacity: 0.7;
+}
+
 </style>
 </head>
 <body>
@@ -3815,7 +3830,9 @@ html, body {
         <div class="seal-eye"></div>
       </div>
       <div class="brand-text">
-        <div class="brand-name">Where the Truth Lies</div>
+        <div class="brand-name">
+  Where the Truth Lies<sup class="tm">TM</sup>
+</div>
         <div class="brand-tagline">Beyond the Argument</div>
         <div class="brand-latin">Ubi Veritas Latet</div>
       </div>
@@ -3823,7 +3840,7 @@ html, body {
 
     <!-- Desktop Navigation -->
     <nav class="desktop-nav" aria-label="Primary">
-      <a href="/">ClaimLab</a>
+      <a href="/">ClaimLab<sup class="tm">TM</sup></a>
       <a href="/archives">Claims Archive</a>
       <a href="#methodology-section">Methodology</a>
 
@@ -3942,7 +3959,9 @@ html, body {
     <section class="claim-entry-band" id="claim-entry-module">
       <div class="claim-entry-inner">
         <div class="claim-entry-card">
-          <div class="claim-entry-heading">Run a Claim Through ClaimLab</div>
+          <div class="claim-entry-heading">
+  Run a Claim Through ClaimLab<sup class="tm">TM</sup>
+</div>
           <div class="claim-entry-sub">Paste any political claim, quote, or viral post. Strip the rhetoric. Find the root. Show the full picture.</div>
 
           {% if session.get("role") == "standard" %}
