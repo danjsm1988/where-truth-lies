@@ -3372,6 +3372,28 @@ html, body {
     </div>
   </div>
 
+<div class="dispute-modal-overlay" id="pushbackModal">
+  <div class="dispute-modal-box">
+    <button class="dispute-close-x" type="button" onclick="closePushbackModal()" aria-label="Close pushback modal">×</button>
+
+    <div class="modal-kicker">Pushback AI Review</div>
+    <div class="modal-title">Respond to the AI review</div>
+    <div class="modal-body">
+      Explain why the AI response is still wrong, incomplete, or unfair.
+    </div>
+
+    <textarea
+      id="pushbackText"
+      class="dispute-textarea"
+      placeholder="Explain why the AI review should be reconsidered."
+    ></textarea>
+
+    <div class="dispute-actions">
+      <button class="dispute-cancel-btn" type="button" onclick="closePushbackModal()">Cancel</button>
+      <button class="dispute-submit-btn" type="button" onclick="submitPushback()">Submit Pushback</button>
+    </div>
+  </div>
+</div>
 
   <!-- ═══════════════════════════════════════════════
        MOBILE SHELL — Distinct mobile experience
@@ -4476,6 +4498,17 @@ html, body {
         </div>
         {% endif %}
 
+{% if dispute.ai_response and dispute.status == "AI Responded" and (dispute.pushback_round_count or 0) < (3 if superuser else 1) %}
+  <div class="dispute-actions">
+    <button
+      class="dispute-btn pushback-btn"
+      type="button"
+      onclick="openPushbackModal('{{ dispute.record_id }}')">
+      Pushback
+    </button>
+  </div>
+{% endif %}
+
       </div>
     {% endfor %}
 
@@ -4902,6 +4935,78 @@ function openDisputeResultModal(title, body) {
 function closeDisputeResultModal() {
   const modal = document.getElementById('disputeResultModal');
   if (modal) modal.classList.remove('visible');
+}
+
+let currentPushbackDisputeId = null;
+
+function openPushbackModal(disputeId) {
+  currentPushbackDisputeId = disputeId;
+  const modal = document.getElementById('pushbackModal');
+  const text = document.getElementById('pushbackText');
+  if (text) text.value = '';
+  if (modal) modal.classList.add('visible');
+}
+
+function closePushbackModal() {
+  const modal = document.getElementById('pushbackModal');
+  if (modal) modal.classList.remove('visible');
+  currentPushbackDisputeId = null;
+}
+
+document.getElementById('pushbackModal')?.addEventListener('click', function(e) {
+  if (e.target === this) closePushbackModal();
+});
+
+async function submitPushback() {
+  const pushbackText = (document.getElementById('pushbackText').value || '').trim();
+
+  if (!currentPushbackDisputeId) {
+    openDisputeResultModal('Pushback Error', 'No dispute is selected for pushback.');
+    return;
+  }
+
+  if (!pushbackText) {
+    openDisputeResultModal('Pushback Required', 'Please explain why the AI review should be reconsidered.');
+    return;
+  }
+
+  try {
+    const res = await fetch('/pushback_dispute', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        dispute_id: currentPushbackDisputeId,
+        pushback_text: pushbackText
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || 'Pushback failed.');
+    }
+
+    closePushbackModal();
+
+    openDisputeResultModal(
+      'Pushback Submitted',
+      data.ai_review && data.ai_review.ai_response
+        ? 'Your pushback was reviewed. Refresh the Disputes tab to see the updated AI response.'
+        : 'Your pushback was submitted successfully.'
+    );
+
+    setTimeout(() => {
+      window.location.reload();
+    }, 1200);
+
+  } catch (err) {
+    openDisputeResultModal(
+      'Pushback Error',
+      'There was a problem submitting your pushback. ' + err.message
+    );
+  }
 }
 
     document.getElementById('disputeModal').addEventListener('click', function(e) {

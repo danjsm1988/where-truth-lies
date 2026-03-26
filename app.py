@@ -858,6 +858,21 @@ def update_dispute_record(record_id, fields):
         timeout=30
     )
 
+def get_dispute_by_id(record_id):
+    if not AIRTABLE_TOKEN or not AIRTABLE_BASE_ID or not AIRTABLE_DISPUTES_TABLE_NAME or not record_id:
+        return None
+    try:
+        response = requests.get(
+            f"{airtable_url(AIRTABLE_DISPUTES_TABLE_NAME)}/{record_id}",
+            headers={"Authorization": f"Bearer {AIRTABLE_TOKEN}"},
+            timeout=20
+        )
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        print("GET DISPUTE BY ID ERROR:", str(e), flush=True)
+        return None
+
 
 DISPUTE_REVIEW_SYSTEM = """You are the dispute review layer for Where the Truth Lies.
 
@@ -875,8 +890,8 @@ Use this exact structure:
 {
   "decision": "uphold" or "recommend_correction" or "needs_human_review",
   "ai_response": "A direct 2 to 4 sentence response to the user explaining what the review found.",
-  "quick_view_outcome": "No change to Quick View." or "Recommend updating Quick View." or "Quick View should be reviewed by a human editor.",
-  "full_excavation_outcome": "No change to Full Excavation." or "Recommend updating Full Excavation." or "Full Excavation should be reviewed by a human editor.",
+  "quick_view_outcome": "No change to Quick View." or "Quick View → Recommend update" or "Quick View should be reviewed by a human editor.",
+  "full_excavation_outcome": "No change to Full Excavation." or "Full Excavation → Recommend update" or "Full Excavation should be reviewed by a human editor.",
   "editor_notes": "Short internal note summarizing why the AI reached this conclusion.",
   "escalate": true or false
 }
@@ -889,6 +904,29 @@ If the issue is high risk, ambiguous, or could materially alter the claim record
 If the dispute is weak or unsupported by the current claim context, prefer uphold.
 """
 
+PUSHBACK_REVIEW_SYSTEM = """You are the pushback review layer for Where the Truth Lies.
+
+A user is responding to an earlier AI dispute review. Your job is to reconsider the dispute in light of the user's pushback and the prior AI response.
+
+Return ONLY valid JSON.
+
+Use this exact structure:
+
+{
+  "decision": "uphold" or "recommend_correction" or "needs_human_review",
+  "ai_response": "A direct 2 to 4 sentence response to the user's pushback.",
+  "quick_view_outcome": "No change to Quick View." or "Recommend updating Quick View." or "Quick View should be reviewed by a human editor.",
+  "full_excavation_outcome": "No change to Full Excavation." or "Recommend updating Full Excavation." or "Full Excavation should be reviewed by a human editor.",
+  "editor_notes": "Short internal note summarizing why the AI reached this conclusion after pushback.",
+  "escalate": true or false
+}
+
+Rules:
+Take the user's pushback seriously.
+If the pushback exposes a likely factual or framing problem, prefer recommend_correction.
+If the issue remains ambiguous, high risk, or likely requires human judgment, prefer needs_human_review.
+If the pushback is weak or repetitive and does not materially change the case, prefer uphold.
+"""
 
 def review_dispute_with_ai(claim_context, dispute_payload):
     if not openai_client:
@@ -956,6 +994,82 @@ User source URL:
 
     except Exception as e:
         print("DISPUTE REVIEW AI ERROR:", str(e), flush=True)
+        return None
+
+def review_pushback_with_ai(claim_context, dispute_record, pushback_text):
+    if not openai_client:
+        return None
+
+    try:
+        fields = dispute_record.get("fields", {})
+
+        prompt = f"""
+Claim title:
+{claim_context.get('title', '')}
+
+Stripped claim:
+{claim_context.get('stripped_claim', '')}
+
+Overall verdict:
+{claim_context.get('overall_verdict', '')}
+
+Quick explanation:
+{claim_context.get('quick_explanation', '')}
+
+Subclaims:
+{json.dumps(claim_context.get('subclaims', []), ensure_ascii=False)}
+
+Direct facts:
+{claim_context.get('direct_facts', '')}
+
+Adjacent facts:
+{claim_context.get('adjacent_facts', '')}
+
+Root concern:
+{claim_context.get('root_concern', '')}
+
+Values divergence:
+{claim_context.get('values_divergence', '')}
+
+Constitutional framework:
+{claim_context.get('constitutional_framework', '')}
+
+Common ground:
+{claim_context.get('common_ground', '')}
+
+Original disputed sections:
+{json.dumps(fields.get('Sections Disputed', []), ensure_ascii=False)}
+
+Original dispute text:
+{fields.get('Dispute Text', '')}
+
+Prior AI response:
+{fields.get('AI Response', '')}
+
+Pushback round count:
+{fields.get('Pushback Round Count', 0)}
+
+New user pushback:
+{pushback_text}
+""".strip()
+
+        response = openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": PUSHBACK_REVIEW_SYSTEM},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0,
+            max_tokens=900
+        )
+
+        parsed = safe_json_parse(response.choices[0].message.content)
+        if isinstance(parsed, dict) and parsed.get("decision"):
+            return parsed
+        return None
+
+    except Exception as e:
+        print("PUSHBACK REVIEW AI ERROR:", str(e), flush=True)
         return None
 
 def get_active_reality_anchors():
@@ -1659,6 +1773,85 @@ def submit_dispute():
             "success": True,
             "dispute_id": dispute_record_id,
             "ai_review": ai_review
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/pushback_dispute", methods=["POST"])
+def pushback_dispute():
+    if not session.get("logged_in"):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    try:
+        data = request.get_json() or {}
+        dispute_id = data.get("dispute_id")
+        pushback_text = (data.get("pushback_text") or "").strip()
+
+        if not dispute_id:
+            return jsonify({"error": "Dispute ID is required"}), 400
+
+        if not pushback_text:
+            return jsonify({"error": "Pushback text is required"}), 400
+
+        dispute_record = get_dispute_by_id(dispute_id)
+        if not dispute_record:
+            return jsonify({"error": "Dispute not found"}), 404
+
+        fields = dispute_record.get("fields", {})
+        role = (fields.get("User Role at Submission") or "standard").lower()
+        current_round = int(fields.get("Pushback Round Count", 0) or 0)
+        max_allowed = MAX_PUSHBACKS.get(role, 1)
+
+        if current_round >= max_allowed:
+            return jsonify({"error": "Pushback limit reached for this dispute."}), 403
+
+        claim_links = fields.get("Claim Record ID", [])
+        claim_id = claim_links[0] if claim_links else None
+        if not claim_id:
+            return jsonify({"error": "Linked claim record missing."}), 400
+
+        claim_record = get_claim_by_record_id(claim_id)
+        if not claim_record:
+            return jsonify({"error": "Claim record not found."}), 404
+
+        claim_context = build_claim_context(claim_record)
+        ai_review = review_pushback_with_ai(claim_context, dispute_record, pushback_text)
+
+        if not ai_review:
+            return jsonify({"error": "AI pushback review failed."}), 500
+
+        escalate = bool(ai_review.get("escalate", False))
+        new_round = current_round + 1
+
+        existing_notes = fields.get("Editor Notes", "") or ""
+        appended_notes = existing_notes
+        if appended_notes:
+            appended_notes += "\n\n"
+        appended_notes += f"Pushback Round {new_round}: {ai_review.get('editor_notes', '')}"
+
+        update_fields = {
+            "AI Response": ai_review.get("ai_response", ""),
+            "Editor Notes": appended_notes,
+            "Last Updated": datetime.utcnow().isoformat(),
+            "Escalated To Human": escalate,
+            "Pushback Round Count": new_round,
+            "Dispute Type": "Pushback",
+            "Status": "Escalated to Human" if escalate else "AI Responded",
+            "Quick View Outcome": ai_review.get("quick_view_outcome", ""),
+            "Full Excavation Outcome": ai_review.get("full_excavation_outcome", "")
+        }
+
+        update_res = update_dispute_record(dispute_id, update_fields)
+        if not update_res.ok:
+            return jsonify({"error": update_res.text}), 500
+
+        return jsonify({
+            "success": True,
+            "ai_review": ai_review,
+            "pushback_round_count": new_round,
+            "max_pushbacks": max_allowed,
+            "escalated_to_human": escalate
         })
 
     except Exception as e:
