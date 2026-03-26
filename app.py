@@ -1971,10 +1971,6 @@ def pushback_dispute():
                 "Claim Record ID": [claim_id],
                 "Claim Slug": fields.get("Claim Slug", ""),
                 "Original Claim Title": fields.get("Original Claim Title", ""),
-                "Stripped Claim": fields.get("Stripped Claim", ""),
-                "Quick Explanation": fields.get("Quick Explanation", ""),
-                "Original Quote (from Claim Record ID)": fields.get("Original Quote (from Claim Record ID)", ""),
-                "Stripped Claim (from Claim Record ID)": fields.get("Stripped Claim (from Claim Record ID)", ""),
                 "Username": session.get("username", "Unknown"),
                 "User Role at Submission": role,
                 "Sections Disputed": fields.get("Sections Disputed", []),
@@ -1991,7 +1987,11 @@ def pushback_dispute():
                 "Editor Notes": ai_review.get("editor_notes", ""),
                 "Editor Resolution": "",
                 "Quick View Outcome": ai_review.get("quick_view_outcome", ""),
-                "Full Excavation Outcome": ai_review.get("full_excavation_outcome", "")
+                "Full Excavation Outcome": ai_review.get("full_excavation_outcome", ""),
+                "AI Recommended Changes": "",
+                "Update Scope": [],
+                "Applied Update Scope": [],
+                "Resolution Type": ""
             }
         }
 
