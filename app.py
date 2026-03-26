@@ -1959,41 +1959,37 @@ def pushback_dispute():
 
         root_fields = root_record.get("fields", {}) if root_record else fields
 
-        payload = {
-            "fields": {
-                "Thread Title": root_fields.get("Thread Title") or (fields.get("Thread Title") or "Dispute Thread"),
-                "Thread Root ID": root_dispute_id,
-                "Thread Sequence": new_sequence,
-                "Entry Label": f"Pushback {new_round}",
-                "Entered By": session.get("username", "Unknown"),
-                "Entered By Type": "User",
-                "Response Text": pushback_text,
-                "Claim Record ID": [claim_id],
-                "Claim Slug": fields.get("Claim Slug", ""),
-                "Original Claim Title": fields.get("Original Claim Title", ""),
-                "Username": session.get("username", "Unknown"),
-                "User Role at Submission": role,
-                "Sections Disputed": fields.get("Sections Disputed", []),
-                "Dispute Text": pushback_text,
-                "User Source URL": "",
-                "Parent Dispute": [root_dispute_id],
-                "Dispute Type": "Pushback",
-                "Pushback Round Count": new_round,
-                "Status": "Escalated to Human" if escalate else "AI Responded",
-                "Date Submitted": datetime.utcnow().isoformat(),
-                "Last Updated": datetime.utcnow().isoformat(),
-                "AI Response": ai_review.get("ai_response", ""),
-                "Escalated To Human": escalate,
-                "Editor Notes": ai_review.get("editor_notes", ""),
-                "Editor Resolution": "",
-                "Quick View Outcome": ai_review.get("quick_view_outcome", ""),
-                "Full Excavation Outcome": ai_review.get("full_excavation_outcome", ""),
-                "AI Recommended Changes": "",
-                "Update Scope": [],
-                "Applied Update Scope": [],
-                "Resolution Type": ""
-            }
-        }
+payload_fields = {
+    "Thread Title": root_fields.get("Thread Title") or (fields.get("Thread Title") or "Dispute Thread"),
+    "Thread Root ID": root_dispute_id,
+    "Thread Sequence": new_sequence,
+    "Entry Label": f"Pushback {new_round}",
+    "Entered By": session.get("username", "Unknown"),
+    "Entered By Type": "User",
+    "Response Text": pushback_text,
+    "Claim Record ID": [claim_id],
+    "Claim Slug": fields.get("Claim Slug", ""),
+    "Original Claim Title": fields.get("Original Claim Title", ""),
+    "Username": session.get("username", "Unknown"),
+    "User Role at Submission": role,
+    "Sections Disputed": fields.get("Sections Disputed", []),
+    "Dispute Text": pushback_text,
+    "User Source URL": "",
+    "Parent Dispute": [root_dispute_id],
+    "Dispute Type": "Pushback",
+    "Pushback Round Count": new_round,
+    "Status": "Escalated to Human" if escalate else "AI Responded",
+    "Date Submitted": datetime.utcnow().isoformat(),
+    "Last Updated": datetime.utcnow().isoformat(),
+    "AI Response": ai_review.get("ai_response", ""),
+    "Escalated To Human": escalate,
+    "Editor Notes": ai_review.get("editor_notes", ""),
+    "Quick View Outcome": ai_review.get("quick_view_outcome", ""),
+    "Full Excavation Outcome": ai_review.get("full_excavation_outcome", ""),
+    "AI Recommended Changes": ""
+}
+
+payload = {"fields": payload_fields}
 
         create_res = requests.post(
             f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{AIRTABLE_DISPUTES_TABLE_NAME}",
