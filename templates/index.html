@@ -3276,6 +3276,68 @@ html, body {
   opacity: 0.7;
 }
 
+/* ===== DISPUTE THREAD ENHANCEMENTS ===== */
+
+.dispute-current-status {
+  font-weight: 600;
+  color: var(--gold);
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+}
+
+.dispute-thread-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.thread-status {
+  color: var(--text-mid);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.thread-meta {
+  font-size: 12px;
+  color: var(--text-mid);
+  opacity: 0.85;
+}
+
+.pushback-label {
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--gold);
+  letter-spacing: 0.5px;
+}
+
+/* Human Override styling */
+.human-override {
+  border-left: 3px solid #ff4d4d;
+  background: rgba(255, 77, 77, 0.05);
+  padding-left: 12px;
+  margin-top: 10px;
+}
+
+.dispute-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.thread-reply {
+  margin-left: 18px;
+  border-left: 2px solid rgba(255,255,255,0.08);
+  padding-left: 14px;
+}
+
+.thread-entry {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
 </style>
 </head>
 <body>
@@ -4457,11 +4519,22 @@ html, body {
 
     {% for dispute in current_claim.disputes %}
       <div class="dispute-card">
+     
+        <div class="dispute-thread">
 
-        <div class="dispute-header">
-          <span class="dispute-status">{{ dispute.status }}</span>
-          <span class="dispute-date">{{ dispute.date_submitted }}</span>
-        </div>
+      <div class="dispute-current-status">
+        Current Status: Initial Dispute → {{ dispute.status }}
+      </div> 
+
+        <div class="dispute-thread-header">
+  <div>
+    <strong>Initial Dispute</strong><br>
+    <span class="thread-status">{{ dispute.status }}</span>
+  </div>
+  <div class="thread-meta">
+    {{ dispute.entered_by or 'User' }} • {{ dispute.date_submitted }}
+  </div>
+</div>
 
         <div class="dispute-section">
           <strong>Sections Disputed:</strong>
@@ -4481,35 +4554,51 @@ html, body {
         {% endif %}
 
         {% if dispute.ai_response %}
-        <div class="dispute-section ai-response">
+        <div class="dispute-section ai-response thread-reply">
           <strong>AI Response:</strong>
           <p>{{ dispute.ai_response }}</p>
         </div>
         {% endif %}
 
-        {% if dispute.quick_view_outcome or dispute.full_excavation_outcome %}
-        <div class="dispute-outcome">
-          <strong>Outcome:</strong>
-          <p>
-            {{ dispute.quick_view_outcome or "No change to Quick View." }}
-            <br>
-            {{ dispute.full_excavation_outcome or "No change to Full Excavation." }}
-          </p>
-        </div>
-        {% endif %}
-
-{% if dispute.ai_response and dispute.status == "AI Responded" and (dispute.pushback_round_count or 0) < (3 if superuser else 1) %}
-  <div class="dispute-actions">
-    <button
-      class="dispute-btn pushback-btn"
-      type="button"
-      onclick="openPushbackModal('{{ dispute.record_id }}')">
-      Pushback
-    </button>
+        {% if dispute.status == "Human Override" %}
+  <div class="dispute-section human-override thread-reply">
+    <strong>Human Override:</strong>
+    <p>{{ dispute.human_response }}</p>
   </div>
 {% endif %}
 
-      </div>
+        {% if dispute.quick_view_outcome or dispute.full_excavation_outcome %}
+<div class="dispute-outcome">
+  <strong>Outcome:</strong>
+  <p>
+    {{ dispute.quick_view_outcome or "No change to Quick View." }}
+    <br>
+    {{ dispute.full_excavation_outcome or "No change to Full Excavation." }}
+  </p>
+</div>
+{% endif %}
+
+{% if (dispute.pushback_round_count or 0) > 0 %}
+  <div class="dispute-section thread-entry">
+    <strong>Pushback {{ dispute.pushback_round_count }}</strong>
+  </div>
+{% endif %}
+
+{% if dispute.ai_response and dispute.status == "AI Responded" and (dispute.pushback_round_count or 0) < (3 if superuser else 1) %}
+  <div class="dispute-section thread-entry">
+    <div class="dispute-actions">
+      <button
+        class="dispute-btn pushback-btn"
+        type="button"
+        onclick="openPushbackModal('{{ dispute.record_id }}')">
+        Submit Pushback
+      </button>
+    </div>
+  </div>
+{% endif %}
+
+      </div> <!-- end dispute-thread -->
+    </div> <!-- end dispute-card -->
     {% endfor %}
 
   {% else %}
