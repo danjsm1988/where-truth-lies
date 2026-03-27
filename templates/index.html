@@ -1439,6 +1439,14 @@
       display: block;
     }
 
+    .archive-topic-chevron {
+      transition: transform 0.18s ease;
+    }
+
+    .archive-topic-header.open .archive-topic-chevron {
+      transform: rotate(180deg);
+    }
+
     .utility-chip {
       display: inline-flex;
       align-items: center;
@@ -1469,8 +1477,11 @@
       gap: 14px;
       padding: 18px 20px;
       background: rgba(255,255,255,.025);
-      border-bottom: 1px solid rgba(255,255,255,.07);
       cursor: pointer;
+    }
+
+    .archive-topic-header.open {
+      border-bottom: 1px solid rgba(255,255,255,.07);
     }
 
     .archive-topic-left {
@@ -3254,18 +3265,22 @@ html, body {
     display: none !important;
   }
 
+  .mobile-shell {
+    display: block !important;
+  }
+
+  .m-bottom-nav {
+    display: grid !important;
+  }
+
   .dispute-close-x {
     width: 38px;
     height: 38px;
     font-size: 24px;
   }
-}
-  .mobile-shell {
-    display: block;
-  }
 
-  .m-bottom-nav {
-    display: grid;
+  body {
+    overflow-x: hidden;
   }
 }
 
@@ -3356,22 +3371,6 @@ html, body {
   border-bottom: none;
   margin-bottom: 0;
   padding-bottom: 0;
-}
-
-.archive-topic-group .archive-topic-body {
-  display: none;
-}
-
-.archive-topic-group.open .archive-topic-body {
-  display: block;
-}
-
-.archive-topic-group .archive-topic-chevron {
-  transition: transform 0.18s ease;
-}
-
-.archive-topic-group.open .archive-topic-chevron {
-  transform: rotate(180deg);
 }
 
 </style>
@@ -3615,6 +3614,24 @@ html, body {
         {% if true_superuser and current_claim.entered_by %}
           <div class="m-entered-by">Entered by <strong>{{ current_claim.entered_by }}</strong></div>
         {% endif %}
+
+        <div class="m-claim-tabs">
+          <button
+            class="m-claim-tab-btn active"
+            type="button"
+            onclick="switchMobileClaimView('excavation', this)">
+            Excavation
+          </button>
+
+          <button
+            class="m-claim-tab-btn"
+            type="button"
+            onclick="switchMobileClaimView('disputes', this)">
+            Claim Disputes
+          </button>
+        </div>
+         
+        <div id="m-claim-excavation-panel" class="m-claim-panel">
 
         <!-- Quick Explanation -->
         {% if current_claim.quick_explanation %}
@@ -3914,7 +3931,110 @@ html, body {
       </div>
       {% endif %}
 
-    </div><!-- end m-content -->
+</div> <!-- END m-claim-excavation-panel -->
+
+<div id="m-claim-disputes-panel" class="m-claim-panel" style="display:none;">
+
+  {% if current_claim.dispute_threads and current_claim.dispute_threads|length > 0 %}
+    {% for thread in current_claim.dispute_threads %}
+      <div class="m-dispute-thread-card">
+
+        <div class="m-dispute-current-status">
+          Current Status: {{ thread.current_entry_label }} → {{ thread.current_status }}
+        </div>
+
+        {% for entry in thread.entries %}
+          <div class="m-dispute-thread-block">
+
+            <div class="m-dispute-thread-head">
+              <div>
+                <div class="m-dispute-entry-label">{{ entry.entry_label }}</div>
+                <div class="m-dispute-entry-status">{{ entry.status }}</div>
+              </div>
+              <div class="m-dispute-entry-meta">
+                {{ entry.entered_by or 'User' }} • {{ entry.date_submitted }}
+              </div>
+            </div>
+
+            {% if entry.sections_disputed and entry.entry_label == "Initial Dispute" %}
+              <div class="m-dispute-section">
+                <strong>Sections Disputed:</strong>
+                <div>{{ entry.sections_disputed | join(", ") }}</div>
+              </div>
+            {% endif %}
+
+            {% if entry.response_text %}
+              <div class="m-dispute-section">
+                <strong>
+                  {% if entry.entry_label == "Initial Dispute" %}
+                    User Argument:
+                  {% elif "Pushback" in entry.entry_label %}
+                    Pushback:
+                  {% elif entry.entered_by_type == "Human Editor" %}
+                    Human Response:
+                  {% else %}
+                    Response:
+                  {% endif %}
+                </strong>
+                <div>{{ entry.response_text }}</div>
+              </div>
+
+            {% elif entry.dispute_text and entry.entry_label == "Initial Dispute" %}
+              <div class="m-dispute-section">
+                <strong>User Argument:</strong>
+                <div>{{ entry.dispute_text }}</div>
+              </div>
+            {% endif %}
+
+            {% if entry.user_source_url %}
+              <div class="m-dispute-section">
+                <strong>User Source:</strong>
+                <a href="{{ entry.user_source_url }}" target="_blank">{{ entry.user_source_url }}</a>
+              </div>
+            {% endif %}
+
+            {% if entry.ai_response %}
+              <div class="m-dispute-section m-dispute-reply">
+                <strong>AI Response:</strong>
+                <div>{{ entry.ai_response }}</div>
+              </div>
+            {% endif %}
+
+            {% if entry.status == "Human Override" and entry.human_response %}
+              <div class="m-dispute-section m-dispute-reply m-dispute-human-override">
+                <strong>Human Override:</strong>
+                <div>{{ entry.human_response }}</div>
+              </div>
+            {% endif %}
+
+            {% if entry.quick_view_outcome or entry.full_excavation_outcome %}
+              <div class="m-dispute-outcome">
+                <strong>Outcome:</strong>
+                <div>{{ entry.quick_view_outcome or "No change to Quick View." }}</div>
+                <div>{{ entry.full_excavation_outcome or "No change to Full Excavation." }}</div>
+              </div>
+            {% endif %}
+
+          </div>
+        {% endfor %}
+
+        {% set latest_entry = thread.entries[-1] %}
+        {% if latest_entry.ai_response and latest_entry.status == "AI Responded" and (latest_entry.pushback_round_count or 0) < (3 if superuser else 1) %}
+          <button
+            class="m-run-btn m-dispute-btn"
+            type="button"
+            onclick="openPushbackModal('{{ latest_entry.record_id }}')">
+            Submit Pushback
+          </button>
+        {% endif %}
+
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="m-empty-note">No claim disputes yet.</div>
+  {% endif %}
+
+</div> <!-- END m-claim-disputes-panel -->
 
     <!-- BOTTOM NAV -->
     <nav class="m-bottom-nav">
@@ -4692,7 +4812,7 @@ html, body {
           {% if archived_claims_by_topic %}
             {% for topic_name, topic_claims in archived_claims_by_topic.items() %}
               <div class="archive-topic-group">
-                <div class="archive-topic-header" onclick="toggleArchiveTopic(this)">
+                <div class="archive-topic-header open" onclick="toggleArchiveTopic(this)">
                   <div class="archive-topic-left">
                     <div class="archive-topic-name">{{ topic_name }}</div>
                     <div class="archive-topic-count">{{ topic_claims|length }} Claim{% if topic_claims|length != 1 %}s{% endif %}</div>
@@ -4700,7 +4820,7 @@ html, body {
                   <div class="archive-topic-chevron">▼</div>
                 </div>
 
-                <div class="archive-topic-body">
+                <div class="archive-topic-body open">
                   <div class="archive-cards">
                     {% for claim in topic_claims %}
                       {% set card_verdict = claim.verdict or claim.overall_verdict or 'Unproven' %}
@@ -5269,10 +5389,11 @@ console.error('Dispute submission failed:', err);
     }
 
     function toggleArchiveTopic(header) {
-  const group = header.closest('.archive-topic-group');
-  if (!group) return;
+  const body = header.nextElementSibling;
+  if (!body) return;
 
-  group.classList.toggle('open');
+  header.classList.toggle('open');
+  body.classList.toggle('open');
 }
 
     function esc(text) {
@@ -5582,6 +5703,27 @@ console.error('Dispute submission failed:', err);
       header.classList.toggle('open');
       if (body) body.classList.toggle('open');
     }
+
+    function switchMobileClaimView(view, btn) {
+  const excavationPanel = document.getElementById('m-claim-excavation-panel');
+  const disputesPanel = document.getElementById('m-claim-disputes-panel');
+
+  if (excavationPanel) {
+    excavationPanel.style.display = (view === 'excavation') ? 'block' : 'none';
+  }
+
+  if (disputesPanel) {
+    disputesPanel.style.display = (view === 'disputes') ? 'block' : 'none';
+  }
+
+  document.querySelectorAll('.m-claim-tab-btn').forEach(b => {
+    b.classList.remove('active');
+  });
+
+  if (btn) {
+    btn.classList.add('active');
+  }
+}
 
     // Mobile confirm modal
     function mOpenConfirm() {
