@@ -3276,6 +3276,34 @@ html, body {
   opacity: 0.7;
 }
 
+
+    /* Mobile claim tabs */
+    .m-claim-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      margin: 0 -16px 16px;
+      padding: 0 16px;
+    }
+    .m-claim-tab-btn {
+      appearance: none;
+      border: none;
+      background: transparent;
+      color: var(--text-mid);
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 10px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      padding: 12px 16px 10px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color .15s ease, border-color .15s ease;
+      white-space: nowrap;
+    }
+    .m-claim-tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+    .m-claim-panel { width: 100%; }
+
 </style>
 </head>
 <body>
@@ -3507,7 +3535,7 @@ html, body {
   </div>
 </div>
 
-<div class="m-claim-eyebrow">ClaimLab Excavation</div>
+<div class="m-claim-eyebrow">ClaimLab<sup class="tm">TM</sup> Excavation</div>
 <h1 class="m-claim-title">{{ current_claim.title }}</h1>
 
         {% if current_claim.stripped_claim and current_claim.stripped_claim != current_claim.title %}
@@ -3518,6 +3546,15 @@ html, body {
           <div class="m-entered-by">Entered by <strong>{{ current_claim.entered_by }}</strong></div>
         {% endif %}
 
+
+        <!-- MOBILE CLAIM TABS -->
+        <div class="m-claim-tabs">
+          <button class="m-claim-tab-btn active" onclick="switchMobileClaimView('excavation', this)">Excavation</button>
+          <button class="m-claim-tab-btn" onclick="switchMobileClaimView('disputes', this)">Claim Disputes</button>
+        </div>
+
+        <!-- EXCAVATION PANEL -->
+        <div id="m-claim-excavation-panel" class="m-claim-panel">
         <!-- Quick Explanation -->
         {% if current_claim.quick_explanation %}
           <div class="m-qe-card">
@@ -3664,6 +3701,54 @@ html, body {
         {% endif %}
 
         <!-- Dispute button -->
+
+        </div><!-- end m-claim-excavation-panel -->
+
+        <!-- DISPUTES PANEL -->
+        <div id="m-claim-disputes-panel" class="m-claim-panel" style="display:none;">
+          {% if current_claim.disputes and current_claim.disputes|length > 0 %}
+            {% for dispute in current_claim.disputes %}
+              <div class="m-dispute-card" style="margin-bottom:12px;">
+                <div class="m-dispute-card-header">
+                  <div class="m-dispute-claim-title" style="font-size:13px;">
+                    {% if dispute.sections_disputed %}{{ dispute.sections_disputed | join(', ') }}{% endif %}
+                  </div>
+                  <span class="m-dispute-status-badge">{{ dispute.status or 'Open' }}</span>
+                </div>
+                <div class="m-dispute-text" style="margin-top:8px;">{{ dispute.dispute_text }}</div>
+                {% if dispute.user_source_url %}
+                  <div style="margin-top:8px;font-size:13px;color:var(--gold);">
+                    <a href="{{ dispute.user_source_url }}" target="_blank" style="color:var(--gold);">Source →</a>
+                  </div>
+                {% endif %}
+                {% if dispute.ai_response %}
+                  <div style="margin-top:10px;padding:10px 12px;background:rgba(255,255,255,.025);border-radius:8px;border-left:3px solid rgba(201,168,76,.3);">
+                    <div style="font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:4px;">Platform Response</div>
+                    <div style="font-size:14px;color:var(--cream-soft);line-height:1.55;">{{ dispute.ai_response }}</div>
+                  </div>
+                {% endif %}
+                {% if dispute.quick_view_outcome or dispute.full_excavation_outcome %}
+                  <div style="margin-top:8px;font-size:13px;color:var(--text-mid);">
+                    <strong style="color:var(--cream-soft);">Outcome:</strong>
+                    {{ dispute.quick_view_outcome or 'No change to Quick View.' }}
+                    {{ dispute.full_excavation_outcome or 'No change to Full Excavation.' }}
+                  </div>
+                {% endif %}
+                {% if dispute.ai_response and dispute.status == 'AI Responded' and (dispute.pushback_round_count or 0) < (3 if superuser else 1) %}
+                  <div style="margin-top:10px;">
+                    <button class="dispute-btn pushback-btn" type="button"
+                      onclick="openPushbackModal('{{ dispute.record_id }}')"
+                      style="font-size:10px;padding:8px 14px;">Pushback</button>
+                  </div>
+                {% endif %}
+                <div class="m-dispute-date">{{ dispute.date_submitted }}</div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="m-disputes-empty">No disputes yet. Be the first to challenge this claim.</div>
+          {% endif %}
+        </div><!-- end m-claim-disputes-panel -->
+
         {% if current_claim %}<button class="m-dispute-btn dispute-btn" onclick="openDisputeModal()" data-claim-id="{{ current_claim.record_id }}" data-claim-slug="{{ current_claim.slug }}" data-claim-title="{{ current_claim.title }}">Dispute This Claim</button>{% endif %}
 
         <!-- Sources -->
@@ -4119,7 +4204,7 @@ html, body {
   </button>
 </div>
 
-        <div class="article-eyebrow">ClaimLab Excavation</div>
+        <div class="article-eyebrow">ClaimLab<sup class="tm">TM</sup> Excavation</div>
 <h1 class="article-title">{{ current_claim.title }}</h1>
 
 {% if current_claim.stripped_claim and current_claim.stripped_claim != current_claim.title %}
@@ -5598,6 +5683,16 @@ console.error('Dispute submission failed:', err);
     // Run clipboard check when mobile shell is visible
     if (window.innerWidth <= 768) {
       document.addEventListener('DOMContentLoaded', mCheckClipboard);
+    }
+
+
+    function switchMobileClaimView(view, btn) {
+      const excavationPanel = document.getElementById('m-claim-excavation-panel');
+      const disputesPanel = document.getElementById('m-claim-disputes-panel');
+      if (excavationPanel) excavationPanel.style.display = (view === 'excavation') ? 'block' : 'none';
+      if (disputesPanel) disputesPanel.style.display = (view === 'disputes') ? 'block' : 'none';
+      document.querySelectorAll('.m-claim-tab-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
     }
 
   </script>
