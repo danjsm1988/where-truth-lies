@@ -3849,26 +3849,28 @@ html, body {
         {% endif %}
 
         <!-- Dispute button -->
+        {% if current_claim %}<button class="m-dispute-btn dispute-btn" onclick="openDisputeModal()" data-claim-id="{{ current_claim.record_id }}" data-claim-slug="{{ current_claim.slug }}" data-claim-title="{{ current_claim.title }}">Dispute This Claim</button>{% endif %}
 
         </div><!-- end m-claim-excavation-panel -->
 
         <!-- DISPUTES PANEL -->
-        <div id="m-claim-disputes-panel" class="m-claim-panel" style="display:none;">
-          {% if current_claim.dispute_threads and current_claim.dispute_threads|length > 0 %}
-            {% for thread in current_claim.dispute_threads %}
-              {% set dispute = thread.entries[-1] %}
-              <div class="m-dispute-card" style="margin-bottom:12px;">
-              <div class="m-dispute-entry-label">
-                {% if dispute.pushback_round_count and dispute.pushback_round_count > 0 %}
-                  Pushback {{ dispute.pushback_round_count }}
-                {% else %}
-                  Initial Dispute
-                {% endif %}
-              </div>
-                <div class="m-dispute-card-header">
-              <div>
-                <div class="m-dispute-claim-title" style="font-size:13px;">
-                  {% if dispute.sections_disputed %}{{ dispute.sections_disputed | join(', ') }}{% endif %}
+<div id="m-claim-disputes-panel" class="m-claim-panel" style="display:none;">
+  {% if current_claim.dispute_threads and current_claim.dispute_threads|length > 0 %}
+    {% for thread in current_claim.dispute_threads %}
+      {% for dispute in thread.entries %}
+        <div class="m-dispute-card" style="margin-bottom:12px;">
+          <div class="m-dispute-entry-label">
+            {% if dispute.pushback_round_count and dispute.pushback_round_count > 0 %}
+              Pushback {{ dispute.pushback_round_count }}
+            {% else %}
+              Initial Dispute
+            {% endif %}
+          </div>
+
+          <div class="m-dispute-card-header">
+            <div>
+              <div class="m-dispute-claim-title" style="font-size:13px;">
+                {% if dispute.sections_disputed %}{{ dispute.sections_disputed | join(', ') }}{% endif %}
               </div>
               <div class="m-dispute-meta-line">
                 {{ dispute.entered_by or dispute.username or 'User' }} • {{ dispute.date_submitted }}
@@ -3876,41 +3878,48 @@ html, body {
             </div>
             <span class="m-dispute-status-badge">{{ dispute.status or 'Open' }}</span>
           </div>
-                <div class="m-dispute-text" style="margin-top:8px;">{{ dispute.dispute_text }}</div>
-                {% if dispute.user_source_url %}
-                  <div style="margin-top:8px;font-size:13px;">
-                    <a href="{{ dispute.user_source_url }}" target="_blank" style="color:var(--gold);">Source →</a>
-                  </div>
-                {% endif %}
-                {% if dispute.ai_response %}
-                  <div style="margin-top:10px;padding:10px 12px;background:rgba(255,255,255,.025);border-radius:8px;border-left:3px solid rgba(201,168,76,.3);">
-                    <div style="font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:4px;">Platform Response</div>
-                    <div style="font-size:14px;color:var(--cream-soft);line-height:1.55;">{{ dispute.ai_response }}</div>
-                  </div>
-                {% endif %}
-                {% if dispute.quick_view_outcome or dispute.full_excavation_outcome %}
-                  <div style="margin-top:8px;font-size:13px;color:var(--text-mid);">
-                    <strong style="color:var(--cream-soft);">Outcome:</strong>
-                    {{ dispute.quick_view_outcome or 'No change to Quick View.' }}
-                    {{ dispute.full_excavation_outcome or 'No change to Full Excavation.' }}
-                  </div>
-                {% endif %}
-                {% if loop.last and dispute.ai_response and dispute.status == 'AI Responded' and (dispute.pushback_round_count or 0) < (3 if superuser else 1) %}) %}
-                  <div style="margin-top:10px;">
-                    <button class="dispute-btn pushback-btn" type="button"
-                      onclick="openPushbackModal('{{ dispute.record_id }}')"
-                      style="font-size:10px;padding:8px 14px;">Pushback</button>
-                  </div>
-                {% endif %}
-                <div class="m-dispute-date">{{ dispute.date_submitted }}</div>
-              </div>
-            {% endfor %}
-          {% else %}
-            <div class="m-disputes-empty">No disputes yet. Be the first to challenge this claim.</div>
-          {% endif %}
-        </div><!-- end m-claim-disputes-panel -->
 
-        {% if current_claim %}<button class="m-dispute-btn dispute-btn" onclick="openDisputeModal()" data-claim-id="{{ current_claim.record_id }}" data-claim-slug="{{ current_claim.slug }}" data-claim-title="{{ current_claim.title }}">Dispute This Claim</button>{% endif %}
+          <div class="m-dispute-text" style="margin-top:8px;">{{ dispute.dispute_text }}</div>
+
+          {% if dispute.user_source_url %}
+            <div style="margin-top:8px;font-size:13px;">
+              <a href="{{ dispute.user_source_url }}" target="_blank" style="color:var(--gold);">Source →</a>
+            </div>
+          {% endif %}
+
+          {% if dispute.ai_response %}
+            <div style="margin-top:10px;padding:10px 12px;background:rgba(255,255,255,.025);border-radius:8px;border-left:3px solid rgba(201,168,76,.3);">
+              <div style="font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:4px;">Platform Response</div>
+              <div style="font-size:14px;color:var(--cream-soft);line-height:1.55;">{{ dispute.ai_response }}</div>
+            </div>
+          {% endif %}
+
+          {% if dispute.quick_view_outcome or dispute.full_excavation_outcome %}
+            <div style="margin-top:8px;font-size:13px;color:var(--text-mid);">
+              <strong style="color:var(--cream-soft);">Outcome:</strong>
+              {{ dispute.quick_view_outcome or 'No change to Quick View.' }}
+              {{ dispute.full_excavation_outcome or 'No change to Full Excavation.' }}
+            </div>
+          {% endif %}
+
+          {% if loop.last and dispute.ai_response and dispute.status == 'AI Responded' and (dispute.pushback_round_count or 0) < (3 if superuser else 1) %}
+            <div style="margin-top:10px;">
+              <button class="dispute-btn pushback-btn" type="button"
+                onclick="openPushbackModal('{{ dispute.record_id }}')"
+                style="font-size:10px;padding:8px 14px;">Pushback</button>
+            </div>
+          {% endif %}
+
+          <div class="m-dispute-date">{{ dispute.date_submitted }}</div>
+        </div>
+      {% endfor %}
+    {% endfor %}
+  {% else %}
+    <div class="m-disputes-empty">No disputes yet. Be the first to challenge this claim.</div>
+  {% endif %}
+</div><!-- end m-claim-disputes-panel -->
+
+        
 
         <!-- Sources -->
         {% if superuser and current_claim.source_urls %}
