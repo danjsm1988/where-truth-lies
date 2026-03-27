@@ -3303,6 +3303,104 @@ html, body {
     .m-claim-tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
     .m-claim-panel { width: 100%; }
 
+    /* ── DISPUTE THREAD STYLES ── */
+    .dispute-thread-header {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+    }
+    .dispute-thread-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .dispute-round-badge {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(201,168,76,.1);
+      border: 1px solid rgba(201,168,76,.28);
+      color: var(--gold);
+    }
+    .dispute-sections-summary {
+      font-size: 12px;
+      color: var(--text-mid);
+      font-style: italic;
+    }
+    .dispute-thread-entry {
+      padding: 10px 14px;
+      border-radius: 10px;
+      margin-bottom: 8px;
+    }
+    .dispute-entry-user {
+      background: rgba(255,255,255,.025);
+      border: 1px solid rgba(255,255,255,.08);
+    }
+    .dispute-entry-ai {
+      background: rgba(201,168,76,.05);
+      border: 1px solid rgba(201,168,76,.18);
+      margin-left: 16px;
+    }
+    .dispute-entry-editor {
+      background: rgba(117,194,141,.04);
+      border: 1px solid rgba(117,194,141,.2);
+      margin-left: 16px;
+    }
+    .dispute-entry-label {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      margin-bottom: 6px;
+    }
+    .dispute-entry-ai .dispute-entry-label { color: var(--gold); }
+    .dispute-entry-editor .dispute-entry-label { color: #75c28d; }
+    .dispute-entry-body {
+      font-size: 15px;
+      color: var(--cream-soft);
+      line-height: 1.6;
+    }
+    .dispute-entry-source {
+      margin-top: 6px;
+      font-size: 13px;
+    }
+    .dispute-outcome {
+      margin-top: 8px;
+      padding: 10px 14px;
+      background: rgba(255,255,255,.02);
+      border-radius: 8px;
+      border-left: 3px solid rgba(201,168,76,.3);
+      font-size: 13px;
+      color: var(--text-mid);
+    }
+    .dispute-outcome-label {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      display: block;
+      margin-bottom: 4px;
+    }
+    .dispute-escalated-notice {
+      margin-top: 10px;
+      padding: 10px 14px;
+      background: rgba(201,168,76,.06);
+      border: 1px solid rgba(201,168,76,.22);
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--text-light);
+      font-style: italic;
+    }
+
 </style>
 </head>
 <body>
@@ -4542,56 +4640,74 @@ html, body {
     {% for dispute in current_claim.disputes %}
       <div class="dispute-card">
 
-        <div class="dispute-header">
-          <span class="dispute-status">{{ dispute.status }}</span>
-          <span class="dispute-date">{{ dispute.date_submitted }}</span>
+        <!-- Thread header: status + meta -->
+        <div class="dispute-thread-header">
+          <div class="dispute-thread-meta">
+            <span class="dispute-status">{{ dispute.status or 'Open' }}</span>
+            <span class="dispute-date">{{ dispute.date_submitted }}</span>
+            {% if dispute.pushback_round_count and dispute.pushback_round_count > 0 %}
+              <span class="dispute-round-badge">Round {{ dispute.pushback_round_count }}</span>
+            {% endif %}
+          </div>
+          <div class="dispute-sections-summary">
+            {{ dispute.sections_disputed | join(", ") }}
+          </div>
         </div>
 
-        <div class="dispute-section">
-          <strong>Sections Disputed:</strong>
-          {{ dispute.sections_disputed | join(", ") }}
+        <!-- Entry: Initial Dispute -->
+        <div class="dispute-thread-entry dispute-entry-user">
+          <div class="dispute-entry-label">Initial Dispute</div>
+          <div class="dispute-entry-body">{{ dispute.dispute_text }}</div>
+          {% if dispute.user_source_url %}
+            <div class="dispute-entry-source">
+              <a href="{{ dispute.user_source_url }}" target="_blank" style="color:var(--gold);">Source →</a>
+            </div>
+          {% endif %}
         </div>
 
-        <div class="dispute-section">
-          <strong>User Argument:</strong>
-          <p>{{ dispute.dispute_text }}</p>
-        </div>
-
-        {% if dispute.user_source_url %}
-        <div class="dispute-section">
-          <strong>User Source:</strong>
-          <a href="{{ dispute.user_source_url }}" target="_blank">{{ dispute.user_source_url }}</a>
-        </div>
-        {% endif %}
-
+        <!-- Entry: AI Response -->
         {% if dispute.ai_response %}
-        <div class="dispute-section ai-response">
-          <strong>AI Response:</strong>
-          <p>{{ dispute.ai_response }}</p>
-        </div>
+          <div class="dispute-thread-entry dispute-entry-ai">
+            <div class="dispute-entry-label">ClaimLab<sup class="tm">TM</sup> Response</div>
+            <div class="dispute-entry-body">{{ dispute.ai_response }}</div>
+          </div>
         {% endif %}
 
+        <!-- Outcome -->
         {% if dispute.quick_view_outcome or dispute.full_excavation_outcome %}
-        <div class="dispute-outcome">
-          <strong>Outcome:</strong>
-          <p>
-            {{ dispute.quick_view_outcome or "No change to Quick View." }}
-            <br>
-            {{ dispute.full_excavation_outcome or "No change to Full Excavation." }}
-          </p>
-        </div>
+          <div class="dispute-outcome">
+            <span class="dispute-outcome-label">Outcome</span>
+            <div>{{ dispute.quick_view_outcome or "No change to Quick View." }}</div>
+            <div>{{ dispute.full_excavation_outcome or "No change to Full Excavation." }}</div>
+          </div>
         {% endif %}
 
-{% if dispute.ai_response and dispute.status == "AI Responded" and (dispute.pushback_round_count or 0) < (3 if superuser else 1) %}
-  <div class="dispute-actions">
-    <button
-      class="dispute-btn pushback-btn"
-      type="button"
-      onclick="openPushbackModal('{{ dispute.record_id }}')">
-      Pushback
-    </button>
-  </div>
-{% endif %}
+        <!-- Editor notes if present -->
+        {% if dispute.editor_notes %}
+          <div class="dispute-thread-entry dispute-entry-editor">
+            <div class="dispute-entry-label">Editor Note</div>
+            <div class="dispute-entry-body">{{ dispute.editor_notes }}</div>
+          </div>
+        {% endif %}
+
+        <!-- Pushback action -->
+        {% if dispute.ai_response and dispute.status == "AI Responded" and (dispute.pushback_round_count or 0) < (3 if superuser else 1) %}
+          <div class="dispute-actions">
+            <button
+              class="dispute-btn pushback-btn"
+              type="button"
+              onclick="openPushbackModal('{{ dispute.record_id }}')">
+              Pushback
+            </button>
+          </div>
+        {% endif %}
+
+        <!-- Escalated notice -->
+        {% if dispute.escalated_to_human %}
+          <div class="dispute-escalated-notice">
+            This dispute has been escalated to a human editor. Review may take 24 to 72 hours.
+          </div>
+        {% endif %}
 
       </div>
     {% endfor %}
