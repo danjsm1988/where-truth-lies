@@ -47,7 +47,27 @@
       min-height: 100vh;
     }
 
+.desktop-shell {
+  display: block;
+}
 
+.mobile-shell {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .desktop-shell {
+    display: none;
+  }
+
+  .mobile-shell {
+    display: block;
+  }
+
+  body {
+    overflow-x: hidden;
+  }
+}
 
     a { color: inherit; }
 
@@ -1411,22 +1431,6 @@
       flex-wrap: wrap;
     }
 
-    .archive-topic-body {
-      display: none;
-    }
-
-    .archive-topic-body.open {
-      display: block;
-    }
-
-    .archive-topic-chevron {
-      transition: transform 0.18s ease;
-    }
-
-    .archive-topic-header.open .archive-topic-chevron {
-      transform: rotate(180deg);
-    }
-
     .utility-chip {
       display: inline-flex;
       align-items: center;
@@ -1457,11 +1461,8 @@
       gap: 14px;
       padding: 18px 20px;
       background: rgba(255,255,255,.025);
-      cursor: pointer;
-    }
-
-    .archive-topic-header.open {
       border-bottom: 1px solid rgba(255,255,255,.07);
+      cursor: pointer;
     }
 
     .archive-topic-left {
@@ -3231,33 +3232,18 @@ html, body {
 
 /* ===== MOBILE / DESKTOP VISIBILITY CONTROL ===== */
 
-/* Desktop */
+/* Hide mobile UI on desktop */
 @media (min-width: 769px) {
   .mobile-shell,
   .m-bottom-nav {
     display: none !important;
   }
-
-  .desktop-shell {
-    display: block !important;
-  }
 }
 
-/* Mobile */
+/* Mobile only */
 @media (max-width: 768px) {
   .desktop-shell {
     display: none !important;
-  }
-
-  .mobile-shell {
-    display: block !important;
-    min-height: 100vh;
-    padding-top: 70px;
-    padding-bottom: 78px;
-  }
-
-  .m-bottom-nav {
-    display: grid !important;
   }
 
   .dispute-close-x {
@@ -3265,9 +3251,13 @@ html, body {
     height: 38px;
     font-size: 24px;
   }
+}
+  .mobile-shell {
+    display: block;
+  }
 
-  body {
-    overflow-x: hidden;
+  .m-bottom-nav {
+    display: grid;
   }
 }
 
@@ -3284,80 +3274,6 @@ html, body {
 .desktop-nav .tm {
   font-size: 0.45em;
   opacity: 0.7;
-}
-
-/* ===== DISPUTE THREAD ENHANCEMENTS ===== */
-
-.dispute-current-status {
-  font-weight: 600;
-  color: var(--gold);
-  margin-bottom: 12px;
-  letter-spacing: 0.5px;
-}
-
-.dispute-thread-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 12px;
-}
-
-.thread-status {
-  color: var(--text-mid);
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.thread-meta {
-  font-size: 12px;
-  color: var(--text-mid);
-  opacity: 0.85;
-}
-
-.pushback-label {
-  margin-top: 14px;
-  font-size: 12px;
-  color: var(--gold);
-  letter-spacing: 0.5px;
-}
-
-/* Human Override styling */
-.human-override {
-  border-left: 3px solid #ff4d4d;
-  background: rgba(255, 77, 77, 0.05);
-  padding-left: 12px;
-  margin-top: 10px;
-}
-
-.dispute-thread {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.thread-reply {
-  margin-left: 18px;
-  border-left: 2px solid rgba(255,255,255,0.08);
-  padding-left: 14px;
-}
-
-.thread-entry {
-  margin-top: 10px;
-  padding-top: 8px;
-  border-top: 1px solid rgba(255,255,255,0.06);
-}
-
-.dispute-thread-block {
-  padding-bottom: 14px;
-  margin-bottom: 14px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-}
-
-.dispute-thread-block:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-  padding-bottom: 0;
 }
 
 </style>
@@ -3602,24 +3518,6 @@ html, body {
           <div class="m-entered-by">Entered by <strong>{{ current_claim.entered_by }}</strong></div>
         {% endif %}
 
-        <div class="m-claim-tabs">
-          <button
-            class="m-claim-tab-btn active"
-            type="button"
-            onclick="switchMobileClaimView('excavation', this)">
-            Excavation
-          </button>
-
-          <button
-            class="m-claim-tab-btn"
-            type="button"
-            onclick="switchMobileClaimView('disputes', this)">
-            Claim Disputes
-          </button>
-        </div>
-         
-        <div id="m-claim-excavation-panel" class="m-claim-panel">
-
         <!-- Quick Explanation -->
         {% if current_claim.quick_explanation %}
           <div class="m-qe-card">
@@ -3769,118 +3667,15 @@ html, body {
         {% if current_claim %}<button class="m-dispute-btn dispute-btn" onclick="openDisputeModal()" data-claim-id="{{ current_claim.record_id }}" data-claim-slug="{{ current_claim.slug }}" data-claim-title="{{ current_claim.title }}">Dispute This Claim</button>{% endif %}
 
         <!-- Sources -->
-{% if superuser and current_claim.source_urls %}
-  <div style="margin-top:16px;">
-    <div style="font-family:'Libre Baskerville',serif; font-size:9px; letter-spacing:.18em; text-transform:uppercase; color:#a78643; margin-bottom:10px;">Sources</div>
-    <div class="sources-block" id="mSourcesContainer"></div>
-  </div>
-{% endif %}
-
-</div> <!-- END m-claim-excavation-panel -->
-
-<div id="m-claim-disputes-panel" class="m-claim-panel" style="display:none;">
-
-  {% if current_claim.dispute_threads and current_claim.dispute_threads|length > 0 %}
-    {% for thread in current_claim.dispute_threads %}
-      <div class="m-dispute-thread-card">
-
-        <div class="m-dispute-current-status">
-          Current Status: {{ thread.current_entry_label }} → {{ thread.current_status }}
-        </div>
-
-        {% for entry in thread.entries %}
-          <div class="m-dispute-thread-block">
-
-            <div class="m-dispute-thread-head">
-              <div>
-                <div class="m-dispute-entry-label">{{ entry.entry_label }}</div>
-                <div class="m-dispute-entry-status">{{ entry.status }}</div>
-              </div>
-              <div class="m-dispute-entry-meta">
-                {{ entry.entered_by or 'User' }} • {{ entry.date_submitted }}
-              </div>
-            </div>
-
-            {% if entry.sections_disputed and entry.entry_label == "Initial Dispute" %}
-              <div class="m-dispute-section">
-                <strong>Sections Disputed:</strong>
-                <div>{{ entry.sections_disputed | join(", ") }}</div>
-              </div>
-            {% endif %}
-
-            {% if entry.response_text %}
-              <div class="m-dispute-section">
-                <strong>
-                  {% if entry.entry_label == "Initial Dispute" %}
-                    User Argument:
-                  {% elif "Pushback" in entry.entry_label %}
-                    Pushback:
-                  {% elif entry.entered_by_type == "Human Editor" %}
-                    Human Response:
-                  {% else %}
-                    Response:
-                  {% endif %}
-                </strong>
-                <div>{{ entry.response_text }}</div>
-              </div>
-
-            {% elif entry.dispute_text and entry.entry_label == "Initial Dispute" %}
-              <div class="m-dispute-section">
-                <strong>User Argument:</strong>
-                <div>{{ entry.dispute_text }}</div>
-              </div>
-            {% endif %}
-
-            {% if entry.user_source_url %}
-              <div class="m-dispute-section">
-                <strong>User Source:</strong>
-                <a href="{{ entry.user_source_url }}" target="_blank">{{ entry.user_source_url }}</a>
-              </div>
-            {% endif %}
-
-            {% if entry.ai_response %}
-              <div class="m-dispute-section m-dispute-reply">
-                <strong>AI Response:</strong>
-                <div>{{ entry.ai_response }}</div>
-              </div>
-            {% endif %}
-
-            {% if entry.status == "Human Override" and entry.human_response %}
-              <div class="m-dispute-section m-dispute-reply m-dispute-human-override">
-                <strong>Human Override:</strong>
-                <div>{{ entry.human_response }}</div>
-              </div>
-            {% endif %}
-
-            {% if entry.quick_view_outcome or entry.full_excavation_outcome %}
-              <div class="m-dispute-outcome">
-                <strong>Outcome:</strong>
-                <div>{{ entry.quick_view_outcome or "No change to Quick View." }}</div>
-                <div>{{ entry.full_excavation_outcome or "No change to Full Excavation." }}</div>
-              </div>
-            {% endif %}
-
+        {% if superuser and current_claim.source_urls %}
+          <div style="margin-top:16px;">
+            <div style="font-family:'Libre Baskerville',serif; font-size:9px; letter-spacing:.18em; text-transform:uppercase; color:#a78643; margin-bottom:10px;">Sources</div>
+            <div class="sources-block" id="mSourcesContainer"></div>
           </div>
-        {% endfor %}
-
-        {% set latest_entry = thread.entries[-1] %}
-        {% if latest_entry.ai_response and latest_entry.status == "AI Responded" and (latest_entry.pushback_round_count or 0) < (3 if superuser else 1) %}
-          <button
-            class="m-run-btn m-dispute-btn"
-            type="button"
-            onclick="openPushbackModal('{{ latest_entry.record_id }}')">
-            Submit Pushback
-          </button>
         {% endif %}
 
       </div>
-    {% endfor %}
-  {% else %}
-    <div class="m-empty-note">No claim disputes yet.</div>
-  {% endif %}
-
-</div> <!-- END m-claim-disputes-panel -->
-
+      {% endif %}
 
       <!-- ── CLAIMS ARCHIVE PAGE ── -->
       {% if page_mode == "archives" %}
@@ -4021,6 +3816,7 @@ html, body {
       </div>
       {% endif %}
 
+    </div><!-- end m-content -->
 
     <!-- BOTTOM NAV -->
     <nav class="m-bottom-nav">
@@ -4657,112 +4453,70 @@ html, body {
     <div class="ornamental-line"></div>
   </div>
 
-  {% if current_claim.dispute_threads and current_claim.dispute_threads|length > 0 %}
+  {% if current_claim.disputes and current_claim.disputes|length > 0 %}
 
-  {% for thread in current_claim.dispute_threads %}
-    <div class="dispute-card">
-      <div class="dispute-current-status">
-        Current Status: {{ thread.current_entry_label }} → {{ thread.current_status }}
-      </div>
+    {% for dispute in current_claim.disputes %}
+      <div class="dispute-card">
 
-      <div class="dispute-thread">
-        {% for entry in thread.entries %}
-          <div class="dispute-thread-block">
-            <div class="dispute-thread-header">
-              <div>
-                <strong>{{ entry.entry_label }}</strong><br>
-                <span class="thread-status">{{ entry.status }}</span>
-              </div>
-              <div class="thread-meta">
-                {{ entry.entered_by or 'User' }} • {{ entry.date_submitted }}
-              </div>
-            </div>
+        <div class="dispute-header">
+          <span class="dispute-status">{{ dispute.status }}</span>
+          <span class="dispute-date">{{ dispute.date_submitted }}</span>
+        </div>
 
-            {% if entry.sections_disputed and entry.entry_label == "Initial Dispute" %}
-              <div class="dispute-section">
-                <strong>Sections Disputed:</strong>
-                {{ entry.sections_disputed | join(", ") }}
-              </div>
-            {% endif %}
+        <div class="dispute-section">
+          <strong>Sections Disputed:</strong>
+          {{ dispute.sections_disputed | join(", ") }}
+        </div>
 
-            {% if entry.response_text %}
-              <div class="dispute-section">
-                <strong>
-                  {% if entry.entry_label == "Initial Dispute" %}
-                    User Argument:
-                  {% elif "Pushback" in entry.entry_label %}
-                    Pushback:
-                  {% elif entry.entered_by_type == "Human Editor" %}
-                    Human Response:
-                  {% else %}
-                    Response:
-                  {% endif %}
-                </strong>
-                <p>{{ entry.response_text }}</p>
-              </div>
-            {% elif entry.dispute_text and entry.entry_label == "Initial Dispute" %}
-              <div class="dispute-section">
-                <strong>User Argument:</strong>
-                <p>{{ entry.dispute_text }}</p>
-              </div>
-            {% endif %}
+        <div class="dispute-section">
+          <strong>User Argument:</strong>
+          <p>{{ dispute.dispute_text }}</p>
+        </div>
 
-            {% if entry.user_source_url %}
-              <div class="dispute-section">
-                <strong>User Source:</strong>
-                <a href="{{ entry.user_source_url }}" target="_blank">{{ entry.user_source_url }}</a>
-              </div>
-            {% endif %}
-
-            {% if entry.ai_response %}
-              <div class="dispute-section ai-response thread-reply">
-                <strong>AI Response:</strong>
-                <p>{{ entry.ai_response }}</p>
-              </div>
-            {% endif %}
-
-            {% if entry.status == "Human Override" and entry.human_response %}
-              <div class="dispute-section human-override thread-reply">
-                <strong>Human Override:</strong>
-                <p>{{ entry.human_response }}</p>
-              </div>
-            {% endif %}
-
-            {% if entry.quick_view_outcome or entry.full_excavation_outcome %}
-              <div class="dispute-outcome">
-                <strong>Outcome:</strong>
-                <p>
-                  {{ entry.quick_view_outcome or "No change to Quick View." }}
-                  <br>
-                  {{ entry.full_excavation_outcome or "No change to Full Excavation." }}
-                </p>
-              </div>
-            {% endif %}
-          </div>
-        {% endfor %}
-
-        {% set latest_entry = thread.entries[-1] %}
-        {% if latest_entry.ai_response and latest_entry.status == "AI Responded" and (latest_entry.pushback_round_count or 0) < (3 if superuser else 1) %}
-          <div class="dispute-section thread-entry">
-            <div class="dispute-actions">
-              <button
-                class="dispute-btn pushback-btn"
-                type="button"
-                onclick="openPushbackModal('{{ latest_entry.record_id }}')">
-                Submit Pushback
-              </button>
-            </div>
-          </div>
+        {% if dispute.user_source_url %}
+        <div class="dispute-section">
+          <strong>User Source:</strong>
+          <a href="{{ dispute.user_source_url }}" target="_blank">{{ dispute.user_source_url }}</a>
+        </div>
         {% endif %}
-      </div>
-    </div>
-  {% endfor %}
 
-{% else %}
-  <p style="text-align:center; color:var(--text-mid); padding:20px;">
-    No disputes yet. Be the first to challenge this claim.
-  </p>
+        {% if dispute.ai_response %}
+        <div class="dispute-section ai-response">
+          <strong>AI Response:</strong>
+          <p>{{ dispute.ai_response }}</p>
+        </div>
+        {% endif %}
+
+        {% if dispute.quick_view_outcome or dispute.full_excavation_outcome %}
+        <div class="dispute-outcome">
+          <strong>Outcome:</strong>
+          <p>
+            {{ dispute.quick_view_outcome or "No change to Quick View." }}
+            <br>
+            {{ dispute.full_excavation_outcome or "No change to Full Excavation." }}
+          </p>
+        </div>
+        {% endif %}
+
+{% if dispute.ai_response and dispute.status == "AI Responded" and (dispute.pushback_round_count or 0) < (3 if superuser else 1) %}
+  <div class="dispute-actions">
+    <button
+      class="dispute-btn pushback-btn"
+      type="button"
+      onclick="openPushbackModal('{{ dispute.record_id }}')">
+      Pushback
+    </button>
+  </div>
 {% endif %}
+
+      </div>
+    {% endfor %}
+
+  {% else %}
+    <p style="text-align:center; color:var(--text-mid); padding:20px;">
+      No disputes yet. Be the first to challenge this claim.
+    </p>
+  {% endif %}
 
 </div>
 
@@ -5375,7 +5129,10 @@ console.error('Dispute submission failed:', err);
     }
 
     function toggleArchiveTopic(header) {
-  const body = header.nextElementSibling;
+  const group = header.closest('.archive-topic-group');
+  if (!group) return;
+
+  const body = group.querySelector('.archive-topic-body');
   if (!body) return;
 
   header.classList.toggle('open');
@@ -5689,27 +5446,6 @@ console.error('Dispute submission failed:', err);
       header.classList.toggle('open');
       if (body) body.classList.toggle('open');
     }
-
-    function switchMobileClaimView(view, btn) {
-  const excavationPanel = document.getElementById('m-claim-excavation-panel');
-  const disputesPanel = document.getElementById('m-claim-disputes-panel');
-
-  if (excavationPanel) {
-    excavationPanel.style.display = (view === 'excavation') ? 'block' : 'none';
-  }
-
-  if (disputesPanel) {
-    disputesPanel.style.display = (view === 'disputes') ? 'block' : 'none';
-  }
-
-  document.querySelectorAll('.m-claim-tab-btn').forEach(b => {
-    b.classList.remove('active');
-  });
-
-  if (btn) {
-    btn.classList.add('active');
-  }
-}
 
     // Mobile confirm modal
     function mOpenConfirm() {
