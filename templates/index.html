@@ -1431,6 +1431,14 @@
       flex-wrap: wrap;
     }
 
+    .archive-topic-body {
+      display: none;
+    }
+
+    .archive-topic-body.open {
+      display: block;
+    }
+
     .utility-chip {
       display: inline-flex;
       align-items: center;
@@ -4668,7 +4676,7 @@ html, body {
           {% if archived_claims_by_topic %}
             {% for topic_name, topic_claims in archived_claims_by_topic.items() %}
               <div class="archive-topic-group">
-                <div class="archive-topic-header open" onclick="toggleArchiveTopic(this)">
+                <div class="archive-topic-header" onclick="toggleArchiveTopic(this)">
                   <div class="archive-topic-left">
                     <div class="archive-topic-name">{{ topic_name }}</div>
                     <div class="archive-topic-count">{{ topic_claims|length }} Claim{% if topic_claims|length != 1 %}s{% endif %}</div>
@@ -4676,7 +4684,7 @@ html, body {
                   <div class="archive-topic-chevron">▼</div>
                 </div>
 
-                <div class="archive-topic-body open">
+                <div class="archive-topic-body">
                   <div class="archive-cards">
                     {% for claim in topic_claims %}
                       {% set card_verdict = claim.verdict or claim.overall_verdict or 'Unproven' %}
