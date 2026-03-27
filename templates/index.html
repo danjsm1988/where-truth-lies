@@ -586,53 +586,6 @@
       padding: 22px;
     }
 
-.sidebar {
-  position: sticky;
-  top: 94px;
-  display: grid;
-  gap: 18px;
-  align-self: start;
-  max-height: calc(100vh - 110px);
-  overflow-y: auto;
-  padding-right: 6px;
-  min-width: 0;
-}
-
-.sidebar::-webkit-scrollbar {
-  width: 8px;
-}
-
-.sidebar::-webkit-scrollbar-track {
-  background: rgba(255,255,255,.03);
-  border-radius: 8px;
-}
-
-.sidebar::-webkit-scrollbar-thumb {
-  background: rgba(201,168,76,.35);
-  border-radius: 8px;
-}
-
-.sidebar::-webkit-scrollbar-thumb:hover {
-  background: rgba(201,168,76,.55);
-}
-
-.sidebar-card {
-  padding: 22px;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.recent-item,
-.recent-link,
-.recent-title {
-  min-width: 0;
-}
-
-.recent-title {
-  overflow-wrap: anywhere;
-  word-break: break-word;
-}
-
     .sidebar-title,
     .section-title {
       font-family: 'Libre Baskerville', Georgia, serif;
@@ -3679,7 +3632,7 @@ html, body {
   </div>
 </div>
 
-<div class="m-claim-eyebrow">ClaimLab<sup class="tm">TM</sup> Excavation</div>
+<div class="m-claim-eyebrow">ClaimLab Excavation</div>
 <h1 class="m-claim-title">{{ current_claim.title }}</h1>
 
         {% if current_claim.stripped_claim and current_claim.stripped_claim != current_claim.title %}
@@ -4071,6 +4024,7 @@ html, body {
     </nav>
 
   </div><!-- end mobile-shell -->
+
 
   <div class="desktop-shell">
   <div class="page-shell">
