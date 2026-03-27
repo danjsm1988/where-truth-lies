@@ -2417,6 +2417,17 @@
   margin: 18px 0;
 }
 
+.dispute-user {
+  color: var(--text-mid);
+}
+
+.dispute-current-status {
+  font-weight: 600;
+  color: var(--gold);
+  margin-bottom: 10px;
+  letter-spacing: 0.5px;
+}
+
 .dispute-header {
   display: flex;
   justify-content: space-between;
@@ -3113,6 +3124,46 @@
   margin-top: 4px;
 }
 
+.m-dispute-entry-label {
+  font-size: 11px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 6px;
+}
+
+.m-dispute-card {
+  margin-bottom: 12px;
+}
+
+.m-dispute-text {
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--cream-soft);
+}
+
+.m-dispute-meta-line {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-mid);
+}
+
+.m-dispute-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.m-dispute-status-badge {
+  flex: 0 0 auto;
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
 .m-bottom-nav {
   position: fixed;
   left: 0;
@@ -3803,15 +3854,28 @@ html, body {
 
         <!-- DISPUTES PANEL -->
         <div id="m-claim-disputes-panel" class="m-claim-panel" style="display:none;">
-          {% if current_claim.disputes and current_claim.disputes|length > 0 %}
-            {% for dispute in current_claim.disputes %}
+          {% if current_claim.dispute_threads and current_claim.dispute_threads|length > 0 %}
+            {% for thread in current_claim.dispute_threads %}
+              {% set dispute = thread.entries[-1] %}
               <div class="m-dispute-card" style="margin-bottom:12px;">
+              <div class="m-dispute-entry-label">
+                {% if dispute.pushback_round_count and dispute.pushback_round_count > 0 %}
+                  Pushback {{ dispute.pushback_round_count }}
+                {% else %}
+                  Initial Dispute
+                {% endif %}
+              </div>
                 <div class="m-dispute-card-header">
-                  <div class="m-dispute-claim-title" style="font-size:13px;">
-                    {% if dispute.sections_disputed %}{{ dispute.sections_disputed | join(', ') }}{% endif %}
-                  </div>
-                  <span class="m-dispute-status-badge">{{ dispute.status or 'Open' }}</span>
-                </div>
+              <div>
+                <div class="m-dispute-claim-title" style="font-size:13px;">
+                  {% if dispute.sections_disputed %}{{ dispute.sections_disputed | join(', ') }}{% endif %}
+              </div>
+              <div class="m-dispute-meta-line">
+                {{ dispute.entered_by or dispute.username or 'User' }} • {{ dispute.date_submitted }}
+              </div>
+            </div>
+            <span class="m-dispute-status-badge">{{ dispute.status or 'Open' }}</span>
+          </div>
                 <div class="m-dispute-text" style="margin-top:8px;">{{ dispute.dispute_text }}</div>
                 {% if dispute.user_source_url %}
                   <div style="margin-top:8px;font-size:13px;">
@@ -3831,7 +3895,7 @@ html, body {
                     {{ dispute.full_excavation_outcome or 'No change to Full Excavation.' }}
                   </div>
                 {% endif %}
-                {% if dispute.ai_response and dispute.status == 'AI Responded' and (dispute.pushback_round_count or 0) < (3 if superuser else 1) %}
+                {% if loop.last and dispute.ai_response and dispute.status == 'AI Responded' and (dispute.pushback_round_count or 0) < (3 if superuser else 1) %}) %}
                   <div style="margin-top:10px;">
                     <button class="dispute-btn pushback-btn" type="button"
                       onclick="openPushbackModal('{{ dispute.record_id }}')"
@@ -4640,11 +4704,15 @@ html, body {
 
     {% for dispute in current_claim.disputes %}
       <div class="dispute-card">
-
+      <div class="dispute-current-status">
+        Current Status: {{ dispute.entry_label or 'Initial Dispute' }} → {{ dispute.status or 'Open' }}
+      </div>
+      
         <!-- Thread header: status + meta -->
         <div class="dispute-thread-header">
           <div class="dispute-thread-meta">
             <span class="dispute-status">{{ dispute.status or 'Open' }}</span>
+            <span class="dispute-user">{{ dispute.entered_by or dispute.username or 'User' }}</span>
             <span class="dispute-date">{{ dispute.date_submitted }}</span>
             {% if dispute.pushback_round_count and dispute.pushback_round_count > 0 %}
               <span class="dispute-round-badge">Round {{ dispute.pushback_round_count }}</span>
@@ -4692,7 +4760,7 @@ html, body {
         {% endif %}
 
         <!-- Pushback action -->
-        {% if dispute.ai_response and dispute.status == "AI Responded" and (dispute.pushback_round_count or 0) < (3 if superuser else 1) %}
+        {% if loop.last and dispute.ai_response and dispute.status == "AI Responded" and (dispute.pushback_round_count or 0) < (3 if superuser else 1) %}
           <div class="dispute-actions">
             <button
               class="dispute-btn pushback-btn"
