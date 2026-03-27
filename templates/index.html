@@ -3251,15 +3251,19 @@ html, body {
 
 /* ===== MOBILE / DESKTOP VISIBILITY CONTROL ===== */
 
-/* Hide mobile UI on desktop */
+/* Desktop */
 @media (min-width: 769px) {
   .mobile-shell,
   .m-bottom-nav {
     display: none !important;
   }
+
+  .desktop-shell {
+    display: block !important;
+  }
 }
 
-/* Mobile only */
+/* Mobile */
 @media (max-width: 768px) {
   .desktop-shell {
     display: none !important;
@@ -3267,9 +3271,6 @@ html, body {
 
   .mobile-shell {
     display: block !important;
-    min-height: 100vh;
-    padding-top: 70px;
-    padding-bottom: 78px;
   }
 
   .m-bottom-nav {
