@@ -3358,6 +3358,22 @@ html, body {
   padding-bottom: 0;
 }
 
+.archive-topic-group .archive-topic-body {
+  display: none;
+}
+
+.archive-topic-group.open .archive-topic-body {
+  display: block;
+}
+
+.archive-topic-group .archive-topic-chevron {
+  transition: transform 0.18s ease;
+}
+
+.archive-topic-group.open .archive-topic-chevron {
+  transform: rotate(180deg);
+}
+
 </style>
 </head>
 <body>
@@ -5256,11 +5272,7 @@ console.error('Dispute submission failed:', err);
   const group = header.closest('.archive-topic-group');
   if (!group) return;
 
-  const body = group.querySelector('.archive-topic-body');
-  if (!body) return;
-
-  header.classList.toggle('open');
-  body.classList.toggle('open');
+  group.classList.toggle('open');
 }
 
     function esc(text) {
