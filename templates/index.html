@@ -3452,6 +3452,13 @@ html, body {
       font-style: italic;
     }
 
+
+    /* Editor page uses the same grid as main-grid */
+    .editor-page-grid {
+      padding-top: 34px;
+      padding-bottom: 64px;
+    }
+
     /* ── EDITOR PAGE ── */
     .editor-page-section {
       max-width: 900px;
@@ -4251,6 +4258,7 @@ html, body {
   </div>
 </header>
 
+    {% if page_mode != "editor" %}
     <section class="hero-band">
       <div class="hero-inner">
         <div class="hero-card">
@@ -4314,6 +4322,7 @@ html, body {
     </div>
   </div>
 </section>
+    {% endif %}
 
     <!-- MAIN CLAIM ENTRY MODULE -->
     {% if page_mode != "editor" %}
@@ -4385,94 +4394,169 @@ html, body {
     {% endif %}
 
     {% if page_mode == "editor" %}
-    <section class="editor-page-section">
-      <article class="main-card">
-        <div class="archives-header" style="margin-bottom:0;">
-          <div class="archives-title-wrap">
-            <h2>Editor Queue</h2>
-            <div class="archives-sub">Disputes and review items currently needing human attention.</div>
+    <div class="main-grid editor-page-grid">
+      <div class="content-stack">
+        <article class="main-card">
+          <div class="archives-header" style="margin-bottom:0;">
+            <div class="archives-title-wrap">
+              <h2>Editor Queue</h2>
+              <div class="archives-sub">Disputes and review items currently needing human attention.</div>
+            </div>
+          </div>
+
+          <div class="excavation-tabs editor-tabs" style="margin-bottom:20px;">
+            <button type="button" class="tab-btn active" id="editor-tab-escalated" onclick="setEditorTab('Escalated to Human', this)">
+              Escalated to Human
+            </button>
+            <button class="tab-btn" id="editor-tab-ai" onclick="setEditorTab('AI Recommended Update', this)">
+              AI Recommended Updates
+            </button>
+            <button class="tab-btn" id="editor-tab-potential" onclick="setEditorTab('Potential Dispute / Pushback Issue', this)">
+              Potential Issues
+            </button>
+            <button class="tab-btn" id="editor-tab-current" onclick="setEditorTab('Current Dispute', this)">
+              Current Disputes
+            </button>
+          </div>
+
+          <div class="editor-queue-scroll">
+            <div id="editor-empty-state" style="display:none; text-align:center; padding:32px 0; color:var(--text-mid); font-style:italic; font-size:16px;">
+              This Category currently has no claims assigned to it.
+            </div>
+
+            {% if editor_queue and editor_queue|length > 0 %}
+              <div style="display:grid; gap:16px;">
+                {% for item in editor_queue %}
+                  <div class="archive-card editor-card"
+                       data-category="{{ item.editor_queue_category or 'Current Dispute' }}"
+                       style="padding:18px;">
+                    <div class="archive-card-title">
+                      <a href="/claim/{{ item.claim_slug }}">{{ item.title }}</a>
+                    </div>
+
+                    <div class="archive-card-meta" style="margin-bottom:10px;">
+                      <span class="status-badge">{{ item.status }}</span>
+                      {% if item.date %}
+                        <span class="micro-meta">{{ item.date }}</span>
+                      {% endif %}
+                      {% if item.escalated %}
+                        <span class="topic-tag">Escalated</span>
+                      {% endif %}
+                    </div>
+
+                    <div class="archive-card-dek" style="margin-bottom:10px;">
+                      <strong>Dispute:</strong> {{ item.dispute_text }}
+                    </div>
+
+                    {% if item.ai_recommended_changes %}
+                      <div class="editor-note-block" style="margin-bottom:10px;">
+                        <strong>AI Recommended Changes:</strong><br>
+                        {{ item.ai_recommended_changes }}
+                      </div>
+                    {% endif %}
+
+                    {% if item.ai_response %}
+                      <div class="editor-note-block" style="margin-bottom:10px;">
+                        <strong>AI Response:</strong> {{ item.ai_response }}
+                      </div>
+                    {% endif %}
+
+                    <div class="archive-card-footer">
+                      <div class="archive-byline">
+                        <strong>Review Target:</strong> Claim dispute
+                      </div>
+                      <div style="display:flex; gap:8px;">
+                        <a href="/claim/{{ item.claim_slug }}" class="gold-btn" style="text-decoration:none;">Open Claim</a>
+                        <form method="POST" action="/editor/resolve/{{ item.record_id }}" style="margin:0;">
+                          <button type="submit" class="gold-btn" style="background:#2e7d32;">Resolve</button>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div style="text-align:center; padding:32px 0; color:var(--text-mid); font-style:italic; font-size:16px;">
+                This Category currently has no claims assigned to it.
+              </div>
+            {% endif %}
+          </div>
+        </article>
+      </div>
+
+      <!-- EDITOR SIDEBAR -->
+      <aside class="sidebar">
+
+        <!-- Layer Reference Card -->
+        <div class="sidebar-card">
+          <div class="sidebar-title">The Six Layers</div>
+          <div style="display:grid; gap:10px;">
+            <div class="account-detail">
+              <strong>01 — Direct Facts</strong>
+              What the documented record actually shows. No inference.
+            </div>
+            <div class="account-detail">
+              <strong>02 — Adjacent Facts</strong>
+              What the claim leaves out. Context that changes the picture.
+            </div>
+            <div class="account-detail">
+              <strong>03 — Root Concern</strong>
+              The real issue beneath the rhetoric. What the argument is actually about.
+            </div>
+            <div class="account-detail">
+              <strong>04 — Values Divergence</strong>
+              Where factual debate becomes a values conflict. Not a fact dispute anymore.
+            </div>
+            <div class="account-detail">
+              <strong>05 — Constitutional Framework</strong>
+              What the founders wrote and why it still matters to this claim.
+            </div>
+            <div class="account-detail">
+              <strong>06 — Common Ground</strong>
+              Real overlap only. Narrow, specific, achievable. No manufactured unity.
+            </div>
           </div>
         </div>
 
-        <div class="excavation-tabs editor-tabs" style="margin-bottom:20px;">
-          <button type="button" class="tab-btn active" id="editor-tab-escalated" onclick="setEditorTab('Escalated to Human', this)">
-            Escalated to Human
-          </button>
-          <button class="tab-btn" id="editor-tab-ai" onclick="setEditorTab('AI Recommended Update', this)">
-            AI Recommended Updates
-          </button>
-          <button class="tab-btn" id="editor-tab-potential" onclick="setEditorTab('Potential Dispute / Pushback Issue', this)">
-            Potential Issues
-          </button>
-          <button class="tab-btn" id="editor-tab-current" onclick="setEditorTab('Current Dispute', this)">
-            Current Disputes
-          </button>
-        </div>
-
-        <div class="editor-queue-scroll">
-          <div id="editor-empty-state" style="display:none; text-align:center; padding:32px 0; color:var(--text-mid); font-style:italic; font-size:16px;">
-            This Category currently has no claims assigned to it.
-          </div>
-
-          {% if editor_queue and editor_queue|length > 0 %}
-            <div style="display:grid; gap:16px;">
-              {% for item in editor_queue %}
-                <div class="archive-card editor-card"
-                     data-category="{{ item.editor_queue_category or 'Current Dispute' }}"
-                     style="padding:18px;">
-                  <div class="archive-card-title">
-                    <a href="/claim/{{ item.claim_slug }}">{{ item.title }}</a>
-                  </div>
-
-                  <div class="archive-card-meta" style="margin-bottom:10px;">
-                    <span class="status-badge">{{ item.status }}</span>
-                    {% if item.date %}
-                      <span class="micro-meta">{{ item.date }}</span>
+        <!-- Recent Claims Card -->
+        <div class="sidebar-card">
+          <div class="sidebar-title">Recent Claims</div>
+          {% if recent_claims %}
+            <div class="recent-list">
+              {% for claim in recent_claims[:5] %}
+                {% set rv = claim.verdict or claim.overall_verdict or 'Unproven' %}
+                {% set rv_lower = rv|lower %}
+                <article class="recent-item">
+                  <a class="recent-link" href="/claim/{{ claim.slug }}">
+                    <div class="recent-title">{{ claim.title }}</div>
+                  </a>
+                  <div class="recent-meta">
+                    {% if claim.date %}
+                      <span class="recent-date">{{ claim.date }}</span>
                     {% endif %}
-                    {% if item.escalated %}
-                      <span class="topic-tag">Escalated</span>
-                    {% endif %}
+                    <span class="verdict-pill
+                      {% if rv_lower == 'true' %}v-true
+                      {% elif 'mostly true' in rv_lower %}v-mostly-true
+                      {% elif 'substantially true' in rv_lower %}v-substantially-true
+                      {% elif 'plausible' in rv_lower or 'mixed' in rv_lower %}v-plausible
+                      {% elif rv_lower == 'contested' %}v-contested
+                      {% elif rv_lower == 'exaggerated' %}v-exaggerated
+                      {% elif rv_lower == 'misleading' %}v-misleading
+                      {% elif rv_lower == 'false' %}v-false
+                      {% else %}v-unproven{% endif %}">
+                      {{ rv }}
+                    </span>
                   </div>
-
-                  <div class="archive-card-dek" style="margin-bottom:10px;">
-                    <strong>Dispute:</strong> {{ item.dispute_text }}
-                  </div>
-
-                  {% if item.ai_recommended_changes %}
-                    <div class="editor-note-block" style="margin-bottom:10px;">
-                      <strong>AI Recommended Changes:</strong><br>
-                      {{ item.ai_recommended_changes }}
-                    </div>
-                  {% endif %}
-
-                  {% if item.ai_response %}
-                    <div class="editor-note-block" style="margin-bottom:10px;">
-                      <strong>AI Response:</strong> {{ item.ai_response }}
-                    </div>
-                  {% endif %}
-
-                  <div class="archive-card-footer">
-                    <div class="archive-byline">
-                      <strong>Review Target:</strong> Claim dispute
-                    </div>
-                    <div style="display:flex; gap:8px;">
-                      <a href="/claim/{{ item.claim_slug }}" class="gold-btn" style="text-decoration:none;">Open Claim</a>
-                      <form method="POST" action="/editor/resolve/{{ item.record_id }}" style="margin:0;">
-                        <button type="submit" class="gold-btn" style="background:#2e7d32;">Resolve</button>
-                      </form>
-                    </div>
-                  </div>
-                </div>
+                </article>
               {% endfor %}
             </div>
           {% else %}
-            <div style="text-align:center; padding:32px 0; color:var(--text-mid); font-style:italic; font-size:16px;">
-              This Category currently has no claims assigned to it.
-            </div>
+            <div class="about-text">No recent claims yet.</div>
           {% endif %}
         </div>
-      </article>
-    </section>
+
+      </aside>
+    </div>
     {% endif %}
 
     {% if page_mode != "editor" %}
