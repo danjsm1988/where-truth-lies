@@ -3452,6 +3452,51 @@ html, body {
       font-style: italic;
     }
 
+    /* ── EDITOR PAGE ── */
+    .editor-page-section {
+      max-width: 900px;
+      margin: 32px auto;
+      padding: 0 24px;
+    }
+
+    /* Scrollable queue container with gold right bar */
+    .editor-queue-scroll {
+      max-height: 70vh;
+      overflow-y: auto;
+      padding-right: 20px;
+      border-right: 3px solid rgba(201,168,76,.45);
+      padding-left: 4px;
+      margin-top: 4px;
+    }
+
+    /* Gold scrollbar */
+    .editor-queue-scroll::-webkit-scrollbar {
+      width: 5px;
+    }
+    .editor-queue-scroll::-webkit-scrollbar-track {
+      background: rgba(255,255,255,.04);
+      border-radius: 4px;
+    }
+    .editor-queue-scroll::-webkit-scrollbar-thumb {
+      background: rgba(201,168,76,.55);
+      border-radius: 4px;
+    }
+    .editor-queue-scroll::-webkit-scrollbar-thumb:hover {
+      background: rgba(201,168,76,.8);
+    }
+
+    /* Editor note blocks inside cards */
+    .editor-note-block {
+      background: rgba(201,168,76,.05);
+      border-left: 3px solid rgba(201,168,76,.3);
+      padding: 10px 14px;
+      border-radius: 0 8px 8px 0;
+      font-size: 14px;
+      color: var(--text-light);
+      line-height: 1.6;
+    }
+
+
 </style>
 </head>
 <body>
@@ -4159,6 +4204,7 @@ html, body {
       <a href="#methodology-section">Methodology</a>
 
       {% if true_superuser %}
+        <a href="/editor">Editor Queue</a>
         <span class="super-badge">Super User</span>
       {% elif superuser %}
         <span class="super-badge">Full Access</span>
@@ -4270,6 +4316,7 @@ html, body {
 </section>
 
     <!-- MAIN CLAIM ENTRY MODULE -->
+    {% if page_mode != "editor" %}
     <section class="claim-entry-band" id="claim-entry-module">
       <div class="claim-entry-inner">
         <div class="claim-entry-card">
@@ -4335,44 +4382,43 @@ html, body {
         </div>
       </div>
     </section>
+    {% endif %}
 
     {% if page_mode == "editor" %}
-    <section class="main-grid">
-      <div class="content-stack">
-        <article class="main-card">
-          <div class="archives-header">
-            <div class="archives-title-wrap">
-              <h2>Editor Queue</h2>
-              <div class="archives-sub">Disputes and review items currently needing human attention.</div>
-            </div>
+    <section class="editor-page-section">
+      <article class="main-card">
+        <div class="archives-header" style="margin-bottom:0;">
+          <div class="archives-title-wrap">
+            <h2>Editor Queue</h2>
+            <div class="archives-sub">Disputes and review items currently needing human attention.</div>
+          </div>
+        </div>
+
+        <div class="excavation-tabs editor-tabs" style="margin-bottom:20px;">
+          <button type="button" class="tab-btn active" id="editor-tab-escalated" onclick="setEditorTab('Escalated to Human', this)">
+            Escalated to Human
+          </button>
+          <button class="tab-btn" id="editor-tab-ai" onclick="setEditorTab('AI Recommended Update', this)">
+            AI Recommended Updates
+          </button>
+          <button class="tab-btn" id="editor-tab-potential" onclick="setEditorTab('Potential Dispute / Pushback Issue', this)">
+            Potential Issues
+          </button>
+          <button class="tab-btn" id="editor-tab-current" onclick="setEditorTab('Current Dispute', this)">
+            Current Disputes
+          </button>
+        </div>
+
+        <div class="editor-queue-scroll">
+          <div id="editor-empty-state" style="display:none; text-align:center; padding:32px 0; color:var(--text-mid); font-style:italic; font-size:16px;">
+            This Category currently has no claims assigned to it.
           </div>
 
-      <div class="excavation-tabs" style="margin-bottom:20px;">
-        <button type="button" class="tab-btn active" id="editor-tab-escalated" onclick="setEditorTab('Escalated to Human', this)">
-          Escalated to Human
-        </button>
-        <button class="tab-btn" id="editor-tab-ai" onclick="setEditorTab('AI Recommended Update', this)">
-          AI Recommended Updates
-        </button>
-        <button class="tab-btn" id="editor-tab-potential" onclick="setEditorTab('Potential Dispute / Pushback Issue', this)">
-          Potential Issues
-        </button>
-        <button class="tab-btn" id="editor-tab-current" onclick="setEditorTab('Current Dispute', this)">
-          Current Disputes
-        </button>
-      </div>
-
           {% if editor_queue and editor_queue|length > 0 %}
-            <div id="editor-empty-state" class="empty-state" style="display:none;">
-              <div class="empty-seal"><div class="seal-eye"></div></div>
-              <div class="empty-title">No items in this queue</div>
-              <div class="empty-sub">There are currently no editor items for this category.</div>
-            </div>
-
             <div style="display:grid; gap:16px;">
               {% for item in editor_queue %}
-                <div class="archive-card editor-card" 
-                     data-category="{{ item.editor_queue_category or 'Current Dispute' }}" 
+                <div class="archive-card editor-card"
+                     data-category="{{ item.editor_queue_category or 'Current Dispute' }}"
                      style="padding:18px;">
                   <div class="archive-card-title">
                     <a href="/claim/{{ item.claim_slug }}">{{ item.title }}</a>
@@ -4393,14 +4439,14 @@ html, body {
                   </div>
 
                   {% if item.ai_recommended_changes %}
-                    <div class="editorial-note" style="margin-bottom:10px;">
+                    <div class="editor-note-block" style="margin-bottom:10px;">
                       <strong>AI Recommended Changes:</strong><br>
                       {{ item.ai_recommended_changes }}
                     </div>
                   {% endif %}
 
                   {% if item.ai_response %}
-                    <div class="editorial-note" style="margin-bottom:10px;">
+                    <div class="editor-note-block" style="margin-bottom:10px;">
                       <strong>AI Response:</strong> {{ item.ai_response }}
                     </div>
                   {% endif %}
@@ -4411,7 +4457,6 @@ html, body {
                     </div>
                     <div style="display:flex; gap:8px;">
                       <a href="/claim/{{ item.claim_slug }}" class="gold-btn" style="text-decoration:none;">Open Claim</a>
-
                       <form method="POST" action="/editor/resolve/{{ item.record_id }}" style="margin:0;">
                         <button type="submit" class="gold-btn" style="background:#2e7d32;">Resolve</button>
                       </form>
@@ -4421,26 +4466,12 @@ html, body {
               {% endfor %}
             </div>
           {% else %}
-            <div class="empty-state">
-              <div class="empty-seal"><div class="seal-eye"></div></div>
-              <div class="empty-title">No items need review</div>
-              <div class="empty-sub">The editor queue is currently clear.</div>
+            <div style="text-align:center; padding:32px 0; color:var(--text-mid); font-style:italic; font-size:16px;">
+              This Category currently has no claims assigned to it.
             </div>
           {% endif %}
-        </article>
-      </div>
-
-      <aside class="sidebar">
-        <div class="sidebar-card">
-          <div class="sidebar-title">Editor Notes</div>
-          <div class="about-text">
-            This page is the first pass of the human review queue. Right now it shows escalated disputes and review-needed items pulled from Airtable.
-          </div>
-          <div class="about-text">
-            Next we will add editor actions like resolve, override, and approve.
-          </div>
         </div>
-      </aside>
+      </article>
     </section>
     {% endif %}
 
@@ -6049,7 +6080,8 @@ console.error('Dispute submission failed:', err);
         if (shouldShow) visibleCount += 1;
       });
 
-      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      // Scope only to editor tabs — do not touch claim page tabs
+      document.querySelectorAll(".editor-tabs .tab-btn").forEach(b => b.classList.remove("active"));
       if (btn) btn.classList.add("active");
 
       const emptyState = document.getElementById("editor-empty-state");
