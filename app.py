@@ -1594,6 +1594,31 @@ def editor_page():
     except Exception as e:
         return f"Editor load error: {str(e)}", 500
 
+@app.route("/editor/resolve/<record_id>", methods=["POST"])
+def resolve_editor_item(record_id):
+    if not session.get("logged_in"):
+        return redirect("/login")
+
+    if not session.get("true_superuser"):
+        return "Unauthorized", 403
+
+    try:
+        response = update_dispute_record(
+            record_id,
+            {
+                "Status": "Resolved",
+                "Escalated To Human": False
+            }
+        )
+
+        if not response.ok:
+            return f"Resolve error: {response.text}", 500
+
+        return redirect("/editor")
+
+    except Exception as e:
+        return f"Resolve error: {str(e)}", 500
+
 @app.route("/search")
 def search_page():
     if not session.get("logged_in"):

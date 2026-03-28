@@ -4379,8 +4379,12 @@ html, body {
                     <div class="archive-byline">
                       <strong>Review Target:</strong> Claim dispute
                     </div>
-                    <div>
+                    <div style="display:flex; gap:8px;">
                       <a href="/claim/{{ item.claim_slug }}" class="gold-btn" style="text-decoration:none;">Open Claim</a>
+
+                      <form method="POST" action="/editor/resolve/{{ item.record_id }}" style="margin:0;">
+                        <button type="submit" class="gold-btn" style="background:#2e7d32;">Resolve</button>
+                      </form>
                     </div>
                   </div>
                 </div>
