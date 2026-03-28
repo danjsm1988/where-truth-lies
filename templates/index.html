@@ -3509,6 +3509,43 @@ html, body {
     }
 
 
+    /* Clipboard paste offer */
+    .m-paste-offer {
+      background: rgba(201,168,76,.08);
+      border: 1px solid rgba(201,168,76,.28);
+      border-radius: 10px;
+      padding: 10px 14px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .m-paste-text {
+      font-size: 14px;
+      color: var(--text-light);
+      font-style: italic;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .m-paste-btn {
+      appearance: none;
+      border: none;
+      background: rgba(201,168,76,.18);
+      color: var(--gold);
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 10px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: 7px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      flex: 0 0 auto;
+    }
+
 </style>
 </head>
 <body>
@@ -6123,8 +6160,9 @@ console.error('Dispute submission failed:', err);
         if (!scanner || document.getElementById('mPasteOffer')) return;
         const offer = document.createElement('div');
         offer.id = 'mPasteOffer';
-        offer.style.cssText = 'background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.28);border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;';
-        offer.innerHTML = '<span style="font-size:14px;color:var(--text-light);font-style:italic;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + text.slice(0, 60) + (text.length > 60 ? '...' : '') + '</span><button onclick="mUsePastedText()" style="appearance:none;border:none;background:rgba(201,168,76,.18);color:var(--gold);font-family:\'Libre Baskerville\',serif;font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:7px 12px;border-radius:8px;cursor:pointer;white-space:nowrap;flex:0 0 auto;">Use This</button>';
+        
+        offer.className = 'm-paste-offer';
+        offer.innerHTML = '<span class="m-paste-text">' + text.slice(0, 60) + (text.length > 60 ? '...' : '') + '</span><button class="m-paste-btn" onclick="mUsePastedText()">Use This</button>';
         mInput.parentNode.insertBefore(offer, mInput);
         window._mClipboardText = text;
       } catch (e) { /* clipboard permission not granted or unavailable */ }
