@@ -4071,6 +4071,42 @@ html, body {
       </div>
       {% endif %}
 
+      
+
+           {% if page_mode == "editor" %}
+      <div class="m-profile" id="mEditor">
+        <div class="m-profile-title">Editor Queue</div>
+
+        {% if editor_queue and editor_queue|length > 0 %}
+          {% for item in editor_queue %}
+            <div class="m-profile-card" style="margin-bottom:12px;">
+              <div class="m-profile-label">Claim</div>
+              <div class="m-profile-value" style="font-size:16px; line-height:1.4;">{{ item.title }}</div>
+
+              <div class="m-profile-label" style="margin-top:10px;">Status</div>
+              <div class="m-profile-value">{{ item.status }}</div>
+
+              <div class="m-profile-label" style="margin-top:10px;">Dispute</div>
+              <div class="m-profile-value" style="font-size:15px; line-height:1.55;">{{ item.dispute_text }}</div>
+
+              {% if item.ai_response %}
+              <div class="m-profile-label" style="margin-top:10px;">AI Response</div>
+              <div class="m-profile-value" style="font-size:15px; line-height:1.55;">{{ item.ai_response }}</div>
+              {% endif %}
+
+              <div style="margin-top:12px;">
+                <a href="/claim/{{ item.claim_slug }}" class="m-logout-btn" style="display:block;text-align:center;text-decoration:none;">Open Claim</a>
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="m-profile-card">
+            <div class="m-profile-value">No items currently need editor review.</div>
+          </div>
+        {% endif %}
+      </div>
+      {% endif %}
+
     </div><!-- end m-content -->
 
     <!-- BOTTOM NAV -->
@@ -4299,6 +4335,82 @@ html, body {
         </div>
       </div>
     </section>
+
+    {% if page_mode == "editor" %}
+    <section class="main-grid">
+      <div class="content-stack">
+        <article class="main-card">
+          <div class="archives-header">
+            <div class="archives-title-wrap">
+              <h2>Editor Queue</h2>
+              <div class="archives-sub">Disputes and review items currently needing human attention.</div>
+            </div>
+          </div>
+
+          {% if editor_queue and editor_queue|length > 0 %}
+            <div style="display:grid; gap:16px;">
+              {% for item in editor_queue %}
+                <div class="archive-card" style="padding:18px;">
+                  <div class="archive-card-title">
+                    <a href="/claim/{{ item.claim_slug }}">{{ item.title }}</a>
+                  </div>
+
+                  <div class="archive-card-meta" style="margin-bottom:10px;">
+                    <span class="status-badge">{{ item.status }}</span>
+                    {% if item.date %}
+                      <span class="micro-meta">{{ item.date }}</span>
+                    {% endif %}
+                    {% if item.escalated %}
+                      <span class="topic-tag">Escalated</span>
+                    {% endif %}
+                  </div>
+
+                  <div class="archive-card-dek" style="margin-bottom:10px;">
+                    <strong>Dispute:</strong> {{ item.dispute_text }}
+                  </div>
+
+                  {% if item.ai_response %}
+                    <div class="editorial-note" style="margin-bottom:10px;">
+                      <strong>AI Response:</strong> {{ item.ai_response }}
+                    </div>
+                  {% endif %}
+
+                  <div class="archive-card-footer">
+                    <div class="archive-byline">
+                      <strong>Review Target:</strong> Claim dispute
+                    </div>
+                    <div>
+                      <a href="/claim/{{ item.claim_slug }}" class="gold-btn" style="text-decoration:none;">Open Claim</a>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="empty-state">
+              <div class="empty-seal"><div class="seal-eye"></div></div>
+              <div class="empty-title">No items need review</div>
+              <div class="empty-sub">The editor queue is currently clear.</div>
+            </div>
+          {% endif %}
+        </article>
+      </div>
+
+      <aside class="sidebar">
+        <div class="sidebar-card">
+          <div class="sidebar-title">Editor Notes</div>
+          <div class="about-text">
+            This page is the first pass of the human review queue. Right now it shows escalated disputes and review-needed items pulled from Airtable.
+          </div>
+          <div class="about-text">
+            Next we will add editor actions like resolve, override, and approve.
+          </div>
+        </div>
+      </aside>
+    </section>
+    {% endif %}
+
+    {% if page_mode != "editor" %}
 
     <main class="main-grid">
       <div class="content-stack">
@@ -5035,7 +5147,8 @@ html, body {
           <div class="about-seal">Ubi Veritas Latet</div>
         </div>
       </aside>
-    </main>
+        </main>
+    {% endif %}
 
     <footer class="footer">
       <div class="footer-inner">
