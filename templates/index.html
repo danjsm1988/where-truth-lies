@@ -6057,7 +6057,7 @@ console.error('Dispute submission failed:', err);
         emptyState.style.display = visibleCount === 0 ? "block" : "none";
       }
     }
-      document.addEventListener("DOMContentLoaded", function () {
+      window.addEventListener("load", function () {
         const defaultTab = document.getElementById("editor-tab-escalated");
         if (defaultTab) {
           setEditorTab("Escalated to Human", defaultTab);
