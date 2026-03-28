@@ -4348,7 +4348,7 @@ html, body {
           </div>
 
       <div class="excavation-tabs" style="margin-bottom:20px;">
-        <button class="tab-btn active" id="editor-tab-escalated" onclick="setEditorTab('Escalated to Human', this)">
+        <button type="button" class="tab-btn active" id="editor-tab-escalated" onclick="setEditorTab('Escalated to Human', this)">
           Escalated to Human
         </button>
         <button class="tab-btn" id="editor-tab-ai" onclick="setEditorTab('AI Recommended Update', this)">
@@ -4363,6 +4363,12 @@ html, body {
       </div>
 
           {% if editor_queue and editor_queue|length > 0 %}
+            <div id="editor-empty-state" class="empty-state" style="display:none;">
+              <div class="empty-seal"><div class="seal-eye"></div></div>
+              <div class="empty-title">No items in this queue</div>
+              <div class="empty-sub">There are currently no editor items for this category.</div>
+            </div>
+
             <div style="display:grid; gap:16px;">
               {% for item in editor_queue %}
                 <div class="archive-card editor-card" 
@@ -6034,14 +6040,30 @@ console.error('Dispute submission failed:', err);
     function setEditorTab(tab, btn) {
       currentEditorTab = tab;
 
+      let visibleCount = 0;
+
       document.querySelectorAll(".editor-card").forEach(el => {
         const category = el.getAttribute("data-category");
-        el.style.display = (category === tab) ? "block" : "none";
+        const shouldShow = (category === tab);
+        el.style.display = shouldShow ? "block" : "none";
+        if (shouldShow) visibleCount += 1;
       });
 
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
       if (btn) btn.classList.add("active");
+
+      const emptyState = document.getElementById("editor-empty-state");
+      if (emptyState) {
+        emptyState.style.display = visibleCount === 0 ? "block" : "none";
+      }
     }
+      document.addEventListener("DOMContentLoaded", function () {
+        const defaultTab = document.getElementById("editor-tab-escalated");
+        if (defaultTab) {
+          setEditorTab("Escalated to Human", defaultTab);
+        }
+      });
+    
 
   </script>
 </body>
