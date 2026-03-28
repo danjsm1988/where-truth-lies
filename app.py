@@ -1572,6 +1572,8 @@ def editor_page():
                 "dispute_text": f.get("Dispute Text", ""),
                 "ai_response": f.get("AI Response", ""),
                 "ai_recommended_changes": f.get("AI Recommended Changes", ""),
+                "ai_initial_queue_category": f.get("AI Initial Queue Category", ""),
+                "editor_queue_category": f.get("Editor Queue Category", ""),
                 "status": f.get("Status", "Open"),
                 "date": (f.get("Date Submitted", "") or "")[:10],
                 "escalated": f.get("Escalated To Human", False)

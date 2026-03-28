@@ -4347,10 +4347,19 @@ html, body {
             </div>
           </div>
 
+      <div style="display:flex; gap:10px; margin:16px 0 20px 0; flex-wrap:wrap;">
+        <button class="gold-btn" onclick="setEditorTab('Escalated to Human')">Escalated</button>
+        <button class="gold-btn" onclick="setEditorTab('AI Recommended Update')">AI Updates</button>
+        <button class="gold-btn" onclick="setEditorTab('Potential Dispute / Pushback Issue')">Potential Issues</button>
+        <button class="gold-btn" onclick="setEditorTab('Current Dispute')">Current</button>
+      </div>
+
           {% if editor_queue and editor_queue|length > 0 %}
             <div style="display:grid; gap:16px;">
               {% for item in editor_queue %}
-                <div class="archive-card" style="padding:18px;">
+                <div class="archive-card editor-card" 
+                     data-category="{{ item.editor_queue_category or 'Current Dispute' }}" 
+                     style="padding:18px;">
                   <div class="archive-card-title">
                     <a href="/claim/{{ item.claim_slug }}">{{ item.title }}</a>
                   </div>
@@ -6010,6 +6019,17 @@ console.error('Dispute submission failed:', err);
       if (disputesPanel) disputesPanel.style.display = (view === 'disputes') ? 'block' : 'none';
       document.querySelectorAll('.m-claim-tab-btn').forEach(b => b.classList.remove('active'));
       if (btn) btn.classList.add('active');
+    }
+
+    let currentEditorTab = "Escalated to Human";
+
+    function setEditorTab(tab) {
+      currentEditorTab = tab;
+
+      document.querySelectorAll(".editor-card").forEach(el => {
+        const category = el.getAttribute("data-category");
+        el.style.display = (category === tab) ? "block" : "none";
+      });
     }
 
   </script>
