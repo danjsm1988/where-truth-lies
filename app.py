@@ -1565,6 +1565,23 @@ def editor_page():
         for record in records:
             f = record.get("fields", {})
 
+            # Determine queue category — use stored value or infer from record state
+            stored_category = (f.get("Editor Queue Category") or "").strip()
+            is_escalated = bool(f.get("Escalated To Human", False))
+            has_ai_response = bool(f.get("AI Response", ""))
+            has_ai_recommended = bool(f.get("AI Recommended Changes", ""))
+
+            if stored_category:
+                queue_category = stored_category
+            elif is_escalated:
+                queue_category = "Escalated to Human"
+            elif has_ai_recommended:
+                queue_category = "AI Recommended Update"
+            elif has_ai_response:
+                queue_category = "Potential Dispute / Pushback Issue"
+            else:
+                queue_category = "Current Dispute"
+
             editor_queue.append({
                 "record_id": record.get("id"),
                 "title": f.get("Original Claim Title", "Untitled"),
@@ -1573,10 +1590,10 @@ def editor_page():
                 "ai_response": f.get("AI Response", ""),
                 "ai_recommended_changes": f.get("AI Recommended Changes", ""),
                 "ai_initial_queue_category": f.get("AI Initial Queue Category", ""),
-                "editor_queue_category": f.get("Editor Queue Category", ""),
+                "editor_queue_category": queue_category,
                 "status": f.get("Status", "Open"),
                 "date": (f.get("Date Submitted", "") or "")[:10],
-                "escalated": f.get("Escalated To Human", False)
+                "escalated": is_escalated
         })
 
         return render_template(
