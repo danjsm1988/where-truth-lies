@@ -1571,10 +1571,11 @@ def editor_page():
                 "claim_slug": f.get("Claim Slug", ""),
                 "dispute_text": f.get("Dispute Text", ""),
                 "ai_response": f.get("AI Response", ""),
+                "ai_recommended_changes": f.get("AI Recommended Changes", ""),
                 "status": f.get("Status", "Open"),
                 "date": (f.get("Date Submitted", "") or "")[:10],
                 "escalated": f.get("Escalated To Human", False)
-            })
+        })
 
         return render_template(
             "index.html",

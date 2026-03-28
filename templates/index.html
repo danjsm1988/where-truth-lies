@@ -4369,6 +4369,13 @@ html, body {
                     <strong>Dispute:</strong> {{ item.dispute_text }}
                   </div>
 
+                  {% if item.ai_recommended_changes %}
+                    <div class="editorial-note" style="margin-bottom:10px;">
+                      <strong>AI Recommended Changes:</strong><br>
+                      {{ item.ai_recommended_changes }}
+                    </div>
+                  {% endif %}
+
                   {% if item.ai_response %}
                     <div class="editorial-note" style="margin-bottom:10px;">
                       <strong>AI Response:</strong> {{ item.ai_response }}
