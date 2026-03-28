@@ -6124,7 +6124,7 @@ console.error('Dispute submission failed:', err);
         const offer = document.createElement('div');
         offer.id = 'mPasteOffer';
         offer.style.cssText = 'background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.28);border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;';
-        offer.innerHTML = '<span style="font-size:14px;color:var(--text-light);font-style:italic;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + text.slice(0, 60) + (text.length > 60 ? '...' : '') + '</span><button onclick="mUsePastedText()" style="appearance:none;border:none;background:rgba(201,168,76,.18);color:var(--gold);font-family:&quot;Libre Baskerville&quot;,serif;font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:7px 12px;border-radius:8px;cursor:pointer;white-space:nowrap;flex:0 0 auto;">Use This</button>';
+        offer.innerHTML = '<span style="font-size:14px;color:var(--text-light);font-style:italic;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + text.slice(0, 60) + (text.length > 60 ? '...' : '') + '</span><button onclick="mUsePastedText()" style="appearance:none;border:none;background:rgba(201,168,76,.18);color:var(--gold);font-family:\'Libre Baskerville\',serif;font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:7px 12px;border-radius:8px;cursor:pointer;white-space:nowrap;flex:0 0 auto;">Use This</button>';
         mInput.parentNode.insertBefore(offer, mInput);
         window._mClipboardText = text;
       } catch (e) { /* clipboard permission not granted or unavailable */ }
@@ -6155,6 +6155,14 @@ console.error('Dispute submission failed:', err);
       if (btn) btn.classList.add('active');
     }
 
+    // Human-readable label map for empty state messages
+    const editorTabLabels = {
+      "Escalated to Human": "Escalated to Human",
+      "AI Recommended Update": "AI Recommended Updates",
+      "Potential Dispute / Pushback Issue": "Potential Issues",
+      "Current Dispute": "Current Disputes"
+    };
+
     let currentEditorTab = "Escalated to Human";
 
     function setEditorTab(tab, btn) {
@@ -6162,29 +6170,39 @@ console.error('Dispute submission failed:', err);
 
       let visibleCount = 0;
 
-      document.querySelectorAll(".editor-card").forEach(el => {
+      // Show/hide cards by category — use flex to match .archive-card CSS
+      document.querySelectorAll(".editor-card").forEach(function(el) {
         const category = el.getAttribute("data-category");
-        const shouldShow = (category === tab);
-        el.style.display = shouldShow ? "block" : "none";
-        if (shouldShow) visibleCount += 1;
+        if (category === tab) {
+          el.style.display = "flex";
+          visibleCount++;
+        } else {
+          el.style.display = "none";
+        }
       });
 
-      // Scope only to editor tabs — do not touch claim page tabs
-      document.querySelectorAll(".editor-tabs .tab-btn").forEach(b => b.classList.remove("active"));
+      // Update active tab — only editor tabs, never claim page tabs
+      document.querySelectorAll(".editor-tabs .tab-btn").forEach(function(b) {
+        b.classList.remove("active");
+      });
       if (btn) btn.classList.add("active");
 
+      // Show category-specific empty state when no cards match
       const emptyState = document.getElementById("editor-empty-state");
       if (emptyState) {
-        emptyState.textContent = "There are no claims for this category: " + tab;
+        const label = editorTabLabels[tab] || tab;
+        emptyState.textContent = "There are no claims for " + label + ".";
         emptyState.style.display = visibleCount === 0 ? "block" : "none";
       }
     }
-      window.addEventListener("load", function () {
-        const defaultTab = document.getElementById("editor-tab-escalated");
-        if (defaultTab) {
-          setEditorTab("Escalated to Human", defaultTab);
-        }
-      });
+
+    // Initialize default tab on page load
+    window.addEventListener("load", function() {
+      if (document.querySelector(".editor-tabs")) {
+        const defaultBtn = document.getElementById("editor-tab-escalated");
+        setEditorTab("Escalated to Human", defaultBtn);
+      }
+    });
     
 
   </script>
