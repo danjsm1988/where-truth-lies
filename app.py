@@ -1544,6 +1544,55 @@ def disputes_page():
         search_results=[]
     )
 
+@app.route("/editor")
+def editor_page():
+    if not session.get("logged_in"):
+        return redirect("/login")
+
+    if not session.get("true_superuser"):
+        return "Unauthorized", 403
+
+    try:
+        params = {
+            "filterByFormula": "OR({Escalated To Human}=TRUE(), {Status}='Needs Review')",
+            "sort[0][field]": "Last Updated",
+            "sort[0][direction]": "desc"
+        }
+
+        records = airtable_get_all(AIRTABLE_DISPUTES_TABLE_NAME, params=params)
+
+        editor_queue = []
+        for record in records:
+            f = record.get("fields", {})
+
+            editor_queue.append({
+                "record_id": record.get("id"),
+                "title": f.get("Original Claim Title", "Untitled"),
+                "claim_slug": f.get("Claim Slug", ""),
+                "dispute_text": f.get("Dispute Text", ""),
+                "ai_response": f.get("AI Response", ""),
+                "status": f.get("Status", "Open"),
+                "date": (f.get("Date Submitted", "") or "")[:10],
+                "escalated": f.get("Escalated To Human", False)
+            })
+
+        return render_template(
+            "index.html",
+            page_mode="editor",
+            editor_queue=editor_queue,
+            superuser=session.get("superuser", False),
+            true_superuser=True,
+            recent_claims=get_recent_claims(limit=10),
+            current_claim=None,
+            archived_claims_by_topic={},
+            selected_topic="",
+            user_disputes=[],
+            search_query="",
+            search_results=[]
+        )
+
+    except Exception as e:
+        return f"Editor load error: {str(e)}", 500
 
 @app.route("/search")
 def search_page():
