@@ -5732,7 +5732,8 @@ console.error('Dispute submission failed:', err);
       el.addEventListener('mouseleave', hideTooltip);
     });
 
-    const glossaryData = {{ current_claim.glossary | tojson | safe if current_claim and current_claim.glossary else '[]' }};
+    let glossaryData = [];
+    {% if current_claim and current_claim.glossary %}glossaryData = {{ current_claim.glossary | tojson | safe }};{% endif %}
     const glossaryMap = {};
     glossaryData.forEach(g => {
       if (g.term && g.definition) glossaryMap[g.term.toLowerCase()] = g;
@@ -5773,7 +5774,8 @@ console.error('Dispute submission failed:', err);
       'rightPerspText'
     ].forEach(id => applyGlossary(document.getElementById(id)));
 
-    const rawScenario = {{ (current_claim.scenario_map | tojson | safe) if current_claim and current_claim.scenario_map else '""' }};
+    let rawScenario = "";
+    {% if current_claim and current_claim.scenario_map %}rawScenario = {{ current_claim.scenario_map | tojson | safe }};{% endif %}
 
     function renderScenarioMap(raw) {
       const container = document.getElementById('scenarioMapContainer');
@@ -5832,7 +5834,8 @@ console.error('Dispute submission failed:', err);
 
     renderScenarioMap(rawScenario);
 
-    const rawSources = {{ (current_claim.source_urls | tojson | safe) if current_claim and current_claim.source_urls else '""' }};
+    let rawSources = "";
+    {% if current_claim and current_claim.source_urls %}rawSources = {{ current_claim.source_urls | tojson | safe }};{% endif %}
 
     function renderSources(raw) {
       const container = document.getElementById('sourcesContainer');
