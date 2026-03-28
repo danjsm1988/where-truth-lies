@@ -3459,6 +3459,11 @@ html, body {
       padding-bottom: 64px;
     }
 
+    /* Suppress tooltip bubble on editor tabs — they have no data-tooltip */
+    .editor-tabs .tab-btn::after {
+      display: none !important;
+    }
+
     /* ── EDITOR PAGE ── */
     .editor-page-section {
       max-width: 900px;
@@ -6170,6 +6175,7 @@ console.error('Dispute submission failed:', err);
 
       const emptyState = document.getElementById("editor-empty-state");
       if (emptyState) {
+        emptyState.textContent = "There are no claims for this category: " + tab;
         emptyState.style.display = visibleCount === 0 ? "block" : "none";
       }
     }
