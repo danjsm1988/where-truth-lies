@@ -1554,7 +1554,7 @@ def editor_page():
 
     try:
         params = {
-            "filterByFormula": "OR({Escalated To Human}=TRUE(), {Status}='Needs Review')",
+            "filterByFormula": "NOT(OR({Status}='Resolved', {Status}='Closed'))",
             "sort[0][field]": "Last Updated",
             "sort[0][direction]": "desc"
         }
@@ -1570,16 +1570,23 @@ def editor_page():
             is_escalated = bool(f.get("Escalated To Human", False))
             has_ai_response = bool(f.get("AI Response", ""))
             has_ai_recommended = bool(f.get("AI Recommended Changes", ""))
+            pushback_count = int(f.get("Pushback Round Count", 0) or 0)
 
             if stored_category:
+                # Airtable field is set — use it as source of truth
                 queue_category = stored_category
-            elif is_escalated:
-                queue_category = "Escalated to Human"
             elif has_ai_recommended:
+                # AI produced a recommendation — goes to AI Recommended Updates
+                # regardless of whether it is also escalated
                 queue_category = "AI Recommended Update"
-            elif has_ai_response:
+            elif is_escalated:
+                # Escalated with no AI recommendation — human needs to review
+                queue_category = "Escalated to Human"
+            elif pushback_count > 0:
+                # Has gone through at least one pushback round — potential issue
                 queue_category = "Potential Dispute / Pushback Issue"
             else:
+                # Fresh dispute, no response yet
                 queue_category = "Current Dispute"
 
             editor_queue.append({
