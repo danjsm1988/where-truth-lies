@@ -4015,7 +4015,7 @@ html, body {
                 {% for bo in group.claims %}
                   {% set bo_ex = bo.breakout_status == 'Excavated' %}
                   <div class="m-breakout-row {% if bo_ex %}excavated{% endif %}"
-                       onclick="{% if bo_ex %}window.location='/claim/{{ bo.slug }}'{% else %}openBreakoutModal('{{ bo.record_id }}', {{ bo | tojson | safe }}){% endif %}">
+                       data-bo-id="{{ bo.record_id }}" data-bo="{{ bo | tojson | e }}" onclick="handleBreakoutClick(this)">
                     <span class="m-breakout-status-dot {% if bo_ex %}excavated{% else %}pending{% endif %}"></span>
                     <span class="m-breakout-row-title">{{ bo.title }}</span>
                     {% if bo.breakout_source_section == 'Dispute' %}
@@ -5207,7 +5207,7 @@ html, body {
                         {% set bo_excavated = bo.breakout_status == 'Excavated' %}
                         {% set bo_origin = bo.origin_type or 'Breakout Claim' %}
                         <div class="breakout-row {% if bo_excavated %}excavated{% endif %}"
-                             onclick="{% if bo_excavated %}window.location='/claim/{{ bo.slug }}'{% else %}openBreakoutModal('{{ bo.record_id }}', {{ bo | tojson | safe }}){% endif %}">
+                             data-bo-id="{{ bo.record_id }}" data-bo="{{ bo | tojson | e }}" onclick="handleBreakoutClick(this)">
                           <span class="breakout-status-dot {% if bo_excavated %}excavated{% elif bo.breakout_status == 'Excavating' %}excavating{% else %}pending{% endif %}"></span>
                           <span class="breakout-row-title">{{ bo.title }}</span>
                           {% if bo.breakout_source_section == 'Dispute' %}
@@ -5609,7 +5609,7 @@ html, body {
                 {% set bo_ex = bo.breakout_status == 'Excavated' %}
                 <div class="breakout-row {% if bo_ex %}excavated{% endif %}"
                      style="margin-bottom:5px;"
-                     onclick="{% if bo_ex %}window.location='/claim/{{ bo.slug }}'{% else %}openBreakoutModal('{{ bo.record_id }}', {{ bo | tojson | safe }}){% endif %}">
+                     data-bo-id="{{ bo.record_id }}" data-bo="{{ bo | tojson | e }}" onclick="handleBreakoutClick(this)">
                   <span class="breakout-status-dot {% if bo_ex %}excavated{% else %}pending{% endif %}"></span>
                   <span class="breakout-row-title">{{ bo.title }}</span>
                   {% if bo.breakout_source_section == 'Dispute' %}
@@ -7719,6 +7719,19 @@ console.error('Dispute submission failed:', err);
       statusEl.textContent = 'Error: ' + err.message;
       confirmBtn.disabled = false;
       confirmBtn.textContent = 'Excavate This Claim';
+    }
+  }
+
+  function handleBreakoutClick(el) {
+    var recordId = el.getAttribute('data-bo-id');
+    var boRaw = el.getAttribute('data-bo');
+    var boData = {};
+    try { boData = JSON.parse(boRaw); } catch(e) {}
+    var status = boData.breakout_status || '';
+    if (status === 'Excavated' && boData.slug) {
+      window.location = '/claim/' + boData.slug;
+    } else {
+      openBreakoutModal(recordId, boData);
     }
   }
 
