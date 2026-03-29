@@ -3449,6 +3449,10 @@ html, body {
     .breakout-empty { font-size:13px; color:var(--text-mid); font-style:italic; padding:12px 0; }
     .breakout-detect-btn { appearance:none; border:1px solid rgba(201,168,76,.2); background:transparent; color:var(--text-mid); font-family:'Libre Baskerville',Georgia,serif; font-size:9px; letter-spacing:.12em; text-transform:uppercase; padding:4px 10px; border-radius:6px; cursor:pointer; transition:all .15s ease; }
     .breakout-detect-btn:hover { color:var(--gold); border-color:rgba(201,168,76,.4); }
+    .breakout-status-pill { font-family:'Libre Baskerville',Georgia,serif; font-size:9px; letter-spacing:.1em; text-transform:uppercase; padding:3px 9px; border-radius:999px; white-space:nowrap; flex-shrink:0; border:1px solid; }
+    .pending-pill { background:rgba(201,168,76,.08); border-color:rgba(201,168,76,.2); color:rgba(201,168,76,.7); }
+    .excavating-pill { background:rgba(99,132,199,.1); border-color:rgba(99,132,199,.3); color:#7fa3e8; }
+    .excavated-pill { background:rgba(117,194,141,.1); border-color:rgba(117,194,141,.25); color:#75c28d; }
 
     /* mobile breakout */
     .m-breakout-section { margin:16px 0 12px; }
@@ -4019,7 +4023,13 @@ html, body {
                     {% elif bo.breakout_source_section == 'Pushback' %}
                       <span class="m-breakout-origin-badge breakout-origin-pushback">Pushback</span>
                     {% endif %}
-                    {% if bo_ex %}<span style="font-size:10px; color:#75c28d;">↗</span>{% endif %}
+                    {% if bo_ex %}
+                      <span class="breakout-status-pill excavated-pill" style="font-size:8px; padding:2px 7px;">Excavated</span>
+                    {% elif bo.breakout_status == 'Excavating' %}
+                      <span class="breakout-status-pill excavating-pill" style="font-size:8px; padding:2px 7px;">Excavating</span>
+                    {% else %}
+                      <span class="breakout-status-pill pending-pill" style="font-size:8px; padding:2px 7px;">Pending</span>
+                    {% endif %}
                   </div>
                 {% endfor %}
               {% endfor %}
@@ -5208,7 +5218,11 @@ html, body {
                             <span class="breakout-origin-badge breakout-origin-main">Main Claim</span>
                           {% endif %}
                           {% if bo_excavated %}
-                            <span style="font-size:11px; color:#75c28d;">Excavated ↗</span>
+                            <span class="breakout-status-pill excavated-pill">Excavated &#x2197;</span>
+                          {% elif bo.breakout_status == 'Excavating' %}
+                            <span class="breakout-status-pill excavating-pill">Excavating...</span>
+                          {% else %}
+                            <span class="breakout-status-pill pending-pill">Pending Excavation</span>
                           {% endif %}
                         </div>
                       {% endfor %}
@@ -5603,7 +5617,13 @@ html, body {
                   {% elif bo.breakout_source_section == 'Pushback' %}
                     <span class="breakout-origin-badge breakout-origin-pushback">From Pushback</span>
                   {% endif %}
-                  {% if bo_ex %}<span style="font-size:11px; color:#75c28d;">Excavated ↗</span>{% endif %}
+                  {% if bo_ex %}
+                    <span class="breakout-status-pill excavated-pill">Excavated &#x2197;</span>
+                  {% elif bo.breakout_status == 'Excavating' %}
+                    <span class="breakout-status-pill excavating-pill">Excavating...</span>
+                  {% else %}
+                    <span class="breakout-status-pill pending-pill">Pending Excavation</span>
+                  {% endif %}
                 </div>
               {% endfor %}
             </div>

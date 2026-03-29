@@ -358,10 +358,8 @@ def build_subclaims(fields, parsed_json):
 
 
 def _safe_get_breakout_grouped(record_id, fields):
-    """Load breakout claims only when the record has children. Fails silently."""
+    """Load breakout claims for this record. Fails silently."""
     try:
-        if not fields.get("Has Breakout Children", False):
-            return []
         breakouts = get_breakout_claims_for_parent(record_id)
         return group_breakout_claims(breakouts)
     except Exception as e:
