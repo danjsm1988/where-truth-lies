@@ -289,7 +289,7 @@
     a.logout-badge:hover { background: rgba(201,168,76,.22); }
 
     /* Menu dropdown */
-    .nav-menu-wrap { position: relative; display: inline-flex; align-items: center; }
+    .nav-menu-wrap { position: relative; display: inline-flex; align-items: center; vertical-align: middle; }
     .nav-menu-btn {
       display: flex; align-items: center; gap: 4px;
       padding: 6px 10px; border-radius: 999px;
@@ -4674,9 +4674,6 @@ html, body {
       </div>
     </nav>
 
-    {% if session.get("username") %}
-  <span class="user-badge mobile-user">{{ session.get("username") }}</span>
-{% endif %}
 
     <!-- Mobile Menu Button -->
     <button
