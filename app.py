@@ -1666,6 +1666,84 @@ def resolve_editor_item(record_id):
 
 
 
+
+@app.route("/editor/reanalyze-dispute/<record_id>", methods=["POST"])
+def editor_reanalyze_dispute(record_id):
+    """Re-run AI on dispute text and write structured recommendation to Airtable."""
+    if not session.get("logged_in"):
+        return jsonify({"error": "Not logged in"}), 401
+    if not session.get("true_superuser"):
+        return jsonify({"error": "Unauthorized"}), 403
+    try:
+        dispute_record = get_dispute_by_id(record_id)
+        if not dispute_record:
+            return jsonify({"error": "Dispute not found"}), 404
+
+        dispute_fields = dispute_record.get("fields", {})
+        claim_links = dispute_fields.get("Claim Record ID", [])
+        claim_id = claim_links[0] if claim_links else None
+        if not claim_id:
+            return jsonify({"error": "No linked claim found"}), 400
+
+        claim_record = get_claim_by_record_id(claim_id)
+        if not claim_record:
+            return jsonify({"error": "Claim record not found"}), 404
+
+        claim_context = build_claim_context(claim_record)
+
+        # Use AI to generate a recommendation from the dispute text
+        prompt = f"""A user disputed this claim with the following text:
+
+Dispute text: {dispute_fields.get('Dispute Text', '')}
+
+Sections disputed: {json.dumps(dispute_fields.get('Sections Disputed', []))}
+
+Prior AI response: {dispute_fields.get('AI Response', '')}
+
+Current claim context:
+- Title: {claim_context.get('title', '') if claim_context else ''}
+- Verdict: {claim_context.get('overall_verdict', '') if claim_context else ''}
+- Quick Explanation: {claim_context.get('quick_explanation', '') if claim_context else ''}
+
+Based on the dispute, write a clear, specific recommendation for what should be changed in the claim analysis. Be precise about which sections and what the change should be. 2-4 sentences."""
+
+        recommendation = ""
+        if anthropic_client:
+            resp = anthropic_client.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=500,
+                system="You are an editorial assistant for a political intelligence platform. Write clear, specific recommendations for claim updates based on user disputes. No preamble. Just the recommendation.",
+                messages=[{"role": "user", "content": prompt}]
+            )
+            recommendation = resp.content[0].text.strip()
+        elif openai_client:
+            resp = openai_client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": "You are an editorial assistant for a political intelligence platform. Write clear, specific recommendations for claim updates based on user disputes. No preamble. Just the recommendation."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0,
+                max_tokens=500
+            )
+            recommendation = resp.choices[0].message.content.strip()
+
+        if not recommendation:
+            return jsonify({"error": "AI could not generate a recommendation"}), 500
+
+        # Write recommendation to Airtable
+        update_resp = update_dispute_record(record_id, {
+            "AI Recommended Changes": recommendation,
+            "Last Updated": datetime.utcnow().isoformat()
+        })
+        if not update_resp.ok:
+            return jsonify({"error": f"Failed to save recommendation: {update_resp.text}"}), 500
+
+        return jsonify({"ok": True, "recommendation": recommendation})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route("/editor/update-recommendation/<record_id>", methods=["POST"])
 def editor_update_recommendation(record_id):
     if not session.get("logged_in"):
