@@ -589,6 +589,7 @@ def get_recent_claims(limit=10):
     try:
         params = {
             "maxRecords": limit,
+            "filterByFormula": "OR(NOT({Breakout User Excavated}), {Breakout User Excavated}!='No')",
             "sort[0][field]": "Date Added",
             "sort[0][direction]": "desc"
         }
@@ -616,6 +617,7 @@ def get_all_claims():
         return []
     try:
         params = {
+            "filterByFormula": "OR(NOT({Breakout User Excavated}), {Breakout User Excavated}!='No')",
             "sort[0][field]": "Date Added",
             "sort[0][direction]": "desc"
         }
@@ -2714,7 +2716,7 @@ def editor_claims_list():
         not_since = request.args.get("not_since", "").strip()
         limit = min(int(request.args.get("limit", 50)), 200)
 
-        formula_parts = ["{Status}='Active'"]
+        formula_parts = ["{Status}='Active'", "OR(NOT({Breakout User Excavated}), {Breakout User Excavated}!='No')"]
         if topic:
             safe_topic = escape_airtable_formula_value(topic)
             formula_parts.append(f"FIND('{safe_topic}', ARRAYJOIN({{Topic}}))")
@@ -3116,14 +3118,14 @@ def create_breakout_claim_record(
     group_label = breakout_data.get("group_label", "")
     confidence = float(breakout_data.get("confidence", 0.75))
 
-    # Deduplication — skip if a breakout with this title already exists under this parent
+    # Deduplication — skip if breakout with same title already exists under this parent
     if parent_record_id:
         try:
             existing = get_breakout_claims_for_parent(parent_record_id)
             title_lower = title.strip().lower()
             for ex in existing:
                 if ex.get("title", "").strip().lower() == title_lower:
-                    print(f"BREAKOUT DEDUP: skipping '{title}' — already exists under parent", flush=True)
+                    print(f"BREAKOUT DEDUP: skipping '{title}' — already exists", flush=True)
                     return None
         except Exception:
             pass
@@ -3155,6 +3157,7 @@ def create_breakout_claim_record(
         "Lock Status": "Unlocked",
         "Claims Cost": 1,
         "Breakout Detection Source": detection_source,
+        "Breakout User Excavated": "No",
     }
 
     if claim_identifier:
@@ -3454,13 +3457,14 @@ def breakout_excavate():
         existing_slug = bf.get("URL Slug", "")
         return jsonify({"error": "Already excavated", "redirect_to": f"/claim/{existing_slug}"}), 409
 
-    # Lock the record
+    # Lock the record and mark as user-confirmed
     lock_expiry = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
     update_airtable_record(breakout_record_id, {
         "Lock Status": "Locked",
         "Locked By": session.get("username", "Unknown"),
         "Lock Expires At": lock_expiry,
-        "Breakout Status": "Excavating"
+        "Breakout Status": "Excavating",
+        "Breakout User Excavated": "Yes"
     })
 
     # Deduct allowance
