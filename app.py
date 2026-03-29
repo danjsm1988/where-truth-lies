@@ -1589,6 +1589,20 @@ def editor_page():
                 # Fresh dispute, no response yet
                 queue_category = "Current Dispute"
 
+            # Fetch claim snapshot for editor context
+            claim_snap_verdict = ""
+            claim_snap_qe = ""
+            claim_links = f.get("Claim Record ID", [])
+            if claim_links:
+                try:
+                    snap = get_claim_by_record_id(claim_links[0])
+                    if snap:
+                        snap_fields = snap.get("fields", {})
+                        claim_snap_verdict = snap_fields.get("Overall Verdict", "")
+                        claim_snap_qe = snap_fields.get("Quick Explanation", "")
+                except Exception:
+                    pass
+
             editor_queue.append({
                 "record_id": record.get("id"),
                 "title": f.get("Original Claim Title", "Untitled"),
@@ -1602,7 +1616,9 @@ def editor_page():
                 "resolution_type": f.get("Resolution Type", ""),
                 "sections_disputed": f.get("Sections Disputed", []),
                 "date": (f.get("Date Submitted", "") or "")[:10],
-                "escalated": is_escalated
+                "escalated": is_escalated,
+                "claim_verdict": claim_snap_verdict,
+                "claim_quick_explanation": claim_snap_qe
         })
 
         return render_template(
@@ -1648,6 +1664,28 @@ def resolve_editor_item(record_id):
     except Exception as e:
         return f"Resolve error: {str(e)}", 500
 
+
+
+@app.route("/editor/update-recommendation/<record_id>", methods=["POST"])
+def editor_update_recommendation(record_id):
+    if not session.get("logged_in"):
+        return jsonify({"error": "Not logged in"}), 401
+    if not session.get("true_superuser"):
+        return jsonify({"error": "Unauthorized"}), 403
+    try:
+        data = request.get_json() or {}
+        recommendation = (data.get("recommendation") or "").strip()
+        if not recommendation:
+            return jsonify({"error": "Recommendation text is required"}), 400
+        response = update_dispute_record(record_id, {
+            "AI Recommended Changes": recommendation,
+            "Last Updated": datetime.utcnow().isoformat()
+        })
+        if not response.ok:
+            return jsonify({"error": response.text}), 500
+        return jsonify({"ok": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/editor/update-status/<record_id>", methods=["POST"])
 def editor_update_status(record_id):
