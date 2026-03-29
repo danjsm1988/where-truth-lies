@@ -733,6 +733,7 @@ def get_disputes_for_claim(claim_slug):
                 "escalated_to_human": f.get("Escalated To Human", False),
                 "editor_notes": f.get("Editor Notes", ""),
                 "editor_resolution": f.get("Editor Resolution", ""),
+                "editor_approved_changes": f.get("Editor Approved Changes", ""),
                 "resolution_type": f.get("Resolution Type", ""),
                 "dispute_type": f.get("Dispute Type", ""),
                 "parent_dispute": parent_dispute_id,
@@ -2518,22 +2519,31 @@ def editor_apply_update(record_id):
         if not update_resp.ok:
             return jsonify({"error": f"Claim update failed: {update_resp.text}"}), 500
 
-        # Log thread entry to dispute record
+        # Write to correct Airtable field types
         applied_scope = list(snapshot_after.keys())
         editor_username = session.get("username", "Editor")
 
-        thread_entry = f"EDITOR UPDATE by {editor_username}:\n"
-        for field_name in snapshot_after:
-            thread_entry += f"\n[{field_name}]\nBefore: {snapshot_before.get(field_name, '')}\nAfter: {snapshot_after[field_name]}\n"
-        if editor_note:
-            thread_entry += f"\nEditor note: {editor_note}"
+        # Editor Approved Changes — JSON snapshot (long text field)
+        approved_changes_json = json.dumps({
+            "editor": editor_username,
+            "date": datetime.utcnow().strftime("%Y-%m-%d"),
+            "editor_note": editor_note or "",
+            "fields": {
+                field_name: {
+                    "before": snapshot_before.get(field_name, ""),
+                    "after": snapshot_after[field_name]
+                }
+                for field_name in snapshot_after
+            }
+        }, ensure_ascii=False)
 
         update_dispute_record(record_id, {
             "Status": "Resolved",
             "Escalated To Human": False,
             "Resolution Type": "AI Recommendation",
+            "Editor Resolution": "Original Claim Modified",
             "Applied Update Scope": applied_scope,
-            "Editor Resolution": thread_entry,
+            "Editor Approved Changes": approved_changes_json,
             "Last Updated": datetime.utcnow().isoformat()
         })
 

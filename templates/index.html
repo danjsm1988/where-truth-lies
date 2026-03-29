@@ -3376,17 +3376,40 @@ html, body {
     @media (max-width:640px) { .update-col-grid { grid-template-columns:1fr; } }
 
     /* ── CLAIM HISTORY TAB ── */
-    .history-entry { background:rgba(255,255,255,.025); border:var(--border-soft); border-left:3px solid var(--gold-dim); border-radius:14px; padding:18px 20px; margin-bottom:16px; }
-    .history-entry-header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
-    .history-entry-meta { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
-    .history-scope-chips { display:flex; flex-wrap:wrap; gap:6px; }
-    .history-diff-text { font-family:'Crimson Text',Georgia,serif; font-size:15px; line-height:1.7; color:var(--cream-soft); white-space:pre-wrap; word-break:break-word; background:rgba(255,255,255,.02); border-radius:10px; padding:14px 16px; margin:0; }
-    .history-timeline-entry { border-left:2px solid rgba(201,168,76,.2); padding:0 0 20px 18px; margin-bottom:4px; position:relative; }
-    .history-timeline-entry::before { content:''; position:absolute; left:-5px; top:4px; width:8px; height:8px; border-radius:50%; background:var(--gold-dim); }
-    .history-timeline-label { font-family:'Libre Baskerville',Georgia,serif; font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); margin-bottom:3px; }
-    .history-timeline-date { font-size:12px; color:var(--text-mid); margin-bottom:8px; }
-    .history-timeline-text { font-size:16px; color:var(--cream-soft); line-height:1.6; }
-    .history-timeline-ai { margin-top:10px; padding:10px 14px; background:rgba(201,168,76,.05); border-left:3px solid rgba(201,168,76,.3); border-radius:0 8px 8px 0; }
+    .ch-nav-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:10px; }
+    .ch-counter { font-family:'Libre Baskerville',Georgia,serif; font-size:11px; letter-spacing:.12em; color:var(--text-mid); }
+    .ch-arrows { display:flex; gap:8px; }
+    .ch-arrow { appearance:none; width:36px; height:36px; border-radius:50%; border:1px solid rgba(201,168,76,.35); background:rgba(201,168,76,.06); color:var(--gold); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .15s ease; }
+    .ch-arrow:hover { background:rgba(201,168,76,.16); border-color:var(--gold); }
+    .ch-arrow:disabled { opacity:.3; cursor:not-allowed; pointer-events:none; }
+    .ch-slide { display:block; }
+    .ch-hidden { display:none !important; }
+    .ch-slide-header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:16px; padding-bottom:14px; border-bottom:1px solid rgba(201,168,76,.12); }
+    .ch-slide-meta { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .ch-res-type { font-family:'Libre Baskerville',Georgia,serif; font-size:9px; letter-spacing:.12em; text-transform:uppercase; color:#75c28d; background:rgba(117,194,141,.08); border:1px solid rgba(117,194,141,.2); border-radius:999px; padding:3px 9px; }
+    .ch-scope-chips { display:flex; flex-wrap:wrap; gap:6px; }
+    .ch-change-summary { background:rgba(255,255,255,.025); border:1px solid rgba(255,255,255,.07); border-radius:14px; padding:18px 20px; margin-bottom:14px; }
+    .ch-change-label { font-family:'Libre Baskerville',Georgia,serif; font-size:9px; letter-spacing:.16em; text-transform:uppercase; color:var(--gold-dim); margin-bottom:14px; }
+    .ch-field-change { display:grid; grid-template-columns:160px 1fr; gap:12px; align-items:start; padding:12px 0; border-bottom:1px solid rgba(255,255,255,.05); }
+    .ch-field-change:last-child { border-bottom:none; }
+    .ch-field-name { font-family:'Libre Baskerville',Georgia,serif; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--gold); padding-top:2px; }
+    .ch-field-cols { display:grid; grid-template-columns:1fr 28px 1fr; gap:8px; align-items:start; }
+    .ch-before-val { background:rgba(232,112,112,.05); border:1px solid rgba(232,112,112,.15); border-radius:8px; padding:10px 12px; font-size:14px; line-height:1.55; color:var(--text-light); }
+    .ch-after-val { background:rgba(117,194,141,.05); border:1px solid rgba(117,194,141,.15); border-radius:8px; padding:10px 12px; font-size:14px; line-height:1.55; color:var(--cream-soft); }
+    .ch-arrow-mid { font-size:18px; color:var(--gold-dim); text-align:center; padding-top:10px; }
+    .ch-val-label { display:block; font-family:'Libre Baskerville',Georgia,serif; font-size:8px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-mid); margin-bottom:5px; }
+    .ch-change-empty { font-size:14px; color:var(--text-mid); font-style:italic; }
+    .ch-change-legacy { font-family:'Crimson Text',Georgia,serif; font-size:15px; line-height:1.7; color:var(--cream-soft); white-space:pre-wrap; }
+    .ch-before-details { background:rgba(255,255,255,.015); border:1px solid rgba(255,255,255,.07); border-radius:12px; overflow:hidden; margin-bottom:20px; }
+    .ch-before-summary { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; cursor:pointer; list-style:none; font-family:'Libre Baskerville',Georgia,serif; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-mid); transition:color .15s ease; user-select:none; }
+    .ch-before-summary::-webkit-details-marker { display:none; }
+    .ch-before-summary:hover { color:var(--gold); }
+    details[open] .ch-toggle-icon { transform:rotate(180deg); }
+    .ch-toggle-icon { transition:transform .2s ease; display:inline-block; }
+    .ch-before-body { padding:0 18px 18px; border-top:1px solid rgba(255,255,255,.06); }
+    .ch-before-section-title { font-family:'Libre Baskerville',Georgia,serif; font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold-dim); margin:14px 0 8px; }
+    .ch-before-field-val { font-size:15px; line-height:1.65; color:var(--text-light); padding:10px 14px; background:rgba(232,112,112,.03); border:1px solid rgba(232,112,112,.1); border-radius:8px; margin-bottom:10px; }
+    @media (max-width:680px) { .ch-field-change { grid-template-columns:1fr; gap:6px; } .ch-field-cols { grid-template-columns:1fr; } .ch-arrow-mid { display:none; } }
 
     /* ── CLAIM MANAGEMENT ── */
     .cm-filter-row { display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:12px; align-items:end; }
@@ -5365,34 +5388,83 @@ html, body {
 
 <!-- CLAIM HISTORY TAB -->
 <div class="tab-panel hidden" id="tab-history">
-  <div class="ornamental"><div class="ornamental-line"></div><div class="ornamental-diamond"></div><div class="ornamental-line"></div></div>
+
+  {%- set updates = [] -%}
   {% if current_claim.disputes %}
-    {% set ns = namespace(has_updates=false) %}
-    {% for dispute in current_claim.disputes %}{% if dispute.applied_update_scope and dispute.applied_update_scope|length > 0 %}{% set ns.has_updates = true %}{% endif %}{% endfor %}
-    {% if ns.has_updates %}
-      <div class="section-title" style="margin-bottom:16px;">Applied Updates</div>
-      {% for dispute in current_claim.disputes %}
-        {% if dispute.applied_update_scope and dispute.applied_update_scope|length > 0 %}
-          <div class="history-entry">
-            <div class="history-entry-header">
-              <div class="history-entry-meta">
-                <span class="dispute-round-badge">{{ dispute.entry_label or 'Update' }}</span>
-                <span class="recent-date">{{ dispute.date_submitted }}</span>
-                <span class="recent-date">{{ dispute.entered_by }}</span>
-              </div>
-              <div class="history-scope-chips">{% for s in dispute.applied_update_scope %}<span class="topic-tag">{{ s }}</span>{% endfor %}</div>
+    {%- for d in current_claim.disputes -%}
+      {%- if d.applied_update_scope and d.applied_update_scope|length > 0 -%}
+        {%- set _ = updates.append(d) -%}
+      {%- endif -%}
+    {%- endfor -%}
+  {% endif %}
+
+  {% if updates|length > 0 %}
+    <div class="ch-nav-row">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <div class="section-kicker" style="margin:0;">Applied Updates</div>
+        <span class="ch-counter" id="ch-counter">1 of {{ updates|length }}</span>
+      </div>
+      {% if updates|length > 1 %}
+        <div class="ch-arrows">
+          <button type="button" class="ch-arrow" id="ch-prev" onclick="chNav(-1)">&#8592;</button>
+          <button type="button" class="ch-arrow" id="ch-next" onclick="chNav(1)">&#8594;</button>
+        </div>
+      {% endif %}
+    </div>
+
+    <div id="ch-slides">
+      {% for dispute in updates %}
+        <div class="ch-slide{% if not loop.first %} ch-hidden{% endif %}" data-idx="{{ loop.index0 }}">
+          <div class="ch-slide-header">
+            <div class="ch-slide-meta">
+              <span class="recent-date">{{ dispute.date_submitted }}</span>
+              {% if dispute.entered_by %}<span class="recent-date">{{ dispute.entered_by }}</span>{% endif %}
+              {% if dispute.resolution_type %}<span class="ch-res-type">{{ dispute.resolution_type }}</span>{% endif %}
             </div>
-            {% if dispute.editor_resolution %}<pre class="history-diff-text">{{ dispute.editor_resolution }}</pre>{% endif %}
+            {% if dispute.applied_update_scope %}
+              <div class="ch-scope-chips">
+                {% for f in dispute.applied_update_scope %}<span class="editor-section-chip">{{ f }}</span>{% endfor %}
+              </div>
+            {% endif %}
           </div>
-        {% endif %}
+          <div class="ch-change-summary">
+            <div class="ch-change-label">What Changed</div>
+            {% if dispute.editor_approved_changes %}
+              <div class="ch-change-json-block" data-json="{{ dispute.editor_approved_changes | e }}"></div>
+            {% elif dispute.editor_resolution and dispute.editor_resolution != 'Original Claim Modified' %}
+              <div class="ch-change-legacy">{{ dispute.editor_resolution }}</div>
+            {% else %}
+              <div class="ch-change-empty">No change details on record for this update.</div>
+            {% endif %}
+          </div>
+          <details class="ch-before-details">
+            <summary class="ch-before-summary">
+              <span>Show Claim State Before This Update</span>
+              <span class="ch-toggle-icon">&#9662;</span>
+            </summary>
+            <div class="ch-before-body">
+              {% if dispute.editor_approved_changes %}
+                <div class="ch-before-json-block" data-json="{{ dispute.editor_approved_changes | e }}"></div>
+              {% else %}
+                <div class="ch-change-empty">Before snapshot not available for this update.</div>
+              {% endif %}
+            </div>
+          </details>
+        </div>
       {% endfor %}
-      <div class="ornamental"><div class="ornamental-line"></div><div class="ornamental-diamond"></div><div class="ornamental-line"></div></div>
-    {% endif %}
+    </div>
+
+    <div class="ornamental" style="margin:32px 0 24px;">
+      <div class="ornamental-line"></div><div class="ornamental-diamond"></div><div class="ornamental-line"></div>
+    </div>
+  {% endif %}
+
+  {% if current_claim.disputes %}
     <div class="section-title" style="margin-bottom:16px;">Full Dispute Timeline</div>
     {% for dispute in current_claim.disputes %}
       <div class="history-timeline-entry">
         <div class="history-timeline-label">{{ dispute.entry_label or 'Dispute' }}</div>
-        <div class="history-timeline-date">{{ dispute.date_submitted }} — {{ dispute.entered_by }}</div>
+        <div class="history-timeline-date">{{ dispute.date_submitted }}{% if dispute.entered_by %} — {{ dispute.entered_by }}{% endif %}</div>
         <div class="history-timeline-text">{{ dispute.dispute_text }}</div>
         {% if dispute.ai_response %}
           <div class="history-timeline-ai">
@@ -5400,11 +5472,18 @@ html, body {
             <div style="font-size:15px;color:var(--cream-soft);line-height:1.6;">{{ dispute.ai_response }}</div>
           </div>
         {% endif %}
+        {% if dispute.applied_update_scope and dispute.applied_update_scope|length > 0 %}
+          <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+            <span style="font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#75c28d;">Applied:</span>
+            {% for f in dispute.applied_update_scope %}<span class="editor-section-chip" style="border-color:rgba(117,194,141,.3);color:#75c28d;">{{ f }}</span>{% endfor %}
+          </div>
+        {% endif %}
       </div>
     {% endfor %}
   {% else %}
     <p style="text-align:center;color:var(--text-mid);padding:20px;font-style:italic;">No dispute or update history for this claim yet.</p>
   {% endif %}
+
 </div>
 
 
@@ -6921,6 +7000,84 @@ console.error('Dispute submission failed:', err);
         if (el) el.addEventListener('click', function(e) { if (e.target === this) el.classList.remove('visible'); });
       });
     });
+
+
+    // ── CLAIM HISTORY TAB ──
+    var _chTotal = 0;
+    var _chCurrent = 0;
+
+    function chNav(dir) {
+      var slides = document.querySelectorAll('.ch-slide');
+      if (!slides.length) return;
+      slides[_chCurrent].classList.add('ch-hidden');
+      _chCurrent = Math.max(0, Math.min(_chTotal - 1, _chCurrent + dir));
+      slides[_chCurrent].classList.remove('ch-hidden');
+      var counter = document.getElementById('ch-counter');
+      if (counter) counter.textContent = (_chCurrent + 1) + ' of ' + _chTotal;
+      var prev = document.getElementById('ch-prev');
+      var next = document.getElementById('ch-next');
+      if (prev) prev.disabled = _chCurrent === 0;
+      if (next) next.disabled = _chCurrent === _chTotal - 1;
+    }
+
+    function chRenderJson() {
+      _chTotal = document.querySelectorAll('.ch-slide').length;
+      _chCurrent = 0;
+      var prev = document.getElementById('ch-prev');
+      var next = document.getElementById('ch-next');
+      if (prev) prev.disabled = true;
+      if (next) next.disabled = _chTotal <= 1;
+
+      document.querySelectorAll('.ch-change-json-block').forEach(function(el) {
+        var raw = el.getAttribute('data-json') || '';
+        if (!raw) return;
+        try {
+          var data = JSON.parse(raw);
+          var fields = data.fields || {};
+          var html = '';
+          Object.keys(fields).forEach(function(fieldName) {
+            var before = fields[fieldName].before || '';
+            var after = fields[fieldName].after || '';
+            html += '<div class="ch-field-change">' +
+              '<span class="ch-field-name">' + escHtml(fieldName) + '</span>' +
+              '<div class="ch-field-cols">' +
+                '<div class="ch-before-val"><span class="ch-val-label">Before</span>' + escHtml(before) + '</div>' +
+                '<div class="ch-arrow-mid">→</div>' +
+                '<div class="ch-after-val"><span class="ch-val-label">After</span>' + escHtml(after) + '</div>' +
+              '</div>' +
+            '</div>';
+          });
+          if (data.editor_note) {
+            html += '<div style="margin-top:12px;padding:10px 14px;background:rgba(201,168,76,.05);border-left:3px solid rgba(201,168,76,.3);border-radius:0 8px 8px 0;font-size:14px;color:var(--text-light);">Editor note: ' + escHtml(data.editor_note) + '</div>';
+          }
+          el.innerHTML = html || '<div class="ch-change-empty">No field changes recorded.</div>';
+        } catch(e) {
+          el.innerHTML = '<div class="ch-change-empty">Could not parse change data.</div>';
+        }
+      });
+
+      document.querySelectorAll('.ch-before-json-block').forEach(function(el) {
+        var raw = el.getAttribute('data-json') || '';
+        if (!raw) return;
+        try {
+          var data = JSON.parse(raw);
+          var fields = data.fields || {};
+          var html = '<div style="padding-top:4px;">';
+          Object.keys(fields).forEach(function(fieldName) {
+            var before = fields[fieldName].before || '';
+            if (!before) return;
+            html += '<div class="ch-before-section-title">' + escHtml(fieldName) + ' — Before</div>' +
+              '<div class="ch-before-field-val">' + escHtml(before) + '</div>';
+          });
+          html += '</div>';
+          el.innerHTML = html;
+        } catch(e) {
+          el.innerHTML = '<div class="ch-change-empty">Could not parse snapshot.</div>';
+        }
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() { chRenderJson(); });
 
 </script>
 
