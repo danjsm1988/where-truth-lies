@@ -440,11 +440,11 @@
     .hero-inner {
       width: min(var(--content-width), calc(100% - 32px));
       margin: 0 auto;
-      padding: 24px 0 20px;
+      padding: 20px 0 18px;
       display: grid;
-      grid-template-columns: 1.35fr .9fr;
-      gap: 28px;
-      align-items: start;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: stretch;
     }
 
     .hero-card,
@@ -469,12 +469,59 @@
 
     .hero-title {
       font-family: 'Playfair Display', Georgia, serif;
-      font-size: clamp(30px, 4vw, 50px);
-      line-height: 1.08;
+      font-size: clamp(26px, 3vw, 40px);
+      line-height: 1.1;
       font-weight: 900;
       color: var(--cream);
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
+
+    .trust-card h3 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(26px, 3vw, 40px);
+      line-height: 1.1;
+      font-weight: 900;
+      color: var(--cream);
+      margin-bottom: 12px;
+    }
+
+    /* ClaimLab tooltip */
+    .claimlab-tip {
+      position: relative;
+      display: inline;
+      cursor: help;
+      border-bottom: 1px dotted rgba(201,168,76,.5);
+    }
+    .claimlab-tip-box {
+      display: none;
+      position: absolute;
+      bottom: calc(100% + 10px);
+      left: 50%;
+      transform: translateX(-50%);
+      width: 280px;
+      background: #0c1e30;
+      border: 1px solid rgba(201,168,76,.25);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-family: 'Crimson Text', Georgia, serif;
+      font-size: 14px;
+      line-height: 1.55;
+      color: var(--text-light);
+      box-shadow: 0 12px 32px rgba(0,0,0,.5);
+      z-index: 999;
+      pointer-events: none;
+    }
+    .claimlab-tip-box::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: rgba(201,168,76,.25);
+    }
+    .claimlab-tip:hover .claimlab-tip-box,
+    .claimlab-tip.tip-open .claimlab-tip-box { display: block; }
 
     .hero-text {
   font-size: 19px;
@@ -4705,24 +4752,18 @@ html, body {
       <div class="hero-inner">
         <div class="hero-card">
           <div class="hero-kicker">Political Intelligence Platform</div>
-          <h1 class="hero-title">Where trust has to come before everything else.</h1>
-          <p class="hero-text">
-  <strong>Where the Truth Lies</strong> is built to expose what political claims actually contain beneath the surface. Most platforms stop at surface-level judgments. That is where they fail.
-</p>
-<p class="hero-text">
-  Every claim has structure. Documented facts. Missing context. Underlying concerns. Value conflicts. This platform excavates all of it.
-</p>
+          <h1 class="hero-title">This platform breaks down what claims are actually made of.</h1>
+          <p class="hero-text">It goes beyond the argument, using <span class="claimlab-tip">ClaimLab&#8482;<span class="claimlab-tip-box">ClaimLab&#8482; is the structured evaluation system behind Where the Truth Lies. It tests how claims hold up against the available record, breaking them into layers so what is known, what is unclear, where people disagree, and where real agreement exists can be examined clearly.</span></span> to surface the layers beneath.</p>
+          <p class="hero-text">Facts, missing context, underlying concerns, and competing interpretations are examined together, not in isolation.</p>
+          <p class="hero-text">The goal is simple. Cut through the noise and show where the record supports real agreement.</p>
         </div>
 
         <div class="trust-card">
           <div class="mini-kicker">Editorial Standard</div>
-          <h3>Common Ground is not compromise.</h3>
-          <p>
-            Layer 06 exists only when the documented record supports something narrow, specific, lawful, institutionally achievable, and measurably better than deadlock.
-          </p>
-          <p>
-            No platitudes. No fake unity. No manufactured midpoint. If no genuine common ground exists, the platform should say so plainly.
-          </p>
+          <h3>Bringing back common ground.</h3>
+          <p>We start with the record as it exists today. Not opinion, not narrative.</p>
+          <p>Each claim is stripped of noise and broken into its underlying structure, revealing what is supported, what is missing, and where interpretations diverge.</p>
+          <p>Common ground is not assumed. It is identified where the record actually supports agreement.</p>
         </div>
       </div>
     </section>
@@ -7870,6 +7911,24 @@ console.error('Dispute submission failed:', err);
       btn.disabled = false;
     }
   }
+
+  // ClaimLab tooltip — tap to show on mobile
+  document.addEventListener('click', function(e) {
+    var tip = e.target.closest('.claimlab-tip');
+    if (tip) {
+      // Toggle on mobile tap
+      var isMobile = window.matchMedia('(hover: none)').matches;
+      if (isMobile) {
+        e.preventDefault();
+        var wasOpen = tip.classList.contains('tip-open');
+        document.querySelectorAll('.claimlab-tip.tip-open').forEach(function(t) { t.classList.remove('tip-open'); });
+        if (!wasOpen) tip.classList.add('tip-open');
+      }
+    } else {
+      // Close any open tooltips when clicking elsewhere
+      document.querySelectorAll('.claimlab-tip.tip-open').forEach(function(t) { t.classList.remove('tip-open'); });
+    }
+  });
 
   // Desktop nav menu dropdown
   function toggleNavMenu() {
