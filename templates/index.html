@@ -271,6 +271,57 @@
       color: var(--gold);
     }
 
+    /* Logout as gold badge pill */
+    a.logout-badge {
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      color: var(--gold);
+      background: rgba(201,168,76,.12);
+      border: 1px solid rgba(201,168,76,.28);
+      text-decoration: none;
+      transition: background .15s;
+    }
+    a.logout-badge:hover { background: rgba(201,168,76,.22); }
+
+    /* Menu dropdown */
+    .nav-menu-wrap { position: relative; display: inline-flex; align-items: center; }
+    .nav-menu-btn {
+      display: flex; align-items: center; gap: 4px;
+      padding: 6px 10px; border-radius: 999px;
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
+      color: var(--text-light);
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.1);
+      cursor: pointer; white-space: nowrap; transition: background .15s;
+    }
+    .nav-menu-btn:hover { background: rgba(255,255,255,.09); }
+    .nav-menu-btn .nav-chevron { font-size: 7px; opacity: .55; transition: transform .2s; }
+    .nav-menu-btn.open .nav-chevron { transform: rotate(180deg); }
+    .nav-menu-panel {
+      display: none; position: absolute; top: calc(100% + 10px); right: 0;
+      background: #0c1e30; border: 1px solid rgba(201,168,76,.22);
+      border-radius: 12px; padding: 6px; min-width: 180px;
+      box-shadow: 0 16px 40px rgba(0,0,0,.55); z-index: 9999;
+    }
+    .nav-menu-panel.open { display: block; }
+    .nav-menu-panel a {
+      display: block; padding: 10px 14px; border-radius: 7px;
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 11px; letter-spacing: .04em;
+      color: var(--text-light); text-decoration: none;
+      transition: background .12s;
+    }
+    .nav-menu-panel a:hover { background: rgba(255,255,255,.06); }
+    .nav-menu-panel .menu-div { height: 1px; background: rgba(255,255,255,.07); margin: 5px 2px; }
+    .nav-menu-panel .menu-red { color: #e97b7b; }
+    .nav-menu-panel .menu-red:hover { background: rgba(233,123,123,.08); }
+
     .gold-btn,
     .gold-btn-mobile {
       appearance: none;
@@ -3314,11 +3365,11 @@ html, body {
 
 /* Trademark styling */
 .tm {
-  font-size: 0.55em;
+  font-size: 0.38em;
   vertical-align: super;
-  margin-left: 2px;
-  letter-spacing: 0.08em;
-  opacity: 0.85;
+  margin-left: 1px;
+  letter-spacing: 0.06em;
+  opacity: 0.65;
 }
 
 /* Slightly smaller in navigation */
@@ -4603,8 +4654,24 @@ html, body {
         <span class="user-badge">{{ session.get("username") }}</span>
       {% endif %}
 
-      <a href="#claim-entry-module" class="gold-btn">Run a Claim</a>
-      <a href="/logout">Logout</a>
+      <a href="/logout" class="logout-badge">Logout</a>
+
+      <div class="nav-menu-wrap">
+        <button class="nav-menu-btn" id="navMenuBtn" onclick="toggleNavMenu()" aria-expanded="false">
+          Menu <span class="nav-chevron">&#9660;</span>
+        </button>
+        <div class="nav-menu-panel" id="navMenuPanel">
+          <a href="/">ClaimLab Home</a>
+          <a href="/archives">Claims Archive</a>
+          <a href="#methodology-section">Methodology</a>
+          {% if true_superuser %}<a href="/editor">Editor Queue</a>{% endif %}
+          <div class="menu-div"></div>
+          <a href="/profile">Profile</a>
+          <a href="/disputes">My Disputes</a>
+          <div class="menu-div"></div>
+          <a href="/logout" class="menu-red">Log Out</a>
+        </div>
+      </div>
     </nav>
 
     {% if session.get("username") %}
@@ -7630,7 +7697,7 @@ console.error('Dispute submission failed:', err);
 </div>
 
 <script>
-  // ── BREAKOUT DATA MAP ── populated from server template, avoids HTML attr quoting issues
+  // ── BREAKOUT DATA MAP ──
   window._boData = {};
   {% if current_claim and current_claim.breakout_claims_grouped %}
     {% for group in current_claim.breakout_claims_grouped %}
@@ -7750,8 +7817,8 @@ console.error('Dispute submission failed:', err);
         body: JSON.stringify({ record_id: _breakoutRecordId, user_context: userContext })
       });
       var data = await res.json();
-
       _stopStatusCycle();
+
       if (res.ok && data.ok && data.redirect_to) {
         statusEl.textContent = 'Excavation complete. Loading claim...';
         setTimeout(function() { closeBreakoutModal(); window.location = data.redirect_to; }, 800);
@@ -7806,6 +7873,26 @@ console.error('Dispute submission failed:', err);
       btn.disabled = false;
     }
   }
+
+  // Desktop nav menu dropdown
+  function toggleNavMenu() {
+    var btn = document.getElementById('navMenuBtn');
+    var panel = document.getElementById('navMenuPanel');
+    if (!btn || !panel) return;
+    var isOpen = panel.classList.contains('open');
+    panel.classList.toggle('open', !isOpen);
+    btn.classList.toggle('open', !isOpen);
+    btn.setAttribute('aria-expanded', String(!isOpen));
+  }
+  document.addEventListener('click', function(e) {
+    var wrap = document.querySelector('.nav-menu-wrap');
+    if (wrap && !wrap.contains(e.target)) {
+      var p = document.getElementById('navMenuPanel');
+      var b = document.getElementById('navMenuBtn');
+      if (p) p.classList.remove('open');
+      if (b) { b.classList.remove('open'); b.setAttribute('aria-expanded','false'); }
+    }
+  });
 
   // Close breakout modal on overlay click
   document.getElementById('breakoutModal').addEventListener('click', function(e) {
