@@ -7195,26 +7195,60 @@ console.error('Dispute submission failed:', err);
       listEl.innerHTML = '';
       claims.forEach(function(claim, idx) {
         var row = document.createElement('div');
-        row.style.cssText = 'padding:12px 0; border-bottom:1px solid rgba(255,255,255,.06); display:grid; grid-template-columns:28px 1fr auto; gap:10px; align-items:start;';
-        var reanalyzedBadge = claim.last_reanalyzed
-          ? '<div style="font-size:10px;color:#75c28d;margin-top:3px;">↻ ' + escHtml(claim.last_reanalyzed) + '</div>' : '';
-        row.innerHTML =
-          '<input type="checkbox" class="m-cm-check" data-idx="' + idx + '" onchange="mCmUpdateCount()" style="width:18px;height:18px;cursor:pointer;margin-top:2px;">' +
-          '<div>' +
-            '<a href="/claim/' + escHtml(claim.slug) + '" style="font-family:'Playfair Display',serif;font-size:15px;color:var(--cream);text-decoration:none;line-height:1.3;display:block;">' +
-              escHtml(claim.title.length > 60 ? claim.title.slice(0,60) + '...' : claim.title) +
-            '</a>' +
-            '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:3px;">' +
-              (claim.verdict ? '<span style="font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-mid);">' + escHtml(claim.verdict) + '</span>' : '') +
-              (claim.date_added ? '<span style="font-family:'Libre Baskerville',serif;font-size:9px;color:var(--text-mid);">' + claim.date_added + '</span>' : '') +
-            '</div>' +
-            reanalyzedBadge +
-          '</div>' +
-          '<button type="button" class="cm-row-btn" id="m-cm-btn-' + idx + '" style="white-space:nowrap;">Full</button>';
-        var btn = row.querySelector('.cm-row-btn');
-        var capturedId = claim.record_id;
-        var capturedIdx = idx;
-        btn.onclick = function() { mRunSingleReanalyze(capturedId, capturedIdx, 'full'); };
+        row.className = 'cm-claim-row';
+
+        var cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.className = 'm-cm-check';
+        cb.setAttribute('data-idx', String(idx));
+        cb.style.cssText = 'width:18px;height:18px;cursor:pointer;margin-top:2px;';
+        cb.addEventListener('change', function() { mCmUpdateCount(); });
+
+        var info = document.createElement('div');
+
+        var titleEl = document.createElement('a');
+        titleEl.href = '/claim/' + escHtml(claim.slug);
+        titleEl.className = 'cm-claim-title';
+        titleEl.textContent = claim.title.length > 60 ? claim.title.slice(0,60) + '...' : claim.title;
+
+        var meta = document.createElement('div');
+        meta.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-top:3px;';
+
+        if (claim.verdict) {
+          var v = document.createElement('span');
+          v.className = 'cm-claim-meta';
+          v.textContent = claim.verdict;
+          meta.appendChild(v);
+        }
+        if (claim.date_added) {
+          var d = document.createElement('span');
+          d.className = 'cm-claim-meta';
+          d.textContent = claim.date_added;
+          meta.appendChild(d);
+        }
+
+        info.appendChild(titleEl);
+        info.appendChild(meta);
+
+        if (claim.last_reanalyzed) {
+          var r = document.createElement('div');
+          r.className = 'cm-reanalyzed-badge';
+          r.textContent = '↻ ' + claim.last_reanalyzed;
+          info.appendChild(r);
+        }
+
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'cm-row-btn';
+        btn.id = 'm-cm-btn-' + idx;
+        btn.textContent = 'Full';
+        (function(id, i) {
+          btn.addEventListener('click', function() { mRunSingleReanalyze(id, i, 'full'); });
+        })(claim.record_id, idx);
+
+        row.appendChild(cb);
+        row.appendChild(info);
+        row.appendChild(btn);
         listEl.appendChild(row);
       });
     }
