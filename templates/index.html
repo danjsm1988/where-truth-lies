@@ -4015,7 +4015,7 @@ html, body {
                 {% for bo in group.claims %}
                   {% set bo_ex = bo.breakout_status == 'Excavated' %}
                   <div class="m-breakout-row {% if bo_ex %}excavated{% endif %}"
-                       data-bo-id="{{ bo.record_id }}" data-bo="{{ bo | tojson | e }}" onclick="handleBreakoutClick(this)">
+                       data-bo-id="{{ bo.record_id }}" onclick="handleBreakoutClick(this)">
                     <span class="m-breakout-status-dot {% if bo_ex %}excavated{% else %}pending{% endif %}"></span>
                     <span class="m-breakout-row-title">{{ bo.title }}</span>
                     {% if bo.breakout_source_section == 'Dispute' %}
@@ -5207,7 +5207,7 @@ html, body {
                         {% set bo_excavated = bo.breakout_status == 'Excavated' %}
                         {% set bo_origin = bo.origin_type or 'Breakout Claim' %}
                         <div class="breakout-row {% if bo_excavated %}excavated{% endif %}"
-                             data-bo-id="{{ bo.record_id }}" data-bo="{{ bo | tojson | e }}" onclick="handleBreakoutClick(this)">
+                             data-bo-id="{{ bo.record_id }}" onclick="handleBreakoutClick(this)">
                           <span class="breakout-status-dot {% if bo_excavated %}excavated{% elif bo.breakout_status == 'Excavating' %}excavating{% else %}pending{% endif %}"></span>
                           <span class="breakout-row-title">{{ bo.title }}</span>
                           {% if bo.breakout_source_section == 'Dispute' %}
@@ -5609,7 +5609,7 @@ html, body {
                 {% set bo_ex = bo.breakout_status == 'Excavated' %}
                 <div class="breakout-row {% if bo_ex %}excavated{% endif %}"
                      style="margin-bottom:5px;"
-                     data-bo-id="{{ bo.record_id }}" data-bo="{{ bo | tojson | e }}" onclick="handleBreakoutClick(this)">
+                     data-bo-id="{{ bo.record_id }}" onclick="handleBreakoutClick(this)">
                   <span class="breakout-status-dot {% if bo_ex %}excavated{% else %}pending{% endif %}"></span>
                   <span class="breakout-row-title">{{ bo.title }}</span>
                   {% if bo.breakout_source_section == 'Dispute' %}
@@ -7630,77 +7630,28 @@ console.error('Dispute submission failed:', err);
 </div>
 
 <script>
+  // ── BREAKOUT DATA MAP ── populated from server template, avoids HTML attr quoting issues
+  window._boData = {};
+  {% if current_claim and current_claim.breakout_claims_grouped %}
+    {% for group in current_claim.breakout_claims_grouped %}
+      {% for bo in group.claims %}
+        window._boData["{{ bo.record_id }}"] = {{ bo | tojson }};
+      {% endfor %}
+    {% endfor %}
+  {% endif %}
+  {% if current_claim and current_claim.dispute_breakout_groups %}
+    {% for g in current_claim.dispute_breakout_groups %}
+      {% for bo in g.claims %}
+        window._boData["{{ bo.record_id }}"] = {{ bo | tojson }};
+      {% endfor %}
+    {% endfor %}
+  {% endif %}
+</script>
+
+<script>
   // ── BREAKOUT CLAIMS JS ──
   var _breakoutRecordId = '';
   var _breakoutData = null;
-  var _breakoutStatusInterval = null;
-  var _breakoutPollInterval = null;
-
-  var _excavationMessages = [
-    'Locking claim record in Airtable...',
-    'Consulting Grok live layer for real-time grounding...',
-    'Grok searching live web and X sources...',
-    'Anchoring facts against known reality...',
-    'Sending to Claude for deep excavation...',
-    'Claude parsing direct facts and adjacent facts...',
-    'Claude mapping root concern and values divergence...',
-    'Claude drafting constitutional framework layer...',
-    'Sending to ChatGPT for cross-analysis...',
-    'ChatGPT building scenario and common ground map...',
-    'Comparing Claude and ChatGPT analyses...',
-    'Writing excavation to Airtable...',
-    'Running breakout detection on newly excavated claim...',
-    'Finalizing. Almost done...'
-  ];
-
-  function _startStatusCycle(statusEl) {
-    var idx = 0;
-    statusEl.textContent = _excavationMessages[0];
-    _breakoutStatusInterval = setInterval(function() {
-      idx = (idx + 1) % _excavationMessages.length;
-      statusEl.textContent = _excavationMessages[idx];
-    }, 4000);
-  }
-
-  function _stopStatusCycle() {
-    if (_breakoutStatusInterval) {
-      clearInterval(_breakoutStatusInterval);
-      _breakoutStatusInterval = null;
-    }
-  }
-
-  function _stopPoll() {
-    if (_breakoutPollInterval) {
-      clearInterval(_breakoutPollInterval);
-      _breakoutPollInterval = null;
-    }
-  }
-
-  function _pollUntilExcavated(recordId, statusEl, confirmBtn) {
-    _breakoutPollInterval = setInterval(function() {
-      fetch('/breakout/lock-check/' + recordId)
-        .then(function(r) { return r.json(); })
-        .then(function(d) {
-          if (d.breakout_status === 'Excavated' && d.slug) {
-            _stopStatusCycle();
-            _stopPoll();
-            statusEl.textContent = 'Excavation complete. Loading claim...';
-            setTimeout(function() {
-              closeBreakoutModal();
-              window.location = '/claim/' + d.slug;
-            }, 800);
-          } else if (d.breakout_status === 'Pending Excavation') {
-            // AI failed — unlocked back to pending
-            _stopStatusCycle();
-            _stopPoll();
-            statusEl.textContent = 'Excavation failed. Please try again.';
-            confirmBtn.disabled = false;
-            confirmBtn.textContent = 'Excavate This Claim';
-          }
-        })
-        .catch(function() {});
-    }, 3000);
-  }
 
   function openBreakoutModal(recordId, boData) {
     _breakoutRecordId = recordId;
@@ -7720,8 +7671,7 @@ console.error('Dispute submission failed:', err);
     }
 
     document.getElementById('breakout-modal-context').value = '';
-    var statusEl = document.getElementById('breakout-modal-status');
-    statusEl.textContent = '';
+    document.getElementById('breakout-modal-status').textContent = '';
 
     var confirmBtn = document.getElementById('breakout-confirm-btn');
     confirmBtn.disabled = false;
@@ -7736,14 +7686,8 @@ console.error('Dispute submission failed:', err);
         if (data.breakout_status === 'Excavated' && data.slug) {
           closeBreakoutModal();
           window.location = '/claim/' + data.slug;
-        } else if (data.breakout_status === 'Excavating') {
-          // Already running in background — attach to live progress
-          confirmBtn.disabled = true;
-          confirmBtn.textContent = 'Excavating...';
-          _startStatusCycle(statusEl);
-          _pollUntilExcavated(recordId, statusEl, confirmBtn);
         } else if (data.lock_status === 'Locked') {
-          statusEl.textContent = 'This claim is currently being excavated. Try again shortly.';
+          document.getElementById('breakout-modal-status').textContent = 'This claim is currently being excavated. Try again shortly.';
           confirmBtn.disabled = true;
         }
       })
@@ -7752,10 +7696,40 @@ console.error('Dispute submission failed:', err);
 
   function closeBreakoutModal() {
     _stopStatusCycle();
-    _stopPoll();
     document.getElementById('breakoutModal').classList.remove('visible');
     _breakoutRecordId = '';
     _breakoutData = null;
+  }
+
+  var _excavationMessages = [
+    'Locking claim record in Airtable...',
+    'Consulting Grok live layer for real-time grounding...',
+    'Grok searching live web and X sources...',
+    'Anchoring facts against known reality...',
+    'Sending to Claude for deep excavation...',
+    'Claude parsing direct facts and adjacent facts...',
+    'Claude mapping root concern and values divergence...',
+    'Claude drafting constitutional framework layer...',
+    'Sending to ChatGPT for cross-analysis...',
+    'ChatGPT building scenario and common ground map...',
+    'Comparing Claude and ChatGPT analyses...',
+    'Writing excavation to Airtable...',
+    'Running breakout detection on newly excavated claim...',
+    'Finalizing. Almost done...'
+  ];
+  var _breakoutStatusInterval = null;
+
+  function _startStatusCycle(statusEl) {
+    var idx = 0;
+    statusEl.textContent = _excavationMessages[0];
+    _breakoutStatusInterval = setInterval(function() {
+      idx = (idx + 1) % _excavationMessages.length;
+      statusEl.textContent = _excavationMessages[idx];
+    }, 4000);
+  }
+
+  function _stopStatusCycle() {
+    if (_breakoutStatusInterval) { clearInterval(_breakoutStatusInterval); _breakoutStatusInterval = null; }
   }
 
   async function confirmBreakoutExcavation() {
@@ -7777,23 +7751,14 @@ console.error('Dispute submission failed:', err);
       });
       var data = await res.json();
 
+      _stopStatusCycle();
       if (res.ok && data.ok && data.redirect_to) {
-        // Synchronous success — redirect directly
-        _stopStatusCycle();
         statusEl.textContent = 'Excavation complete. Loading claim...';
-        setTimeout(function() {
-          closeBreakoutModal();
-          window.location = data.redirect_to;
-        }, 800);
-      } else if (res.ok && data.ok && data.queued) {
-        // Async queued — poll until done (fallback path)
-        _pollUntilExcavated(_breakoutRecordId, statusEl, confirmBtn);
+        setTimeout(function() { closeBreakoutModal(); window.location = data.redirect_to; }, 800);
       } else if (data.redirect_to) {
-        _stopStatusCycle();
         statusEl.textContent = 'Already excavated. Redirecting...';
         setTimeout(function() { window.location = data.redirect_to; }, 800);
       } else {
-        _stopStatusCycle();
         statusEl.textContent = 'Error: ' + (data.error || 'Excavation failed.');
         confirmBtn.disabled = false;
         confirmBtn.textContent = 'Excavate This Claim';
@@ -7808,9 +7773,7 @@ console.error('Dispute submission failed:', err);
 
   function handleBreakoutClick(el) {
     var recordId = el.getAttribute('data-bo-id');
-    var boRaw = el.getAttribute('data-bo');
-    var boData = {};
-    try { boData = JSON.parse(boRaw); } catch(e) {}
+    var boData = (window._boData && window._boData[recordId]) || {};
     var status = boData.breakout_status || '';
     if (status === 'Excavated' && boData.slug) {
       window.location = '/claim/' + boData.slug;

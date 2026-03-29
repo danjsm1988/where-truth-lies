@@ -3413,9 +3413,8 @@ def breakout_list_for_claim(slug):
 @app.route("/breakout/excavate", methods=["POST"])
 def breakout_excavate():
     """
-    Synchronous excavation — runs full AI pipeline inline.
-    JS shows animated progress during the wait, then redirects on completion.
-    gunicorn timeout must be >= 120s (set in Procfile).
+    Synchronous excavation. Runs full AI pipeline inline and returns redirect_to on success.
+    Requires gunicorn --timeout 120 in Procfile.
     """
     if not session.get("logged_in"):
         return jsonify({"error": "Not logged in"}), 401
@@ -3488,7 +3487,6 @@ def breakout_excavate():
 
     username = session.get("username", "Unknown")
 
-    # Run AI pipeline synchronously
     try:
         reality_anchor, grok_adjudication = build_reality_anchor_with_grok(claim_text)
         prompt_text = f"{reality_anchor}\n\nNow analyze this claim:\n\"{claim_text}\"".strip()
@@ -3530,7 +3528,7 @@ def breakout_excavate():
                 "Breakout Status": "Pending Excavation",
                 "Breakout User Excavated": "No"
             })
-            return jsonify({"error": f"AI excavation failed: {primary.get('error', 'Unknown error')}"}), 500
+            return jsonify({"error": f"AI excavation failed: {primary.get('error', 'Unknown')}"}), 500
 
         update_fields = extract_primary_record_fields(
             claim=claim_text,
@@ -3558,7 +3556,6 @@ def breakout_excavate():
             return jsonify({"error": f"Failed to save excavation: {resp.text}"}), 500
 
         final_slug = update_fields.get("URL Slug", bf.get("URL Slug", ""))
-
         parent_links = bf.get("Parent Claim", [])
         if parent_links:
             update_airtable_record(parent_links[0], {"Has Breakout Children": True})
@@ -3583,6 +3580,8 @@ def breakout_excavate():
             "Breakout User Excavated": "No"
         })
         return jsonify({"error": f"Excavation error: {str(e)}"}), 500
+
+
 
 @app.route("/breakout/lock-check/<record_id>", methods=["GET"])
 def breakout_lock_check(record_id):
