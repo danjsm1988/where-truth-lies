@@ -3567,6 +3567,25 @@ html, body {
       display: none !important;
     }
 
+    /* ── EDITOR TABS — 5-tab layout ── */
+    .excavation-tabs.editor-tabs {
+      flex-wrap: wrap;
+      gap: 2px;
+    }
+    .editor-tab-cm {
+      margin-left: auto;
+      border-left: 1px solid rgba(201,168,76,.2);
+      padding-left: 16px !important;
+      color: var(--gold-dim);
+    }
+    .editor-tab-cm.active {
+      color: var(--gold);
+    }
+    @media (max-width: 900px) {
+      .excavation-tabs.editor-tabs { flex-wrap: wrap; }
+      .editor-tab-cm { margin-left: 0; border-left: none; padding-left: 12px !important; }
+    }
+
     /* ── EDITOR PAGE ── */
     .editor-page-section {
       max-width: 900px;
@@ -4568,10 +4587,10 @@ html, body {
             </button>
             <button type="button" class="tab-btn" id="editor-tab-current" onclick="setEditorTab('Current Dispute', this)">
               Current Disputes
-            </button
-          <button type="button" class="tab-btn" id="editor-tab-claims" onclick="setEditorTab('__claims__', this)">
+            </button>
+          <button type="button" class="tab-btn editor-tab-cm" id="editor-tab-claims" onclick="setEditorTab('__claims__', this)">
             Claim Management
-          </button>>
+          </button>
           </div>
 
           <div class="editor-queue-scroll">
