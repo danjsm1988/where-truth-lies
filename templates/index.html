@@ -3488,132 +3488,27 @@ html, body {
 
 
     /* ── EDITOR CARD ENHANCEMENTS ── */
-    .editor-sections-row {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 12px;
-    }
-    .editor-sections-label {
-      font-family: 'Libre Baskerville', Georgia, serif;
-      font-size: 9px;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-      color: var(--text-mid);
-      flex: 0 0 auto;
-    }
-    .editor-section-chip {
-      font-family: 'Libre Baskerville', Georgia, serif;
-      font-size: 9px;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-      padding: 3px 9px;
-      border-radius: 999px;
-      background: rgba(201,168,76,.08);
-      border: 1px solid rgba(201,168,76,.22);
-      color: var(--gold);
-    }
-    .editor-claim-snapshot {
-      background: rgba(255,255,255,.025);
-      border: 1px solid rgba(255,255,255,.08);
-      border-left: 3px solid rgba(201,168,76,.5);
-      border-radius: 0 12px 12px 0;
-      padding: 12px 14px;
-      margin-bottom: 12px;
-    }
-    .editor-snapshot-label {
-      font-family: 'Libre Baskerville', Georgia, serif;
-      font-size: 9px;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-      color: var(--gold-dim);
-      margin-bottom: 8px;
-    }
-    .editor-snapshot-verdict {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 8px;
-    }
-    .editor-snapshot-field {
-      font-family: 'Libre Baskerville', Georgia, serif;
-      font-size: 10px;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-      color: var(--text-mid);
-    }
-    .editor-snapshot-qe {
-      font-size: 14px;
-      line-height: 1.6;
-      color: var(--text-light);
-      font-style: italic;
-    }
-    .editor-note-green {
-      border-left-color: rgba(117,194,141,.5) !important;
-      background: rgba(117,194,141,.04) !important;
-    }
-    .editor-manual-rec {
-      width: 100%;
-      min-height: 80px;
-      resize: vertical;
-      background: rgba(255,255,255,.035);
-      border: 1px solid rgba(255,255,255,.11);
-      border-radius: 10px;
-      color: var(--cream);
-      font-family: 'Crimson Text', Georgia, serif;
-      font-size: 15px;
-      line-height: 1.55;
-      padding: 10px 12px;
-      outline: none;
-      transition: border-color .18s ease;
-      margin-bottom: 8px;
-      display: block;
-    }
+    .editor-sections-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 12px; }
+    .editor-sections-label { font-family: 'Libre Baskerville', Georgia, serif; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--text-mid); flex: 0 0 auto; }
+    .editor-section-chip { font-family: 'Libre Baskerville', Georgia, serif; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; background: rgba(201,168,76,.08); border: 1px solid rgba(201,168,76,.22); color: var(--gold); }
+    .editor-claim-snapshot { background: rgba(255,255,255,.025); border: 1px solid rgba(255,255,255,.08); border-left: 3px solid rgba(201,168,76,.5); border-radius: 0 12px 12px 0; padding: 12px 14px; margin-bottom: 12px; }
+    .editor-snapshot-label { font-family: 'Libre Baskerville', Georgia, serif; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-dim); margin-bottom: 8px; }
+    .editor-snapshot-verdict { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .editor-snapshot-field { font-family: 'Libre Baskerville', Georgia, serif; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-mid); }
+    .editor-snapshot-qe { font-size: 14px; line-height: 1.6; color: var(--text-light); font-style: italic; }
+    .editor-note-green { border-left-color: rgba(117,194,141,.5) !important; background: rgba(117,194,141,.04) !important; }
+    .editor-manual-rec { width: 100%; min-height: 80px; resize: vertical; background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.11); border-radius: 10px; color: var(--cream); font-family: 'Crimson Text', Georgia, serif; font-size: 15px; line-height: 1.55; padding: 10px 12px; outline: none; transition: border-color .18s ease; margin-bottom: 8px; display: block; }
     .editor-manual-rec:focus { border-color: rgba(201,168,76,.48); }
-    .editor-save-rec-btn {
-      appearance: none;
-      border: 1px solid rgba(201,168,76,.35);
-      background: rgba(201,168,76,.08);
-      color: var(--gold);
-      font-family: 'Libre Baskerville', Georgia, serif;
-      font-size: 10px;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      padding: 8px 14px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all .15s ease;
-    }
+    .editor-save-rec-btn { appearance: none; border: 1px solid rgba(201,168,76,.35); background: rgba(201,168,76,.08); color: var(--gold); font-family: 'Libre Baskerville', Georgia, serif; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; padding: 8px 14px; border-radius: 8px; cursor: pointer; transition: all .15s ease; }
     .editor-save-rec-btn:hover { background: rgba(201,168,76,.16); border-color: var(--gold); }
+    .editor-reanalyze-btn { appearance: none; border: 1px solid rgba(117,194,141,.35); background: rgba(117,194,141,.08); color: #75c28d; font-family: 'Libre Baskerville', Georgia, serif; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; padding: 8px 14px; border-radius: 8px; cursor: pointer; transition: all .15s ease; margin-left: 8px; }
+    .editor-reanalyze-btn:hover { background: rgba(117,194,141,.16); border-color: #75c28d; }
 
     /* ── EDITOR CONTROLS ── */
-    .editor-controls-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      padding: 14px 0 4px;
-      border-top: 1px solid rgba(201,168,76,.12);
-      margin-top: 12px;
-    }
+    .editor-controls-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 14px 0 4px; border-top: 1px solid rgba(201,168,76,.12); margin-top: 12px; }
     .editor-control-group { display: flex; flex-direction: column; gap: 5px; }
-    .editor-control-label {
-      font-family: 'Libre Baskerville', Georgia, serif;
-      font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-dim);
-    }
-    .editor-select {
-      appearance: none;
-      background: rgba(255,255,255,.04);
-      border: 1px solid rgba(201,168,76,.22);
-      border-radius: 8px;
-      color: var(--cream);
-      font-family: 'Libre Baskerville', Georgia, serif;
-      font-size: 11px;
-      padding: 7px 10px;
-      cursor: pointer;
-      transition: border-color .15s ease, background .15s ease;
-      outline: none;
-    }
+    .editor-control-label { font-family: 'Libre Baskerville', Georgia, serif; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-dim); }
+    .editor-select { appearance: none; background: rgba(255,255,255,.04); border: 1px solid rgba(201,168,76,.22); border-radius: 8px; color: var(--cream); font-family: 'Libre Baskerville', Georgia, serif; font-size: 11px; padding: 7px 10px; cursor: pointer; transition: border-color .15s ease, background .15s ease; outline: none; }
     .editor-select:hover { border-color: rgba(201,168,76,.5); background: rgba(255,255,255,.07); }
     .editor-select:focus { border-color: var(--gold); background: rgba(255,255,255,.07); }
     .editor-select option { background: #0f2133; color: var(--cream); }
@@ -3623,19 +3518,9 @@ html, body {
     @media (max-width: 1180px) { .editor-controls-row { grid-template-columns: 1fr 1fr; } }
 
     /* ── UPDATE PREVIEW MODAL ── */
-    .update-preview-overlay {
-      display: none; position: fixed; inset: 0; z-index: 8200;
-      background: rgba(6,17,27,.88); backdrop-filter: blur(4px);
-      align-items: center; justify-content: center; padding: 20px;
-    }
+    .update-preview-overlay { display: none; position: fixed; inset: 0; z-index: 8200; background: rgba(6,17,27,.88); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px; }
     .update-preview-overlay.visible { display: flex; }
-    .update-preview-box {
-      background: linear-gradient(180deg, #0f2133, #091b2c);
-      border: var(--border); border-radius: var(--radius);
-      padding: 28px 28px 24px; max-width: 820px; width: 100%;
-      max-height: 88vh; overflow-y: auto;
-      box-shadow: 0 32px 64px rgba(0,0,0,.6);
-    }
+    .update-preview-box { background: linear-gradient(180deg, #0f2133, #091b2c); border: var(--border); border-radius: var(--radius); padding: 28px 28px 24px; max-width: 820px; width: 100%; max-height: 88vh; overflow-y: auto; box-shadow: 0 32px 64px rgba(0,0,0,.6); }
     .update-preview-title { font-family: 'Playfair Display', Georgia, serif; font-size: 26px; font-weight: 700; color: var(--cream); margin-bottom: 6px; }
     .update-preview-sub { font-size: 15px; color: var(--text-light); font-style: italic; margin-bottom: 20px; line-height: 1.5; }
     .update-section-card { background: rgba(255,255,255,.025); border: var(--border-soft); border-radius: 14px; padding: 16px 18px; margin-bottom: 14px; }
@@ -4355,7 +4240,7 @@ html, body {
                 {% if item.escalated %}<span class="m-chip" style="color:var(--gold);border-color:rgba(201,168,76,.3);">Escalated</span>{% endif %}
               </div>
               {% if item.sections_disputed %}
-                <div class="editor-sections-row" style="margin-bottom:8px;">
+                <div class="editor-sections-row">
                   <span class="editor-sections-label">Disputing:</span>
                   {% for sec in item.sections_disputed %}<span class="editor-section-chip">{{ sec }}</span>{% endfor %}
                 </div>
@@ -4368,19 +4253,15 @@ html, body {
                 </div>
               {% endif %}
               <div class="m-editor-dispute-text">{{ item.dispute_text }}</div>
-              {% if item.ai_response %}
-                <div class="m-editor-ai-block"><div class="m-editor-ai-label">AI Response</div><div class="m-editor-ai-text">{{ item.ai_response }}</div></div>
-              {% endif %}
+              {% if item.ai_response %}<div class="m-editor-ai-block"><div class="m-editor-ai-label">AI Response</div><div class="m-editor-ai-text">{{ item.ai_response }}</div></div>{% endif %}
               {% if item.ai_recommended_changes %}
-                <div class="m-editor-ai-block" style="border-left-color:rgba(117,194,141,.4);">
-                  <div class="m-editor-ai-label" style="color:#75c28d;">AI Recommended Changes</div>
-                  <div class="m-editor-ai-text">{{ item.ai_recommended_changes }}</div>
-                </div>
+                <div class="m-editor-ai-block" style="border-left-color:rgba(117,194,141,.4);"><div class="m-editor-ai-label" style="color:#75c28d;">AI Recommended Changes</div><div class="m-editor-ai-text">{{ item.ai_recommended_changes }}</div></div>
               {% else %}
                 <div>
                   <label class="editor-control-label" style="display:block; margin-bottom:4px;">Write recommendation:</label>
                   <textarea id="manual-rec-{{ item.record_id }}" class="editor-manual-rec" placeholder="Describe what should change..." rows="3"></textarea>
                   <button type="button" class="editor-save-rec-btn" onclick="saveManualRecommendation('{{ item.record_id }}', this)">Save</button>
+                  <button type="button" class="editor-reanalyze-btn" onclick="reanalyzeDispute('{{ item.record_id }}', this)">Ask AI</button>
                   <span id="rec-status-{{ item.record_id }}" style="font-size:12px; color:var(--text-mid); margin-left:6px;"></span>
                 </div>
               {% endif %}
@@ -4414,7 +4295,7 @@ html, body {
                 <div id="save-m-{{ item.record_id }}" style="font-size:12px; color:var(--text-mid); font-style:italic; min-height:16px;"></div>
                 <a href="/claim/{{ item.claim_slug }}" class="m-run-btn" style="text-decoration:none; text-align:center; display:block; margin-top:6px;">Open Claim</a>
                 <button type="button" class="m-run-btn" style="background:linear-gradient(180deg,#2e7d32,#1b5e20); width:100%; margin-top:8px; border:none; cursor:pointer;"
-                  onclick="handleEditorResolve('{{ item.record_id }}', '{{ item.resolution_type }}', this)">Resolve</button>
+                  onclick="handleEditorResolve('{{ item.record_id }}', '{{ item.resolution_type }}', '{{ item.status }}', this)">Resolve</button>
               </div>
             </div>
           {% endfor %}
@@ -4695,8 +4576,6 @@ html, body {
                   <div class="archive-card editor-card"
                        data-category="{{ item.editor_queue_category or 'Current Dispute' }}"
                        style="padding:18px;">
-
-                    <!-- Card title + meta -->
                     <div class="archive-card-title">
                       <a href="/claim/{{ item.claim_slug }}">{{ item.title }}</a>
                     </div>
@@ -4705,81 +4584,47 @@ html, body {
                       {% if item.date %}<span class="micro-meta">{{ item.date }}</span>{% endif %}
                       {% if item.escalated %}<span class="topic-tag">Escalated</span>{% endif %}
                     </div>
-
-                    <!-- Sections disputed chips -->
                     {% if item.sections_disputed %}
                       <div class="editor-sections-row">
                         <span class="editor-sections-label">Disputing:</span>
-                        {% for sec in item.sections_disputed %}
-                          <span class="editor-section-chip">{{ sec }}</span>
-                        {% endfor %}
+                        {% for sec in item.sections_disputed %}<span class="editor-section-chip">{{ sec }}</span>{% endfor %}
                       </div>
                     {% endif %}
-
-                    <!-- Claim snapshot -->
                     {% if item.claim_verdict or item.claim_quick_explanation %}
                       <div class="editor-claim-snapshot">
                         <div class="editor-snapshot-label">Current Claim State</div>
                         {% if item.claim_verdict %}
                           <div class="editor-snapshot-verdict">
                             <span class="editor-snapshot-field">Verdict:</span>
-                            <span class="verdict-pill
-                              {% set vl = item.claim_verdict|lower %}
-                              {% if vl == 'true' %}v-true
-                              {% elif 'mostly true' in vl %}v-mostly-true
-                              {% elif 'substantially true' in vl %}v-substantially-true
-                              {% elif 'plausible' in vl or 'mixed' in vl %}v-plausible
-                              {% elif vl == 'contested' %}v-contested
-                              {% elif vl == 'exaggerated' %}v-exaggerated
-                              {% elif vl == 'misleading' %}v-misleading
-                              {% elif vl == 'false' %}v-false
-                              {% else %}v-unproven{% endif %}">{{ item.claim_verdict }}</span>
+                            <span class="verdict-pill {% set vl = item.claim_verdict|lower %}{% if vl == 'true' %}v-true{% elif 'mostly true' in vl %}v-mostly-true{% elif 'substantially true' in vl %}v-substantially-true{% elif 'plausible' in vl or 'mixed' in vl %}v-plausible{% elif vl == 'contested' %}v-contested{% elif vl == 'exaggerated' %}v-exaggerated{% elif vl == 'misleading' %}v-misleading{% elif vl == 'false' %}v-false{% else %}v-unproven{% endif %}">{{ item.claim_verdict }}</span>
                           </div>
                         {% endif %}
-                        {% if item.claim_quick_explanation %}
-                          <div class="editor-snapshot-qe">{{ item.claim_quick_explanation }}</div>
-                        {% endif %}
+                        {% if item.claim_quick_explanation %}<div class="editor-snapshot-qe">{{ item.claim_quick_explanation }}</div>{% endif %}
                       </div>
                     {% endif %}
-
-                    <!-- Dispute text -->
                     <div class="archive-card-dek" style="margin-bottom:10px;">
                       <strong>Dispute:</strong> {{ item.dispute_text }}
                     </div>
-
-                    <!-- AI response -->
                     {% if item.ai_response %}
                       <div class="editor-note-block" style="margin-bottom:10px;">
                         <strong>AI Response:</strong> {{ item.ai_response }}
                       </div>
                     {% endif %}
-
-                    <!-- AI recommended changes OR write-your-own textarea -->
                     {% if item.ai_recommended_changes %}
                       <div class="editor-note-block editor-note-green" style="margin-bottom:10px;">
-                        <strong>AI Recommended Changes:</strong><br>
-                        {{ item.ai_recommended_changes }}
+                        <strong>AI Recommended Changes:</strong><br>{{ item.ai_recommended_changes }}
                       </div>
                     {% else %}
                       <div style="margin-bottom:10px;">
-                        <label class="editor-control-label" style="display:block; margin-bottom:6px;">
-                          No AI recommendation on file. Write your own:
-                        </label>
-                        <textarea
-                          id="manual-rec-{{ item.record_id }}"
-                          class="editor-manual-rec"
-                          placeholder="Describe what should be updated and why. AI will use this to generate structured changes."
-                          rows="3"
-                        ></textarea>
-                        <button type="button" class="editor-save-rec-btn"
-                          onclick="saveManualRecommendation('{{ item.record_id }}', this)">
-                          Save Recommendation
-                        </button>
-                        <span id="rec-status-{{ item.record_id }}" style="font-size:12px; color:var(--text-mid); font-style:italic; margin-left:8px;"></span>
+                        <label class="editor-control-label" style="display:block; margin-bottom:6px;">No AI recommendation on file. Write your own:</label>
+                        <textarea id="manual-rec-{{ item.record_id }}" class="editor-manual-rec" placeholder="Describe what should be updated and why. AI will use this to generate structured changes." rows="3"></textarea>
+                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:4px;">
+                          <button type="button" class="editor-save-rec-btn" onclick="saveManualRecommendation('{{ item.record_id }}', this)">Save Recommendation</button>
+                          <button type="button" class="editor-reanalyze-btn" onclick="reanalyzeDispute('{{ item.record_id }}', this)">Ask AI to Analyze</button>
+                          <span id="rec-status-{{ item.record_id }}" style="font-size:12px; color:var(--text-mid); font-style:italic;"></span>
+                        </div>
                       </div>
                     {% endif %}
-
-                    <!-- Editor controls -->
                     <div class="editor-controls-row">
                       <div class="editor-control-group">
                         <label class="editor-control-label">Resolution Type</label>
@@ -4815,13 +4660,12 @@ html, body {
                         </select>
                       </div>
                     </div>
-
                     <div class="archive-card-footer" style="margin-top:12px;">
                       <div class="editor-save-indicator" id="save-{{ item.record_id }}" style="font-size:13px; color:var(--text-mid); font-style:italic;"></div>
                       <div style="display:flex; gap:8px;">
                         <a href="/claim/{{ item.claim_slug }}" class="gold-btn" style="text-decoration:none;">Open Claim</a>
                         <button type="button" class="gold-btn" style="background:#2e7d32;"
-                          onclick="handleEditorResolve('{{ item.record_id }}', '{{ item.resolution_type }}', this)">
+                          onclick="handleEditorResolve('{{ item.record_id }}', '{{ item.resolution_type }}', '{{ item.status }}', this)">
                           Resolve
                         </button>
                       </div>
@@ -5424,15 +5268,11 @@ html, body {
 <!-- CLAIM HISTORY TAB -->
 <div class="tab-panel hidden" id="tab-history">
   <div class="ornamental"><div class="ornamental-line"></div><div class="ornamental-diamond"></div><div class="ornamental-line"></div></div>
-
   {% if current_claim.disputes %}
     {% set ns = namespace(has_updates=false) %}
     {% for dispute in current_claim.disputes %}
-      {% if dispute.applied_update_scope and dispute.applied_update_scope|length > 0 %}
-        {% set ns.has_updates = true %}
-      {% endif %}
+      {% if dispute.applied_update_scope and dispute.applied_update_scope|length > 0 %}{% set ns.has_updates = true %}{% endif %}
     {% endfor %}
-
     {% if ns.has_updates %}
       <div class="section-title" style="margin-bottom:16px;">Applied Updates</div>
       {% for dispute in current_claim.disputes %}
@@ -5445,20 +5285,15 @@ html, body {
                 <span class="recent-date">{{ dispute.entered_by }}</span>
               </div>
               <div class="history-scope-chips">
-                {% for scope_item in dispute.applied_update_scope %}
-                  <span class="topic-tag">{{ scope_item }}</span>
-                {% endfor %}
+                {% for scope_item in dispute.applied_update_scope %}<span class="topic-tag">{{ scope_item }}</span>{% endfor %}
               </div>
             </div>
-            {% if dispute.editor_resolution %}
-              <pre class="history-diff-text">{{ dispute.editor_resolution }}</pre>
-            {% endif %}
+            {% if dispute.editor_resolution %}<pre class="history-diff-text">{{ dispute.editor_resolution }}</pre>{% endif %}
           </div>
         {% endif %}
       {% endfor %}
       <div class="ornamental"><div class="ornamental-line"></div><div class="ornamental-diamond"></div><div class="ornamental-line"></div></div>
     {% endif %}
-
     <div class="section-title" style="margin-bottom:16px;">Full Dispute Timeline</div>
     {% for dispute in current_claim.disputes %}
       <div class="history-timeline-entry">
@@ -5467,17 +5302,14 @@ html, body {
         <div class="history-timeline-text">{{ dispute.dispute_text }}</div>
         {% if dispute.ai_response %}
           <div class="history-timeline-ai">
-            <div class="dispute-entry-label" style="color:var(--gold); font-family:'Libre Baskerville',serif; font-size:9px; letter-spacing:.14em; text-transform:uppercase; margin-bottom:4px;">Platform Response</div>
+            <div style="font-family:'Libre Baskerville',serif; font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); margin-bottom:4px;">Platform Response</div>
             <div style="font-size:15px; color:var(--cream-soft); line-height:1.6;">{{ dispute.ai_response }}</div>
           </div>
         {% endif %}
       </div>
     {% endfor %}
-
   {% else %}
-    <p style="text-align:center; color:var(--text-mid); padding:20px; font-style:italic;">
-      No dispute or update history for this claim yet.
-    </p>
+    <p style="text-align:center; color:var(--text-mid); padding:20px; font-style:italic;">No dispute or update history for this claim yet.</p>
   {% endif %}
 </div>
 
@@ -6627,6 +6459,34 @@ console.error('Dispute submission failed:', err);
     
 
   </script>
+
+<!-- RESOLVE CONFIRMATION MODAL -->
+<div class="update-preview-overlay" id="resolveConfirmModal">
+  <div class="update-preview-box" style="max-width:520px;">
+    <div class="modal-kicker">Confirm Resolution</div>
+    <div class="update-preview-title" style="font-size:22px; margin-bottom:8px;" id="resolveConfirmTitle">Resolve this dispute?</div>
+    <div style="margin-bottom:20px; font-size:15px; color:var(--text-light); font-style:italic;" id="resolveConfirmSub"></div>
+
+    <div id="resolveStatusWarning" style="display:none; background:rgba(232,112,112,.08); border:1px solid rgba(232,112,112,.28); border-radius:10px; padding:12px 14px; margin-bottom:16px; font-size:14px; color:#ef9a9a; line-height:1.55;"></div>
+
+    <div style="margin-bottom:16px;">
+      <label class="editor-control-label" style="display:block; margin-bottom:6px;">Set Final Status</label>
+      <select class="editor-select" id="resolveFinalStatus" style="width:100%;">
+        <option value="Resolved">Resolved</option>
+        <option value="Closed">Closed</option>
+        <option value="In Review">In Review (keep open)</option>
+        <option value="No Update">No Update</option>
+      </select>
+    </div>
+
+    <div class="update-actions">
+      <button type="button" class="modal-btn-secondary" onclick="closeResolveConfirm()">Cancel</button>
+      <button type="button" class="modal-btn-primary" id="resolveConfirmBtn" onclick="confirmResolve()">Confirm Resolve</button>
+    </div>
+    <div id="resolveConfirmStatus" style="margin-top:10px; font-size:13px; color:var(--text-mid); font-style:italic;"></div>
+  </div>
+</div>
+
 
 <!-- UPDATE PREVIEW MODAL -->
 <div class="update-preview-overlay" id="updatePreviewModal">
