@@ -3487,90 +3487,105 @@ html, body {
     }
 
 
-    /* ── CLAIM HISTORY TAB ── */
-    .history-entry {
-      background: rgba(255,255,255,.025);
-      border: var(--border-soft);
-      border-left: 3px solid var(--gold-dim);
-      border-radius: 14px;
-      padding: 18px 20px;
-      margin-bottom: 16px;
-    }
-    .history-entry-header {
+    /* ── EDITOR CARD ENHANCEMENTS ── */
+    .editor-sections-row {
       display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 12px;
       flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
       margin-bottom: 12px;
     }
-    .history-entry-meta {
+    .editor-sections-label {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--text-mid);
+      flex: 0 0 auto;
+    }
+    .editor-section-chip {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(201,168,76,.08);
+      border: 1px solid rgba(201,168,76,.22);
+      color: var(--gold);
+    }
+    .editor-claim-snapshot {
+      background: rgba(255,255,255,.025);
+      border: 1px solid rgba(255,255,255,.08);
+      border-left: 3px solid rgba(201,168,76,.5);
+      border-radius: 0 12px 12px 0;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+    }
+    .editor-snapshot-label {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      margin-bottom: 8px;
+    }
+    .editor-snapshot-verdict {
       display: flex;
       align-items: center;
       gap: 10px;
-      flex-wrap: wrap;
-    }
-    .history-scope-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-    .history-entry-body {
-      margin-top: 8px;
-    }
-    .history-diff-text {
-      font-family: 'Crimson Text', Georgia, serif;
-      font-size: 15px;
-      line-height: 1.7;
-      color: var(--cream-soft);
-      white-space: pre-wrap;
-      word-break: break-word;
-      background: rgba(255,255,255,.02);
-      border-radius: 10px;
-      padding: 14px 16px;
-      margin: 0;
-    }
-    .history-timeline-entry {
-      border-left: 2px solid rgba(201,168,76,.2);
-      padding: 0 0 20px 18px;
-      margin-bottom: 4px;
-      position: relative;
-    }
-    .history-timeline-entry::before {
-      content: '';
-      position: absolute;
-      left: -5px;
-      top: 4px;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--gold-dim);
-    }
-    .history-timeline-label {
-      font-family: 'Libre Baskerville', Georgia, serif;
-      font-size: 10px;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-      color: var(--gold);
-      margin-bottom: 3px;
-    }
-    .history-timeline-date {
-      font-size: 12px;
-      color: var(--text-mid);
       margin-bottom: 8px;
     }
-    .history-timeline-text {
-      font-size: 16px;
-      color: var(--cream-soft);
+    .editor-snapshot-field {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 10px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--text-mid);
+    }
+    .editor-snapshot-qe {
+      font-size: 14px;
       line-height: 1.6;
+      color: var(--text-light);
+      font-style: italic;
     }
-    .history-timeline-ai {
-      margin-top: 10px;
-      padding: 10px 14px;
-      background: rgba(201,168,76,.05);
-      border-left: 3px solid rgba(201,168,76,.3);
-      border-radius: 0 8px 8px 0;
+    .editor-note-green {
+      border-left-color: rgba(117,194,141,.5) !important;
+      background: rgba(117,194,141,.04) !important;
     }
+    .editor-manual-rec {
+      width: 100%;
+      min-height: 80px;
+      resize: vertical;
+      background: rgba(255,255,255,.035);
+      border: 1px solid rgba(255,255,255,.11);
+      border-radius: 10px;
+      color: var(--cream);
+      font-family: 'Crimson Text', Georgia, serif;
+      font-size: 15px;
+      line-height: 1.55;
+      padding: 10px 12px;
+      outline: none;
+      transition: border-color .18s ease;
+      margin-bottom: 8px;
+      display: block;
+    }
+    .editor-manual-rec:focus { border-color: rgba(201,168,76,.48); }
+    .editor-save-rec-btn {
+      appearance: none;
+      border: 1px solid rgba(201,168,76,.35);
+      background: rgba(201,168,76,.08);
+      color: var(--gold);
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 10px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all .15s ease;
+    }
+    .editor-save-rec-btn:hover { background: rgba(201,168,76,.16); border-color: var(--gold); }
 
     /* ── EDITOR CONTROLS ── */
     .editor-controls-row {
@@ -3609,123 +3624,45 @@ html, body {
 
     /* ── UPDATE PREVIEW MODAL ── */
     .update-preview-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 8200;
-      background: rgba(6,17,27,.88);
-      backdrop-filter: blur(4px);
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
+      display: none; position: fixed; inset: 0; z-index: 8200;
+      background: rgba(6,17,27,.88); backdrop-filter: blur(4px);
+      align-items: center; justify-content: center; padding: 20px;
     }
     .update-preview-overlay.visible { display: flex; }
     .update-preview-box {
       background: linear-gradient(180deg, #0f2133, #091b2c);
-      border: var(--border);
-      border-radius: var(--radius);
-      padding: 28px 28px 24px;
-      max-width: 820px;
-      width: 100%;
-      max-height: 88vh;
-      overflow-y: auto;
+      border: var(--border); border-radius: var(--radius);
+      padding: 28px 28px 24px; max-width: 820px; width: 100%;
+      max-height: 88vh; overflow-y: auto;
       box-shadow: 0 32px 64px rgba(0,0,0,.6);
     }
-    .update-preview-title {
-      font-family: 'Playfair Display', Georgia, serif;
-      font-size: 26px;
-      font-weight: 700;
-      color: var(--cream);
-      margin-bottom: 6px;
-    }
-    .update-preview-sub {
-      font-size: 15px;
-      color: var(--text-light);
-      font-style: italic;
-      margin-bottom: 20px;
-      line-height: 1.5;
-    }
-    .update-section-card {
-      background: rgba(255,255,255,.025);
-      border: var(--border-soft);
-      border-radius: 14px;
-      padding: 16px 18px;
-      margin-bottom: 14px;
-    }
-    .update-section-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-    .update-section-name {
-      font-family: 'Libre Baskerville', Georgia, serif;
-      font-size: 11px;
-      letter-spacing: .16em;
-      text-transform: uppercase;
-      color: var(--gold);
-      flex: 1;
-    }
-    .update-section-check {
-      width: 18px; height: 18px; cursor: pointer; flex: 0 0 auto;
-    }
-    .update-col-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-    .update-col-label {
-      font-family: 'Libre Baskerville', Georgia, serif;
-      font-size: 9px;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-      color: var(--text-mid);
-      margin-bottom: 5px;
-    }
-    .update-col-current {
-      font-size: 14px;
-      line-height: 1.6;
-      color: var(--text-light);
-      background: rgba(232,112,112,.05);
-      border: 1px solid rgba(232,112,112,.15);
-      border-radius: 8px;
-      padding: 10px 12px;
-    }
-    .update-col-proposed {
-      font-size: 14px;
-      line-height: 1.6;
-      color: var(--cream-soft);
-      background: rgba(117,194,141,.05);
-      border: 1px solid rgba(117,194,141,.15);
-      border-radius: 8px;
-      padding: 10px 12px;
-    }
-    .update-editor-note {
-      background: rgba(201,168,76,.06);
-      border-left: 3px solid rgba(201,168,76,.4);
-      border-radius: 0 10px 10px 0;
-      padding: 12px 16px;
-      font-size: 14px;
-      color: var(--text-light);
-      line-height: 1.6;
-      margin-bottom: 20px;
-    }
-    .update-loading {
-      text-align: center;
-      padding: 40px 20px;
-      color: var(--gold);
-      font-style: italic;
-      font-size: 15px;
-    }
-    .update-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 20px;
-      padding-top: 18px;
-      border-top: 1px solid rgba(201,168,76,.14);
-    }
+    .update-preview-title { font-family: 'Playfair Display', Georgia, serif; font-size: 26px; font-weight: 700; color: var(--cream); margin-bottom: 6px; }
+    .update-preview-sub { font-size: 15px; color: var(--text-light); font-style: italic; margin-bottom: 20px; line-height: 1.5; }
+    .update-section-card { background: rgba(255,255,255,.025); border: var(--border-soft); border-radius: 14px; padding: 16px 18px; margin-bottom: 14px; }
+    .update-section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .update-section-name { font-family: 'Libre Baskerville', Georgia, serif; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); flex: 1; }
+    .update-section-check { width: 18px; height: 18px; cursor: pointer; flex: 0 0 auto; }
+    .update-col-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .update-col-label { font-family: 'Libre Baskerville', Georgia, serif; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--text-mid); margin-bottom: 5px; }
+    .update-col-current { font-size: 14px; line-height: 1.6; color: var(--text-light); background: rgba(232,112,112,.05); border: 1px solid rgba(232,112,112,.15); border-radius: 8px; padding: 10px 12px; }
+    .update-col-proposed { font-size: 14px; line-height: 1.6; color: var(--cream-soft); background: rgba(117,194,141,.05); border: 1px solid rgba(117,194,141,.15); border-radius: 8px; padding: 10px 12px; }
+    .update-editor-note { background: rgba(201,168,76,.06); border-left: 3px solid rgba(201,168,76,.4); border-radius: 0 10px 10px 0; padding: 12px 16px; font-size: 14px; color: var(--text-light); line-height: 1.6; margin-bottom: 20px; }
+    .update-loading { text-align: center; padding: 40px 20px; color: var(--gold); font-style: italic; font-size: 15px; }
+    .update-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; padding-top: 18px; border-top: 1px solid rgba(201,168,76,.14); }
     @media (max-width: 640px) { .update-col-grid { grid-template-columns: 1fr; } }
+
+    /* ── CLAIM HISTORY TAB ── */
+    .history-entry { background: rgba(255,255,255,.025); border: var(--border-soft); border-left: 3px solid var(--gold-dim); border-radius: 14px; padding: 18px 20px; margin-bottom: 16px; }
+    .history-entry-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+    .history-entry-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .history-scope-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .history-diff-text { font-family: 'Crimson Text', Georgia, serif; font-size: 15px; line-height: 1.7; color: var(--cream-soft); white-space: pre-wrap; word-break: break-word; background: rgba(255,255,255,.02); border-radius: 10px; padding: 14px 16px; margin: 0; }
+    .history-timeline-entry { border-left: 2px solid rgba(201,168,76,.2); padding: 0 0 20px 18px; margin-bottom: 4px; position: relative; }
+    .history-timeline-entry::before { content: ''; position: absolute; left: -5px; top: 4px; width: 8px; height: 8px; border-radius: 50%; background: var(--gold-dim); }
+    .history-timeline-label { font-family: 'Libre Baskerville', Georgia, serif; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin-bottom: 3px; }
+    .history-timeline-date { font-size: 12px; color: var(--text-mid); margin-bottom: 8px; }
+    .history-timeline-text { font-size: 16px; color: var(--cream-soft); line-height: 1.6; }
+    .history-timeline-ai { margin-top: 10px; padding: 10px 14px; background: rgba(201,168,76,.05); border-left: 3px solid rgba(201,168,76,.3); border-radius: 0 8px 8px 0; }
 
     /* ── EDITOR PAGE ── */
     .editor-page-section {
@@ -4417,17 +4354,34 @@ html, body {
                 {% if item.date %}<span class="m-card-date">{{ item.date }}</span>{% endif %}
                 {% if item.escalated %}<span class="m-chip" style="color:var(--gold);border-color:rgba(201,168,76,.3);">Escalated</span>{% endif %}
               </div>
+              {% if item.sections_disputed %}
+                <div class="editor-sections-row" style="margin-bottom:8px;">
+                  <span class="editor-sections-label">Disputing:</span>
+                  {% for sec in item.sections_disputed %}<span class="editor-section-chip">{{ sec }}</span>{% endfor %}
+                </div>
+              {% endif %}
+              {% if item.claim_verdict or item.claim_quick_explanation %}
+                <div class="editor-claim-snapshot">
+                  <div class="editor-snapshot-label">Current Claim State</div>
+                  {% if item.claim_verdict %}<div class="editor-snapshot-verdict"><span class="editor-snapshot-field">Verdict:</span> <strong style="color:var(--gold);">{{ item.claim_verdict }}</strong></div>{% endif %}
+                  {% if item.claim_quick_explanation %}<div class="editor-snapshot-qe">{{ item.claim_quick_explanation }}</div>{% endif %}
+                </div>
+              {% endif %}
               <div class="m-editor-dispute-text">{{ item.dispute_text }}</div>
               {% if item.ai_response %}
-                <div class="m-editor-ai-block">
-                  <div class="m-editor-ai-label">AI Response</div>
-                  <div class="m-editor-ai-text">{{ item.ai_response }}</div>
-                </div>
+                <div class="m-editor-ai-block"><div class="m-editor-ai-label">AI Response</div><div class="m-editor-ai-text">{{ item.ai_response }}</div></div>
               {% endif %}
               {% if item.ai_recommended_changes %}
                 <div class="m-editor-ai-block" style="border-left-color:rgba(117,194,141,.4);">
                   <div class="m-editor-ai-label" style="color:#75c28d;">AI Recommended Changes</div>
                   <div class="m-editor-ai-text">{{ item.ai_recommended_changes }}</div>
+                </div>
+              {% else %}
+                <div>
+                  <label class="editor-control-label" style="display:block; margin-bottom:4px;">Write recommendation:</label>
+                  <textarea id="manual-rec-{{ item.record_id }}" class="editor-manual-rec" placeholder="Describe what should change..." rows="3"></textarea>
+                  <button type="button" class="editor-save-rec-btn" onclick="saveManualRecommendation('{{ item.record_id }}', this)">Save</button>
+                  <span id="rec-status-{{ item.record_id }}" style="font-size:12px; color:var(--text-mid); margin-left:6px;"></span>
                 </div>
               {% endif %}
               <div class="m-editor-controls">
@@ -4460,9 +4414,7 @@ html, body {
                 <div id="save-m-{{ item.record_id }}" style="font-size:12px; color:var(--text-mid); font-style:italic; min-height:16px;"></div>
                 <a href="/claim/{{ item.claim_slug }}" class="m-run-btn" style="text-decoration:none; text-align:center; display:block; margin-top:6px;">Open Claim</a>
                 <button type="button" class="m-run-btn" style="background:linear-gradient(180deg,#2e7d32,#1b5e20); width:100%; margin-top:8px; border:none; cursor:pointer;"
-                  onclick="handleEditorResolve('{{ item.record_id }}', '{{ item.resolution_type }}', this)">
-                  Resolve
-                </button>
+                  onclick="handleEditorResolve('{{ item.record_id }}', '{{ item.resolution_type }}', this)">Resolve</button>
               </div>
             </div>
           {% endfor %}
@@ -4743,83 +4695,137 @@ html, body {
                   <div class="archive-card editor-card"
                        data-category="{{ item.editor_queue_category or 'Current Dispute' }}"
                        style="padding:18px;">
+
+                    <!-- Card title + meta -->
                     <div class="archive-card-title">
                       <a href="/claim/{{ item.claim_slug }}">{{ item.title }}</a>
                     </div>
-
                     <div class="archive-card-meta" style="margin-bottom:10px;">
                       <span class="status-badge">{{ item.status }}</span>
-                      {% if item.date %}
-                        <span class="micro-meta">{{ item.date }}</span>
-                      {% endif %}
-                      {% if item.escalated %}
-                        <span class="topic-tag">Escalated</span>
-                      {% endif %}
+                      {% if item.date %}<span class="micro-meta">{{ item.date }}</span>{% endif %}
+                      {% if item.escalated %}<span class="topic-tag">Escalated</span>{% endif %}
                     </div>
 
+                    <!-- Sections disputed chips -->
+                    {% if item.sections_disputed %}
+                      <div class="editor-sections-row">
+                        <span class="editor-sections-label">Disputing:</span>
+                        {% for sec in item.sections_disputed %}
+                          <span class="editor-section-chip">{{ sec }}</span>
+                        {% endfor %}
+                      </div>
+                    {% endif %}
+
+                    <!-- Claim snapshot -->
+                    {% if item.claim_verdict or item.claim_quick_explanation %}
+                      <div class="editor-claim-snapshot">
+                        <div class="editor-snapshot-label">Current Claim State</div>
+                        {% if item.claim_verdict %}
+                          <div class="editor-snapshot-verdict">
+                            <span class="editor-snapshot-field">Verdict:</span>
+                            <span class="verdict-pill
+                              {% set vl = item.claim_verdict|lower %}
+                              {% if vl == 'true' %}v-true
+                              {% elif 'mostly true' in vl %}v-mostly-true
+                              {% elif 'substantially true' in vl %}v-substantially-true
+                              {% elif 'plausible' in vl or 'mixed' in vl %}v-plausible
+                              {% elif vl == 'contested' %}v-contested
+                              {% elif vl == 'exaggerated' %}v-exaggerated
+                              {% elif vl == 'misleading' %}v-misleading
+                              {% elif vl == 'false' %}v-false
+                              {% else %}v-unproven{% endif %}">{{ item.claim_verdict }}</span>
+                          </div>
+                        {% endif %}
+                        {% if item.claim_quick_explanation %}
+                          <div class="editor-snapshot-qe">{{ item.claim_quick_explanation }}</div>
+                        {% endif %}
+                      </div>
+                    {% endif %}
+
+                    <!-- Dispute text -->
                     <div class="archive-card-dek" style="margin-bottom:10px;">
                       <strong>Dispute:</strong> {{ item.dispute_text }}
                     </div>
 
-                    {% if item.ai_recommended_changes %}
-                      <div class="editor-note-block" style="margin-bottom:10px;">
-                        <strong>AI Recommended Changes:</strong><br>
-                        {{ item.ai_recommended_changes }}
-                      </div>
-                    {% endif %}
-
+                    <!-- AI response -->
                     {% if item.ai_response %}
                       <div class="editor-note-block" style="margin-bottom:10px;">
                         <strong>AI Response:</strong> {{ item.ai_response }}
                       </div>
                     {% endif %}
 
-                    <!-- EDITOR CONTROLS -->
-                  <div class="editor-controls-row">
-                    <div class="editor-control-group">
-                      <label class="editor-control-label">Resolution Type</label>
-                      <select class="editor-select" onchange="editorUpdateField('{{ item.record_id }}', 'resolution-type', this.value, this)">
-                        <option value="" {% if not item.resolution_type %}selected{% endif %}>— select —</option>
-                        <option value="AI Recommendation" {% if item.resolution_type == 'AI Recommendation' %}selected{% endif %}>AI Recommendation</option>
-                        <option value="Human Response" {% if item.resolution_type == 'Human Response' %}selected{% endif %}>Human Response</option>
-                        <option value="Human Override" {% if item.resolution_type == 'Human Override' %}selected{% endif %}>Human Override</option>
-                        <option value="Partial Update" {% if item.resolution_type == 'Partial Update' %}selected{% endif %}>Partial Update</option>
-                        <option value="No Update" {% if item.resolution_type == 'No Update' %}selected{% endif %}>No Update</option>
-                        <option value="Escalated" {% if item.resolution_type == 'Escalated' %}selected{% endif %}>Escalated</option>
-                      </select>
+                    <!-- AI recommended changes OR write-your-own textarea -->
+                    {% if item.ai_recommended_changes %}
+                      <div class="editor-note-block editor-note-green" style="margin-bottom:10px;">
+                        <strong>AI Recommended Changes:</strong><br>
+                        {{ item.ai_recommended_changes }}
+                      </div>
+                    {% else %}
+                      <div style="margin-bottom:10px;">
+                        <label class="editor-control-label" style="display:block; margin-bottom:6px;">
+                          No AI recommendation on file. Write your own:
+                        </label>
+                        <textarea
+                          id="manual-rec-{{ item.record_id }}"
+                          class="editor-manual-rec"
+                          placeholder="Describe what should be updated and why. AI will use this to generate structured changes."
+                          rows="3"
+                        ></textarea>
+                        <button type="button" class="editor-save-rec-btn"
+                          onclick="saveManualRecommendation('{{ item.record_id }}', this)">
+                          Save Recommendation
+                        </button>
+                        <span id="rec-status-{{ item.record_id }}" style="font-size:12px; color:var(--text-mid); font-style:italic; margin-left:8px;"></span>
+                      </div>
+                    {% endif %}
+
+                    <!-- Editor controls -->
+                    <div class="editor-controls-row">
+                      <div class="editor-control-group">
+                        <label class="editor-control-label">Resolution Type</label>
+                        <select class="editor-select" onchange="editorUpdateField('{{ item.record_id }}', 'resolution-type', this.value, this)">
+                          <option value="" {% if not item.resolution_type %}selected{% endif %}>— select —</option>
+                          <option value="AI Recommendation" {% if item.resolution_type == 'AI Recommendation' %}selected{% endif %}>AI Recommendation</option>
+                          <option value="Human Response" {% if item.resolution_type == 'Human Response' %}selected{% endif %}>Human Response</option>
+                          <option value="Human Override" {% if item.resolution_type == 'Human Override' %}selected{% endif %}>Human Override</option>
+                          <option value="Partial Update" {% if item.resolution_type == 'Partial Update' %}selected{% endif %}>Partial Update</option>
+                          <option value="No Update" {% if item.resolution_type == 'No Update' %}selected{% endif %}>No Update</option>
+                          <option value="Escalated" {% if item.resolution_type == 'Escalated' %}selected{% endif %}>Escalated</option>
+                        </select>
+                      </div>
+                      <div class="editor-control-group">
+                        <label class="editor-control-label">Queue Category</label>
+                        <select class="editor-select" onchange="editorUpdateField('{{ item.record_id }}', 'queue-category', this.value, this)">
+                          <option value="Current Dispute" {% if item.editor_queue_category == 'Current Dispute' %}selected{% endif %}>Current Dispute</option>
+                          <option value="Escalated to Human" {% if item.editor_queue_category == 'Escalated to Human' %}selected{% endif %}>Escalated to Human</option>
+                          <option value="AI Recommended Update" {% if item.editor_queue_category == 'AI Recommended Update' %}selected{% endif %}>AI Recommended Update</option>
+                          <option value="Potential Dispute / Pushback Issue" {% if item.editor_queue_category == 'Potential Dispute / Pushback Issue' %}selected{% endif %}>Potential Issues</option>
+                        </select>
+                      </div>
+                      <div class="editor-control-group">
+                        <label class="editor-control-label">Status</label>
+                        <select class="editor-select" onchange="editorUpdateField('{{ item.record_id }}', 'status', this.value, this)">
+                          <option value="Open" {% if item.status == 'Open' %}selected{% endif %}>Open</option>
+                          <option value="AI Responded" {% if item.status == 'AI Responded' %}selected{% endif %}>AI Responded</option>
+                          <option value="Escalated to Human" {% if item.status == 'Escalated to Human' %}selected{% endif %}>Escalated to Human</option>
+                          <option value="In Review" {% if item.status == 'In Review' %}selected{% endif %}>In Review</option>
+                          <option value="Needs Review" {% if item.status == 'Needs Review' %}selected{% endif %}>Needs Review</option>
+                          <option value="Resolved" {% if item.status == 'Resolved' %}selected{% endif %}>Resolved</option>
+                          <option value="Closed" {% if item.status == 'Closed' %}selected{% endif %}>Closed</option>
+                        </select>
+                      </div>
                     </div>
-                    <div class="editor-control-group">
-                      <label class="editor-control-label">Queue Category</label>
-                      <select class="editor-select" onchange="editorUpdateField('{{ item.record_id }}', 'queue-category', this.value, this)">
-                        <option value="Current Dispute" {% if item.editor_queue_category == 'Current Dispute' %}selected{% endif %}>Current Dispute</option>
-                        <option value="Escalated to Human" {% if item.editor_queue_category == 'Escalated to Human' %}selected{% endif %}>Escalated to Human</option>
-                        <option value="AI Recommended Update" {% if item.editor_queue_category == 'AI Recommended Update' %}selected{% endif %}>AI Recommended Update</option>
-                        <option value="Potential Dispute / Pushback Issue" {% if item.editor_queue_category == 'Potential Dispute / Pushback Issue' %}selected{% endif %}>Potential Issues</option>
-                      </select>
+
+                    <div class="archive-card-footer" style="margin-top:12px;">
+                      <div class="editor-save-indicator" id="save-{{ item.record_id }}" style="font-size:13px; color:var(--text-mid); font-style:italic;"></div>
+                      <div style="display:flex; gap:8px;">
+                        <a href="/claim/{{ item.claim_slug }}" class="gold-btn" style="text-decoration:none;">Open Claim</a>
+                        <button type="button" class="gold-btn" style="background:#2e7d32;"
+                          onclick="handleEditorResolve('{{ item.record_id }}', '{{ item.resolution_type }}', this)">
+                          Resolve
+                        </button>
+                      </div>
                     </div>
-                    <div class="editor-control-group">
-                      <label class="editor-control-label">Status</label>
-                      <select class="editor-select" onchange="editorUpdateField('{{ item.record_id }}', 'status', this.value, this)">
-                        <option value="Open" {% if item.status == 'Open' %}selected{% endif %}>Open</option>
-                        <option value="AI Responded" {% if item.status == 'AI Responded' %}selected{% endif %}>AI Responded</option>
-                        <option value="Escalated to Human" {% if item.status == 'Escalated to Human' %}selected{% endif %}>Escalated to Human</option>
-                        <option value="In Review" {% if item.status == 'In Review' %}selected{% endif %}>In Review</option>
-                        <option value="Needs Review" {% if item.status == 'Needs Review' %}selected{% endif %}>Needs Review</option>
-                        <option value="Resolved" {% if item.status == 'Resolved' %}selected{% endif %}>Resolved</option>
-                        <option value="Closed" {% if item.status == 'Closed' %}selected{% endif %}>Closed</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="archive-card-footer" style="margin-top:12px;">
-                    <div class="editor-save-indicator" id="save-{{ item.record_id }}" style="font-size:13px; color:var(--text-mid); font-style:italic;"></div>
-                    <div style="display:flex; gap:8px;">
-                      <a href="/claim/{{ item.claim_slug }}" class="gold-btn" style="text-decoration:none;">Open Claim</a>
-                      <button type="button" class="gold-btn" style="background:#2e7d32;"
-                        onclick="handleEditorResolve('{{ item.record_id }}', '{{ item.resolution_type }}', this)">
-                        Resolve
-                      </button>
-                    </div>
-                  </div
                   </div>
                 {% endfor %}
               </div>
@@ -4948,7 +4954,7 @@ html, body {
 <button class="tab-btn"
         id="tab-history-btn"
         onclick="switchTab('history')"
-        data-tooltip="Updates applied to this claim over time">
+        data-tooltip="All updates applied to this claim over time">
   Claim History
 </button>
 </div>
@@ -5413,6 +5419,68 @@ html, body {
   {% endif %}
 
 </div>
+
+
+<!-- CLAIM HISTORY TAB -->
+<div class="tab-panel hidden" id="tab-history">
+  <div class="ornamental"><div class="ornamental-line"></div><div class="ornamental-diamond"></div><div class="ornamental-line"></div></div>
+
+  {% if current_claim.disputes %}
+    {% set ns = namespace(has_updates=false) %}
+    {% for dispute in current_claim.disputes %}
+      {% if dispute.applied_update_scope and dispute.applied_update_scope|length > 0 %}
+        {% set ns.has_updates = true %}
+      {% endif %}
+    {% endfor %}
+
+    {% if ns.has_updates %}
+      <div class="section-title" style="margin-bottom:16px;">Applied Updates</div>
+      {% for dispute in current_claim.disputes %}
+        {% if dispute.applied_update_scope and dispute.applied_update_scope|length > 0 %}
+          <div class="history-entry">
+            <div class="history-entry-header">
+              <div class="history-entry-meta">
+                <span class="dispute-round-badge">{{ dispute.entry_label or 'Update' }}</span>
+                <span class="recent-date">{{ dispute.date_submitted }}</span>
+                <span class="recent-date">{{ dispute.entered_by }}</span>
+              </div>
+              <div class="history-scope-chips">
+                {% for scope_item in dispute.applied_update_scope %}
+                  <span class="topic-tag">{{ scope_item }}</span>
+                {% endfor %}
+              </div>
+            </div>
+            {% if dispute.editor_resolution %}
+              <pre class="history-diff-text">{{ dispute.editor_resolution }}</pre>
+            {% endif %}
+          </div>
+        {% endif %}
+      {% endfor %}
+      <div class="ornamental"><div class="ornamental-line"></div><div class="ornamental-diamond"></div><div class="ornamental-line"></div></div>
+    {% endif %}
+
+    <div class="section-title" style="margin-bottom:16px;">Full Dispute Timeline</div>
+    {% for dispute in current_claim.disputes %}
+      <div class="history-timeline-entry">
+        <div class="history-timeline-label">{{ dispute.entry_label or 'Dispute' }}</div>
+        <div class="history-timeline-date">{{ dispute.date_submitted }} — {{ dispute.entered_by }}</div>
+        <div class="history-timeline-text">{{ dispute.dispute_text }}</div>
+        {% if dispute.ai_response %}
+          <div class="history-timeline-ai">
+            <div class="dispute-entry-label" style="color:var(--gold); font-family:'Libre Baskerville',serif; font-size:9px; letter-spacing:.14em; text-transform:uppercase; margin-bottom:4px;">Platform Response</div>
+            <div style="font-size:15px; color:var(--cream-soft); line-height:1.6;">{{ dispute.ai_response }}</div>
+          </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+
+  {% else %}
+    <p style="text-align:center; color:var(--text-mid); padding:20px; font-style:italic;">
+      No dispute or update history for this claim yet.
+    </p>
+  {% endif %}
+</div>
+
 
           {% else %}
             <div class="empty-state">
@@ -6566,11 +6634,7 @@ console.error('Dispute submission failed:', err);
     <div class="modal-kicker">Editor Review</div>
     <div class="update-preview-title" id="updatePreviewTitle">AI Recommended Update</div>
     <div class="update-preview-sub" id="updatePreviewSub">Review the proposed changes before applying them to the live claim.</div>
-
-    <div id="updatePreviewLoading" class="update-loading">
-      Generating preview. Asking AI to structure the recommended changes...
-    </div>
-
+    <div id="updatePreviewLoading" class="update-loading">Generating preview. Asking AI to structure the recommended changes...</div>
     <div id="updatePreviewContent" style="display:none;">
       <div class="update-editor-note" id="updateEditorNote" style="display:none;"></div>
       <div id="updateSectionsContainer"></div>
