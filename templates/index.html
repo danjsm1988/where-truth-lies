@@ -3328,7 +3328,6 @@ html, body {
 }
 
 
-    /* ── MOBILE EDITOR QUEUE ── */
     .m-editor-queue { display: grid; gap: 14px; }
     .m-editor-title { font-family: 'Playfair Display', Georgia, serif; font-size: 26px; font-weight: 900; color: var(--cream); margin-bottom: 4px; }
     .m-editor-sub { font-size: 14px; color: var(--text-mid); font-style: italic; }
@@ -3488,6 +3487,91 @@ html, body {
     }
 
 
+    /* ── CLAIM HISTORY TAB ── */
+    .history-entry {
+      background: rgba(255,255,255,.025);
+      border: var(--border-soft);
+      border-left: 3px solid var(--gold-dim);
+      border-radius: 14px;
+      padding: 18px 20px;
+      margin-bottom: 16px;
+    }
+    .history-entry-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .history-entry-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .history-scope-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .history-entry-body {
+      margin-top: 8px;
+    }
+    .history-diff-text {
+      font-family: 'Crimson Text', Georgia, serif;
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--cream-soft);
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: rgba(255,255,255,.02);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin: 0;
+    }
+    .history-timeline-entry {
+      border-left: 2px solid rgba(201,168,76,.2);
+      padding: 0 0 20px 18px;
+      margin-bottom: 4px;
+      position: relative;
+    }
+    .history-timeline-entry::before {
+      content: '';
+      position: absolute;
+      left: -5px;
+      top: 4px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--gold-dim);
+    }
+    .history-timeline-label {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 10px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 3px;
+    }
+    .history-timeline-date {
+      font-size: 12px;
+      color: var(--text-mid);
+      margin-bottom: 8px;
+    }
+    .history-timeline-text {
+      font-size: 16px;
+      color: var(--cream-soft);
+      line-height: 1.6;
+    }
+    .history-timeline-ai {
+      margin-top: 10px;
+      padding: 10px 14px;
+      background: rgba(201,168,76,.05);
+      border-left: 3px solid rgba(201,168,76,.3);
+      border-radius: 0 8px 8px 0;
+    }
+
     /* ── EDITOR CONTROLS ── */
     .editor-controls-row {
       display: grid;
@@ -3497,21 +3581,11 @@ html, body {
       border-top: 1px solid rgba(201,168,76,.12);
       margin-top: 12px;
     }
-
-    .editor-control-group {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-
+    .editor-control-group { display: flex; flex-direction: column; gap: 5px; }
     .editor-control-label {
       font-family: 'Libre Baskerville', Georgia, serif;
-      font-size: 9px;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-      color: var(--gold-dim);
+      font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-dim);
     }
-
     .editor-select {
       appearance: none;
       background: rgba(255,255,255,.04);
@@ -3525,40 +3599,133 @@ html, body {
       transition: border-color .15s ease, background .15s ease;
       outline: none;
     }
+    .editor-select:hover { border-color: rgba(201,168,76,.5); background: rgba(255,255,255,.07); }
+    .editor-select:focus { border-color: var(--gold); background: rgba(255,255,255,.07); }
+    .editor-select option { background: #0f2133; color: var(--cream); }
+    .editor-select.saving { opacity: .6; pointer-events: none; }
+    .editor-select.saved { border-color: rgba(117,194,141,.6); }
+    .editor-select.error { border-color: rgba(232,112,112,.6); }
+    @media (max-width: 1180px) { .editor-controls-row { grid-template-columns: 1fr 1fr; } }
 
-    .editor-select:hover {
-      border-color: rgba(201,168,76,.5);
-      background: rgba(255,255,255,.07);
+    /* ── UPDATE PREVIEW MODAL ── */
+    .update-preview-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 8200;
+      background: rgba(6,17,27,.88);
+      backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
     }
-
-    .editor-select:focus {
-      border-color: var(--gold);
-      background: rgba(255,255,255,.07);
+    .update-preview-overlay.visible { display: flex; }
+    .update-preview-box {
+      background: linear-gradient(180deg, #0f2133, #091b2c);
+      border: var(--border);
+      border-radius: var(--radius);
+      padding: 28px 28px 24px;
+      max-width: 820px;
+      width: 100%;
+      max-height: 88vh;
+      overflow-y: auto;
+      box-shadow: 0 32px 64px rgba(0,0,0,.6);
     }
-
-    .editor-select option {
-      background: #0f2133;
+    .update-preview-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 26px;
+      font-weight: 700;
       color: var(--cream);
+      margin-bottom: 6px;
     }
-
-    .editor-select.saving {
-      opacity: .6;
-      pointer-events: none;
+    .update-preview-sub {
+      font-size: 15px;
+      color: var(--text-light);
+      font-style: italic;
+      margin-bottom: 20px;
+      line-height: 1.5;
     }
-
-    .editor-select.saved {
-      border-color: rgba(117,194,141,.6);
+    .update-section-card {
+      background: rgba(255,255,255,.025);
+      border: var(--border-soft);
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-bottom: 14px;
     }
-
-    .editor-select.error {
-      border-color: rgba(232,112,112,.6);
+    .update-section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
     }
-
-    @media (max-width: 1180px) {
-      .editor-controls-row {
-        grid-template-columns: 1fr 1fr;
-      }
+    .update-section-name {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 11px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      flex: 1;
     }
+    .update-section-check {
+      width: 18px; height: 18px; cursor: pointer; flex: 0 0 auto;
+    }
+    .update-col-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .update-col-label {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--text-mid);
+      margin-bottom: 5px;
+    }
+    .update-col-current {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text-light);
+      background: rgba(232,112,112,.05);
+      border: 1px solid rgba(232,112,112,.15);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .update-col-proposed {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--cream-soft);
+      background: rgba(117,194,141,.05);
+      border: 1px solid rgba(117,194,141,.15);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .update-editor-note {
+      background: rgba(201,168,76,.06);
+      border-left: 3px solid rgba(201,168,76,.4);
+      border-radius: 0 10px 10px 0;
+      padding: 12px 16px;
+      font-size: 14px;
+      color: var(--text-light);
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .update-loading {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--gold);
+      font-style: italic;
+      font-size: 15px;
+    }
+    .update-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(201,168,76,.14);
+    }
+    @media (max-width: 640px) { .update-col-grid { grid-template-columns: 1fr; } }
 
     /* ── EDITOR PAGE ── */
     .editor-page-section {
@@ -4238,9 +4405,7 @@ html, body {
           <button type="button" class="m-editor-tab-btn" onclick="setMobileEditorTab('Potential Dispute / Pushback Issue', this)">Issues</button>
           <button type="button" class="m-editor-tab-btn" onclick="setMobileEditorTab('Current Dispute', this)">Current</button>
         </div>
-        <div id="m-editor-empty" style="display:none; text-align:center; padding:32px 16px; color:var(--text-mid); font-style:italic; font-size:15px;">
-          No claims in this category.
-        </div>
+        <div id="m-editor-empty" style="display:none; text-align:center; padding:32px 16px; color:var(--text-mid); font-style:italic; font-size:15px;">No claims in this category.</div>
         {% if editor_queue and editor_queue|length > 0 %}
           {% for item in editor_queue %}
             <div class="m-editor-card" data-category="{{ item.editor_queue_category }}">
@@ -4265,7 +4430,6 @@ html, body {
                   <div class="m-editor-ai-text">{{ item.ai_recommended_changes }}</div>
                 </div>
               {% endif %}
-              <!-- Mobile editor controls -->
               <div class="m-editor-controls">
                 <div class="m-editor-control">
                   <label class="editor-control-label">Resolution Type</label>
@@ -4295,16 +4459,15 @@ html, body {
               <div class="m-editor-card-actions">
                 <div id="save-m-{{ item.record_id }}" style="font-size:12px; color:var(--text-mid); font-style:italic; min-height:16px;"></div>
                 <a href="/claim/{{ item.claim_slug }}" class="m-run-btn" style="text-decoration:none; text-align:center; display:block; margin-top:6px;">Open Claim</a>
-                <form method="POST" action="/editor/resolve/{{ item.record_id }}" style="margin-top:8px;">
-                  <button type="submit" class="m-run-btn" style="background:linear-gradient(180deg,#2e7d32,#1b5e20); width:100%;">Resolve</button>
-                </form>
+                <button type="button" class="m-run-btn" style="background:linear-gradient(180deg,#2e7d32,#1b5e20); width:100%; margin-top:8px; border:none; cursor:pointer;"
+                  onclick="handleEditorResolve('{{ item.record_id }}', '{{ item.resolution_type }}', this)">
+                  Resolve
+                </button>
               </div>
             </div>
           {% endfor %}
         {% else %}
-          <div style="text-align:center; padding:32px 16px; color:var(--text-mid); font-style:italic;">
-            No items currently need editor review.
-          </div>
+          <div style="text-align:center; padding:32px 16px; color:var(--text-mid); font-style:italic;">No items currently need editor review.</div>
         {% endif %}
       </div>
       {% endif %}
@@ -4316,25 +4479,20 @@ html, body {
     <!-- BOTTOM NAV -->
     <nav class="m-bottom-nav {% if true_superuser %}m-bottom-nav-5{% endif %}">
       <a class="m-nav-link {% if page_mode == 'claim' %}active{% endif %}" href="/">
-        <span class="m-nav-icon">⌂</span>
-        <span>Home</span>
+        <span class="m-nav-icon">⌂</span><span>Home</span>
       </a>
       <a class="m-nav-link {% if page_mode == 'search' %}active{% endif %}" href="/search">
-        <span class="m-nav-icon">▤</span>
-        <span>Claims</span>
+        <span class="m-nav-icon">▤</span><span>Claims</span>
       </a>
       <a class="m-nav-link {% if page_mode == 'disputes' %}active{% endif %}" href="/disputes">
-        <span class="m-nav-icon">✦</span>
-        <span>Disputes</span>
+        <span class="m-nav-icon">✦</span><span>Disputes</span>
       </a>
       <a class="m-nav-link {% if page_mode == 'profile' %}active{% endif %}" href="/profile">
-        <span class="m-nav-icon">◉</span>
-        <span>Profile</span>
+        <span class="m-nav-icon">◉</span><span>Profile</span>
       </a>
       {% if true_superuser %}
       <a class="m-nav-link {% if page_mode == 'editor' %}active{% endif %}" href="/editor">
-        <span class="m-nav-icon">✎</span>
-        <span>Editor</span>
+        <span class="m-nav-icon">✎</span><span>Editor</span>
       </a>
       {% endif %}
     </nav>
@@ -4616,7 +4774,7 @@ html, body {
                       </div>
                     {% endif %}
 
-                  <!-- EDITOR CONTROLS -->
+                    <!-- EDITOR CONTROLS -->
                   <div class="editor-controls-row">
                     <div class="editor-control-group">
                       <label class="editor-control-label">Resolution Type</label>
@@ -4656,11 +4814,12 @@ html, body {
                     <div class="editor-save-indicator" id="save-{{ item.record_id }}" style="font-size:13px; color:var(--text-mid); font-style:italic;"></div>
                     <div style="display:flex; gap:8px;">
                       <a href="/claim/{{ item.claim_slug }}" class="gold-btn" style="text-decoration:none;">Open Claim</a>
-                      <form method="POST" action="/editor/resolve/{{ item.record_id }}" style="margin:0;">
-                        <button type="submit" class="gold-btn" style="background:#2e7d32;">Resolve</button>
-                      </form>
+                      <button type="button" class="gold-btn" style="background:#2e7d32;"
+                        onclick="handleEditorResolve('{{ item.record_id }}', '{{ item.resolution_type }}', this)">
+                        Resolve
+                      </button>
                     </div>
-                  </div>
+                  </div
                   </div>
                 {% endfor %}
               </div>
@@ -4784,6 +4943,13 @@ html, body {
         onclick="switchTab('disputes')"
         data-tooltip="User challenges and AI responses">
   Disputes
+</button>
+
+<button class="tab-btn"
+        id="tab-history-btn"
+        onclick="switchTab('history')"
+        data-tooltip="Updates applied to this claim over time">
+  Claim History
 </button>
 </div>
 
@@ -6392,95 +6558,30 @@ console.error('Dispute submission failed:', err);
     });
     
 
-
-    async function editorUpdateField(recordId, fieldType, value, selectEl) {
-      if (!value) return;
-
-      const endpoints = {
-        'status': '/editor/update-status/',
-        'queue-category': '/editor/update-queue-category/',
-        'resolution-type': '/editor/update-resolution-type/'
-      };
-
-      const payloads = {
-        'status': { status: value },
-        'queue-category': { category: value },
-        'resolution-type': { resolution_type: value }
-      };
-
-      const endpoint = endpoints[fieldType];
-      const payload = payloads[fieldType];
-      if (!endpoint || !payload) return;
-
-      const indicator = document.getElementById('save-' + recordId);
-      selectEl.classList.add('saving');
-      if (indicator) indicator.textContent = 'Saving...';
-
-      try {
-        const res = await fetch(endpoint + recordId, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-
-        if (res.ok && data.ok) {
-          selectEl.classList.remove('saving');
-          selectEl.classList.add('saved');
-          if (indicator) indicator.textContent = 'Saved';
-          setTimeout(() => {
-            selectEl.classList.remove('saved');
-            if (indicator) indicator.textContent = '';
-          }, 2000);
-
-          // If queue category changed, move the card to new tab
-          if (fieldType === 'queue-category') {
-            const card = selectEl.closest('.editor-card');
-            if (card) {
-              card.setAttribute('data-category', value);
-              // Re-run current tab filter to hide/show
-              const activeTab = document.querySelector('.editor-tabs .tab-btn.active');
-              if (activeTab) {
-                const currentTab = document.getElementById('currentEditorTab') ? currentEditorTab : 'Escalated to Human';
-                setEditorTab(currentEditorTab, activeTab);
-              }
-            }
-          }
-        } else {
-          throw new Error(data.error || 'Save failed');
-        }
-      } catch (err) {
-        selectEl.classList.remove('saving');
-        selectEl.classList.add('error');
-        if (indicator) indicator.textContent = 'Error: ' + err.message;
-        setTimeout(() => {
-          selectEl.classList.remove('error');
-          if (indicator) indicator.textContent = '';
-        }, 3000);
-      }
-    }
-
-
-    function setMobileEditorTab(tab, btn) {
-      var cards = document.querySelectorAll('.m-editor-card');
-      var visibleCount = 0;
-      for (var i = 0; i < cards.length; i++) {
-        var cat = (cards[i].getAttribute('data-category') || '').trim();
-        if (cat === tab) { cards[i].style.display = 'grid'; visibleCount++; }
-        else { cards[i].style.display = 'none'; }
-      }
-      var btns = document.querySelectorAll('.m-editor-tab-btn');
-      for (var j = 0; j < btns.length; j++) { btns[j].classList.remove('active'); }
-      if (btn) btn.classList.add('active');
-      var empty = document.getElementById('m-editor-empty');
-      if (empty) empty.style.display = visibleCount === 0 ? 'block' : 'none';
-    }
-    window.addEventListener('load', function() {
-      if (document.querySelector('.m-editor-queue')) {
-        setMobileEditorTab('Escalated to Human', document.querySelector('.m-editor-tab-btn'));
-      }
-    });
-
   </script>
+
+<!-- UPDATE PREVIEW MODAL -->
+<div class="update-preview-overlay" id="updatePreviewModal">
+  <div class="update-preview-box">
+    <div class="modal-kicker">Editor Review</div>
+    <div class="update-preview-title" id="updatePreviewTitle">AI Recommended Update</div>
+    <div class="update-preview-sub" id="updatePreviewSub">Review the proposed changes before applying them to the live claim.</div>
+
+    <div id="updatePreviewLoading" class="update-loading">
+      Generating preview. Asking AI to structure the recommended changes...
+    </div>
+
+    <div id="updatePreviewContent" style="display:none;">
+      <div class="update-editor-note" id="updateEditorNote" style="display:none;"></div>
+      <div id="updateSectionsContainer"></div>
+      <div class="update-actions">
+        <button type="button" class="modal-btn-secondary" onclick="closeUpdatePreview()">Cancel</button>
+        <button type="button" class="modal-btn-primary" id="updateApproveBtn" onclick="applyApprovedSections()">Apply Approved Changes</button>
+      </div>
+      <div id="updateStatusMsg" style="margin-top:10px; font-size:14px; color:var(--text-light); font-style:italic;"></div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
