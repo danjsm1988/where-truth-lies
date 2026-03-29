@@ -1532,7 +1532,6 @@ def claim_detail(slug):
         latest_record = get_latest_claim()
         current_claim = build_claim_context(latest_record) if latest_record else None
     else:
-        # Don't render unexcavated breakout stubs as full claim pages
         f = record.get("fields", {})
         if f.get("Breakout User Excavated") == "No":
             latest_record = get_latest_claim()
@@ -3411,102 +3410,12 @@ def breakout_list_for_claim(slug):
     })
 
 
-def _run_breakout_excavation_bg(breakout_record_id, claim_text, bf, username):
-    """Background thread: run full AI excavation and save to Airtable."""
-    try:
-        reality_anchor, grok_adjudication = build_reality_anchor_with_grok(claim_text)
-        prompt_text = f"{reality_anchor}\n\nNow analyze this claim:\n\"{claim_text}\"".strip()
-
-        claude_json = {}
-        openai_json = {}
-        try:
-            if anthropic_client:
-                r = anthropic_client.messages.create(
-                    model="claude-sonnet-4-6",
-                    max_tokens=4000,
-                    temperature=0,
-                    system=CLAIMLAB_SYSTEM,
-                    messages=[{"role": "user", "content": prompt_text}]
-                )
-                claude_json = safe_json_parse(r.content[0].text)
-        except Exception as e:
-            claude_json = {"error": str(e)}
-
-        try:
-            if openai_client:
-                r = openai_client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[
-                        {"role": "system", "content": CLAIMLAB_SYSTEM},
-                        {"role": "user", "content": prompt_text}
-                    ],
-                    max_tokens=4000,
-                    temperature=0
-                )
-                openai_json = safe_json_parse(r.choices[0].message.content)
-        except Exception as e:
-            openai_json = {"error": str(e)}
-
-        primary = claude_json if "error" not in claude_json else openai_json
-        if "error" in primary:
-            update_airtable_record(breakout_record_id, {
-                "Lock Status": "Unlocked",
-                "Breakout Status": "Pending Excavation",
-                "Breakout User Excavated": "No"
-            })
-            print(f"BREAKOUT EXCAVATION AI FAILED: {primary.get('error')}", flush=True)
-            return
-
-        existing_fields = bf
-        update_fields = extract_primary_record_fields(
-            claim=claim_text,
-            parsed=primary,
-            mode="full",
-            username=username,
-            existing_fields=existing_fields
-        )
-        update_fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
-        update_fields["OpenAI Raw JSON"] = json.dumps(openai_json, ensure_ascii=False)[:100000]
-        if grok_adjudication:
-            update_fields["Grok Raw JSON"] = json.dumps(grok_adjudication, ensure_ascii=False)[:100000]
-        update_fields["Breakout Status"] = "Excavated"
-        update_fields["Lock Status"] = "Unlocked"
-        update_fields["Locked By"] = ""
-        update_fields["Excavation Record ID"] = breakout_record_id
-
-        resp = update_airtable_record(breakout_record_id, update_fields)
-        if not resp.ok:
-            print(f"BREAKOUT EXCAVATION SAVE FAILED: {resp.text}", flush=True)
-            return
-
-        final_slug = update_fields.get("URL Slug", bf.get("URL Slug", ""))
-        parent_links = bf.get("Parent Claim", [])
-        if parent_links:
-            update_airtable_record(parent_links[0], {"Has Breakout Children": True})
-
-        refreshed = get_claim_by_record_id(breakout_record_id)
-        if refreshed:
-            child_count = run_breakout_detection_for_claim(refreshed, detection_source_override="Child Excavation")
-            print(f"BREAKOUT EXCAVATION COMPLETE: {final_slug} — {child_count} child breakouts", flush=True)
-
-    except Exception as e:
-        print(f"BREAKOUT EXCAVATION BG ERROR: {e}", flush=True)
-        try:
-            update_airtable_record(breakout_record_id, {
-                "Lock Status": "Unlocked",
-                "Breakout Status": "Pending Excavation",
-                "Breakout User Excavated": "No"
-            })
-        except Exception:
-            pass
-
-
 @app.route("/breakout/excavate", methods=["POST"])
 def breakout_excavate():
     """
-    User confirms excavation of a breakout claim.
-    Immediately returns after locking. AI runs in background thread.
-    JS polls /breakout/lock-check until Excavated, then redirects.
+    Synchronous excavation — runs full AI pipeline inline.
+    JS shows animated progress during the wait, then redirects on completion.
+    gunicorn timeout must be >= 120s (set in Procfile).
     """
     if not session.get("logged_in"):
         return jsonify({"error": "Not logged in"}), 401
@@ -3553,9 +3462,9 @@ def breakout_excavate():
     current_status = (bf.get("Breakout Status") or "Pending Excavation").strip()
     if current_status == "Excavated":
         existing_slug = bf.get("URL Slug", "")
-        return jsonify({"error": "Already excavated", "redirect_to": f"/claim/{existing_slug}"}), 409
+        return jsonify({"ok": True, "redirect_to": f"/claim/{existing_slug}"}), 200
 
-    # Lock immediately
+    # Lock record
     lock_expiry = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
     update_airtable_record(breakout_record_id, {
         "Lock Status": "Locked",
@@ -3577,21 +3486,103 @@ def breakout_excavate():
         claim_text = f"{claim_text}\n\nAdditional context from user: {user_context}"
         update_airtable_record(breakout_record_id, {"User Added Context": user_context})
 
-    # Fire AI excavation in background thread — return immediately
     username = session.get("username", "Unknown")
-    t = threading.Thread(
-        target=_run_breakout_excavation_bg,
-        args=(breakout_record_id, claim_text, bf, username),
-        daemon=True
-    )
-    t.start()
 
-    return jsonify({
-        "ok": True,
-        "queued": True,
-        "record_id": breakout_record_id,
-        "claims_remaining": session.get("claims_remaining")
-    })
+    # Run AI pipeline synchronously
+    try:
+        reality_anchor, grok_adjudication = build_reality_anchor_with_grok(claim_text)
+        prompt_text = f"{reality_anchor}\n\nNow analyze this claim:\n\"{claim_text}\"".strip()
+
+        claude_json = {}
+        openai_json = {}
+        try:
+            if anthropic_client:
+                r = anthropic_client.messages.create(
+                    model="claude-sonnet-4-6",
+                    max_tokens=4000,
+                    temperature=0,
+                    system=CLAIMLAB_SYSTEM,
+                    messages=[{"role": "user", "content": prompt_text}]
+                )
+                claude_json = safe_json_parse(r.content[0].text)
+        except Exception as e:
+            claude_json = {"error": str(e)}
+
+        try:
+            if openai_client:
+                r = openai_client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": CLAIMLAB_SYSTEM},
+                        {"role": "user", "content": prompt_text}
+                    ],
+                    max_tokens=4000,
+                    temperature=0
+                )
+                openai_json = safe_json_parse(r.choices[0].message.content)
+        except Exception as e:
+            openai_json = {"error": str(e)}
+
+        primary = claude_json if "error" not in claude_json else openai_json
+        if "error" in primary:
+            update_airtable_record(breakout_record_id, {
+                "Lock Status": "Unlocked",
+                "Breakout Status": "Pending Excavation",
+                "Breakout User Excavated": "No"
+            })
+            return jsonify({"error": f"AI excavation failed: {primary.get('error', 'Unknown error')}"}), 500
+
+        update_fields = extract_primary_record_fields(
+            claim=claim_text,
+            parsed=primary,
+            mode="full",
+            username=username,
+            existing_fields=bf
+        )
+        update_fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
+        update_fields["OpenAI Raw JSON"] = json.dumps(openai_json, ensure_ascii=False)[:100000]
+        if grok_adjudication:
+            update_fields["Grok Raw JSON"] = json.dumps(grok_adjudication, ensure_ascii=False)[:100000]
+        update_fields["Breakout Status"] = "Excavated"
+        update_fields["Lock Status"] = "Unlocked"
+        update_fields["Locked By"] = ""
+        update_fields["Excavation Record ID"] = breakout_record_id
+
+        resp = update_airtable_record(breakout_record_id, update_fields)
+        if not resp.ok:
+            update_airtable_record(breakout_record_id, {
+                "Lock Status": "Unlocked",
+                "Breakout Status": "Pending Excavation",
+                "Breakout User Excavated": "No"
+            })
+            return jsonify({"error": f"Failed to save excavation: {resp.text}"}), 500
+
+        final_slug = update_fields.get("URL Slug", bf.get("URL Slug", ""))
+
+        parent_links = bf.get("Parent Claim", [])
+        if parent_links:
+            update_airtable_record(parent_links[0], {"Has Breakout Children": True})
+
+        refreshed = get_claim_by_record_id(breakout_record_id)
+        if refreshed:
+            child_count = run_breakout_detection_for_claim(refreshed, detection_source_override="Child Excavation")
+            print(f"BREAKOUT EXCAVATION COMPLETE: {final_slug} — {child_count} child breakouts", flush=True)
+
+        return jsonify({
+            "ok": True,
+            "redirect_to": f"/claim/{final_slug}",
+            "slug": final_slug,
+            "claims_remaining": session.get("claims_remaining")
+        })
+
+    except Exception as e:
+        print(f"BREAKOUT EXCAVATION ERROR: {e}", flush=True)
+        update_airtable_record(breakout_record_id, {
+            "Lock Status": "Unlocked",
+            "Breakout Status": "Pending Excavation",
+            "Breakout User Excavated": "No"
+        })
+        return jsonify({"error": f"Excavation error: {str(e)}"}), 500
 
 @app.route("/breakout/lock-check/<record_id>", methods=["GET"])
 def breakout_lock_check(record_id):

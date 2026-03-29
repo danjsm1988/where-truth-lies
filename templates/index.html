@@ -7777,17 +7777,17 @@ console.error('Dispute submission failed:', err);
       });
       var data = await res.json();
 
-      if (res.ok && data.ok && data.queued) {
-        // Background job fired — poll until Excavated
-        _pollUntilExcavated(_breakoutRecordId, statusEl, confirmBtn);
-      } else if (res.ok && data.ok && data.redirect_to) {
-        // Synchronous success (fallback)
+      if (res.ok && data.ok && data.redirect_to) {
+        // Synchronous success — redirect directly
         _stopStatusCycle();
         statusEl.textContent = 'Excavation complete. Loading claim...';
         setTimeout(function() {
           closeBreakoutModal();
           window.location = data.redirect_to;
         }, 800);
+      } else if (res.ok && data.ok && data.queued) {
+        // Async queued — poll until done (fallback path)
+        _pollUntilExcavated(_breakoutRecordId, statusEl, confirmBtn);
       } else if (data.redirect_to) {
         _stopStatusCycle();
         statusEl.textContent = 'Already excavated. Redirecting...';
