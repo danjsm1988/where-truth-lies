@@ -5887,36 +5887,6 @@ console.error('Dispute submission failed:', err);
       }
     }
 
-   function switchTab(tab) {
-  const quickPanel = document.getElementById('tab-quick');
-  const fullPanel = document.getElementById('tab-full');
-  const disputesPanel = document.getElementById('tab-disputes');
-
-  const quickBtn = document.getElementById('tab-quick-btn');
-  const fullBtn = document.getElementById('tab-full-btn');
-  const disputesBtn = document.getElementById('tab-disputes-btn');
-
-  quickPanel.classList.toggle('hidden', tab !== 'quick');
-  fullPanel.classList.toggle('hidden', tab !== 'full');
-  disputesPanel.classList.toggle('hidden', tab !== 'disputes');
-
-  quickBtn.classList.toggle('active', tab === 'quick');
-  fullBtn.classList.toggle('active', tab === 'full');
-  disputesBtn.classList.toggle('active', tab === 'disputes');
-
-  if (tab === 'disputes') {
-    const subclaimsSection = document.querySelector('.subclaims-list');
-    const targetY = subclaimsSection
-      ? subclaimsSection.getBoundingClientRect().bottom + window.scrollY + 14
-      : disputesPanel.getBoundingClientRect().top + window.scrollY - 110;
-
-    window.scrollTo({
-      top: targetY,
-      behavior: 'smooth'
-    });
-  }
-}
-
     function toggleLayer(header) {
       const body = header.nextElementSibling;
       header.classList.toggle('open');
@@ -6458,7 +6428,266 @@ console.error('Dispute submission failed:', err);
     });
     
 
-  </script>
+  
+    function switchTab(tab) {
+      ['quick','full','disputes','history'].forEach(function(t) {
+        var panel = document.getElementById('tab-' + t);
+        var btn = document.getElementById('tab-' + t + '-btn');
+        if (panel) panel.classList.toggle('hidden', t !== tab);
+        if (btn) btn.classList.toggle('active', t === tab);
+      });
+      if (tab === 'disputes' || tab === 'history') {
+        var sub = document.querySelector('.subclaims-list');
+        var tgt = document.getElementById('tab-' + tab);
+        var y = sub ? sub.getBoundingClientRect().bottom + window.scrollY + 14 : (tgt ? tgt.getBoundingClientRect().top + window.scrollY - 110 : 0);
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
+    }
+
+    async function editorUpdateField(recordId, fieldType, value, selectEl) {
+      if (!value) return;
+      var endpoints = { 'status': '/editor/update-status/', 'queue-category': '/editor/update-queue-category/', 'resolution-type': '/editor/update-resolution-type/' };
+      var payloads = { 'status': { status: value }, 'queue-category': { category: value }, 'resolution-type': { resolution_type: value } };
+      var endpoint = endpoints[fieldType]; var payload = payloads[fieldType];
+      if (!endpoint) return;
+      var indicator = document.getElementById('save-' + recordId);
+      selectEl.classList.add('saving');
+      if (indicator) indicator.textContent = 'Saving...';
+      try {
+        var res = await fetch(endpoint + recordId, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        var data = await res.json();
+        if (res.ok && data.ok) {
+          selectEl.classList.remove('saving'); selectEl.classList.add('saved');
+          if (indicator) indicator.textContent = 'Saved';
+          setTimeout(function() { selectEl.classList.remove('saved'); if (indicator) indicator.textContent = ''; }, 2000);
+          if (fieldType === 'queue-category') {
+            var card = selectEl.closest('.editor-card');
+            if (card) {
+              card.setAttribute('data-category', value);
+              if (typeof currentEditorTab !== 'undefined') {
+                card.style.display = currentEditorTab === value ? 'flex' : 'none';
+              }
+            }
+          }
+        } else { throw new Error(data.error || 'Save failed'); }
+      } catch(err) {
+        selectEl.classList.remove('saving'); selectEl.classList.add('error');
+        if (indicator) indicator.textContent = 'Error: ' + err.message;
+        setTimeout(function() { selectEl.classList.remove('error'); if (indicator) indicator.textContent = ''; }, 3000);
+      }
+    }
+
+    async function saveManualRecommendation(recordId, btn) {
+      var textarea = document.getElementById('manual-rec-' + recordId);
+      var statusEl = document.getElementById('rec-status-' + recordId);
+      var text = (textarea ? textarea.value : '').trim();
+      if (!text) { if (statusEl) statusEl.textContent = 'Enter a recommendation first.'; return; }
+      btn.disabled = true;
+      if (statusEl) statusEl.textContent = 'Saving...';
+      try {
+        var res = await fetch('/editor/update-recommendation/' + recordId, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ recommendation: text }) });
+        var data = await res.json();
+        if (res.ok && data.ok) { if (statusEl) statusEl.textContent = 'Saved. You can now click Resolve.'; }
+        else { throw new Error(data.error || 'Failed'); }
+      } catch(err) { if (statusEl) statusEl.textContent = 'Error: ' + err.message; }
+      btn.disabled = false;
+    }
+
+    async function reanalyzeDispute(recordId, btn) {
+      var statusEl = document.getElementById('rec-status-' + recordId);
+      if (statusEl) statusEl.textContent = 'Asking AI... this may take a moment.';
+      btn.disabled = true;
+      // Also show the loading state visually
+      var loadingEl = document.createElement('div');
+      loadingEl.id = 'reanalyze-loading-' + recordId;
+      loadingEl.style.cssText = 'margin-top:8px; font-size:13px; color:var(--gold); font-style:italic;';
+      loadingEl.textContent = 'AI is analyzing the dispute text...';
+      btn.parentNode.appendChild(loadingEl);
+      try {
+        var res = await fetch('/editor/reanalyze-dispute/' + recordId, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+        var data = await res.json();
+        if (res.ok && data.ok) {
+          if (statusEl) statusEl.textContent = 'AI recommendation saved. Reloading...';
+          loadingEl.textContent = 'Done. Reloading page...';
+          setTimeout(function() { window.location.reload(); }, 1000);
+        } else { throw new Error(data.error || 'AI analysis failed'); }
+      } catch(err) {
+        if (statusEl) statusEl.textContent = 'Error: ' + err.message;
+        loadingEl.remove();
+        btn.disabled = false;
+      }
+    }
+
+    var _resolveRecordId = null;
+    var _resolveBtn = null;
+
+    function handleEditorResolve(recordId, resolutionType, currentStatus, btn) {
+      var type = (resolutionType || '').trim();
+      if (type === 'AI Recommendation' || type === 'Partial Update') {
+        openUpdatePreview(recordId, type); return;
+      }
+      _resolveRecordId = recordId; _resolveBtn = btn;
+      var modal = document.getElementById('resolveConfirmModal');
+      document.getElementById('resolveConfirmTitle').textContent = type ? 'Resolve as: ' + type : 'Resolve this dispute?';
+      document.getElementById('resolveConfirmSub').textContent = type === 'No Update'
+        ? 'The claim will not be changed. The dispute will be marked resolved.'
+        : 'Review the final status before closing this dispute.';
+      var warningEl = document.getElementById('resolveStatusWarning');
+      var nonFinal = ['Open', 'Needs Review', 'AI Responded'];
+      if (nonFinal.indexOf((currentStatus || '').trim()) !== -1) {
+        warningEl.style.display = 'block';
+        warningEl.textContent = 'Current status is "' + currentStatus + '". This looks unfinished. Confirm you want to close it now, or cancel and update the status first.';
+      } else { warningEl.style.display = 'none'; }
+      var defaultStatus = type === 'Escalated' ? 'Escalated to Human' : 'Resolved';
+      document.getElementById('resolveFinalStatus').value = defaultStatus;
+      document.getElementById('resolveConfirmStatus').textContent = '';
+      document.getElementById('resolveConfirmBtn').disabled = false;
+      modal.classList.add('visible');
+    }
+
+    function closeResolveConfirm() {
+      document.getElementById('resolveConfirmModal').classList.remove('visible');
+      _resolveRecordId = null; _resolveBtn = null;
+    }
+
+    async function confirmResolve() {
+      if (!_resolveRecordId) return;
+      var finalStatus = document.getElementById('resolveFinalStatus').value;
+      var statusEl = document.getElementById('resolveConfirmStatus');
+      var confirmBtn = document.getElementById('resolveConfirmBtn');
+      confirmBtn.disabled = true; statusEl.textContent = 'Resolving...';
+      try {
+        var res = await fetch('/editor/update-status/' + _resolveRecordId, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: finalStatus }) });
+        var data = await res.json();
+        if (res.ok && data.ok) {
+          statusEl.textContent = 'Done.';
+          var card = _resolveBtn ? _resolveBtn.closest('.editor-card, .m-editor-card') : null;
+          if (card) { card.style.opacity = '0.4'; card.style.pointerEvents = 'none'; }
+          setTimeout(function() { closeResolveConfirm(); window.location.reload(); }, 800);
+        } else { throw new Error(data.error || 'Failed'); }
+      } catch(err) { statusEl.textContent = 'Error: ' + err.message; confirmBtn.disabled = false; }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      var rModal = document.getElementById('resolveConfirmModal');
+      if (rModal) rModal.addEventListener('click', function(e) { if (e.target === this) closeResolveConfirm(); });
+      var uModal = document.getElementById('updatePreviewModal');
+      if (uModal) uModal.addEventListener('click', function(e) { if (e.target === this) closeUpdatePreview(); });
+    });
+
+    var _updatePreviewRecordId = null;
+    var _updatePreviewClaimRecordId = null;
+    var _updatePreviewSections = [];
+    var _updatePreviewType = '';
+
+    async function openUpdatePreview(recordId, type) {
+      _updatePreviewRecordId = recordId; _updatePreviewType = type;
+      _updatePreviewSections = []; _updatePreviewClaimRecordId = null;
+      var modal = document.getElementById('updatePreviewModal');
+      var loading = document.getElementById('updatePreviewLoading');
+      var contentEl = document.getElementById('updatePreviewContent');
+      document.getElementById('updatePreviewTitle').textContent = type === 'Partial Update' ? 'Select Sections to Update' : 'AI Recommended Update';
+      document.getElementById('updatePreviewSub').textContent = type === 'Partial Update' ? 'Check the sections you want to apply.' : 'Review the proposed changes before applying.';
+      loading.style.display = 'block'; loading.textContent = 'Generating preview. Asking AI to structure the changes...';
+      contentEl.style.display = 'none';
+      document.getElementById('updateStatusMsg').textContent = '';
+      document.getElementById('updateApproveBtn').disabled = false;
+      modal.classList.add('visible');
+      try {
+        var res = await fetch('/editor/preview-update/' + recordId);
+        var data = await res.json();
+        if (!res.ok || !data.ok) {
+          loading.innerHTML = '<div style="color:var(--bad);margin-bottom:12px;">No AI recommendation on file.</div>' +
+            '<button type="button" class="gold-btn" onclick="reanalyzeAndRetry('' + recordId + '')">Ask AI to Analyze Dispute</button>' +
+            '<div style="margin-top:8px;font-size:13px;color:var(--text-mid);">Or cancel and write your own recommendation on the card.</div>';
+          return;
+        }
+        _updatePreviewClaimRecordId = data.claim_record_id;
+        _updatePreviewSections = data.sections.filter(function(s) { return s.changed; });
+        var noteEl = document.getElementById('updateEditorNote');
+        if (data.editor_note) { noteEl.textContent = data.editor_note; noteEl.style.display = 'block'; }
+        else { noteEl.style.display = 'none'; }
+        var container = document.getElementById('updateSectionsContainer');
+        container.innerHTML = '';
+        _updatePreviewSections.forEach(function(section, idx) {
+          var isPartial = type === 'Partial Update';
+          container.innerHTML += '<div class="update-section-card"><div class="update-section-header"><span class="update-section-name">' + section.field + '</span>' +
+            (isPartial ? '<input type="checkbox" class="update-section-check" id="check-section-' + idx + '" checked>' : '') +
+            '</div><div class="update-col-grid"><div><div class="update-col-label">Current</div><div class="update-col-current">' + escHtml(section.current) + '</div></div>' +
+            '<div><div class="update-col-label">Proposed</div><div class="update-col-proposed">' + escHtml(section.proposed) + '</div></div></div></div>';
+        });
+        loading.style.display = 'none'; contentEl.style.display = 'block';
+      } catch(err) { loading.textContent = 'Network error: ' + err.message; }
+    }
+
+    async function reanalyzeAndRetry(recordId) {
+      var loading = document.getElementById('updatePreviewLoading');
+      loading.textContent = 'Asking AI to analyze the dispute...';
+      try {
+        var res = await fetch('/editor/reanalyze-dispute/' + recordId, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+        var data = await res.json();
+        if (res.ok && data.ok) {
+          loading.textContent = 'Recommendation generated. Building preview...';
+          setTimeout(function() { openUpdatePreview(recordId, _updatePreviewType); }, 600);
+        } else { loading.textContent = 'AI failed: ' + (data.error || 'Unknown'); }
+      } catch(err) { loading.textContent = 'Error: ' + err.message; }
+    }
+
+    function escHtml(text) {
+      if (!text) return '';
+      return String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function closeUpdatePreview() {
+      document.getElementById('updatePreviewModal').classList.remove('visible');
+      _updatePreviewRecordId = null; _updatePreviewSections = [];
+    }
+
+    async function applyApprovedSections() {
+      if (!_updatePreviewRecordId || !_updatePreviewClaimRecordId) return;
+      var approved = [];
+      _updatePreviewSections.forEach(function(section, idx) {
+        var cb = document.getElementById('check-section-' + idx);
+        if (!cb || cb.checked) approved.push(section);
+      });
+      if (!approved.length) { alert('No sections selected.'); return; }
+      var btn = document.getElementById('updateApproveBtn');
+      var statusMsg = document.getElementById('updateStatusMsg');
+      btn.disabled = true; statusMsg.textContent = 'Applying changes to live claim...';
+      try {
+        var res = await fetch('/editor/apply-update/' + _updatePreviewRecordId, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ approved_sections: approved, claim_record_id: _updatePreviewClaimRecordId, editor_note: '' })
+        });
+        var data = await res.json();
+        if (res.ok && data.ok) {
+          statusMsg.textContent = 'Done. Updated: ' + data.fields_updated.join(', ');
+          setTimeout(function() { closeUpdatePreview(); window.location.reload(); }, 1500);
+        } else { throw new Error(data.error || 'Apply failed'); }
+      } catch(err) { statusMsg.textContent = 'Error: ' + err.message; btn.disabled = false; }
+    }
+
+    function setMobileEditorTab(tab, btn) {
+      var cards = document.querySelectorAll('.m-editor-card');
+      var visibleCount = 0;
+      for (var i = 0; i < cards.length; i++) {
+        var cat = (cards[i].getAttribute('data-category') || '').trim();
+        if (cat === tab) { cards[i].style.display = 'grid'; visibleCount++; }
+        else { cards[i].style.display = 'none'; }
+      }
+      var btns = document.querySelectorAll('.m-editor-tab-btn');
+      for (var j = 0; j < btns.length; j++) { btns[j].classList.remove('active'); }
+      if (btn) btn.classList.add('active');
+      var empty = document.getElementById('m-editor-empty');
+      if (empty) empty.style.display = visibleCount === 0 ? 'block' : 'none';
+    }
+    window.addEventListener('load', function() {
+      if (document.querySelector('.m-editor-queue')) {
+        setMobileEditorTab('Escalated to Human', document.querySelector('.m-editor-tab-btn'));
+      }
+    });
+
+</script>
 
 <!-- RESOLVE CONFIRMATION MODAL -->
 <div class="update-preview-overlay" id="resolveConfirmModal">
