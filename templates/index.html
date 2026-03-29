@@ -3327,6 +3327,151 @@ html, body {
   opacity: 0.7;
 }
 
+
+    /* ── MOBILE EDITOR QUEUE ── */
+    .m-editor-queue {
+      display: grid;
+      gap: 14px;
+    }
+
+    .m-editor-header {
+      padding-bottom: 4px;
+    }
+
+    .m-editor-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--cream);
+      margin-bottom: 4px;
+    }
+
+    .m-editor-sub {
+      font-size: 14px;
+      color: var(--text-mid);
+      font-style: italic;
+    }
+
+    .m-editor-tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      background: rgba(255,255,255,.025);
+      border: 1px solid rgba(201,168,76,.16);
+      border-radius: 12px;
+      padding: 6px;
+    }
+
+    .m-editor-tab-btn {
+      appearance: none;
+      border: none;
+      background: transparent;
+      color: var(--text-mid);
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: 8px 4px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all .15s ease;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    .m-editor-tab-btn.active {
+      background: rgba(201,168,76,.14);
+      color: var(--gold);
+      border: 1px solid rgba(201,168,76,.3);
+    }
+
+    .m-editor-card {
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.018));
+      border: 1px solid rgba(201,168,76,.16);
+      border-radius: 16px;
+      padding: 16px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .m-editor-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .m-editor-claim-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 17px;
+      line-height: 1.3;
+      color: var(--cream);
+      text-decoration: none;
+      flex: 1;
+    }
+
+    .m-editor-claim-title:hover {
+      color: var(--gold);
+    }
+
+    .m-editor-status-badge {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--gold);
+      background: rgba(201,168,76,.1);
+      border: 1px solid rgba(201,168,76,.26);
+      border-radius: 999px;
+      padding: 4px 8px;
+      white-space: nowrap;
+      flex: 0 0 auto;
+    }
+
+    .m-editor-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .m-editor-dispute-text {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--cream-soft);
+    }
+
+    .m-editor-ai-block {
+      background: rgba(201,168,76,.05);
+      border-left: 3px solid rgba(201,168,76,.35);
+      border-radius: 0 8px 8px 0;
+      padding: 10px 12px;
+    }
+
+    .m-editor-ai-label {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 5px;
+    }
+
+    .m-editor-ai-text {
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--cream-soft);
+    }
+
+    .m-editor-card-actions {
+      margin-top: 4px;
+    }
+
+    /* 5-column bottom nav for superusers */
+    .m-bottom-nav-5 {
+      grid-template-columns: repeat(5, 1fr) !important;
+    }
+
     /* Mobile claim tabs */
     .m-claim-tabs {
       display: flex;
@@ -4131,62 +4276,101 @@ html, body {
       
 
            {% if page_mode == "editor" %}
-      <div class="m-profile" id="mEditor">
-        <div class="m-profile-title">Editor Queue</div>
+      <div class="m-editor-queue" id="mEditor">
+
+        <div class="m-editor-header">
+          <div class="m-editor-title">Editor Queue</div>
+          <div class="m-editor-sub">Disputes needing human attention.</div>
+        </div>
+
+        <!-- Mobile editor tabs -->
+        <div class="m-editor-tabs">
+          <button type="button" class="m-editor-tab-btn active" onclick="setMobileEditorTab('Escalated to Human', this)">Escalated</button>
+          <button type="button" class="m-editor-tab-btn" onclick="setMobileEditorTab('AI Recommended Update', this)">AI Rec.</button>
+          <button type="button" class="m-editor-tab-btn" onclick="setMobileEditorTab('Potential Dispute / Pushback Issue', this)">Issues</button>
+          <button type="button" class="m-editor-tab-btn" onclick="setMobileEditorTab('Current Dispute', this)">Current</button>
+        </div>
+
+        <div id="m-editor-empty" style="display:none; text-align:center; padding:32px 16px; color:var(--text-mid); font-style:italic; font-size:15px;">
+          No claims in this category.
+        </div>
 
         {% if editor_queue and editor_queue|length > 0 %}
           {% for item in editor_queue %}
-            <div class="m-profile-card" style="margin-bottom:12px;">
-              <div class="m-profile-label">Claim</div>
-              <div class="m-profile-value" style="font-size:16px; line-height:1.4;">{{ item.title }}</div>
+            <div class="m-editor-card" data-category="{{ item.editor_queue_category }}">
 
-              <div class="m-profile-label" style="margin-top:10px;">Status</div>
-              <div class="m-profile-value">{{ item.status }}</div>
+              <div class="m-editor-card-header">
+                <a href="/claim/{{ item.claim_slug }}" class="m-editor-claim-title">{{ item.title }}</a>
+                <span class="m-editor-status-badge">{{ item.status }}</span>
+              </div>
 
-              <div class="m-profile-label" style="margin-top:10px;">Dispute</div>
-              <div class="m-profile-value" style="font-size:15px; line-height:1.55;">{{ item.dispute_text }}</div>
+              <div class="m-editor-meta">
+                {% if item.date %}<span class="m-card-date">{{ item.date }}</span>{% endif %}
+                {% if item.escalated %}<span class="m-chip" style="color:var(--gold);border-color:rgba(201,168,76,.3);">Escalated</span>{% endif %}
+              </div>
+
+              <div class="m-editor-dispute-text">{{ item.dispute_text }}</div>
 
               {% if item.ai_response %}
-              <div class="m-profile-label" style="margin-top:10px;">AI Response</div>
-              <div class="m-profile-value" style="font-size:15px; line-height:1.55;">{{ item.ai_response }}</div>
+                <div class="m-editor-ai-block">
+                  <div class="m-editor-ai-label">AI Response</div>
+                  <div class="m-editor-ai-text">{{ item.ai_response }}</div>
+                </div>
               {% endif %}
 
-              <div style="margin-top:12px;">
-                <a href="/claim/{{ item.claim_slug }}" class="m-logout-btn" style="display:block;text-align:center;text-decoration:none;">Open Claim</a>
+              {% if item.ai_recommended_changes %}
+                <div class="m-editor-ai-block" style="border-left-color:rgba(117,194,141,.4);">
+                  <div class="m-editor-ai-label" style="color:#75c28d;">AI Recommended Changes</div>
+                  <div class="m-editor-ai-text">{{ item.ai_recommended_changes }}</div>
+                </div>
+              {% endif %}
+
+              <div class="m-editor-card-actions">
+                <a href="/claim/{{ item.claim_slug }}" class="m-run-btn" style="text-decoration:none; text-align:center; display:block;">Open Claim</a>
+                <form method="POST" action="/editor/resolve/{{ item.record_id }}" style="margin-top:8px;">
+                  <button type="submit" class="m-run-btn" style="background:linear-gradient(180deg,#2e7d32,#1b5e20); width:100%;">Resolve</button>
+                </form>
               </div>
+
             </div>
           {% endfor %}
         {% else %}
-          <div class="m-profile-card">
-            <div class="m-profile-value">No items currently need editor review.</div>
+          <div style="text-align:center; padding:32px 16px; color:var(--text-mid); font-style:italic;">
+            No items currently need editor review.
           </div>
         {% endif %}
+
       </div>
       {% endif %}
+
+
 
     </div><!-- end m-content -->
 
     <!-- BOTTOM NAV -->
-    <nav class="m-bottom-nav">
+    <nav class="m-bottom-nav {% if true_superuser %}m-bottom-nav-5{% endif %}">
       <a class="m-nav-link {% if page_mode == 'claim' %}active{% endif %}" href="/">
-    <span class="m-nav-icon">⌂</span>
-    <span>Home</span>
-  </a>
-
-  <a class="m-nav-link {% if page_mode == 'search' %}active{% endif %}" href="/search">
-    <span class="m-nav-icon">▤</span>
-    <span>Claims</span>
-  </a>
-
-  <a class="m-nav-link {% if page_mode == 'disputes' %}active{% endif %}" href="/disputes">
-    <span class="m-nav-icon">✦</span>
-    <span>Disputes</span>
-  </a>
-
-  <a class="m-nav-link {% if page_mode == 'profile' %}active{% endif %}" href="/profile">
-    <span class="m-nav-icon">◉</span>
-    <span>Profile</span>
-  </a>
+        <span class="m-nav-icon">⌂</span>
+        <span>Home</span>
+      </a>
+      <a class="m-nav-link {% if page_mode == 'search' %}active{% endif %}" href="/search">
+        <span class="m-nav-icon">▤</span>
+        <span>Claims</span>
+      </a>
+      <a class="m-nav-link {% if page_mode == 'disputes' %}active{% endif %}" href="/disputes">
+        <span class="m-nav-icon">✦</span>
+        <span>Disputes</span>
+      </a>
+      <a class="m-nav-link {% if page_mode == 'profile' %}active{% endif %}" href="/profile">
+        <span class="m-nav-icon">◉</span>
+        <span>Profile</span>
+      </a>
+      {% if true_superuser %}
+      <a class="m-nav-link {% if page_mode == 'editor' %}active{% endif %}" href="/editor">
+        <span class="m-nav-icon">✎</span>
+        <span>Editor</span>
+      </a>
+      {% endif %}
     </nav>
 
   </div><!-- end mobile-shell -->
@@ -5732,8 +5916,7 @@ console.error('Dispute submission failed:', err);
       el.addEventListener('mouseleave', hideTooltip);
     });
 
-    let glossaryData = [];
-    {% if current_claim and current_claim.glossary %}glossaryData = {{ current_claim.glossary | tojson | safe }};{% endif %}
+    const glossaryData = {{ current_claim.glossary | tojson if current_claim and current_claim.glossary else '[]' }};
     const glossaryMap = {};
     glossaryData.forEach(g => {
       if (g.term && g.definition) glossaryMap[g.term.toLowerCase()] = g;
@@ -5774,8 +5957,7 @@ console.error('Dispute submission failed:', err);
       'rightPerspText'
     ].forEach(id => applyGlossary(document.getElementById(id)));
 
-    let rawScenario = "";
-    {% if current_claim and current_claim.scenario_map %}rawScenario = {{ current_claim.scenario_map | tojson | safe }};{% endif %}
+    const rawScenario = {{ (current_claim.scenario_map | tojson) if current_claim and current_claim.scenario_map else '""' }};
 
     function renderScenarioMap(raw) {
       const container = document.getElementById('scenarioMapContainer');
@@ -5834,8 +6016,7 @@ console.error('Dispute submission failed:', err);
 
     renderScenarioMap(rawScenario);
 
-    let rawSources = "";
-    {% if current_claim and current_claim.source_urls %}rawSources = {{ current_claim.source_urls | tojson | safe }};{% endif %}
+    const rawSources = {{ (current_claim.source_urls | tojson) if current_claim and current_claim.source_urls else '""' }};
 
     function renderSources(raw) {
       const container = document.getElementById('sourcesContainer');
@@ -6207,6 +6388,38 @@ console.error('Dispute submission failed:', err);
       }
     });
     
+
+
+    function setMobileEditorTab(tab, btn) {
+      let visibleCount = 0;
+
+      document.querySelectorAll('.m-editor-card').forEach(function(el) {
+        const category = (el.getAttribute('data-category') || '').trim();
+        if (category === tab) {
+          el.style.display = 'grid';
+          visibleCount++;
+        } else {
+          el.style.display = 'none';
+        }
+      });
+
+      document.querySelectorAll('.m-editor-tab-btn').forEach(function(b) {
+        b.classList.remove('active');
+      });
+      if (btn) btn.classList.add('active');
+
+      const empty = document.getElementById('m-editor-empty');
+      if (empty) {
+        empty.style.display = visibleCount === 0 ? 'block' : 'none';
+      }
+    }
+
+    window.addEventListener('load', function() {
+      const defaultMobileBtn = document.querySelector('.m-editor-tab-btn');
+      if (defaultMobileBtn && document.querySelector('.m-editor-queue')) {
+        setMobileEditorTab('Escalated to Human', defaultMobileBtn);
+      }
+    });
 
   </script>
 </body>
