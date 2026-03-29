@@ -3569,21 +3569,20 @@ html, body {
 
     /* ── EDITOR TABS — 5-tab layout ── */
     .excavation-tabs.editor-tabs {
-      flex-wrap: wrap;
-      gap: 2px;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+      gap: 0;
+    }
+    .excavation-tabs.editor-tabs::-webkit-scrollbar { display: none; }
+    .excavation-tabs.editor-tabs .tab-btn {
+      white-space: nowrap;
+      flex-shrink: 0;
     }
     .editor-tab-cm {
       margin-left: auto;
-      border-left: 1px solid rgba(201,168,76,.2);
-      padding-left: 16px !important;
-      color: var(--gold-dim);
-    }
-    .editor-tab-cm.active {
-      color: var(--gold);
-    }
-    @media (max-width: 900px) {
-      .excavation-tabs.editor-tabs { flex-wrap: wrap; }
-      .editor-tab-cm { margin-left: 0; border-left: none; padding-left: 12px !important; }
+      border-left: 1px solid rgba(201,168,76,.18);
+      flex-shrink: 0;
     }
 
     /* ── EDITOR PAGE ── */
@@ -4577,16 +4576,16 @@ html, body {
 
           <div class="excavation-tabs editor-tabs" style="margin-bottom:20px;">
             <button type="button" class="tab-btn active" id="editor-tab-escalated" onclick="setEditorTab('Escalated to Human', this)">
-              Escalated to Human
+              Escalated
             </button>
             <button type="button" class="tab-btn" id="editor-tab-ai" onclick="setEditorTab('AI Recommended Update', this)">
-              AI Recommended Updates
+              AI Rec.
             </button>
             <button type="button" class="tab-btn" id="editor-tab-potential" onclick="setEditorTab('Potential Dispute / Pushback Issue', this)">
-              Potential Issues
+              Issues
             </button>
             <button type="button" class="tab-btn" id="editor-tab-current" onclick="setEditorTab('Current Dispute', this)">
-              Current Disputes
+              Current
             </button>
           <button type="button" class="tab-btn editor-tab-cm" id="editor-tab-claims" onclick="setEditorTab('__claims__', this)">
             Claim Management
