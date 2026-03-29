@@ -3567,22 +3567,37 @@ html, body {
       display: none !important;
     }
 
-    /* ── EDITOR TABS — 5-tab layout ── */
+    /* ── EDITOR TABS — compact with gold dividers ── */
     .excavation-tabs.editor-tabs {
       flex-wrap: nowrap;
       overflow-x: auto;
       scrollbar-width: none;
       gap: 0;
+      padding-bottom: 0;
     }
     .excavation-tabs.editor-tabs::-webkit-scrollbar { display: none; }
     .excavation-tabs.editor-tabs .tab-btn {
       white-space: nowrap;
       flex-shrink: 0;
+      font-size: 9px !important;
+      letter-spacing: .12em;
+      padding: 10px 14px 8px !important;
+      position: relative;
+    }
+    .excavation-tabs.editor-tabs .tab-btn + .tab-btn::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 20%;
+      height: 60%;
+      width: 1px;
+      background: rgba(201,168,76,.22);
     }
     .editor-tab-cm {
       margin-left: auto;
-      border-left: 1px solid rgba(201,168,76,.18);
-      flex-shrink: 0;
+    }
+    .editor-tab-cm::before {
+      background: rgba(201,168,76,.35) !important;
     }
 
     /* ── EDITOR PAGE ── */
@@ -6726,10 +6741,10 @@ console.error('Dispute submission failed:', err);
       try {
         var res = await fetch('/editor/claims?' + params.toString());
         var data = await res.json();
-        if (!res.ok || !data.ok) { listEl.innerHTML = '<div style="color:var(--bad);">Error: ' + (data.error || 'Failed') + '</div>'; return; }
+        if (!res.ok || !data.ok) { listEl.innerHTML = '<div style="color:var(--bad); word-break:break-word; white-space:pre-wrap; font-size:13px; line-height:1.5;">Error: ' + escHtml(data.error || 'Failed') + '</div>'; return; }
         _cmClaims = data.claims;
         renderCmClaimsList(data.claims);
-      } catch(err) { listEl.innerHTML = '<div style="color:var(--bad);">Error: ' + err.message + '</div>'; }
+      } catch(err) { listEl.innerHTML = '<div style="color:var(--bad); word-break:break-word; white-space:pre-wrap; font-size:13px; line-height:1.5;">Error: ' + escHtml(err.message) + '</div>'; }
     }
 
     function renderCmClaimsList(claims) {

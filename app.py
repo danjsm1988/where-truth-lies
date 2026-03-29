@@ -2616,7 +2616,7 @@ def editor_claims_list():
     try:
         topic = request.args.get("topic", "").strip()
         verdict = request.args.get("verdict", "").strip()
-        not_since = request.args.get("not_since", "").strip()  # ISO date string
+        not_since = request.args.get("not_since", "").strip()
         limit = min(int(request.args.get("limit", 50)), 200)
 
         formula_parts = ["{Status}='Active'"]
@@ -2627,7 +2627,6 @@ def editor_claims_list():
             safe_verdict = escape_airtable_formula_value(verdict)
             formula_parts.append(f"{{Overall Verdict}}='{safe_verdict}'")
         if not_since:
-            # Claims where Last Reanalyzed is empty OR older than not_since
             formula_parts.append(
                 f"OR({{Last Reanalyzed}}='', IS_BEFORE({{Last Reanalyzed}}, '{not_since}'))"
             )
