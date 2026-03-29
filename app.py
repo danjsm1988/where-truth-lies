@@ -2627,8 +2627,10 @@ def editor_claims_list():
             safe_verdict = escape_airtable_formula_value(verdict)
             formula_parts.append(f"{{Overall Verdict}}='{safe_verdict}'")
         if not_since:
+            # NOT({Last Reanalyzed}) catches blank/empty values safely
+            # IS_BEFORE only runs when the field has a value
             formula_parts.append(
-                f"OR({{Last Reanalyzed}}='', IS_BEFORE({{Last Reanalyzed}}, '{not_since}'))"
+                f"OR(NOT({{Last Reanalyzed}}), IS_BEFORE({{Last Reanalyzed}}, '{not_since}'))"
             )
 
         formula = "AND(" + ", ".join(formula_parts) + ")" if len(formula_parts) > 1 else formula_parts[0]
