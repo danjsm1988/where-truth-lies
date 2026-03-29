@@ -513,6 +513,7 @@ def extract_primary_record_fields(claim, parsed, mode, username, existing_fields
         "Date": dates["display_date"],
         "Date Added": existing_fields.get("Date Added", dates["short_date"]),
         "Last Updated": dates["short_date"],
+        "Last Reanalyzed": dates["short_date"],
         "Entered By": entered_by
     }
 
