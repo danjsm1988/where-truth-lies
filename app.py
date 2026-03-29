@@ -3082,7 +3082,7 @@ def get_next_child_sequence(parent_record_id):
     try:
         safe_id = escape_airtable_formula_value(parent_record_id)
         params = {
-            "filterByFormula": f"FIND('{safe_id}', ARRAYJOIN({{Parent Claim}}))",
+            "filterByFormula": f"{{Parent Claim ID}}='{safe_id}'",
             "fields[]": ["Child Sequence"]
         }
         records = airtable_get_all(AIRTABLE_TABLE_NAME, params=params)
@@ -3166,6 +3166,7 @@ def create_breakout_claim_record(
     # Link fields
     if parent_record_id:
         fields["Parent Claim"] = [parent_record_id]
+        fields["Parent Claim ID"] = parent_record_id
         # Calculate depth from parent
         try:
             parent_rec = get_claim_by_record_id(parent_record_id)
@@ -3304,7 +3305,7 @@ def get_breakout_claims_for_parent(parent_record_id):
     try:
         safe_id = escape_airtable_formula_value(parent_record_id)
         params = {
-            "filterByFormula": f"FIND('{safe_id}', ARRAYJOIN({{Parent Claim}}))",
+            "filterByFormula": f"{{Parent Claim ID}}='{safe_id}'",
             "sort[0][field]": "Breakout Group Key",
             "sort[0][direction]": "asc"
         }
