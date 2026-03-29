@@ -6638,7 +6638,11 @@ console.error('Dispute submission failed:', err);
         var res = await fetch('/editor/preview-update/' + recordId);
         var data = await res.json();
         if (!res.ok || !data.ok) {
-          loading.innerHTML = '<div style="color:var(--bad);margin-bottom:12px;">No AI recommendation on file.</div><button type="button" class="gold-btn" onclick="reanalyzeAndRetry('' + recordId + '')">Ask AI to Analyze Dispute</button><div style="margin-top:8px;font-size:13px;color:var(--text-mid);">Or cancel and write your own recommendation on the card.</div>';
+          loading.innerHTML = '<div style="color:var(--bad);margin-bottom:12px;">No AI recommendation on file.</div>' +
+              '<button type="button" class="gold-btn" id="reanalyze-retry-btn">Ask AI to Analyze Dispute</button>' +
+              '<div style="margin-top:8px;font-size:13px;color:var(--text-mid);">Or cancel and write your own recommendation on the card.</div>';
+          var retryBtn = document.getElementById('reanalyze-retry-btn');
+          if (retryBtn) retryBtn.onclick = function() { reanalyzeAndRetry(recordId); };
           return;
         }
         _updatePreviewClaimRecordId = data.claim_record_id;
@@ -6713,24 +6717,40 @@ console.error('Dispute submission failed:', err);
     function renderCmClaimsList(claims) {
       var listEl = document.getElementById('cm-claims-list');
       var countEl = document.getElementById('cm-selected-count');
-      if (!claims.length) { listEl.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-mid); font-style:italic;">No claims match your filters.</div>'; return; }
-      countEl.textContent = '0 of ' + claims.length + ' selected';
-      var html = '';
+      if (!claims.length) {
+        listEl.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-mid); font-style:italic;">No claims match your filters.</div>';
+        return;
+      }
+      if (countEl) countEl.textContent = '0 of ' + claims.length + ' selected';
+      listEl.innerHTML = '';
       claims.forEach(function(claim, idx) {
-        html += '<div class="cm-claim-row">' +
+        var row = document.createElement('div');
+        row.className = 'cm-claim-row';
+        var reanalyzedHtml = claim.last_reanalyzed
+          ? '<span class="cm-reanalyzed-badge">↻ ' + escHtml(claim.last_reanalyzed) + (claim.reanalyzed_by ? ' by ' + escHtml(claim.reanalyzed_by) : '') + '</span>'
+          : '';
+        row.innerHTML =
           '<input type="checkbox" class="cm-claim-check" data-idx="' + idx + '" onchange="cmUpdateCount()" style="cursor:pointer;">' +
-          '<div><a href="/claim/' + escHtml(claim.slug) + '" class="cm-claim-title" target="_blank">' + escHtml(claim.title.slice(0,80)) + (claim.title.length > 80 ? '...' : '') + '</a>' +
-          '<div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:3px;">' +
-          (claim.topic ? '<span class="cm-claim-meta">' + escHtml(claim.topic) + '</span>' : '') +
-          (claim.verdict ? '<span class="cm-claim-meta">' + escHtml(claim.verdict) + '</span>' : '') +
-          (claim.date_added ? '<span class="cm-claim-meta">Added ' + claim.date_added + '</span>' : '') +
-          (claim.last_reanalyzed ? '<span class="cm-reanalyzed-badge">↻ ' + claim.last_reanalyzed + (claim.reanalyzed_by ? ' by ' + claim.reanalyzed_by : '') + '</span>' : '') +
-          '</div></div>' +
-          '<button type="button" class="cm-row-btn" id="cm-btn-' + idx + '" onclick="runSingleClaimReanalyze('' + escHtml(claim.record_id) + '', ' + idx + ', 'full')">Full</button>' +
-          '</div>';
+          '<div>' +
+            '<a href="/claim/' + escHtml(claim.slug) + '" class="cm-claim-title" target="_blank">' +
+              escHtml(claim.title.length > 80 ? claim.title.slice(0,80) + '...' : claim.title) +
+            '</a>' +
+            '<div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:3px;">' +
+              (claim.topic ? '<span class="cm-claim-meta">' + escHtml(claim.topic) + '</span>' : '') +
+              (claim.verdict ? '<span class="cm-claim-meta">' + escHtml(claim.verdict) + '</span>' : '') +
+              (claim.date_added ? '<span class="cm-claim-meta">Added ' + claim.date_added + '</span>' : '') +
+              reanalyzedHtml +
+            '</div>' +
+          '</div>' +
+          '<button type="button" class="cm-row-btn" id="cm-btn-' + idx + '">Full</button>';
+        var btn = row.querySelector('.cm-row-btn');
+        var capturedId = claim.record_id;
+        var capturedIdx = idx;
+        btn.onclick = function() { runSingleClaimReanalyze(capturedId, capturedIdx, 'full'); };
+        listEl.appendChild(row);
       });
-      listEl.innerHTML = html;
     }
+
 
     function cmUpdateCount() {
       var checked = document.querySelectorAll('.cm-claim-check:checked').length;
