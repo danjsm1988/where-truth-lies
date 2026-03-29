@@ -857,6 +857,7 @@ def get_latest_claim():
     try:
         params = {
             "maxRecords": 1,
+            "filterByFormula": "OR(NOT({Breakout User Excavated}), {Breakout User Excavated}!='No')",
             "sort[0][field]": "Date Added",
             "sort[0][direction]": "desc"
         }
@@ -1531,7 +1532,13 @@ def claim_detail(slug):
         latest_record = get_latest_claim()
         current_claim = build_claim_context(latest_record) if latest_record else None
     else:
-        current_claim = build_claim_context(record)
+        # Don't render unexcavated breakout stubs as full claim pages
+        f = record.get("fields", {})
+        if f.get("Breakout User Excavated") == "No":
+            latest_record = get_latest_claim()
+            current_claim = build_claim_context(latest_record) if latest_record else None
+        else:
+            current_claim = build_claim_context(record)
     return render_template(
         "index.html",
         page_mode="claim",
