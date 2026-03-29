@@ -2179,8 +2179,7 @@ def submit_dispute():
         # Run breakout detection on dispute text (fire-and-forget style — don't block response)
         try:
             if claim_record:
-                dispute_text_for_breakout = dispute_text
-                combined = dispute_text_for_breakout.strip()
+                combined = dispute_text.strip()
                 if combined:
                     breakout_candidates = detect_breakout_claims(combined, source_type="Dispute")
                     claim_fields_snap = claim_record.get("fields", {})
@@ -2188,16 +2187,22 @@ def submit_dispute():
                     parent_identifier = claim_fields_snap.get("Claim Identifier", "")
                     root_links = claim_fields_snap.get("Root Claim", [])
                     root_id = root_links[0] if root_links else parent_id
+                    dispute_had_breakouts = False
                     for b in breakout_candidates:
-                        create_breakout_claim_record(
+                        result = create_breakout_claim_record(
                             breakout_data=b,
                             parent_record_id=parent_id,
                             root_record_id=root_id,
                             origin_type="Breakout Dispute",
                             parent_identifier=parent_identifier,
                             source_section="Dispute",
-                            origin_dispute_id=dispute_record_id
+                            origin_dispute_id=dispute_record_id,
+                            detection_source="Dispute"
                         )
+                        if result:
+                            dispute_had_breakouts = True
+                    if dispute_had_breakouts and dispute_record_id:
+                        update_dispute_record(dispute_record_id, {"Has Breakout Claims": True})
         except Exception as bo_err:
             print(f"DISPUTE BREAKOUT DETECTION ERROR: {bo_err}", flush=True)
 
@@ -2345,16 +2350,22 @@ def pushback_dispute():
                 root_links = claim_fields_snap.get("Root Claim", [])
                 root_id = root_links[0] if root_links else parent_id
                 pb_record_id = new_pushback_record.get("id")
+                pushback_had_breakouts = False
                 for b in breakout_candidates:
-                    create_breakout_claim_record(
+                    result = create_breakout_claim_record(
                         breakout_data=b,
                         parent_record_id=parent_id,
                         root_record_id=root_id,
                         origin_type="Breakout Pushback",
                         parent_identifier=parent_identifier,
                         source_section="Pushback",
-                        origin_pushback_id=pb_record_id
+                        origin_pushback_id=pb_record_id,
+                        detection_source="Pushback"
                     )
+                    if result:
+                        pushback_had_breakouts = True
+                if pushback_had_breakouts and pb_record_id:
+                    update_dispute_record(pb_record_id, {"Has Breakout Claims": True})
         except Exception as bo_err:
             print(f"PUSHBACK BREAKOUT DETECTION ERROR: {bo_err}", flush=True)
 
@@ -3089,6 +3100,8 @@ def create_breakout_claim_record(
     source_section,
     origin_dispute_id=None,
     origin_pushback_id=None,
+    origin_claim_record_id=None,
+    detection_source="Initial Submission",
     parent_slug=None
 ):
     """Create a breakout claim row in Airtable with full hierarchy metadata."""
@@ -3123,6 +3136,8 @@ def create_breakout_claim_record(
         "Child Sequence": child_seq,
         "Claim Depth": 0,  # will calculate below
         "Lock Status": "Unlocked",
+        "Claims Cost": 1,
+        "Breakout Detection Source": detection_source,
     }
 
     if claim_identifier:
@@ -3145,6 +3160,13 @@ def create_breakout_claim_record(
     elif parent_record_id:
         fields["Root Claim"] = [parent_record_id]
 
+    # Origin Claim — set when breakout comes from a claim body or another breakout child
+    if origin_claim_record_id:
+        fields["Origin Claim"] = [origin_claim_record_id]
+    elif origin_type in ("Breakout Claim",) and parent_record_id:
+        # Main claim origin — parent IS the origin claim
+        fields["Origin Claim"] = [parent_record_id]
+
     if origin_dispute_id:
         fields["Origin Dispute ID"] = origin_dispute_id
     if origin_pushback_id:
@@ -3155,13 +3177,12 @@ def create_breakout_claim_record(
         resp = create_airtable_record(fields)
         if resp.ok:
             new_record = resp.json()
-            new_record_id = new_record.get("id")
 
             # Mark parent as having breakout children
             if parent_record_id:
                 update_airtable_record(parent_record_id, {"Has Breakout Children": True})
 
-            print(f"BREAKOUT CLAIM CREATED: {claim_identifier or slug} depth={fields['Claim Depth']}", flush=True)
+            print(f"BREAKOUT CLAIM CREATED: {claim_identifier or slug} depth={fields['Claim Depth']} source={detection_source}", flush=True)
             return new_record
         else:
             print(f"BREAKOUT CLAIM CREATE ERROR: {resp.text}", flush=True)
@@ -3171,7 +3192,7 @@ def create_breakout_claim_record(
         return None
 
 
-def run_breakout_detection_for_claim(claim_record):
+def run_breakout_detection_for_claim(claim_record, detection_source_override=None):
     """
     Run full breakout detection on a claim record:
     main claim body + all disputes + all pushbacks.
@@ -3204,7 +3225,8 @@ def run_breakout_detection_for_claim(claim_record):
             root_record_id=root_record_id,
             origin_type="Breakout Claim",
             parent_identifier=parent_identifier,
-            source_section="Main Claim"
+            source_section="Main Claim",
+            detection_source=detection_source_override or "Initial Submission"
         )
         if result:
             created_count += 1
@@ -3221,12 +3243,14 @@ def run_breakout_detection_for_claim(claim_record):
             is_pushback = "pushback" in dispute_type.lower()
             source_type = "Pushback" if is_pushback else "Dispute"
             origin_type = "Breakout Pushback" if is_pushback else "Breakout Dispute"
+            det_source = "Pushback" if is_pushback else "Dispute"
 
             combined_text = " ".join(filter(None, [dispute_text, response_text]))
             if not combined_text.strip():
                 continue
 
             dispute_breakouts = detect_breakout_claims(combined_text, source_type=source_type)
+            dispute_had_breakouts = False
             for b in dispute_breakouts:
                 result = create_breakout_claim_record(
                     breakout_data=b,
@@ -3236,10 +3260,19 @@ def run_breakout_detection_for_claim(claim_record):
                     parent_identifier=parent_identifier,
                     source_section="Dispute" if not is_pushback else "Pushback",
                     origin_dispute_id=dispute_record_id if not is_pushback else None,
-                    origin_pushback_id=dispute_record_id if is_pushback else None
+                    origin_pushback_id=dispute_record_id if is_pushback else None,
+                    detection_source=det_source
                 )
                 if result:
                     created_count += 1
+                    dispute_had_breakouts = True
+
+            # Mark the dispute record with Has Breakout Claims
+            if dispute_had_breakouts and dispute_record_id:
+                try:
+                    update_dispute_record(dispute_record_id, {"Has Breakout Claims": True})
+                except Exception as e:
+                    print(f"HAS BREAKOUT CLAIMS UPDATE ERROR: {e}", flush=True)
 
     return created_count
 
@@ -3504,7 +3537,7 @@ def breakout_excavate():
     # Run recursive breakout detection on the newly excavated child
     refreshed = get_claim_by_record_id(breakout_record_id)
     if refreshed:
-        child_count = run_breakout_detection_for_claim(refreshed)
+        child_count = run_breakout_detection_for_claim(refreshed, detection_source_override="Child Excavation")
         print(f"RECURSIVE BREAKOUT DETECTION: {child_count} children found on {final_slug}", flush=True)
 
     return jsonify({
