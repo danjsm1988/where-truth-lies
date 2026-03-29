@@ -3116,6 +3116,18 @@ def create_breakout_claim_record(
     group_label = breakout_data.get("group_label", "")
     confidence = float(breakout_data.get("confidence", 0.75))
 
+    # Deduplication — skip if a breakout with this title already exists under this parent
+    if parent_record_id:
+        try:
+            existing = get_breakout_claims_for_parent(parent_record_id)
+            title_lower = title.strip().lower()
+            for ex in existing:
+                if ex.get("title", "").strip().lower() == title_lower:
+                    print(f"BREAKOUT DEDUP: skipping '{title}' — already exists under parent", flush=True)
+                    return None
+        except Exception:
+            pass
+
     child_seq = get_next_child_sequence(parent_record_id)
     claim_identifier = generate_claim_identifier(parent_identifier, origin_type, child_seq)
     slug = slugify(title)
