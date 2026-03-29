@@ -1599,6 +1599,8 @@ def editor_page():
                 "ai_initial_queue_category": f.get("AI Initial Queue Category", ""),
                 "editor_queue_category": queue_category,
                 "status": f.get("Status", "Open"),
+                "resolution_type": f.get("Resolution Type", ""),
+                "sections_disputed": f.get("Sections Disputed", []),
                 "date": (f.get("Date Submitted", "") or "")[:10],
                 "escalated": is_escalated
         })
@@ -1645,6 +1647,71 @@ def resolve_editor_item(record_id):
 
     except Exception as e:
         return f"Resolve error: {str(e)}", 500
+
+
+@app.route("/editor/update-status/<record_id>", methods=["POST"])
+def editor_update_status(record_id):
+    if not session.get("logged_in"):
+        return {"error": "Not logged in"}, 401
+    if not session.get("true_superuser"):
+        return {"error": "Unauthorized"}, 403
+    try:
+        data = request.get_json()
+        new_status = (data or {}).get("status", "").strip()
+        valid_statuses = ["Open", "AI Responded", "Escalated to Human", "In Review", "Resolved", "Closed", "Needs Review"]
+        if new_status not in valid_statuses:
+            return {"error": f"Invalid status: {new_status}"}, 400
+        fields = {"Status": new_status}
+        if new_status == "Escalated to Human":
+            fields["Escalated To Human"] = True
+        elif new_status in ["Resolved", "Closed"]:
+            fields["Escalated To Human"] = False
+        response = update_dispute_record(record_id, fields)
+        if not response.ok:
+            return {"error": response.text}, 500
+        return {"ok": True, "status": new_status}
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+
+@app.route("/editor/update-queue-category/<record_id>", methods=["POST"])
+def editor_update_queue_category(record_id):
+    if not session.get("logged_in"):
+        return {"error": "Not logged in"}, 401
+    if not session.get("true_superuser"):
+        return {"error": "Unauthorized"}, 403
+    try:
+        data = request.get_json()
+        new_category = (data or {}).get("category", "").strip()
+        valid_categories = ["Escalated to Human", "AI Recommended Update", "Potential Dispute / Pushback Issue", "Current Dispute"]
+        if new_category not in valid_categories:
+            return {"error": f"Invalid category: {new_category}"}, 400
+        response = update_dispute_record(record_id, {"Editor Queue Category": new_category})
+        if not response.ok:
+            return {"error": response.text}, 500
+        return {"ok": True, "category": new_category}
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+
+@app.route("/editor/update-resolution-type/<record_id>", methods=["POST"])
+def editor_update_resolution_type(record_id):
+    if not session.get("logged_in"):
+        return {"error": "Not logged in"}, 401
+    if not session.get("true_superuser"):
+        return {"error": "Unauthorized"}, 403
+    try:
+        data = request.get_json()
+        new_type = (data or {}).get("resolution_type", "").strip()
+        valid_types = ["AI Recommendation", "Human Response", "Human Override", "Partial Update", "No Update", "Escalated"]
+        if new_type not in valid_types:
+            return {"error": f"Invalid resolution type: {new_type}"}, 400
+        response = update_dispute_record(record_id, {"Resolution Type": new_type})
+        if not response.ok:
+            return {"error": response.text}, 500
+        return {"ok": True, "resolution_type": new_type}
+    except Exception as e:
+        return {"error": str(e)}, 500
 
 @app.route("/search")
 def search_page():
