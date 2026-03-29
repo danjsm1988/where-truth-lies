@@ -3330,57 +3330,23 @@ html, body {
 
     /* ── MOBILE EDITOR QUEUE ── */
     .m-editor-queue { display: grid; gap: 14px; }
-    .m-editor-title {
-      font-family: 'Playfair Display', Georgia, serif;
-      font-size: 26px; font-weight: 900; color: var(--cream); margin-bottom: 4px;
-    }
+    .m-editor-title { font-family: 'Playfair Display', Georgia, serif; font-size: 26px; font-weight: 900; color: var(--cream); margin-bottom: 4px; }
     .m-editor-sub { font-size: 14px; color: var(--text-mid); font-style: italic; }
-    .m-editor-tabs {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
-      background: rgba(255,255,255,.025); border: 1px solid rgba(201,168,76,.16);
-      border-radius: 12px; padding: 6px;
-    }
-    .m-editor-tab-btn {
-      appearance: none; border: none; background: transparent;
-      color: var(--text-mid); font-family: 'Libre Baskerville', Georgia, serif;
-      font-size: 9px; letter-spacing: .1em; text-transform: uppercase;
-      padding: 8px 4px; border-radius: 8px; cursor: pointer;
-      transition: all .15s ease; text-align: center; line-height: 1.3;
-    }
-    .m-editor-tab-btn.active {
-      background: rgba(201,168,76,.14); color: var(--gold);
-      border: 1px solid rgba(201,168,76,.3);
-    }
-    .m-editor-card {
-      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.018));
-      border: 1px solid rgba(201,168,76,.16); border-radius: 16px;
-      padding: 16px; display: none; gap: 10px;
-    }
-    .m-editor-card-header {
-      display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
-    }
-    .m-editor-claim-title {
-      font-family: 'Playfair Display', Georgia, serif; font-size: 17px;
-      line-height: 1.3; color: var(--cream); text-decoration: none; flex: 1;
-    }
+    .m-editor-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; background: rgba(255,255,255,.025); border: 1px solid rgba(201,168,76,.16); border-radius: 12px; padding: 6px; }
+    .m-editor-tab-btn { appearance: none; border: none; background: transparent; color: var(--text-mid); font-family: 'Libre Baskerville', Georgia, serif; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; padding: 8px 4px; border-radius: 8px; cursor: pointer; transition: all .15s ease; text-align: center; line-height: 1.3; }
+    .m-editor-tab-btn.active { background: rgba(201,168,76,.14); color: var(--gold); border: 1px solid rgba(201,168,76,.3); }
+    .m-editor-card { background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.018)); border: 1px solid rgba(201,168,76,.16); border-radius: 16px; padding: 16px; display: none; gap: 10px; }
+    .m-editor-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .m-editor-claim-title { font-family: 'Playfair Display', Georgia, serif; font-size: 17px; line-height: 1.3; color: var(--cream); text-decoration: none; flex: 1; }
     .m-editor-claim-title:hover { color: var(--gold); }
-    .m-editor-status-badge {
-      font-family: 'Libre Baskerville', Georgia, serif; font-size: 9px;
-      letter-spacing: .1em; text-transform: uppercase; color: var(--gold);
-      background: rgba(201,168,76,.1); border: 1px solid rgba(201,168,76,.26);
-      border-radius: 999px; padding: 4px 8px; white-space: nowrap; flex: 0 0 auto;
-    }
+    .m-editor-status-badge { font-family: 'Libre Baskerville', Georgia, serif; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); background: rgba(201,168,76,.1); border: 1px solid rgba(201,168,76,.26); border-radius: 999px; padding: 4px 8px; white-space: nowrap; flex: 0 0 auto; }
     .m-editor-meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
     .m-editor-dispute-text { font-size: 14px; line-height: 1.6; color: var(--cream-soft); }
-    .m-editor-ai-block {
-      background: rgba(201,168,76,.05); border-left: 3px solid rgba(201,168,76,.35);
-      border-radius: 0 8px 8px 0; padding: 10px 12px;
-    }
-    .m-editor-ai-label {
-      font-family: 'Libre Baskerville', Georgia, serif; font-size: 9px;
-      letter-spacing: .12em; text-transform: uppercase; color: var(--gold); margin-bottom: 5px;
-    }
+    .m-editor-ai-block { background: rgba(201,168,76,.05); border-left: 3px solid rgba(201,168,76,.35); border-radius: 0 8px 8px 0; padding: 10px 12px; }
+    .m-editor-ai-label { font-family: 'Libre Baskerville', Georgia, serif; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); margin-bottom: 5px; }
     .m-editor-ai-text { font-size: 13px; line-height: 1.55; color: var(--cream-soft); }
+    .m-editor-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.07); }
+    .m-editor-control { display: flex; flex-direction: column; gap: 4px; }
     .m-editor-card-actions { margin-top: 4px; }
     .m-bottom-nav-5 { grid-template-columns: repeat(5, 1fr) !important; }
 
@@ -3519,6 +3485,79 @@ html, body {
     /* Suppress tooltip bubble on editor tabs — they have no data-tooltip */
     .editor-tabs .tab-btn::after {
       display: none !important;
+    }
+
+
+    /* ── EDITOR CONTROLS ── */
+    .editor-controls-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      padding: 14px 0 4px;
+      border-top: 1px solid rgba(201,168,76,.12);
+      margin-top: 12px;
+    }
+
+    .editor-control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .editor-control-label {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+    }
+
+    .editor-select {
+      appearance: none;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(201,168,76,.22);
+      border-radius: 8px;
+      color: var(--cream);
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 11px;
+      padding: 7px 10px;
+      cursor: pointer;
+      transition: border-color .15s ease, background .15s ease;
+      outline: none;
+    }
+
+    .editor-select:hover {
+      border-color: rgba(201,168,76,.5);
+      background: rgba(255,255,255,.07);
+    }
+
+    .editor-select:focus {
+      border-color: var(--gold);
+      background: rgba(255,255,255,.07);
+    }
+
+    .editor-select option {
+      background: #0f2133;
+      color: var(--cream);
+    }
+
+    .editor-select.saving {
+      opacity: .6;
+      pointer-events: none;
+    }
+
+    .editor-select.saved {
+      border-color: rgba(117,194,141,.6);
+    }
+
+    .editor-select.error {
+      border-color: rgba(232,112,112,.6);
+    }
+
+    @media (max-width: 1180px) {
+      .editor-controls-row {
+        grid-template-columns: 1fr 1fr;
+      }
     }
 
     /* ── EDITOR PAGE ── */
@@ -4189,23 +4228,19 @@ html, body {
 
            {% if page_mode == "editor" %}
       <div class="m-editor-queue" id="mEditor">
-
         <div class="m-editor-header">
           <div class="m-editor-title">Editor Queue</div>
           <div class="m-editor-sub">Disputes needing human attention.</div>
         </div>
-
         <div class="m-editor-tabs">
           <button type="button" class="m-editor-tab-btn active" onclick="setMobileEditorTab('Escalated to Human', this)">Escalated</button>
           <button type="button" class="m-editor-tab-btn" onclick="setMobileEditorTab('AI Recommended Update', this)">AI Rec.</button>
           <button type="button" class="m-editor-tab-btn" onclick="setMobileEditorTab('Potential Dispute / Pushback Issue', this)">Issues</button>
           <button type="button" class="m-editor-tab-btn" onclick="setMobileEditorTab('Current Dispute', this)">Current</button>
         </div>
-
         <div id="m-editor-empty" style="display:none; text-align:center; padding:32px 16px; color:var(--text-mid); font-style:italic; font-size:15px;">
           No claims in this category.
         </div>
-
         {% if editor_queue and editor_queue|length > 0 %}
           {% for item in editor_queue %}
             <div class="m-editor-card" data-category="{{ item.editor_queue_category }}">
@@ -4230,8 +4265,36 @@ html, body {
                   <div class="m-editor-ai-text">{{ item.ai_recommended_changes }}</div>
                 </div>
               {% endif %}
+              <!-- Mobile editor controls -->
+              <div class="m-editor-controls">
+                <div class="m-editor-control">
+                  <label class="editor-control-label">Resolution Type</label>
+                  <select class="editor-select" style="font-size:12px;" onchange="editorUpdateField('{{ item.record_id }}', 'resolution-type', this.value, this)">
+                    <option value="" {% if not item.resolution_type %}selected{% endif %}>— select —</option>
+                    <option value="AI Recommendation" {% if item.resolution_type == 'AI Recommendation' %}selected{% endif %}>AI Recommendation</option>
+                    <option value="Human Response" {% if item.resolution_type == 'Human Response' %}selected{% endif %}>Human Response</option>
+                    <option value="Human Override" {% if item.resolution_type == 'Human Override' %}selected{% endif %}>Human Override</option>
+                    <option value="Partial Update" {% if item.resolution_type == 'Partial Update' %}selected{% endif %}>Partial Update</option>
+                    <option value="No Update" {% if item.resolution_type == 'No Update' %}selected{% endif %}>No Update</option>
+                    <option value="Escalated" {% if item.resolution_type == 'Escalated' %}selected{% endif %}>Escalated</option>
+                  </select>
+                </div>
+                <div class="m-editor-control">
+                  <label class="editor-control-label">Status</label>
+                  <select class="editor-select" style="font-size:12px;" onchange="editorUpdateField('{{ item.record_id }}', 'status', this.value, this)">
+                    <option value="Open" {% if item.status == 'Open' %}selected{% endif %}>Open</option>
+                    <option value="AI Responded" {% if item.status == 'AI Responded' %}selected{% endif %}>AI Responded</option>
+                    <option value="Escalated to Human" {% if item.status == 'Escalated to Human' %}selected{% endif %}>Escalated to Human</option>
+                    <option value="In Review" {% if item.status == 'In Review' %}selected{% endif %}>In Review</option>
+                    <option value="Needs Review" {% if item.status == 'Needs Review' %}selected{% endif %}>Needs Review</option>
+                    <option value="Resolved" {% if item.status == 'Resolved' %}selected{% endif %}>Resolved</option>
+                    <option value="Closed" {% if item.status == 'Closed' %}selected{% endif %}>Closed</option>
+                  </select>
+                </div>
+              </div>
               <div class="m-editor-card-actions">
-                <a href="/claim/{{ item.claim_slug }}" class="m-run-btn" style="text-decoration:none; text-align:center; display:block;">Open Claim</a>
+                <div id="save-m-{{ item.record_id }}" style="font-size:12px; color:var(--text-mid); font-style:italic; min-height:16px;"></div>
+                <a href="/claim/{{ item.claim_slug }}" class="m-run-btn" style="text-decoration:none; text-align:center; display:block; margin-top:6px;">Open Claim</a>
                 <form method="POST" action="/editor/resolve/{{ item.record_id }}" style="margin-top:8px;">
                   <button type="submit" class="m-run-btn" style="background:linear-gradient(180deg,#2e7d32,#1b5e20); width:100%;">Resolve</button>
                 </form>
@@ -4243,7 +4306,6 @@ html, body {
             No items currently need editor review.
           </div>
         {% endif %}
-
       </div>
       {% endif %}
 
@@ -4554,17 +4616,51 @@ html, body {
                       </div>
                     {% endif %}
 
-                    <div class="archive-card-footer">
-                      <div class="archive-byline">
-                        <strong>Review Target:</strong> Claim dispute
-                      </div>
-                      <div style="display:flex; gap:8px;">
-                        <a href="/claim/{{ item.claim_slug }}" class="gold-btn" style="text-decoration:none;">Open Claim</a>
-                        <form method="POST" action="/editor/resolve/{{ item.record_id }}" style="margin:0;">
-                          <button type="submit" class="gold-btn" style="background:#2e7d32;">Resolve</button>
-                        </form>
-                      </div>
+                  <!-- EDITOR CONTROLS -->
+                  <div class="editor-controls-row">
+                    <div class="editor-control-group">
+                      <label class="editor-control-label">Resolution Type</label>
+                      <select class="editor-select" onchange="editorUpdateField('{{ item.record_id }}', 'resolution-type', this.value, this)">
+                        <option value="" {% if not item.resolution_type %}selected{% endif %}>— select —</option>
+                        <option value="AI Recommendation" {% if item.resolution_type == 'AI Recommendation' %}selected{% endif %}>AI Recommendation</option>
+                        <option value="Human Response" {% if item.resolution_type == 'Human Response' %}selected{% endif %}>Human Response</option>
+                        <option value="Human Override" {% if item.resolution_type == 'Human Override' %}selected{% endif %}>Human Override</option>
+                        <option value="Partial Update" {% if item.resolution_type == 'Partial Update' %}selected{% endif %}>Partial Update</option>
+                        <option value="No Update" {% if item.resolution_type == 'No Update' %}selected{% endif %}>No Update</option>
+                        <option value="Escalated" {% if item.resolution_type == 'Escalated' %}selected{% endif %}>Escalated</option>
+                      </select>
                     </div>
+                    <div class="editor-control-group">
+                      <label class="editor-control-label">Queue Category</label>
+                      <select class="editor-select" onchange="editorUpdateField('{{ item.record_id }}', 'queue-category', this.value, this)">
+                        <option value="Current Dispute" {% if item.editor_queue_category == 'Current Dispute' %}selected{% endif %}>Current Dispute</option>
+                        <option value="Escalated to Human" {% if item.editor_queue_category == 'Escalated to Human' %}selected{% endif %}>Escalated to Human</option>
+                        <option value="AI Recommended Update" {% if item.editor_queue_category == 'AI Recommended Update' %}selected{% endif %}>AI Recommended Update</option>
+                        <option value="Potential Dispute / Pushback Issue" {% if item.editor_queue_category == 'Potential Dispute / Pushback Issue' %}selected{% endif %}>Potential Issues</option>
+                      </select>
+                    </div>
+                    <div class="editor-control-group">
+                      <label class="editor-control-label">Status</label>
+                      <select class="editor-select" onchange="editorUpdateField('{{ item.record_id }}', 'status', this.value, this)">
+                        <option value="Open" {% if item.status == 'Open' %}selected{% endif %}>Open</option>
+                        <option value="AI Responded" {% if item.status == 'AI Responded' %}selected{% endif %}>AI Responded</option>
+                        <option value="Escalated to Human" {% if item.status == 'Escalated to Human' %}selected{% endif %}>Escalated to Human</option>
+                        <option value="In Review" {% if item.status == 'In Review' %}selected{% endif %}>In Review</option>
+                        <option value="Needs Review" {% if item.status == 'Needs Review' %}selected{% endif %}>Needs Review</option>
+                        <option value="Resolved" {% if item.status == 'Resolved' %}selected{% endif %}>Resolved</option>
+                        <option value="Closed" {% if item.status == 'Closed' %}selected{% endif %}>Closed</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="archive-card-footer" style="margin-top:12px;">
+                    <div class="editor-save-indicator" id="save-{{ item.record_id }}" style="font-size:13px; color:var(--text-mid); font-style:italic;"></div>
+                    <div style="display:flex; gap:8px;">
+                      <a href="/claim/{{ item.claim_slug }}" class="gold-btn" style="text-decoration:none;">Open Claim</a>
+                      <form method="POST" action="/editor/resolve/{{ item.record_id }}" style="margin:0;">
+                        <button type="submit" class="gold-btn" style="background:#2e7d32;">Resolve</button>
+                      </form>
+                    </div>
+                  </div>
                   </div>
                 {% endfor %}
               </div>
@@ -6297,17 +6393,81 @@ console.error('Dispute submission failed:', err);
     
 
 
+    async function editorUpdateField(recordId, fieldType, value, selectEl) {
+      if (!value) return;
+
+      const endpoints = {
+        'status': '/editor/update-status/',
+        'queue-category': '/editor/update-queue-category/',
+        'resolution-type': '/editor/update-resolution-type/'
+      };
+
+      const payloads = {
+        'status': { status: value },
+        'queue-category': { category: value },
+        'resolution-type': { resolution_type: value }
+      };
+
+      const endpoint = endpoints[fieldType];
+      const payload = payloads[fieldType];
+      if (!endpoint || !payload) return;
+
+      const indicator = document.getElementById('save-' + recordId);
+      selectEl.classList.add('saving');
+      if (indicator) indicator.textContent = 'Saving...';
+
+      try {
+        const res = await fetch(endpoint + recordId, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (res.ok && data.ok) {
+          selectEl.classList.remove('saving');
+          selectEl.classList.add('saved');
+          if (indicator) indicator.textContent = 'Saved';
+          setTimeout(() => {
+            selectEl.classList.remove('saved');
+            if (indicator) indicator.textContent = '';
+          }, 2000);
+
+          // If queue category changed, move the card to new tab
+          if (fieldType === 'queue-category') {
+            const card = selectEl.closest('.editor-card');
+            if (card) {
+              card.setAttribute('data-category', value);
+              // Re-run current tab filter to hide/show
+              const activeTab = document.querySelector('.editor-tabs .tab-btn.active');
+              if (activeTab) {
+                const currentTab = document.getElementById('currentEditorTab') ? currentEditorTab : 'Escalated to Human';
+                setEditorTab(currentEditorTab, activeTab);
+              }
+            }
+          }
+        } else {
+          throw new Error(data.error || 'Save failed');
+        }
+      } catch (err) {
+        selectEl.classList.remove('saving');
+        selectEl.classList.add('error');
+        if (indicator) indicator.textContent = 'Error: ' + err.message;
+        setTimeout(() => {
+          selectEl.classList.remove('error');
+          if (indicator) indicator.textContent = '';
+        }, 3000);
+      }
+    }
+
+
     function setMobileEditorTab(tab, btn) {
       var cards = document.querySelectorAll('.m-editor-card');
       var visibleCount = 0;
       for (var i = 0; i < cards.length; i++) {
         var cat = (cards[i].getAttribute('data-category') || '').trim();
-        if (cat === tab) {
-          cards[i].style.display = 'grid';
-          visibleCount++;
-        } else {
-          cards[i].style.display = 'none';
-        }
+        if (cat === tab) { cards[i].style.display = 'grid'; visibleCount++; }
+        else { cards[i].style.display = 'none'; }
       }
       var btns = document.querySelectorAll('.m-editor-tab-btn');
       for (var j = 0; j < btns.length; j++) { btns[j].classList.remove('active'); }
@@ -6315,7 +6475,6 @@ console.error('Dispute submission failed:', err);
       var empty = document.getElementById('m-editor-empty');
       if (empty) empty.style.display = visibleCount === 0 ? 'block' : 'none';
     }
-
     window.addEventListener('load', function() {
       if (document.querySelector('.m-editor-queue')) {
         setMobileEditorTab('Escalated to Human', document.querySelector('.m-editor-tab-btn'));
