@@ -21,6 +21,7 @@
       --cream: #f4ede2;
       --cream-soft: #e7decf;
       --text-light: #bcc7d0;
+      --text-primary: #f4ede2;
       --text-mid: #8093a3;
       --text-dim: #617587;
       --ok: #75c28d;
@@ -3449,10 +3450,6 @@ html, body {
     .breakout-empty { font-size:13px; color:var(--text-mid); font-style:italic; padding:12px 0; }
     .breakout-detect-btn { appearance:none; border:1px solid rgba(201,168,76,.2); background:transparent; color:var(--text-mid); font-family:'Libre Baskerville',Georgia,serif; font-size:9px; letter-spacing:.12em; text-transform:uppercase; padding:4px 10px; border-radius:6px; cursor:pointer; transition:all .15s ease; }
     .breakout-detect-btn:hover { color:var(--gold); border-color:rgba(201,168,76,.4); }
-    .breakout-status-pill { font-family:'Libre Baskerville',Georgia,serif; font-size:9px; letter-spacing:.1em; text-transform:uppercase; padding:3px 9px; border-radius:999px; white-space:nowrap; flex-shrink:0; border:1px solid; }
-    .pending-pill { background:rgba(201,168,76,.08); border-color:rgba(201,168,76,.2); color:rgba(201,168,76,.7); }
-    .excavating-pill { background:rgba(99,132,199,.1); border-color:rgba(99,132,199,.3); color:#7fa3e8; }
-    .excavated-pill { background:rgba(117,194,141,.1); border-color:rgba(117,194,141,.25); color:#75c28d; }
 
     /* mobile breakout */
     .m-breakout-section { margin:16px 0 12px; }
@@ -3471,7 +3468,7 @@ html, body {
     /* excavation popup */
     .breakout-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.72); z-index:9900; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity .2s ease; }
     .breakout-modal-overlay.visible { opacity:1; pointer-events:all; }
-    .breakout-modal { background:var(--surface); border:1px solid rgba(201,168,76,.3); border-radius:16px; padding:32px 28px; max-width:480px; width:90%; max-height:85vh; overflow-y:auto; }
+    .breakout-modal { background:#0f2438; border:1px solid rgba(201,168,76,.3); border-radius:16px; padding:32px 28px; max-width:480px; width:90%; max-height:85vh; overflow-y:auto; box-shadow:0 24px 60px rgba(0,0,0,.7); }
     .breakout-modal-title { font-family:'Playfair Display',Georgia,serif; font-size:18px; color:var(--text-primary); margin-bottom:6px; line-height:1.35; }
     .breakout-modal-source { font-size:12px; color:var(--text-mid); font-style:italic; margin-bottom:18px; padding:10px 12px; background:rgba(255,255,255,.03); border-left:2px solid rgba(201,168,76,.3); border-radius:0 6px 6px 0; line-height:1.5; }
     .breakout-modal-label { font-family:'Libre Baskerville',Georgia,serif; font-size:9px; letter-spacing:.16em; text-transform:uppercase; color:var(--gold-dim); margin-bottom:6px; }
@@ -4015,7 +4012,7 @@ html, body {
                 {% for bo in group.claims %}
                   {% set bo_ex = bo.breakout_status == 'Excavated' %}
                   <div class="m-breakout-row {% if bo_ex %}excavated{% endif %}"
-                       data-bo-id="{{ bo.record_id }}" data-bo="{{ bo | tojson | e }}" onclick="handleBreakoutClick(this)">
+                       onclick="{% if bo_ex %}window.location='/claim/{{ bo.slug }}'{% else %}openBreakoutModal('{{ bo.record_id }}', {{ bo | tojson | safe }}){% endif %}">
                     <span class="m-breakout-status-dot {% if bo_ex %}excavated{% else %}pending{% endif %}"></span>
                     <span class="m-breakout-row-title">{{ bo.title }}</span>
                     {% if bo.breakout_source_section == 'Dispute' %}
@@ -4023,13 +4020,7 @@ html, body {
                     {% elif bo.breakout_source_section == 'Pushback' %}
                       <span class="m-breakout-origin-badge breakout-origin-pushback">Pushback</span>
                     {% endif %}
-                    {% if bo_ex %}
-                      <span class="breakout-status-pill excavated-pill" style="font-size:8px; padding:2px 7px;">Excavated</span>
-                    {% elif bo.breakout_status == 'Excavating' %}
-                      <span class="breakout-status-pill excavating-pill" style="font-size:8px; padding:2px 7px;">Excavating</span>
-                    {% else %}
-                      <span class="breakout-status-pill pending-pill" style="font-size:8px; padding:2px 7px;">Pending</span>
-                    {% endif %}
+                    {% if bo_ex %}<span style="font-size:10px; color:#75c28d;">↗</span>{% endif %}
                   </div>
                 {% endfor %}
               {% endfor %}
@@ -5207,7 +5198,7 @@ html, body {
                         {% set bo_excavated = bo.breakout_status == 'Excavated' %}
                         {% set bo_origin = bo.origin_type or 'Breakout Claim' %}
                         <div class="breakout-row {% if bo_excavated %}excavated{% endif %}"
-                             data-bo-id="{{ bo.record_id }}" data-bo="{{ bo | tojson | e }}" onclick="handleBreakoutClick(this)">
+                             onclick="{% if bo_excavated %}window.location='/claim/{{ bo.slug }}'{% else %}openBreakoutModal('{{ bo.record_id }}', {{ bo | tojson | safe }}){% endif %}">
                           <span class="breakout-status-dot {% if bo_excavated %}excavated{% elif bo.breakout_status == 'Excavating' %}excavating{% else %}pending{% endif %}"></span>
                           <span class="breakout-row-title">{{ bo.title }}</span>
                           {% if bo.breakout_source_section == 'Dispute' %}
@@ -5218,11 +5209,7 @@ html, body {
                             <span class="breakout-origin-badge breakout-origin-main">Main Claim</span>
                           {% endif %}
                           {% if bo_excavated %}
-                            <span class="breakout-status-pill excavated-pill">Excavated &#x2197;</span>
-                          {% elif bo.breakout_status == 'Excavating' %}
-                            <span class="breakout-status-pill excavating-pill">Excavating...</span>
-                          {% else %}
-                            <span class="breakout-status-pill pending-pill">Pending Excavation</span>
+                            <span style="font-size:11px; color:#75c28d;">Excavated ↗</span>
                           {% endif %}
                         </div>
                       {% endfor %}
@@ -5609,7 +5596,7 @@ html, body {
                 {% set bo_ex = bo.breakout_status == 'Excavated' %}
                 <div class="breakout-row {% if bo_ex %}excavated{% endif %}"
                      style="margin-bottom:5px;"
-                     data-bo-id="{{ bo.record_id }}" data-bo="{{ bo | tojson | e }}" onclick="handleBreakoutClick(this)">
+                     onclick="{% if bo_ex %}window.location='/claim/{{ bo.slug }}'{% else %}openBreakoutModal('{{ bo.record_id }}', {{ bo | tojson | safe }}){% endif %}">
                   <span class="breakout-status-dot {% if bo_ex %}excavated{% else %}pending{% endif %}"></span>
                   <span class="breakout-row-title">{{ bo.title }}</span>
                   {% if bo.breakout_source_section == 'Dispute' %}
@@ -5617,13 +5604,7 @@ html, body {
                   {% elif bo.breakout_source_section == 'Pushback' %}
                     <span class="breakout-origin-badge breakout-origin-pushback">From Pushback</span>
                   {% endif %}
-                  {% if bo_ex %}
-                    <span class="breakout-status-pill excavated-pill">Excavated &#x2197;</span>
-                  {% elif bo.breakout_status == 'Excavating' %}
-                    <span class="breakout-status-pill excavating-pill">Excavating...</span>
-                  {% else %}
-                    <span class="breakout-status-pill pending-pill">Pending Excavation</span>
-                  {% endif %}
+                  {% if bo_ex %}<span style="font-size:11px; color:#75c28d;">Excavated ↗</span>{% endif %}
                 </div>
               {% endfor %}
             </div>
@@ -7633,6 +7614,75 @@ console.error('Dispute submission failed:', err);
   // ── BREAKOUT CLAIMS JS ──
   var _breakoutRecordId = '';
   var _breakoutData = null;
+  var _breakoutStatusInterval = null;
+  var _breakoutPollInterval = null;
+
+  var _excavationMessages = [
+    'Locking claim record...',
+    'Consulting Grok live layer for real-time grounding...',
+    'Running Grok web and X search...',
+    'Anchoring facts to live sources...',
+    'Sending to Claude for deep excavation...',
+    'Claude analyzing sub-claims and direct facts...',
+    'Claude mapping values divergence...',
+    'Claude drafting constitutional framework...',
+    'Sending to ChatGPT for cross-analysis...',
+    'ChatGPT building scenario map...',
+    'Comparing Claude and ChatGPT verdicts...',
+    'Writing to Airtable...',
+    'Running recursive breakout detection on child claim...',
+    'Almost there. Finalizing...'
+  ];
+
+  function _startStatusCycle(statusEl) {
+    var idx = 0;
+    statusEl.textContent = _excavationMessages[0];
+    _breakoutStatusInterval = setInterval(function() {
+      idx++;
+      if (idx < _excavationMessages.length) {
+        statusEl.textContent = _excavationMessages[idx];
+      }
+    }, 4000);
+  }
+
+  function _stopStatusCycle() {
+    if (_breakoutStatusInterval) {
+      clearInterval(_breakoutStatusInterval);
+      _breakoutStatusInterval = null;
+    }
+  }
+
+  function _stopPoll() {
+    if (_breakoutPollInterval) {
+      clearInterval(_breakoutPollInterval);
+      _breakoutPollInterval = null;
+    }
+  }
+
+  function _pollUntilExcavated(recordId, statusEl, confirmBtn) {
+    _breakoutPollInterval = setInterval(async function() {
+      try {
+        var r = await fetch('/breakout/lock-check/' + recordId);
+        var d = await r.json();
+        if (d.breakout_status === 'Excavated' && d.slug) {
+          _stopStatusCycle();
+          _stopPoll();
+          statusEl.textContent = 'Excavation complete. Loading claim...';
+          setTimeout(function() {
+            closeBreakoutModal();
+            window.location = '/claim/' + d.slug;
+          }, 800);
+        } else if (d.breakout_status === 'Pending Excavation') {
+          // Failed — unlocked back to pending
+          _stopStatusCycle();
+          _stopPoll();
+          statusEl.textContent = 'Excavation failed. Please try again.';
+          confirmBtn.disabled = false;
+          confirmBtn.textContent = 'Excavate This Claim';
+        }
+      } catch(e) {}
+    }, 3000);
+  }
 
   function openBreakoutModal(recordId, boData) {
     _breakoutRecordId = recordId;
@@ -7667,6 +7717,13 @@ console.error('Dispute submission failed:', err);
         if (data.breakout_status === 'Excavated' && data.slug) {
           closeBreakoutModal();
           window.location = '/claim/' + data.slug;
+        } else if (data.breakout_status === 'Excavating') {
+          // Already running in background — attach to it
+          document.getElementById('breakout-modal-status').textContent = 'Excavation already in progress...';
+          confirmBtn.disabled = true;
+          confirmBtn.textContent = 'Excavating...';
+          _startStatusCycle(document.getElementById('breakout-modal-status'));
+          _pollUntilExcavated(recordId, document.getElementById('breakout-modal-status'), confirmBtn);
         } else if (data.lock_status === 'Locked') {
           document.getElementById('breakout-modal-status').textContent = 'This claim is currently being excavated. Try again shortly.';
           confirmBtn.disabled = true;
@@ -7676,6 +7733,8 @@ console.error('Dispute submission failed:', err);
   }
 
   function closeBreakoutModal() {
+    _stopStatusCycle();
+    _stopPoll();
     document.getElementById('breakoutModal').classList.remove('visible');
     _breakoutRecordId = '';
     _breakoutData = null;
@@ -7690,7 +7749,7 @@ console.error('Dispute submission failed:', err);
 
     confirmBtn.disabled = true;
     confirmBtn.textContent = 'Excavating...';
-    statusEl.textContent = 'Running excavation. This may take 30 to 60 seconds...';
+    _startStatusCycle(statusEl);
 
     try {
       var res = await fetch('/breakout/excavate', {
@@ -7700,38 +7759,32 @@ console.error('Dispute submission failed:', err);
       });
       var data = await res.json();
 
-      if (res.ok && data.ok) {
+      if (res.ok && data.ok && data.queued) {
+        // Background job started — poll until done
+        _pollUntilExcavated(_breakoutRecordId, statusEl, confirmBtn);
+      } else if (res.ok && data.ok && data.redirect_to) {
+        // Synchronous response (old path)
+        _stopStatusCycle();
         statusEl.textContent = 'Excavation complete. Loading claim...';
         setTimeout(function() {
           closeBreakoutModal();
           window.location = data.redirect_to;
-        }, 1200);
+        }, 800);
       } else if (data.redirect_to) {
-        // Already excavated
+        _stopStatusCycle();
         statusEl.textContent = 'Already excavated. Redirecting...';
         setTimeout(function() { window.location = data.redirect_to; }, 800);
       } else {
+        _stopStatusCycle();
         statusEl.textContent = 'Error: ' + (data.error || 'Excavation failed.');
         confirmBtn.disabled = false;
         confirmBtn.textContent = 'Excavate This Claim';
       }
     } catch(err) {
+      _stopStatusCycle();
       statusEl.textContent = 'Error: ' + err.message;
       confirmBtn.disabled = false;
       confirmBtn.textContent = 'Excavate This Claim';
-    }
-  }
-
-  function handleBreakoutClick(el) {
-    var recordId = el.getAttribute('data-bo-id');
-    var boRaw = el.getAttribute('data-bo');
-    var boData = {};
-    try { boData = JSON.parse(boRaw); } catch(e) {}
-    var status = boData.breakout_status || '';
-    if (status === 'Excavated' && boData.slug) {
-      window.location = '/claim/' + boData.slug;
-    } else {
-      openBreakoutModal(recordId, boData);
     }
   }
 

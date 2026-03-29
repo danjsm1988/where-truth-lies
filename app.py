@@ -2,6 +2,7 @@ import os
 import json
 import re
 import unicodedata
+import threading
 from datetime import datetime
 
 import requests
@@ -3403,12 +3404,102 @@ def breakout_list_for_claim(slug):
     })
 
 
+def _run_breakout_excavation_bg(breakout_record_id, claim_text, bf, username):
+    """Background thread: run full AI excavation and save to Airtable."""
+    try:
+        reality_anchor, grok_adjudication = build_reality_anchor_with_grok(claim_text)
+        prompt_text = f"{reality_anchor}\n\nNow analyze this claim:\n\"{claim_text}\"".strip()
+
+        claude_json = {}
+        openai_json = {}
+        try:
+            if anthropic_client:
+                r = anthropic_client.messages.create(
+                    model="claude-sonnet-4-6",
+                    max_tokens=4000,
+                    temperature=0,
+                    system=CLAIMLAB_SYSTEM,
+                    messages=[{"role": "user", "content": prompt_text}]
+                )
+                claude_json = safe_json_parse(r.content[0].text)
+        except Exception as e:
+            claude_json = {"error": str(e)}
+
+        try:
+            if openai_client:
+                r = openai_client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": CLAIMLAB_SYSTEM},
+                        {"role": "user", "content": prompt_text}
+                    ],
+                    max_tokens=4000,
+                    temperature=0
+                )
+                openai_json = safe_json_parse(r.choices[0].message.content)
+        except Exception as e:
+            openai_json = {"error": str(e)}
+
+        primary = claude_json if "error" not in claude_json else openai_json
+        if "error" in primary:
+            update_airtable_record(breakout_record_id, {
+                "Lock Status": "Unlocked",
+                "Breakout Status": "Pending Excavation",
+                "Breakout User Excavated": "No"
+            })
+            print(f"BREAKOUT EXCAVATION AI FAILED: {primary.get('error')}", flush=True)
+            return
+
+        existing_fields = bf
+        update_fields = extract_primary_record_fields(
+            claim=claim_text,
+            parsed=primary,
+            mode="full",
+            username=username,
+            existing_fields=existing_fields
+        )
+        update_fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
+        update_fields["OpenAI Raw JSON"] = json.dumps(openai_json, ensure_ascii=False)[:100000]
+        if grok_adjudication:
+            update_fields["Grok Raw JSON"] = json.dumps(grok_adjudication, ensure_ascii=False)[:100000]
+        update_fields["Breakout Status"] = "Excavated"
+        update_fields["Lock Status"] = "Unlocked"
+        update_fields["Locked By"] = ""
+        update_fields["Excavation Record ID"] = breakout_record_id
+
+        resp = update_airtable_record(breakout_record_id, update_fields)
+        if not resp.ok:
+            print(f"BREAKOUT EXCAVATION SAVE FAILED: {resp.text}", flush=True)
+            return
+
+        final_slug = update_fields.get("URL Slug", bf.get("URL Slug", ""))
+        parent_links = bf.get("Parent Claim", [])
+        if parent_links:
+            update_airtable_record(parent_links[0], {"Has Breakout Children": True})
+
+        refreshed = get_claim_by_record_id(breakout_record_id)
+        if refreshed:
+            child_count = run_breakout_detection_for_claim(refreshed, detection_source_override="Child Excavation")
+            print(f"BREAKOUT EXCAVATION COMPLETE: {final_slug} — {child_count} child breakouts", flush=True)
+
+    except Exception as e:
+        print(f"BREAKOUT EXCAVATION BG ERROR: {e}", flush=True)
+        try:
+            update_airtable_record(breakout_record_id, {
+                "Lock Status": "Unlocked",
+                "Breakout Status": "Pending Excavation",
+                "Breakout User Excavated": "No"
+            })
+        except Exception:
+            pass
+
+
 @app.route("/breakout/excavate", methods=["POST"])
 def breakout_excavate():
     """
     User confirms excavation of a breakout claim.
-    Deducts 1 allowance, locks the record, runs full AI excavation,
-    then runs recursive breakout detection on the new child claim.
+    Immediately returns after locking. AI runs in background thread.
+    JS polls /breakout/lock-check until Excavated, then redirects.
     """
     if not session.get("logged_in"):
         return jsonify({"error": "Not logged in"}), 401
@@ -3433,7 +3524,6 @@ def breakout_excavate():
     if not breakout_record_id:
         return jsonify({"error": "Breakout record ID required"}), 400
 
-    # Fetch the breakout claim record
     breakout_record = get_claim_by_record_id(breakout_record_id)
     if not breakout_record:
         return jsonify({"error": "Breakout claim not found"}), 404
@@ -3458,7 +3548,7 @@ def breakout_excavate():
         existing_slug = bf.get("URL Slug", "")
         return jsonify({"error": "Already excavated", "redirect_to": f"/claim/{existing_slug}"}), 409
 
-    # Lock the record and mark as user-confirmed
+    # Lock immediately
     lock_expiry = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
     update_airtable_record(breakout_record_id, {
         "Lock Status": "Locked",
@@ -3474,102 +3564,27 @@ def breakout_excavate():
         update_user_claims_remaining(user_info["record_id"], new_count)
         session["claims_remaining"] = new_count
 
-    # Build claim text with user context
+    # Build claim text
     claim_text = bf.get("Original Quote") or bf.get("Stripped Claim") or ""
     if user_context:
         claim_text = f"{claim_text}\n\nAdditional context from user: {user_context}"
-
-    # Save user context
-    if user_context:
         update_airtable_record(breakout_record_id, {"User Added Context": user_context})
 
-    # Run AI excavation
-    reality_anchor, grok_adjudication = build_reality_anchor_with_grok(claim_text)
-    prompt_text = f"{reality_anchor}\n\nNow analyze this claim:\n\"{claim_text}\"".strip()
-
-    claude_json = {}
-    openai_json = {}
-    try:
-        if anthropic_client:
-            r = anthropic_client.messages.create(
-                model="claude-sonnet-4-6",
-                max_tokens=4000,
-                temperature=0,
-                system=CLAIMLAB_SYSTEM,
-                messages=[{"role": "user", "content": prompt_text}]
-            )
-            claude_json = safe_json_parse(r.content[0].text)
-    except Exception as e:
-        claude_json = {"error": str(e)}
-
-    try:
-        if openai_client:
-            r = openai_client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {"role": "system", "content": CLAIMLAB_SYSTEM},
-                    {"role": "user", "content": prompt_text}
-                ],
-                max_tokens=4000,
-                temperature=0
-            )
-            openai_json = safe_json_parse(r.choices[0].message.content)
-    except Exception as e:
-        openai_json = {"error": str(e)}
-
-    primary = claude_json if "error" not in claude_json else openai_json
-    if "error" in primary:
-        # Unlock on failure
-        update_airtable_record(breakout_record_id, {
-            "Lock Status": "Unlocked",
-            "Breakout Status": "Pending Excavation"
-        })
-        return jsonify({"error": f"AI excavation failed: {primary['error']}"}), 500
-
-    # Build update fields — preserve hierarchy fields, add full excavation
-    existing_fields = bf
+    # Fire AI excavation in background thread — return immediately
     username = session.get("username", "Unknown")
-    update_fields = extract_primary_record_fields(
-        claim=claim_text,
-        parsed=primary,
-        mode="full",
-        username=username,
-        existing_fields=existing_fields
+    t = threading.Thread(
+        target=_run_breakout_excavation_bg,
+        args=(breakout_record_id, claim_text, bf, username),
+        daemon=True
     )
-    update_fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
-    update_fields["OpenAI Raw JSON"] = json.dumps(openai_json, ensure_ascii=False)[:100000]
-    if grok_adjudication:
-        update_fields["Grok Raw JSON"] = json.dumps(grok_adjudication, ensure_ascii=False)[:100000]
-    update_fields["Breakout Status"] = "Excavated"
-    update_fields["Lock Status"] = "Unlocked"
-    update_fields["Locked By"] = ""
-    update_fields["Excavation Record ID"] = breakout_record_id
-
-    resp = update_airtable_record(breakout_record_id, update_fields)
-    if not resp.ok:
-        return jsonify({"error": f"Failed to save excavation: {resp.text}"}), 500
-
-    final_slug = update_fields.get("URL Slug", bf.get("URL Slug", ""))
-
-    # Mark parent as having breakout children (already done on create, but ensure)
-    parent_links = bf.get("Parent Claim", [])
-    if parent_links:
-        update_airtable_record(parent_links[0], {"Has Breakout Children": True})
-
-    # Run recursive breakout detection on the newly excavated child
-    refreshed = get_claim_by_record_id(breakout_record_id)
-    if refreshed:
-        child_count = run_breakout_detection_for_claim(refreshed, detection_source_override="Child Excavation")
-        print(f"RECURSIVE BREAKOUT DETECTION: {child_count} children found on {final_slug}", flush=True)
+    t.start()
 
     return jsonify({
         "ok": True,
-        "redirect_to": f"/claim/{final_slug}",
-        "slug": final_slug,
-        "verdict": primary.get("Overall Verdict", ""),
+        "queued": True,
+        "record_id": breakout_record_id,
         "claims_remaining": session.get("claims_remaining")
     })
-
 
 @app.route("/breakout/lock-check/<record_id>", methods=["GET"])
 def breakout_lock_check(record_id):
