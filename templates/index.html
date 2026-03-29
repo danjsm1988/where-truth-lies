@@ -4011,7 +4011,7 @@ html, body {
                 {% for bo in group.claims %}
                   {% set bo_ex = bo.breakout_status == 'Excavated' %}
                   <div class="m-breakout-row {% if bo_ex %}excavated{% endif %}"
-                       onclick="{% if bo_ex %}window.location='/claim/{{ bo.slug }}'{% else %}openBreakoutModal('{{ bo.record_id }}', {{ bo | tojson | e }}){% endif %}">
+                       onclick="{% if bo_ex %}window.location='/claim/{{ bo.slug }}'{% else %}openBreakoutModal('{{ bo.record_id }}', {{ bo | tojson | safe }}){% endif %}">
                     <span class="m-breakout-status-dot {% if bo_ex %}excavated{% else %}pending{% endif %}"></span>
                     <span class="m-breakout-row-title">{{ bo.title }}</span>
                     {% if bo.breakout_source_section == 'Dispute' %}
@@ -5199,7 +5199,7 @@ html, body {
                         {% set bo_excavated = bo.breakout_status == 'Excavated' %}
                         {% set bo_origin = bo.origin_type or 'Breakout Claim' %}
                         <div class="breakout-row {% if bo_excavated %}excavated{% endif %}"
-                             onclick="{% if bo_excavated %}window.location='/claim/{{ bo.slug }}'{% else %}openBreakoutModal('{{ bo.record_id }}', {{ bo | tojson | e }}){% endif %}">
+                             onclick="{% if bo_excavated %}window.location='/claim/{{ bo.slug }}'{% else %}openBreakoutModal('{{ bo.record_id }}', {{ bo | tojson | safe }}){% endif %}">
                           <span class="breakout-status-dot {% if bo_excavated %}excavated{% elif bo.breakout_status == 'Excavating' %}excavating{% else %}pending{% endif %}"></span>
                           <span class="breakout-row-title">{{ bo.title }}</span>
                           {% if bo.breakout_source_section == 'Dispute' %}
@@ -5597,7 +5597,7 @@ html, body {
                 {% set bo_ex = bo.breakout_status == 'Excavated' %}
                 <div class="breakout-row {% if bo_ex %}excavated{% endif %}"
                      style="margin-bottom:5px;"
-                     onclick="{% if bo_ex %}window.location='/claim/{{ bo.slug }}'{% else %}openBreakoutModal('{{ bo.record_id }}', {{ bo | tojson | e }}){% endif %}">
+                     onclick="{% if bo_ex %}window.location='/claim/{{ bo.slug }}'{% else %}openBreakoutModal('{{ bo.record_id }}', {{ bo | tojson | safe }}){% endif %}">
                   <span class="breakout-status-dot {% if bo_ex %}excavated{% else %}pending{% endif %}"></span>
                   <span class="breakout-row-title">{{ bo.title }}</span>
                   {% if bo.breakout_source_section == 'Dispute' %}

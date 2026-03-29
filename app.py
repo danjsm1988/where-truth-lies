@@ -357,6 +357,18 @@ def build_subclaims(fields, parsed_json):
     return subclaims
 
 
+def _safe_get_breakout_grouped(record_id, fields):
+    """Load breakout claims only when the record has children. Fails silently."""
+    try:
+        if not fields.get("Has Breakout Children", False):
+            return []
+        breakouts = get_breakout_claims_for_parent(record_id)
+        return group_breakout_claims(breakouts)
+    except Exception as e:
+        print(f"BREAKOUT LOAD ERROR (non-fatal): {e}", flush=True)
+        return []
+
+
 def build_claim_context(record):
     if not record:
         return None
@@ -482,9 +494,7 @@ def build_claim_context(record):
         "grok_adjudication": grok_adjudication,
         "grok_grounded": grok_grounded,
         "grok_status": grok_status,
-        "breakout_claims_grouped": group_breakout_claims(
-            get_breakout_claims_for_parent(record.get("id"))
-        ),
+        "breakout_claims_grouped": _safe_get_breakout_grouped(record.get("id"), fields),
         "has_breakout_children": fields.get("Has Breakout Children", False),
         "claim_identifier": fields.get("Claim Identifier", ""),
         "claim_depth": int(fields.get("Claim Depth", 0) or 0),
