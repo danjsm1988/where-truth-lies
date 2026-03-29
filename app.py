@@ -467,6 +467,8 @@ def build_claim_context(record):
         "published": fields.get("Published", False),
         "human_reviewed": fields.get("Human Reviewed", False),
         "entered_by": fields.get("Entered By", ""),
+        "last_reanalyzed": (fields.get("Last Reanalyzed") or "")[:10],
+        "reanalyzed_by": fields.get("Reanalyzed By", ""),
         "dispute_threads": dispute_threads,
         "disputes": claim_disputes,
         "quick_view": quick_view,
@@ -2538,6 +2540,295 @@ def editor_apply_update(record_id):
             "ok": True,
             "fields_updated": list(claim_updates.keys()),
             "claim_slug": claim_fields.get("URL Slug", "")
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# ══════════════════════════════════════════════
+# CLAIM MANAGEMENT — REANALYSIS SYSTEM
+# ══════════════════════════════════════════════
+
+SELECTIVE_FIELD_MAP = {
+    "Quick Explanation": "Quick Explanation",
+    "Overall Verdict": "Overall Verdict",
+    "Direct Facts": "Direct Facts",
+    "Adjacent Facts": "Adjacent Facts",
+    "Root Concern": "Root Concern",
+    "Values Divergence": "Values Divergence",
+    "Constitutional Framework": "Constitutional Framework",
+    "Common Ground": "Common Ground",
+    "Bottom Line": "Strip Mode Summary",
+    "Left Perspective": "Left Perspective",
+    "Right Perspective": "Right Perspective",
+    "Sub Claims": "Sub-Claims",
+}
+
+
+def run_reanalysis_ai(claim_text, mode="full"):
+    """Run the AI excavation pipeline on an existing claim text. Returns merged parsed JSON."""
+    reality_anchor, grok_adjudication = build_reality_anchor_with_grok(claim_text)
+    prompt_text = f"{reality_anchor}\n\nNow analyze this claim:\n\"{claim_text}\"".strip()
+
+    claude_json = {}
+    openai_json = {}
+
+    try:
+        if anthropic_client:
+            resp = anthropic_client.messages.create(
+                model="claude-sonnet-4-6",
+                max_tokens=4000,
+                temperature=0,
+                system=CLAIMLAB_SYSTEM,
+                messages=[{"role": "user", "content": prompt_text}]
+            )
+            claude_json = safe_json_parse(resp.content[0].text)
+    except Exception as e:
+        claude_json = {"error": str(e)}
+
+    try:
+        if openai_client:
+            resp = openai_client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": CLAIMLAB_SYSTEM},
+                    {"role": "user", "content": prompt_text}
+                ],
+                max_tokens=4000,
+                temperature=0
+            )
+            openai_json = safe_json_parse(resp.choices[0].message.content)
+    except Exception as e:
+        openai_json = {"error": str(e)}
+
+    primary = claude_json if "error" not in claude_json else openai_json
+    return primary, claude_json, openai_json, grok_adjudication
+
+
+@app.route("/editor/claims", methods=["GET"])
+def editor_claims_list():
+    """Return claims list for the Claim Management tab with filters."""
+    if not session.get("logged_in"):
+        return jsonify({"error": "Not logged in"}), 401
+    if not session.get("true_superuser"):
+        return jsonify({"error": "Unauthorized"}), 403
+
+    try:
+        topic = request.args.get("topic", "").strip()
+        verdict = request.args.get("verdict", "").strip()
+        not_since = request.args.get("not_since", "").strip()  # ISO date string
+        limit = min(int(request.args.get("limit", 50)), 200)
+
+        formula_parts = ["{Status}='Active'"]
+        if topic:
+            safe_topic = escape_airtable_formula_value(topic)
+            formula_parts.append(f"FIND('{safe_topic}', ARRAYJOIN({{Topic}}))")
+        if verdict:
+            safe_verdict = escape_airtable_formula_value(verdict)
+            formula_parts.append(f"{{Overall Verdict}}='{safe_verdict}'")
+        if not_since:
+            # Claims where Last Reanalyzed is empty OR older than not_since
+            formula_parts.append(
+                f"OR({{Last Reanalyzed}}='', IS_BEFORE({{Last Reanalyzed}}, '{not_since}'))"
+            )
+
+        formula = "AND(" + ", ".join(formula_parts) + ")" if len(formula_parts) > 1 else formula_parts[0]
+
+        params = {
+            "filterByFormula": formula,
+            "sort[0][field]": "Date Added",
+            "sort[0][direction]": "desc",
+            "maxRecords": limit,
+            "fields[]": [
+                "Original Quote", "Stripped Claim", "URL Slug", "Overall Verdict",
+                "Topic", "Date Added", "Last Reanalyzed", "Reanalyzed By", "Entered By"
+            ]
+        }
+
+        records = airtable_get_all(AIRTABLE_TABLE_NAME, params=params)
+        claims = []
+        for r in records:
+            f = r.get("fields", {})
+            topics = f.get("Topic", [])
+            if isinstance(topics, list):
+                topic_str = ", ".join(topics)
+            else:
+                topic_str = str(topics)
+            claims.append({
+                "record_id": r.get("id"),
+                "title": f.get("Original Quote") or f.get("Stripped Claim") or "Untitled",
+                "slug": f.get("URL Slug", ""),
+                "verdict": f.get("Overall Verdict", ""),
+                "topic": topic_str,
+                "date_added": (f.get("Date Added") or "")[:10],
+                "last_reanalyzed": (f.get("Last Reanalyzed") or "")[:10],
+                "reanalyzed_by": f.get("Reanalyzed By", ""),
+            })
+
+        return jsonify({"ok": True, "claims": claims, "total": len(claims)})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/editor/reanalyze-claim/<record_id>", methods=["POST"])
+def editor_reanalyze_claim(record_id):
+    """Reanalyze a single claim. Supports full or selective modes."""
+    if not session.get("logged_in"):
+        return jsonify({"error": "Not logged in"}), 401
+    if not session.get("true_superuser"):
+        return jsonify({"error": "Unauthorized"}), 403
+
+    try:
+        data = request.get_json() or {}
+        mode = data.get("mode", "full")  # "full" or "selective"
+        selective_fields = data.get("fields", [])  # list of field names for selective
+
+        # Fetch the claim record
+        claim_record = get_claim_by_record_id(record_id)
+        if not claim_record:
+            return jsonify({"error": "Claim not found"}), 404
+
+        claim_fields = claim_record.get("fields", {})
+        claim_text = claim_fields.get("Original Quote") or claim_fields.get("Stripped Claim") or ""
+
+        if not claim_text:
+            return jsonify({"error": "No claim text found on this record"}), 400
+
+        # Run AI
+        primary, claude_json, openai_json, grok_adjudication = run_reanalysis_ai(claim_text, mode)
+
+        if "error" in primary:
+            return jsonify({"error": f"AI failed: {primary['error']}"}), 500
+
+        editor_username = session.get("username", "Editor")
+        now_str = datetime.utcnow().strftime("%Y-%m-%d")
+
+        if mode == "full":
+            # Full reanalysis — rebuild all fields
+            update_fields = extract_primary_record_fields(
+                claim=claim_text,
+                parsed=primary,
+                mode="full",
+                username=editor_username,
+                existing_fields=claim_fields
+            )
+            update_fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
+            update_fields["OpenAI Raw JSON"] = json.dumps(openai_json, ensure_ascii=False)[:100000]
+            if grok_adjudication:
+                update_fields["Grok Raw JSON"] = json.dumps(grok_adjudication, ensure_ascii=False)[:100000]
+            update_fields["Last Reanalyzed"] = now_str
+            update_fields["Reanalyzed By"] = editor_username
+
+        else:
+            # Selective — only write requested fields
+            update_fields = {
+                "Last Reanalyzed": now_str,
+                "Reanalyzed By": editor_username,
+                "Last Updated": now_str
+            }
+            for field_name in selective_fields:
+                airtable_key = SELECTIVE_FIELD_MAP.get(field_name)
+                if not airtable_key:
+                    continue
+                if airtable_key == "Sub-Claims":
+                    sub_claims = primary.get("Sub Claims", [])
+                    if isinstance(sub_claims, list):
+                        update_fields["Sub-Claims"] = " | ".join(
+                            [sc.get("claim", "") for sc in sub_claims if sc.get("claim")]
+                        )
+                        if len(sub_claims) > 0:
+                            update_fields["Sub-Claim 1"] = sub_claims[0].get("claim", "")
+                            if sub_claims[0].get("verdict"):
+                                update_fields["Verdict: Sub-Claim1"] = sub_claims[0]["verdict"]
+                elif primary.get(field_name):
+                    update_fields[airtable_key] = primary[field_name]
+                elif field_name == "Overall Verdict":
+                    v = primary.get("Overall Verdict") or primary.get("Verdict")
+                    if v:
+                        update_fields["Overall Verdict"] = v
+
+        resp = update_airtable_record(record_id, update_fields)
+        if not resp.ok:
+            return jsonify({"error": f"Airtable update failed: {resp.text}"}), 500
+
+        return jsonify({
+            "ok": True,
+            "record_id": record_id,
+            "mode": mode,
+            "fields_updated": list(update_fields.keys()),
+            "reanalyzed_by": editor_username,
+            "last_reanalyzed": now_str,
+            "slug": claim_fields.get("URL Slug", "")
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/editor/reanalyze-claim-by-slug/<slug>", methods=["POST"])
+def editor_reanalyze_claim_by_slug(slug):
+    """Reanalyze a single claim from its claim detail page (by slug)."""
+    if not session.get("logged_in"):
+        return jsonify({"error": "Not logged in"}), 401
+    if not session.get("true_superuser"):
+        return jsonify({"error": "Unauthorized"}), 403
+
+    try:
+        data = request.get_json() or {}
+        mode = data.get("mode", "full")
+        selective_fields = data.get("fields", [])
+
+        # Find the claim by slug
+        safe_slug = escape_airtable_formula_value(slug)
+        params = {"filterByFormula": f"{{URL Slug}}='{safe_slug}'", "maxRecords": 1}
+        records = airtable_get_all(AIRTABLE_TABLE_NAME, params=params)
+        if not records:
+            return jsonify({"error": "Claim not found"}), 404
+
+        record_id = records[0].get("id")
+        # Delegate to the record_id route logic
+        request._cached_json = {"mode": mode, "fields": selective_fields}
+
+        claim_fields = records[0].get("fields", {})
+        claim_text = claim_fields.get("Original Quote") or claim_fields.get("Stripped Claim") or ""
+        if not claim_text:
+            return jsonify({"error": "No claim text found"}), 400
+
+        primary, claude_json, openai_json, grok_adjudication = run_reanalysis_ai(claim_text, mode)
+        if "error" in primary:
+            return jsonify({"error": f"AI failed: {primary['error']}"}), 500
+
+        editor_username = session.get("username", "Editor")
+        now_str = datetime.utcnow().strftime("%Y-%m-%d")
+
+        if mode == "full":
+            update_fields = extract_primary_record_fields(
+                claim=claim_text, parsed=primary, mode="full",
+                username=editor_username, existing_fields=claim_fields
+            )
+            update_fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
+            update_fields["OpenAI Raw JSON"] = json.dumps(openai_json, ensure_ascii=False)[:100000]
+            if grok_adjudication:
+                update_fields["Grok Raw JSON"] = json.dumps(grok_adjudication, ensure_ascii=False)[:100000]
+        else:
+            update_fields = {"Last Updated": now_str}
+            for field_name in selective_fields:
+                airtable_key = SELECTIVE_FIELD_MAP.get(field_name)
+                if airtable_key and primary.get(field_name):
+                    update_fields[airtable_key] = primary[field_name]
+
+        update_fields["Last Reanalyzed"] = now_str
+        update_fields["Reanalyzed By"] = editor_username
+
+        resp = update_airtable_record(record_id, update_fields)
+        if not resp.ok:
+            return jsonify({"error": f"Airtable update failed: {resp.text}"}), 500
+
+        return jsonify({
+            "ok": True, "record_id": record_id, "mode": mode,
+            "reanalyzed_by": editor_username, "last_reanalyzed": now_str,
+            "fields_updated": list(update_fields.keys())
         })
 
     except Exception as e:

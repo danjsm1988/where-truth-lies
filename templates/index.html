@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -3327,28 +3327,6 @@ html, body {
   opacity: 0.7;
 }
 
-
-    .m-editor-queue { display: grid; gap: 14px; }
-    .m-editor-title { font-family: 'Playfair Display', Georgia, serif; font-size: 26px; font-weight: 900; color: var(--cream); margin-bottom: 4px; }
-    .m-editor-sub { font-size: 14px; color: var(--text-mid); font-style: italic; }
-    .m-editor-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; background: rgba(255,255,255,.025); border: 1px solid rgba(201,168,76,.16); border-radius: 12px; padding: 6px; }
-    .m-editor-tab-btn { appearance: none; border: none; background: transparent; color: var(--text-mid); font-family: 'Libre Baskerville', Georgia, serif; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; padding: 8px 4px; border-radius: 8px; cursor: pointer; transition: all .15s ease; text-align: center; line-height: 1.3; }
-    .m-editor-tab-btn.active { background: rgba(201,168,76,.14); color: var(--gold); border: 1px solid rgba(201,168,76,.3); }
-    .m-editor-card { background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.018)); border: 1px solid rgba(201,168,76,.16); border-radius: 16px; padding: 16px; display: none; gap: 10px; }
-    .m-editor-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
-    .m-editor-claim-title { font-family: 'Playfair Display', Georgia, serif; font-size: 17px; line-height: 1.3; color: var(--cream); text-decoration: none; flex: 1; }
-    .m-editor-claim-title:hover { color: var(--gold); }
-    .m-editor-status-badge { font-family: 'Libre Baskerville', Georgia, serif; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); background: rgba(201,168,76,.1); border: 1px solid rgba(201,168,76,.26); border-radius: 999px; padding: 4px 8px; white-space: nowrap; flex: 0 0 auto; }
-    .m-editor-meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-    .m-editor-dispute-text { font-size: 14px; line-height: 1.6; color: var(--cream-soft); }
-    .m-editor-ai-block { background: rgba(201,168,76,.05); border-left: 3px solid rgba(201,168,76,.35); border-radius: 0 8px 8px 0; padding: 10px 12px; }
-    .m-editor-ai-label { font-family: 'Libre Baskerville', Georgia, serif; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); margin-bottom: 5px; }
-    .m-editor-ai-text { font-size: 13px; line-height: 1.55; color: var(--cream-soft); }
-    .m-editor-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.07); }
-    .m-editor-control { display: flex; flex-direction: column; gap: 4px; }
-    .m-editor-card-actions { margin-top: 4px; }
-    .m-bottom-nav-5 { grid-template-columns: repeat(5, 1fr) !important; }
-
     /* Mobile claim tabs */
     .m-claim-tabs {
       display: flex;
@@ -3487,68 +3465,116 @@ html, body {
     }
 
 
-    /* ── EDITOR CARD ENHANCEMENTS ── */
-    .editor-sections-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 12px; }
-    .editor-sections-label { font-family: 'Libre Baskerville', Georgia, serif; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--text-mid); flex: 0 0 auto; }
-    .editor-section-chip { font-family: 'Libre Baskerville', Georgia, serif; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; background: rgba(201,168,76,.08); border: 1px solid rgba(201,168,76,.22); color: var(--gold); }
-    .editor-claim-snapshot { background: rgba(255,255,255,.025); border: 1px solid rgba(255,255,255,.08); border-left: 3px solid rgba(201,168,76,.5); border-radius: 0 12px 12px 0; padding: 12px 14px; margin-bottom: 12px; }
-    .editor-snapshot-label { font-family: 'Libre Baskerville', Georgia, serif; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-dim); margin-bottom: 8px; }
-    .editor-snapshot-verdict { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-    .editor-snapshot-field { font-family: 'Libre Baskerville', Georgia, serif; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-mid); }
-    .editor-snapshot-qe { font-size: 14px; line-height: 1.6; color: var(--text-light); font-style: italic; }
-    .editor-note-green { border-left-color: rgba(117,194,141,.5) !important; background: rgba(117,194,141,.04) !important; }
-    .editor-manual-rec { width: 100%; min-height: 80px; resize: vertical; background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.11); border-radius: 10px; color: var(--cream); font-family: 'Crimson Text', Georgia, serif; font-size: 15px; line-height: 1.55; padding: 10px 12px; outline: none; transition: border-color .18s ease; margin-bottom: 8px; display: block; }
-    .editor-manual-rec:focus { border-color: rgba(201,168,76,.48); }
-    .editor-save-rec-btn { appearance: none; border: 1px solid rgba(201,168,76,.35); background: rgba(201,168,76,.08); color: var(--gold); font-family: 'Libre Baskerville', Georgia, serif; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; padding: 8px 14px; border-radius: 8px; cursor: pointer; transition: all .15s ease; }
-    .editor-save-rec-btn:hover { background: rgba(201,168,76,.16); border-color: var(--gold); }
-    .editor-reanalyze-btn { appearance: none; border: 1px solid rgba(117,194,141,.35); background: rgba(117,194,141,.08); color: #75c28d; font-family: 'Libre Baskerville', Georgia, serif; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; padding: 8px 14px; border-radius: 8px; cursor: pointer; transition: all .15s ease; margin-left: 8px; }
-    .editor-reanalyze-btn:hover { background: rgba(117,194,141,.16); border-color: #75c28d; }
+    /* ── CLAIM MANAGEMENT ── */
+    .cm-filter-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr auto;
+      gap: 12px;
+      align-items: end;
+    }
+    .cm-action-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(201,168,76,.12);
+      flex-wrap: wrap;
+    }
+    .cm-claim-row {
+      display: grid;
+      grid-template-columns: 28px 1fr auto auto auto;
+      gap: 10px;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .cm-claim-row:last-child { border-bottom: none; }
+    .cm-claim-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 16px;
+      line-height: 1.3;
+      color: var(--cream);
+      text-decoration: none;
+    }
+    .cm-claim-title:hover { color: var(--gold); }
+    .cm-claim-meta {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--text-mid);
+      white-space: nowrap;
+    }
+    .cm-reanalyzed-badge {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: #75c28d;
+      white-space: nowrap;
+    }
+    .cm-row-btn {
+      appearance: none;
+      border: 1px solid rgba(201,168,76,.25);
+      background: transparent;
+      color: var(--gold);
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all .15s ease;
+    }
+    .cm-row-btn:hover { background: rgba(201,168,76,.1); }
+    .cm-row-btn.running { opacity: .5; pointer-events: none; }
+    .cm-row-btn.done { border-color: rgba(117,194,141,.4); color: #75c28d; }
 
-    /* ── EDITOR CONTROLS ── */
-    .editor-controls-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 14px 0 4px; border-top: 1px solid rgba(201,168,76,.12); margin-top: 12px; }
-    .editor-control-group { display: flex; flex-direction: column; gap: 5px; }
-    .editor-control-label { font-family: 'Libre Baskerville', Georgia, serif; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-dim); }
-    .editor-select { appearance: none; background: rgba(255,255,255,.04); border: 1px solid rgba(201,168,76,.22); border-radius: 8px; color: var(--cream); font-family: 'Libre Baskerville', Georgia, serif; font-size: 11px; padding: 7px 10px; cursor: pointer; transition: border-color .15s ease, background .15s ease; outline: none; }
-    .editor-select:hover { border-color: rgba(201,168,76,.5); background: rgba(255,255,255,.07); }
-    .editor-select:focus { border-color: var(--gold); background: rgba(255,255,255,.07); }
-    .editor-select option { background: #0f2133; color: var(--cream); }
-    .editor-select.saving { opacity: .6; pointer-events: none; }
-    .editor-select.saved { border-color: rgba(117,194,141,.6); }
-    .editor-select.error { border-color: rgba(232,112,112,.6); }
-    @media (max-width: 1180px) { .editor-controls-row { grid-template-columns: 1fr 1fr; } }
+    /* Claim page reanalyze button */
+    .claim-reanalyze-btn {
+      appearance: none;
+      border: 1px solid rgba(201,168,76,.3);
+      background: rgba(201,168,76,.07);
+      color: var(--gold);
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 10px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all .15s ease;
+    }
+    .claim-reanalyze-btn:hover { background: rgba(201,168,76,.14); border-color: var(--gold); }
 
-    /* ── UPDATE PREVIEW MODAL ── */
-    .update-preview-overlay { display: none; position: fixed; inset: 0; z-index: 8200; background: rgba(6,17,27,.88); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px; }
-    .update-preview-overlay.visible { display: flex; }
-    .update-preview-box { background: linear-gradient(180deg, #0f2133, #091b2c); border: var(--border); border-radius: var(--radius); padding: 28px 28px 24px; max-width: 820px; width: 100%; max-height: 88vh; overflow-y: auto; box-shadow: 0 32px 64px rgba(0,0,0,.6); }
-    .update-preview-title { font-family: 'Playfair Display', Georgia, serif; font-size: 26px; font-weight: 700; color: var(--cream); margin-bottom: 6px; }
-    .update-preview-sub { font-size: 15px; color: var(--text-light); font-style: italic; margin-bottom: 20px; line-height: 1.5; }
-    .update-section-card { background: rgba(255,255,255,.025); border: var(--border-soft); border-radius: 14px; padding: 16px 18px; margin-bottom: 14px; }
-    .update-section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-    .update-section-name { font-family: 'Libre Baskerville', Georgia, serif; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); flex: 1; }
-    .update-section-check { width: 18px; height: 18px; cursor: pointer; flex: 0 0 auto; }
-    .update-col-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .update-col-label { font-family: 'Libre Baskerville', Georgia, serif; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--text-mid); margin-bottom: 5px; }
-    .update-col-current { font-size: 14px; line-height: 1.6; color: var(--text-light); background: rgba(232,112,112,.05); border: 1px solid rgba(232,112,112,.15); border-radius: 8px; padding: 10px 12px; }
-    .update-col-proposed { font-size: 14px; line-height: 1.6; color: var(--cream-soft); background: rgba(117,194,141,.05); border: 1px solid rgba(117,194,141,.15); border-radius: 8px; padding: 10px 12px; }
-    .update-editor-note { background: rgba(201,168,76,.06); border-left: 3px solid rgba(201,168,76,.4); border-radius: 0 10px 10px 0; padding: 12px 16px; font-size: 14px; color: var(--text-light); line-height: 1.6; margin-bottom: 20px; }
-    .update-loading { text-align: center; padding: 40px 20px; color: var(--gold); font-style: italic; font-size: 15px; }
-    .update-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; padding-top: 18px; border-top: 1px solid rgba(201,168,76,.14); }
-    @media (max-width: 640px) { .update-col-grid { grid-template-columns: 1fr; } }
+    /* Selective reanalysis modal */
+    .selective-check-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 16px 0;
+    }
+    .selective-check-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,.02);
+      border: var(--border-soft);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 14px;
+      color: var(--cream-soft);
+      cursor: pointer;
+    }
+    .selective-check-item input { width:16px; height:16px; cursor:pointer; flex:0 0 auto; }
 
-    /* ── CLAIM HISTORY TAB ── */
-    .history-entry { background: rgba(255,255,255,.025); border: var(--border-soft); border-left: 3px solid var(--gold-dim); border-radius: 14px; padding: 18px 20px; margin-bottom: 16px; }
-    .history-entry-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
-    .history-entry-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .history-scope-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-    .history-diff-text { font-family: 'Crimson Text', Georgia, serif; font-size: 15px; line-height: 1.7; color: var(--cream-soft); white-space: pre-wrap; word-break: break-word; background: rgba(255,255,255,.02); border-radius: 10px; padding: 14px 16px; margin: 0; }
-    .history-timeline-entry { border-left: 2px solid rgba(201,168,76,.2); padding: 0 0 20px 18px; margin-bottom: 4px; position: relative; }
-    .history-timeline-entry::before { content: ''; position: absolute; left: -5px; top: 4px; width: 8px; height: 8px; border-radius: 50%; background: var(--gold-dim); }
-    .history-timeline-label { font-family: 'Libre Baskerville', Georgia, serif; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin-bottom: 3px; }
-    .history-timeline-date { font-size: 12px; color: var(--text-mid); margin-bottom: 8px; }
-    .history-timeline-text { font-size: 16px; color: var(--cream-soft); line-height: 1.6; }
-    .history-timeline-ai { margin-top: 10px; padding: 10px 14px; background: rgba(201,168,76,.05); border-left: 3px solid rgba(201,168,76,.3); border-radius: 0 8px 8px 0; }
-
+    @media (max-width: 980px) {
+      .cm-filter-row { grid-template-columns: 1fr 1fr; }
+      .cm-claim-row { grid-template-columns: 28px 1fr auto; }
+    }
     /* ── EDITOR PAGE ── */
     .editor-page-section {
       max-width: 900px;
@@ -4216,118 +4242,62 @@ html, body {
       
 
            {% if page_mode == "editor" %}
-      <div class="m-editor-queue" id="mEditor">
-        <div class="m-editor-header">
-          <div class="m-editor-title">Editor Queue</div>
-          <div class="m-editor-sub">Disputes needing human attention.</div>
-        </div>
-        <div class="m-editor-tabs">
-          <button type="button" class="m-editor-tab-btn active" onclick="setMobileEditorTab('Escalated to Human', this)">Escalated</button>
-          <button type="button" class="m-editor-tab-btn" onclick="setMobileEditorTab('AI Recommended Update', this)">AI Rec.</button>
-          <button type="button" class="m-editor-tab-btn" onclick="setMobileEditorTab('Potential Dispute / Pushback Issue', this)">Issues</button>
-          <button type="button" class="m-editor-tab-btn" onclick="setMobileEditorTab('Current Dispute', this)">Current</button>
-        </div>
-        <div id="m-editor-empty" style="display:none; text-align:center; padding:32px 16px; color:var(--text-mid); font-style:italic; font-size:15px;">No claims in this category.</div>
+      <div class="m-profile" id="mEditor">
+        <div class="m-profile-title">Editor Queue</div>
+
         {% if editor_queue and editor_queue|length > 0 %}
           {% for item in editor_queue %}
-            <div class="m-editor-card" data-category="{{ item.editor_queue_category }}">
-              <div class="m-editor-card-header">
-                <a href="/claim/{{ item.claim_slug }}" class="m-editor-claim-title">{{ item.title }}</a>
-                <span class="m-editor-status-badge">{{ item.status }}</span>
-              </div>
-              <div class="m-editor-meta">
-                {% if item.date %}<span class="m-card-date">{{ item.date }}</span>{% endif %}
-                {% if item.escalated %}<span class="m-chip" style="color:var(--gold);border-color:rgba(201,168,76,.3);">Escalated</span>{% endif %}
-              </div>
-              {% if item.sections_disputed %}
-                <div class="editor-sections-row">
-                  <span class="editor-sections-label">Disputing:</span>
-                  {% for sec in item.sections_disputed %}<span class="editor-section-chip">{{ sec }}</span>{% endfor %}
-                </div>
+            <div class="m-profile-card" style="margin-bottom:12px;">
+              <div class="m-profile-label">Claim</div>
+              <div class="m-profile-value" style="font-size:16px; line-height:1.4;">{{ item.title }}</div>
+
+              <div class="m-profile-label" style="margin-top:10px;">Status</div>
+              <div class="m-profile-value">{{ item.status }}</div>
+
+              <div class="m-profile-label" style="margin-top:10px;">Dispute</div>
+              <div class="m-profile-value" style="font-size:15px; line-height:1.55;">{{ item.dispute_text }}</div>
+
+              {% if item.ai_response %}
+              <div class="m-profile-label" style="margin-top:10px;">AI Response</div>
+              <div class="m-profile-value" style="font-size:15px; line-height:1.55;">{{ item.ai_response }}</div>
               {% endif %}
-              {% if item.claim_verdict or item.claim_quick_explanation %}
-                <div class="editor-claim-snapshot">
-                  <div class="editor-snapshot-label">Current Claim State</div>
-                  {% if item.claim_verdict %}<div class="editor-snapshot-verdict"><span class="editor-snapshot-field">Verdict:</span> <strong style="color:var(--gold);">{{ item.claim_verdict }}</strong></div>{% endif %}
-                  {% if item.claim_quick_explanation %}<div class="editor-snapshot-qe">{{ item.claim_quick_explanation }}</div>{% endif %}
-                </div>
-              {% endif %}
-              <div class="m-editor-dispute-text">{{ item.dispute_text }}</div>
-              {% if item.ai_response %}<div class="m-editor-ai-block"><div class="m-editor-ai-label">AI Response</div><div class="m-editor-ai-text">{{ item.ai_response }}</div></div>{% endif %}
-              {% if item.ai_recommended_changes %}
-                <div class="m-editor-ai-block" style="border-left-color:rgba(117,194,141,.4);"><div class="m-editor-ai-label" style="color:#75c28d;">AI Recommended Changes</div><div class="m-editor-ai-text">{{ item.ai_recommended_changes }}</div></div>
-              {% else %}
-                <div>
-                  <label class="editor-control-label" style="display:block; margin-bottom:4px;">Write recommendation:</label>
-                  <textarea id="manual-rec-{{ item.record_id }}" class="editor-manual-rec" placeholder="Describe what should change..." rows="3"></textarea>
-                  <button type="button" class="editor-save-rec-btn" onclick="saveManualRecommendation('{{ item.record_id }}', this)">Save</button>
-                  <button type="button" class="editor-reanalyze-btn" onclick="reanalyzeDispute('{{ item.record_id }}', this)">Ask AI</button>
-                  <span id="rec-status-{{ item.record_id }}" style="font-size:12px; color:var(--text-mid); margin-left:6px;"></span>
-                </div>
-              {% endif %}
-              <div class="m-editor-controls">
-                <div class="m-editor-control">
-                  <label class="editor-control-label">Resolution Type</label>
-                  <select class="editor-select" style="font-size:12px;" onchange="editorUpdateField('{{ item.record_id }}', 'resolution-type', this.value, this)">
-                    <option value="" {% if not item.resolution_type %}selected{% endif %}>— select —</option>
-                    <option value="AI Recommendation" {% if item.resolution_type == 'AI Recommendation' %}selected{% endif %}>AI Recommendation</option>
-                    <option value="Human Response" {% if item.resolution_type == 'Human Response' %}selected{% endif %}>Human Response</option>
-                    <option value="Human Override" {% if item.resolution_type == 'Human Override' %}selected{% endif %}>Human Override</option>
-                    <option value="Partial Update" {% if item.resolution_type == 'Partial Update' %}selected{% endif %}>Partial Update</option>
-                    <option value="No Update" {% if item.resolution_type == 'No Update' %}selected{% endif %}>No Update</option>
-                    <option value="Escalated" {% if item.resolution_type == 'Escalated' %}selected{% endif %}>Escalated</option>
-                  </select>
-                </div>
-                <div class="m-editor-control">
-                  <label class="editor-control-label">Status</label>
-                  <select class="editor-select" style="font-size:12px;" onchange="editorUpdateField('{{ item.record_id }}', 'status', this.value, this)">
-                    <option value="Open" {% if item.status == 'Open' %}selected{% endif %}>Open</option>
-                    <option value="AI Responded" {% if item.status == 'AI Responded' %}selected{% endif %}>AI Responded</option>
-                    <option value="Escalated to Human" {% if item.status == 'Escalated to Human' %}selected{% endif %}>Escalated to Human</option>
-                    <option value="In Review" {% if item.status == 'In Review' %}selected{% endif %}>In Review</option>
-                    <option value="Needs Review" {% if item.status == 'Needs Review' %}selected{% endif %}>Needs Review</option>
-                    <option value="Resolved" {% if item.status == 'Resolved' %}selected{% endif %}>Resolved</option>
-                    <option value="Closed" {% if item.status == 'Closed' %}selected{% endif %}>Closed</option>
-                  </select>
-                </div>
-              </div>
-              <div class="m-editor-card-actions">
-                <div id="save-m-{{ item.record_id }}" style="font-size:12px; color:var(--text-mid); font-style:italic; min-height:16px;"></div>
-                <a href="/claim/{{ item.claim_slug }}" class="m-run-btn" style="text-decoration:none; text-align:center; display:block; margin-top:6px;">Open Claim</a>
-                <button type="button" class="m-run-btn" style="background:linear-gradient(180deg,#2e7d32,#1b5e20); width:100%; margin-top:8px; border:none; cursor:pointer;"
-                  onclick="handleEditorResolve('{{ item.record_id }}', '{{ item.resolution_type }}', '{{ item.status }}', this)">Resolve</button>
+
+              <div style="margin-top:12px;">
+                <a href="/claim/{{ item.claim_slug }}" class="m-logout-btn" style="display:block;text-align:center;text-decoration:none;">Open Claim</a>
               </div>
             </div>
           {% endfor %}
         {% else %}
-          <div style="text-align:center; padding:32px 16px; color:var(--text-mid); font-style:italic;">No items currently need editor review.</div>
+          <div class="m-profile-card">
+            <div class="m-profile-value">No items currently need editor review.</div>
+          </div>
         {% endif %}
       </div>
       {% endif %}
 
-
-
     </div><!-- end m-content -->
 
     <!-- BOTTOM NAV -->
-    <nav class="m-bottom-nav {% if true_superuser %}m-bottom-nav-5{% endif %}">
+    <nav class="m-bottom-nav">
       <a class="m-nav-link {% if page_mode == 'claim' %}active{% endif %}" href="/">
-        <span class="m-nav-icon">⌂</span><span>Home</span>
-      </a>
-      <a class="m-nav-link {% if page_mode == 'search' %}active{% endif %}" href="/search">
-        <span class="m-nav-icon">▤</span><span>Claims</span>
-      </a>
-      <a class="m-nav-link {% if page_mode == 'disputes' %}active{% endif %}" href="/disputes">
-        <span class="m-nav-icon">✦</span><span>Disputes</span>
-      </a>
-      <a class="m-nav-link {% if page_mode == 'profile' %}active{% endif %}" href="/profile">
-        <span class="m-nav-icon">◉</span><span>Profile</span>
-      </a>
-      {% if true_superuser %}
-      <a class="m-nav-link {% if page_mode == 'editor' %}active{% endif %}" href="/editor">
-        <span class="m-nav-icon">✎</span><span>Editor</span>
-      </a>
-      {% endif %}
+    <span class="m-nav-icon">⌂</span>
+    <span>Home</span>
+  </a>
+
+  <a class="m-nav-link {% if page_mode == 'search' %}active{% endif %}" href="/search">
+    <span class="m-nav-icon">▤</span>
+    <span>Claims</span>
+  </a>
+
+  <a class="m-nav-link {% if page_mode == 'disputes' %}active{% endif %}" href="/disputes">
+    <span class="m-nav-icon">✦</span>
+    <span>Disputes</span>
+  </a>
+
+  <a class="m-nav-link {% if page_mode == 'profile' %}active{% endif %}" href="/profile">
+    <span class="m-nav-icon">◉</span>
+    <span>Profile</span>
+  </a>
     </nav>
 
   </div><!-- end mobile-shell -->
@@ -4563,6 +4533,9 @@ html, body {
             <button type="button" class="tab-btn" id="editor-tab-current" onclick="setEditorTab('Current Dispute', this)">
               Current Disputes
             </button>
+            <button type="button" class="tab-btn" id="editor-tab-claims" onclick="setEditorTab('__claims__', this)">
+              Claim Management
+            </button>
           </div>
 
           <div class="editor-queue-scroll">
@@ -4579,95 +4552,43 @@ html, body {
                     <div class="archive-card-title">
                       <a href="/claim/{{ item.claim_slug }}">{{ item.title }}</a>
                     </div>
+
                     <div class="archive-card-meta" style="margin-bottom:10px;">
                       <span class="status-badge">{{ item.status }}</span>
-                      {% if item.date %}<span class="micro-meta">{{ item.date }}</span>{% endif %}
-                      {% if item.escalated %}<span class="topic-tag">Escalated</span>{% endif %}
+                      {% if item.date %}
+                        <span class="micro-meta">{{ item.date }}</span>
+                      {% endif %}
+                      {% if item.escalated %}
+                        <span class="topic-tag">Escalated</span>
+                      {% endif %}
                     </div>
-                    {% if item.sections_disputed %}
-                      <div class="editor-sections-row">
-                        <span class="editor-sections-label">Disputing:</span>
-                        {% for sec in item.sections_disputed %}<span class="editor-section-chip">{{ sec }}</span>{% endfor %}
-                      </div>
-                    {% endif %}
-                    {% if item.claim_verdict or item.claim_quick_explanation %}
-                      <div class="editor-claim-snapshot">
-                        <div class="editor-snapshot-label">Current Claim State</div>
-                        {% if item.claim_verdict %}
-                          <div class="editor-snapshot-verdict">
-                            <span class="editor-snapshot-field">Verdict:</span>
-                            <span class="verdict-pill {% set vl = item.claim_verdict|lower %}{% if vl == 'true' %}v-true{% elif 'mostly true' in vl %}v-mostly-true{% elif 'substantially true' in vl %}v-substantially-true{% elif 'plausible' in vl or 'mixed' in vl %}v-plausible{% elif vl == 'contested' %}v-contested{% elif vl == 'exaggerated' %}v-exaggerated{% elif vl == 'misleading' %}v-misleading{% elif vl == 'false' %}v-false{% else %}v-unproven{% endif %}">{{ item.claim_verdict }}</span>
-                          </div>
-                        {% endif %}
-                        {% if item.claim_quick_explanation %}<div class="editor-snapshot-qe">{{ item.claim_quick_explanation }}</div>{% endif %}
-                      </div>
-                    {% endif %}
+
                     <div class="archive-card-dek" style="margin-bottom:10px;">
                       <strong>Dispute:</strong> {{ item.dispute_text }}
                     </div>
+
+                    {% if item.ai_recommended_changes %}
+                      <div class="editor-note-block" style="margin-bottom:10px;">
+                        <strong>AI Recommended Changes:</strong><br>
+                        {{ item.ai_recommended_changes }}
+                      </div>
+                    {% endif %}
+
                     {% if item.ai_response %}
                       <div class="editor-note-block" style="margin-bottom:10px;">
                         <strong>AI Response:</strong> {{ item.ai_response }}
                       </div>
                     {% endif %}
-                    {% if item.ai_recommended_changes %}
-                      <div class="editor-note-block editor-note-green" style="margin-bottom:10px;">
-                        <strong>AI Recommended Changes:</strong><br>{{ item.ai_recommended_changes }}
+
+                    <div class="archive-card-footer">
+                      <div class="archive-byline">
+                        <strong>Review Target:</strong> Claim dispute
                       </div>
-                    {% else %}
-                      <div style="margin-bottom:10px;">
-                        <label class="editor-control-label" style="display:block; margin-bottom:6px;">No AI recommendation on file. Write your own:</label>
-                        <textarea id="manual-rec-{{ item.record_id }}" class="editor-manual-rec" placeholder="Describe what should be updated and why. AI will use this to generate structured changes." rows="3"></textarea>
-                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:4px;">
-                          <button type="button" class="editor-save-rec-btn" onclick="saveManualRecommendation('{{ item.record_id }}', this)">Save Recommendation</button>
-                          <button type="button" class="editor-reanalyze-btn" onclick="reanalyzeDispute('{{ item.record_id }}', this)">Ask AI to Analyze</button>
-                          <span id="rec-status-{{ item.record_id }}" style="font-size:12px; color:var(--text-mid); font-style:italic;"></span>
-                        </div>
-                      </div>
-                    {% endif %}
-                    <div class="editor-controls-row">
-                      <div class="editor-control-group">
-                        <label class="editor-control-label">Resolution Type</label>
-                        <select class="editor-select" onchange="editorUpdateField('{{ item.record_id }}', 'resolution-type', this.value, this)">
-                          <option value="" {% if not item.resolution_type %}selected{% endif %}>— select —</option>
-                          <option value="AI Recommendation" {% if item.resolution_type == 'AI Recommendation' %}selected{% endif %}>AI Recommendation</option>
-                          <option value="Human Response" {% if item.resolution_type == 'Human Response' %}selected{% endif %}>Human Response</option>
-                          <option value="Human Override" {% if item.resolution_type == 'Human Override' %}selected{% endif %}>Human Override</option>
-                          <option value="Partial Update" {% if item.resolution_type == 'Partial Update' %}selected{% endif %}>Partial Update</option>
-                          <option value="No Update" {% if item.resolution_type == 'No Update' %}selected{% endif %}>No Update</option>
-                          <option value="Escalated" {% if item.resolution_type == 'Escalated' %}selected{% endif %}>Escalated</option>
-                        </select>
-                      </div>
-                      <div class="editor-control-group">
-                        <label class="editor-control-label">Queue Category</label>
-                        <select class="editor-select" onchange="editorUpdateField('{{ item.record_id }}', 'queue-category', this.value, this)">
-                          <option value="Current Dispute" {% if item.editor_queue_category == 'Current Dispute' %}selected{% endif %}>Current Dispute</option>
-                          <option value="Escalated to Human" {% if item.editor_queue_category == 'Escalated to Human' %}selected{% endif %}>Escalated to Human</option>
-                          <option value="AI Recommended Update" {% if item.editor_queue_category == 'AI Recommended Update' %}selected{% endif %}>AI Recommended Update</option>
-                          <option value="Potential Dispute / Pushback Issue" {% if item.editor_queue_category == 'Potential Dispute / Pushback Issue' %}selected{% endif %}>Potential Issues</option>
-                        </select>
-                      </div>
-                      <div class="editor-control-group">
-                        <label class="editor-control-label">Status</label>
-                        <select class="editor-select" onchange="editorUpdateField('{{ item.record_id }}', 'status', this.value, this)">
-                          <option value="Open" {% if item.status == 'Open' %}selected{% endif %}>Open</option>
-                          <option value="AI Responded" {% if item.status == 'AI Responded' %}selected{% endif %}>AI Responded</option>
-                          <option value="Escalated to Human" {% if item.status == 'Escalated to Human' %}selected{% endif %}>Escalated to Human</option>
-                          <option value="In Review" {% if item.status == 'In Review' %}selected{% endif %}>In Review</option>
-                          <option value="Needs Review" {% if item.status == 'Needs Review' %}selected{% endif %}>Needs Review</option>
-                          <option value="Resolved" {% if item.status == 'Resolved' %}selected{% endif %}>Resolved</option>
-                          <option value="Closed" {% if item.status == 'Closed' %}selected{% endif %}>Closed</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div class="archive-card-footer" style="margin-top:12px;">
-                      <div class="editor-save-indicator" id="save-{{ item.record_id }}" style="font-size:13px; color:var(--text-mid); font-style:italic;"></div>
                       <div style="display:flex; gap:8px;">
                         <a href="/claim/{{ item.claim_slug }}" class="gold-btn" style="text-decoration:none;">Open Claim</a>
-                        <button type="button" class="gold-btn" style="background:#2e7d32;"
-                          onclick="handleEditorResolve('{{ item.record_id }}', '{{ item.resolution_type }}', '{{ item.status }}', this)">
-                          Resolve
-                        </button>
+                        <form method="POST" action="/editor/resolve/{{ item.record_id }}" style="margin:0;">
+                          <button type="submit" class="gold-btn" style="background:#2e7d32;">Resolve</button>
+                        </form>
                       </div>
                     </div>
                   </div>
@@ -4678,6 +4599,86 @@ html, body {
                 This Category currently has no claims assigned to it.
               </div>
             {% endif %}
+          </div>
+
+          <!-- CLAIM MANAGEMENT PANEL -->
+          <div id="claim-management-panel" style="display:none;">
+            <div style="margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid rgba(201,168,76,.14);">
+              <div class="archives-title-wrap" style="margin-bottom:16px;">
+                <div class="section-kicker">Claim Management</div>
+                <div class="archives-sub">Reanalyze existing claims individually or in bulk.</div>
+              </div>
+
+              <!-- Filters -->
+              <div class="cm-filter-row">
+                <div class="editor-control-group">
+                  <label class="editor-control-label">Topic</label>
+                  <select class="editor-select" id="cm-filter-topic">
+                    <option value="">All Topics</option>
+                    <option>Economy</option>
+                    <option>Immigration</option>
+                    <option>Elections</option>
+                    <option>Foreign Policy</option>
+                    <option>Healthcare</option>
+                    <option>Crime</option>
+                    <option>Environment</option>
+                    <option>Education</option>
+                  </select>
+                </div>
+                <div class="editor-control-group">
+                  <label class="editor-control-label">Verdict</label>
+                  <select class="editor-select" id="cm-filter-verdict">
+                    <option value="">All Verdicts</option>
+                    <option>True</option>
+                    <option>Mostly True</option>
+                    <option>Substantially True</option>
+                    <option>Plausible/Mixed</option>
+                    <option>Contested</option>
+                    <option>Exaggerated</option>
+                    <option>Misleading</option>
+                    <option>Unproven</option>
+                    <option>False</option>
+                  </select>
+                </div>
+                <div class="editor-control-group">
+                  <label class="editor-control-label">Not Reanalyzed Since</label>
+                  <input type="date" class="editor-select" id="cm-filter-date" style="color:var(--cream);">
+                </div>
+                <div class="editor-control-group" style="justify-content:flex-end;">
+                  <button type="button" class="gold-btn" onclick="loadClaimsForManagement()" style="margin-top:18px;">Load Claims</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bulk action bar -->
+            <div class="cm-action-bar">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <input type="checkbox" id="cm-select-all" onchange="cmToggleSelectAll(this)" style="width:16px; height:16px; cursor:pointer;">
+                <label for="cm-select-all" class="editor-control-label" style="cursor:pointer;">Select All</label>
+                <span id="cm-selected-count" style="font-size:12px; color:var(--text-mid); font-style:italic;"></span>
+              </div>
+              <div style="display:flex; gap:8px;">
+                <button type="button" class="editor-save-rec-btn" onclick="bulkReanalyze('full')">Full Reanalysis</button>
+                <button type="button" class="editor-reanalyze-btn" onclick="openSelectiveModal()">Selective Reanalysis</button>
+              </div>
+            </div>
+
+            <!-- Claims list -->
+            <div id="cm-claims-list" style="margin-top:12px;">
+              <div style="text-align:center; padding:32px; color:var(--text-mid); font-style:italic;">
+                Click Load Claims to fetch the claim list.
+              </div>
+            </div>
+
+            <!-- Bulk progress -->
+            <div id="cm-progress" style="display:none; margin-top:16px;">
+              <div class="editor-note-block">
+                <div id="cm-progress-text" style="font-size:14px; color:var(--gold); margin-bottom:8px;">Reanalyzing...</div>
+                <div style="background:rgba(255,255,255,.06); border-radius:4px; height:6px; overflow:hidden;">
+                  <div id="cm-progress-bar" style="height:100%; background:var(--gold); transition:width .3s ease; width:0%;"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </article>
       </div>
@@ -4794,13 +4795,6 @@ html, body {
         data-tooltip="User challenges and AI responses">
   Disputes
 </button>
-
-<button class="tab-btn"
-        id="tab-history-btn"
-        onclick="switchTab('history')"
-        data-tooltip="All updates applied to this claim over time">
-  Claim History
-</button>
 </div>
 
               <div class="claim-header-top">
@@ -4860,6 +4854,18 @@ html, body {
     {% elif current_claim.date %}
       <span class="meta-chip">{{ current_claim.date }}</span>
     {% endif %}
+
+    {% if current_claim.last_reanalyzed %}
+      <span class="meta-chip" style="border-color:rgba(117,194,141,.3); color:#75c28d;">
+        Reanalyzed {{ current_claim.last_reanalyzed }}{% if current_claim.reanalyzed_by %} by {{ current_claim.reanalyzed_by }}{% endif %}
+      </span>
+    {% endif %}
+
+    <button type="button" class="claim-reanalyze-btn"
+      onclick="openReanalyzeModal('{{ current_claim.slug }}')"
+      title="Reanalyze this claim with AI">
+      ↻ Reanalyze
+    </button>
   </div>
 {% endif %}
 </div>
@@ -5263,56 +5269,6 @@ html, body {
   {% endif %}
 
 </div>
-
-
-<!-- CLAIM HISTORY TAB -->
-<div class="tab-panel hidden" id="tab-history">
-  <div class="ornamental"><div class="ornamental-line"></div><div class="ornamental-diamond"></div><div class="ornamental-line"></div></div>
-  {% if current_claim.disputes %}
-    {% set ns = namespace(has_updates=false) %}
-    {% for dispute in current_claim.disputes %}
-      {% if dispute.applied_update_scope and dispute.applied_update_scope|length > 0 %}{% set ns.has_updates = true %}{% endif %}
-    {% endfor %}
-    {% if ns.has_updates %}
-      <div class="section-title" style="margin-bottom:16px;">Applied Updates</div>
-      {% for dispute in current_claim.disputes %}
-        {% if dispute.applied_update_scope and dispute.applied_update_scope|length > 0 %}
-          <div class="history-entry">
-            <div class="history-entry-header">
-              <div class="history-entry-meta">
-                <span class="dispute-round-badge">{{ dispute.entry_label or 'Update' }}</span>
-                <span class="recent-date">{{ dispute.date_submitted }}</span>
-                <span class="recent-date">{{ dispute.entered_by }}</span>
-              </div>
-              <div class="history-scope-chips">
-                {% for scope_item in dispute.applied_update_scope %}<span class="topic-tag">{{ scope_item }}</span>{% endfor %}
-              </div>
-            </div>
-            {% if dispute.editor_resolution %}<pre class="history-diff-text">{{ dispute.editor_resolution }}</pre>{% endif %}
-          </div>
-        {% endif %}
-      {% endfor %}
-      <div class="ornamental"><div class="ornamental-line"></div><div class="ornamental-diamond"></div><div class="ornamental-line"></div></div>
-    {% endif %}
-    <div class="section-title" style="margin-bottom:16px;">Full Dispute Timeline</div>
-    {% for dispute in current_claim.disputes %}
-      <div class="history-timeline-entry">
-        <div class="history-timeline-label">{{ dispute.entry_label or 'Dispute' }}</div>
-        <div class="history-timeline-date">{{ dispute.date_submitted }} — {{ dispute.entered_by }}</div>
-        <div class="history-timeline-text">{{ dispute.dispute_text }}</div>
-        {% if dispute.ai_response %}
-          <div class="history-timeline-ai">
-            <div style="font-family:'Libre Baskerville',serif; font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); margin-bottom:4px;">Platform Response</div>
-            <div style="font-size:15px; color:var(--cream-soft); line-height:1.6;">{{ dispute.ai_response }}</div>
-          </div>
-        {% endif %}
-      </div>
-    {% endfor %}
-  {% else %}
-    <p style="text-align:center; color:var(--text-mid); padding:20px; font-style:italic;">No dispute or update history for this claim yet.</p>
-  {% endif %}
-</div>
-
 
           {% else %}
             <div class="empty-state">
@@ -5970,7 +5926,7 @@ console.error('Dispute submission failed:', err);
           const regex = new RegExp('\\b(' + entry.term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')\\b', 'i');
           html = html.replace(
             regex,
-            `<span class="glossary-term" data-term="${entry.term}" data-def="${entry.definition.replace(/"/g, '&#34;')}">$1</span>`
+            `<span class="glossary-term" data-term="${entry.term}" data-def="${entry.definition.replace(/"/g, '&quot;')}">$1</span>`
           );
         });
 
@@ -6388,36 +6344,6 @@ console.error('Dispute submission failed:', err);
 
     let currentEditorTab = "Escalated to Human";
 
-    function setEditorTab(tab, btn) {
-      currentEditorTab = tab;
-
-      let visibleCount = 0;
-
-      // Show/hide cards by category — use flex to match .archive-card CSS
-      document.querySelectorAll(".editor-card").forEach(function(el) {
-        const category = el.getAttribute("data-category");
-        if (category === tab) {
-          el.style.display = "flex";
-          visibleCount++;
-        } else {
-          el.style.display = "none";
-        }
-      });
-
-      // Update active tab — only editor tabs, never claim page tabs
-      document.querySelectorAll(".editor-tabs .tab-btn").forEach(function(b) {
-        b.classList.remove("active");
-      });
-      if (btn) btn.classList.add("active");
-
-      // Show category-specific empty state when no cards match
-      const emptyState = document.getElementById("editor-empty-state");
-      if (emptyState) {
-        const label = editorTabLabels[tab] || tab;
-        emptyState.textContent = "There are no claims for " + label + ".";
-        emptyState.style.display = visibleCount === 0 ? "block" : "none";
-      }
-    }
 
     // Initialize default tab on page load
     window.addEventListener("load", function() {
@@ -6429,6 +6355,55 @@ console.error('Dispute submission failed:', err);
     
 
   
+    // ── EDITOR TAB SYSTEM (includes Claim Management) ──
+    const editorTabLabels = {
+      "Escalated to Human": "Escalated to Human",
+      "AI Recommended Update": "AI Recommended Updates",
+      "Potential Dispute / Pushback Issue": "Potential Issues",
+      "Current Dispute": "Current Disputes",
+      "__claims__": "Claim Management"
+    };
+    let currentEditorTab = "Escalated to Human";
+
+    function setEditorTab(tab, btn) {
+      currentEditorTab = tab;
+
+      // Toggle dispute queue vs claim management panel
+      var queueScroll = document.querySelector('.editor-queue-scroll');
+      var claimPanel = document.getElementById('claim-management-panel');
+
+      if (tab === '__claims__') {
+        if (queueScroll) queueScroll.style.display = 'none';
+        if (claimPanel) claimPanel.style.display = 'block';
+      } else {
+        if (queueScroll) queueScroll.style.display = 'block';
+        if (claimPanel) claimPanel.style.display = 'none';
+
+        var visibleCount = 0;
+        document.querySelectorAll('.editor-card').forEach(function(el) {
+          var category = (el.getAttribute('data-category') || '').trim();
+          if (category === tab) { el.style.display = 'flex'; visibleCount++; }
+          else { el.style.display = 'none'; }
+        });
+        var emptyState = document.getElementById('editor-empty-state');
+        if (emptyState) {
+          var label = editorTabLabels[tab] || tab;
+          emptyState.textContent = 'There are no claims for ' + label + '.';
+          emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+      }
+
+      document.querySelectorAll('.editor-tabs .tab-btn').forEach(function(b) { b.classList.remove('active'); });
+      if (btn) btn.classList.add('active');
+    }
+
+    window.addEventListener('load', function() {
+      if (document.querySelector('.editor-tabs')) {
+        var defaultBtn = document.getElementById('editor-tab-escalated');
+        if (defaultBtn) setEditorTab('Escalated to Human', defaultBtn);
+      }
+    });
+
     function switchTab(tab) {
       ['quick','full','disputes','history'].forEach(function(t) {
         var panel = document.getElementById('tab-' + t);
@@ -6464,9 +6439,7 @@ console.error('Dispute submission failed:', err);
             var card = selectEl.closest('.editor-card');
             if (card) {
               card.setAttribute('data-category', value);
-              if (typeof currentEditorTab !== 'undefined') {
-                card.style.display = currentEditorTab === value ? 'flex' : 'none';
-              }
+              if (typeof currentEditorTab !== 'undefined') card.style.display = currentEditorTab === value ? 'flex' : 'none';
             }
           }
         } else { throw new Error(data.error || 'Save failed'); }
@@ -6497,7 +6470,6 @@ console.error('Dispute submission failed:', err);
       var statusEl = document.getElementById('rec-status-' + recordId);
       if (statusEl) statusEl.textContent = 'Asking AI... this may take a moment.';
       btn.disabled = true;
-      // Also show the loading state visually
       var loadingEl = document.createElement('div');
       loadingEl.id = 'reanalyze-loading-' + recordId;
       loadingEl.style.cssText = 'margin-top:8px; font-size:13px; color:var(--gold); font-style:italic;';
@@ -6508,14 +6480,10 @@ console.error('Dispute submission failed:', err);
         var data = await res.json();
         if (res.ok && data.ok) {
           if (statusEl) statusEl.textContent = 'AI recommendation saved. Reloading...';
-          loadingEl.textContent = 'Done. Reloading page...';
+          loadingEl.textContent = 'Done. Reloading...';
           setTimeout(function() { window.location.reload(); }, 1000);
         } else { throw new Error(data.error || 'AI analysis failed'); }
-      } catch(err) {
-        if (statusEl) statusEl.textContent = 'Error: ' + err.message;
-        loadingEl.remove();
-        btn.disabled = false;
-      }
+      } catch(err) { if (statusEl) statusEl.textContent = 'Error: ' + err.message; loadingEl.remove(); btn.disabled = false; }
     }
 
     var _resolveRecordId = null;
@@ -6523,32 +6491,24 @@ console.error('Dispute submission failed:', err);
 
     function handleEditorResolve(recordId, resolutionType, currentStatus, btn) {
       var type = (resolutionType || '').trim();
-      if (type === 'AI Recommendation' || type === 'Partial Update') {
-        openUpdatePreview(recordId, type); return;
-      }
+      if (type === 'AI Recommendation' || type === 'Partial Update') { openUpdatePreview(recordId, type); return; }
       _resolveRecordId = recordId; _resolveBtn = btn;
       var modal = document.getElementById('resolveConfirmModal');
       document.getElementById('resolveConfirmTitle').textContent = type ? 'Resolve as: ' + type : 'Resolve this dispute?';
-      document.getElementById('resolveConfirmSub').textContent = type === 'No Update'
-        ? 'The claim will not be changed. The dispute will be marked resolved.'
-        : 'Review the final status before closing this dispute.';
+      document.getElementById('resolveConfirmSub').textContent = type === 'No Update' ? 'The claim will not be changed.' : 'Review the final status before closing.';
       var warningEl = document.getElementById('resolveStatusWarning');
       var nonFinal = ['Open', 'Needs Review', 'AI Responded'];
       if (nonFinal.indexOf((currentStatus || '').trim()) !== -1) {
         warningEl.style.display = 'block';
         warningEl.textContent = 'Current status is "' + currentStatus + '". This looks unfinished. Confirm you want to close it now, or cancel and update the status first.';
       } else { warningEl.style.display = 'none'; }
-      var defaultStatus = type === 'Escalated' ? 'Escalated to Human' : 'Resolved';
-      document.getElementById('resolveFinalStatus').value = defaultStatus;
+      document.getElementById('resolveFinalStatus').value = type === 'Escalated' ? 'Escalated to Human' : 'Resolved';
       document.getElementById('resolveConfirmStatus').textContent = '';
       document.getElementById('resolveConfirmBtn').disabled = false;
       modal.classList.add('visible');
     }
 
-    function closeResolveConfirm() {
-      document.getElementById('resolveConfirmModal').classList.remove('visible');
-      _resolveRecordId = null; _resolveBtn = null;
-    }
+    function closeResolveConfirm() { document.getElementById('resolveConfirmModal').classList.remove('visible'); _resolveRecordId = null; _resolveBtn = null; }
 
     async function confirmResolve() {
       if (!_resolveRecordId) return;
@@ -6560,7 +6520,6 @@ console.error('Dispute submission failed:', err);
         var res = await fetch('/editor/update-status/' + _resolveRecordId, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: finalStatus }) });
         var data = await res.json();
         if (res.ok && data.ok) {
-          statusEl.textContent = 'Done.';
           var card = _resolveBtn ? _resolveBtn.closest('.editor-card, .m-editor-card') : null;
           if (card) { card.style.opacity = '0.4'; card.style.pointerEvents = 'none'; }
           setTimeout(function() { closeResolveConfirm(); window.location.reload(); }, 800);
@@ -6569,16 +6528,13 @@ console.error('Dispute submission failed:', err);
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-      var rModal = document.getElementById('resolveConfirmModal');
-      if (rModal) rModal.addEventListener('click', function(e) { if (e.target === this) closeResolveConfirm(); });
-      var uModal = document.getElementById('updatePreviewModal');
-      if (uModal) uModal.addEventListener('click', function(e) { if (e.target === this) closeUpdatePreview(); });
+      ['resolveConfirmModal','updatePreviewModal','selectiveModal','claimReanalyzeModal'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.addEventListener('click', function(e) { if (e.target === this) el.classList.remove('visible'); });
+      });
     });
 
-    var _updatePreviewRecordId = null;
-    var _updatePreviewClaimRecordId = null;
-    var _updatePreviewSections = [];
-    var _updatePreviewType = '';
+    var _updatePreviewRecordId = null, _updatePreviewClaimRecordId = null, _updatePreviewSections = [], _updatePreviewType = '';
 
     async function openUpdatePreview(recordId, type) {
       _updatePreviewRecordId = recordId; _updatePreviewType = type;
@@ -6588,7 +6544,7 @@ console.error('Dispute submission failed:', err);
       var contentEl = document.getElementById('updatePreviewContent');
       document.getElementById('updatePreviewTitle').textContent = type === 'Partial Update' ? 'Select Sections to Update' : 'AI Recommended Update';
       document.getElementById('updatePreviewSub').textContent = type === 'Partial Update' ? 'Check the sections you want to apply.' : 'Review the proposed changes before applying.';
-      loading.style.display = 'block'; loading.textContent = 'Generating preview. Asking AI to structure the changes...';
+      loading.style.display = 'block'; loading.textContent = 'Generating preview...';
       contentEl.style.display = 'none';
       document.getElementById('updateStatusMsg').textContent = '';
       document.getElementById('updateApproveBtn').disabled = false;
@@ -6597,16 +6553,13 @@ console.error('Dispute submission failed:', err);
         var res = await fetch('/editor/preview-update/' + recordId);
         var data = await res.json();
         if (!res.ok || !data.ok) {
-          loading.innerHTML = '<div style="color:var(--bad);margin-bottom:12px;">No AI recommendation on file.</div>' +
-            '<button type="button" class="gold-btn" onclick="reanalyzeAndRetry('' + recordId + '')">Ask AI to Analyze Dispute</button>' +
-            '<div style="margin-top:8px;font-size:13px;color:var(--text-mid);">Or cancel and write your own recommendation on the card.</div>';
+          loading.innerHTML = '<div style="color:var(--bad);margin-bottom:12px;">No AI recommendation on file.</div><button type="button" class="gold-btn" onclick="reanalyzeAndRetry('' + recordId + '')">Ask AI to Analyze Dispute</button>';
           return;
         }
         _updatePreviewClaimRecordId = data.claim_record_id;
         _updatePreviewSections = data.sections.filter(function(s) { return s.changed; });
         var noteEl = document.getElementById('updateEditorNote');
-        if (data.editor_note) { noteEl.textContent = data.editor_note; noteEl.style.display = 'block'; }
-        else { noteEl.style.display = 'none'; }
+        if (data.editor_note) { noteEl.textContent = data.editor_note; noteEl.style.display = 'block'; } else { noteEl.style.display = 'none'; }
         var container = document.getElementById('updateSectionsContainer');
         container.innerHTML = '';
         _updatePreviewSections.forEach(function(section, idx) {
@@ -6617,7 +6570,7 @@ console.error('Dispute submission failed:', err);
             '<div><div class="update-col-label">Proposed</div><div class="update-col-proposed">' + escHtml(section.proposed) + '</div></div></div></div>';
         });
         loading.style.display = 'none'; contentEl.style.display = 'block';
-      } catch(err) { loading.textContent = 'Network error: ' + err.message; }
+      } catch(err) { loading.textContent = 'Error: ' + err.message; }
     }
 
     async function reanalyzeAndRetry(recordId) {
@@ -6626,45 +6579,202 @@ console.error('Dispute submission failed:', err);
       try {
         var res = await fetch('/editor/reanalyze-dispute/' + recordId, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
         var data = await res.json();
-        if (res.ok && data.ok) {
-          loading.textContent = 'Recommendation generated. Building preview...';
-          setTimeout(function() { openUpdatePreview(recordId, _updatePreviewType); }, 600);
-        } else { loading.textContent = 'AI failed: ' + (data.error || 'Unknown'); }
+        if (res.ok && data.ok) { loading.textContent = 'Generated. Building preview...'; setTimeout(function() { openUpdatePreview(recordId, _updatePreviewType); }, 600); }
+        else { loading.textContent = 'AI failed: ' + (data.error || 'Unknown'); }
       } catch(err) { loading.textContent = 'Error: ' + err.message; }
     }
 
-    function escHtml(text) {
-      if (!text) return '';
-      return String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    }
-
-    function closeUpdatePreview() {
-      document.getElementById('updatePreviewModal').classList.remove('visible');
-      _updatePreviewRecordId = null; _updatePreviewSections = [];
-    }
+    function escHtml(text) { if (!text) return ''; return String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function closeUpdatePreview() { document.getElementById('updatePreviewModal').classList.remove('visible'); _updatePreviewRecordId = null; _updatePreviewSections = []; }
 
     async function applyApprovedSections() {
       if (!_updatePreviewRecordId || !_updatePreviewClaimRecordId) return;
       var approved = [];
-      _updatePreviewSections.forEach(function(section, idx) {
-        var cb = document.getElementById('check-section-' + idx);
-        if (!cb || cb.checked) approved.push(section);
-      });
+      _updatePreviewSections.forEach(function(section, idx) { var cb = document.getElementById('check-section-' + idx); if (!cb || cb.checked) approved.push(section); });
       if (!approved.length) { alert('No sections selected.'); return; }
       var btn = document.getElementById('updateApproveBtn');
       var statusMsg = document.getElementById('updateStatusMsg');
-      btn.disabled = true; statusMsg.textContent = 'Applying changes to live claim...';
+      btn.disabled = true; statusMsg.textContent = 'Applying changes...';
       try {
-        var res = await fetch('/editor/apply-update/' + _updatePreviewRecordId, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ approved_sections: approved, claim_record_id: _updatePreviewClaimRecordId, editor_note: '' })
-        });
+        var res = await fetch('/editor/apply-update/' + _updatePreviewRecordId, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ approved_sections: approved, claim_record_id: _updatePreviewClaimRecordId, editor_note: '' }) });
+        var data = await res.json();
+        if (res.ok && data.ok) { statusMsg.textContent = 'Done. Updated: ' + data.fields_updated.join(', '); setTimeout(function() { closeUpdatePreview(); window.location.reload(); }, 1500); }
+        else { throw new Error(data.error || 'Apply failed'); }
+      } catch(err) { statusMsg.textContent = 'Error: ' + err.message; btn.disabled = false; }
+    }
+
+    // ── CLAIM MANAGEMENT TAB ──
+    var _cmClaims = [];
+    var _selectiveTargetIds = [];
+    var _selectiveMode = 'bulk'; // 'bulk' or 'single'
+    var _selectiveSingleSlug = '';
+
+    async function loadClaimsForManagement() {
+      var topic = document.getElementById('cm-filter-topic').value;
+      var verdict = document.getElementById('cm-filter-verdict').value;
+      var dateVal = document.getElementById('cm-filter-date').value;
+      var listEl = document.getElementById('cm-claims-list');
+      listEl.innerHTML = '<div style="text-align:center; padding:20px; color:var(--gold); font-style:italic;">Loading claims...</div>';
+      var params = new URLSearchParams({ limit: 100 });
+      if (topic) params.append('topic', topic);
+      if (verdict) params.append('verdict', verdict);
+      if (dateVal) params.append('not_since', dateVal);
+      try {
+        var res = await fetch('/editor/claims?' + params.toString());
+        var data = await res.json();
+        if (!res.ok || !data.ok) { listEl.innerHTML = '<div style="color:var(--bad);">Error: ' + (data.error || 'Failed') + '</div>'; return; }
+        _cmClaims = data.claims;
+        renderCmClaimsList(data.claims);
+      } catch(err) { listEl.innerHTML = '<div style="color:var(--bad);">Error: ' + err.message + '</div>'; }
+    }
+
+    function renderCmClaimsList(claims) {
+      var listEl = document.getElementById('cm-claims-list');
+      var countEl = document.getElementById('cm-selected-count');
+      if (!claims.length) { listEl.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-mid); font-style:italic;">No claims match your filters.</div>'; return; }
+      countEl.textContent = '0 of ' + claims.length + ' selected';
+      var html = '';
+      claims.forEach(function(claim, idx) {
+        html += '<div class="cm-claim-row">' +
+          '<input type="checkbox" class="cm-claim-check" data-idx="' + idx + '" onchange="cmUpdateCount()" style="cursor:pointer;">' +
+          '<div><a href="/claim/' + escHtml(claim.slug) + '" class="cm-claim-title" target="_blank">' + escHtml(claim.title.slice(0, 80)) + (claim.title.length > 80 ? '...' : '') + '</a>' +
+          '<div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:4px;">' +
+          (claim.topic ? '<span class="cm-claim-meta">' + escHtml(claim.topic) + '</span>' : '') +
+          (claim.verdict ? '<span class="cm-claim-meta">' + escHtml(claim.verdict) + '</span>' : '') +
+          (claim.date_added ? '<span class="cm-claim-meta">Added ' + claim.date_added + '</span>' : '') +
+          (claim.last_reanalyzed ? '<span class="cm-reanalyzed-badge">↻ ' + claim.last_reanalyzed + (claim.reanalyzed_by ? ' by ' + claim.reanalyzed_by : '') + '</span>' : '') +
+          '</div></div>' +
+          '<button type="button" class="cm-row-btn" id="cm-btn-' + idx + '" onclick="runSingleClaimReanalyze('' + escHtml(claim.record_id) + '', ' + idx + ', 'full')">Full</button>' +
+          '</div>';
+      });
+      listEl.innerHTML = html;
+    }
+
+    function cmUpdateCount() {
+      var checked = document.querySelectorAll('.cm-claim-check:checked').length;
+      var total = _cmClaims.length;
+      var countEl = document.getElementById('cm-selected-count');
+      if (countEl) countEl.textContent = checked + ' of ' + total + ' selected';
+    }
+
+    function cmToggleSelectAll(masterCb) {
+      document.querySelectorAll('.cm-claim-check').forEach(function(cb) { cb.checked = masterCb.checked; });
+      cmUpdateCount();
+    }
+
+    function getSelectedClaimIds() {
+      var ids = [];
+      document.querySelectorAll('.cm-claim-check:checked').forEach(function(cb) {
+        var idx = parseInt(cb.getAttribute('data-idx'));
+        if (_cmClaims[idx]) ids.push({ record_id: _cmClaims[idx].record_id, idx: idx });
+      });
+      return ids;
+    }
+
+    async function runSingleClaimReanalyze(recordId, rowIdx, mode, fields) {
+      var btn = document.getElementById('cm-btn-' + rowIdx);
+      if (btn) { btn.classList.add('running'); btn.textContent = '...'; }
+      try {
+        var body = { mode: mode };
+        if (fields) body.fields = fields;
+        var res = await fetch('/editor/reanalyze-claim/' + recordId, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
         var data = await res.json();
         if (res.ok && data.ok) {
-          statusMsg.textContent = 'Done. Updated: ' + data.fields_updated.join(', ');
-          setTimeout(function() { closeUpdatePreview(); window.location.reload(); }, 1500);
-        } else { throw new Error(data.error || 'Apply failed'); }
-      } catch(err) { statusMsg.textContent = 'Error: ' + err.message; btn.disabled = false; }
+          if (btn) { btn.classList.remove('running'); btn.classList.add('done'); btn.textContent = '✓ ' + data.last_reanalyzed; }
+          // Update the reanalyzed badge in the row
+          if (_cmClaims[rowIdx]) { _cmClaims[rowIdx].last_reanalyzed = data.last_reanalyzed; _cmClaims[rowIdx].reanalyzed_by = data.reanalyzed_by; }
+        } else { if (btn) { btn.classList.remove('running'); btn.textContent = 'Error'; } }
+      } catch(err) { if (btn) { btn.classList.remove('running'); btn.textContent = 'Error'; } }
+    }
+
+    async function bulkReanalyze(mode, selectiveFields) {
+      var selected = getSelectedClaimIds();
+      if (!selected.length) { alert('Select at least one claim first.'); return; }
+      var progressEl = document.getElementById('cm-progress');
+      var progressText = document.getElementById('cm-progress-text');
+      var progressBar = document.getElementById('cm-progress-bar');
+      progressEl.style.display = 'block';
+      for (var i = 0; i < selected.length; i++) {
+        var item = selected[i];
+        progressText.textContent = 'Reanalyzing ' + (i + 1) + ' of ' + selected.length + '...';
+        progressBar.style.width = Math.round((i / selected.length) * 100) + '%';
+        await runSingleClaimReanalyze(item.record_id, item.idx, mode, selectiveFields);
+        // Small delay to avoid rate limits
+        if (i < selected.length - 1) await new Promise(function(r) { setTimeout(r, 1200); });
+      }
+      progressBar.style.width = '100%';
+      progressText.textContent = 'Done. Reanalyzed ' + selected.length + ' claim' + (selected.length !== 1 ? 's' : '') + '.';
+    }
+
+    function openSelectiveModal() {
+      var selected = getSelectedClaimIds();
+      if (!selected.length) { alert('Select at least one claim first.'); return; }
+      _selectiveMode = 'bulk';
+      _selectiveSingleSlug = '';
+      document.getElementById('selective-target-info').textContent = selected.length + ' claim' + (selected.length !== 1 ? 's' : '') + ' selected';
+      document.getElementById('selective-status').textContent = '';
+      document.getElementById('selectiveModal').classList.add('visible');
+    }
+
+    function closeSelectiveModal() { document.getElementById('selectiveModal').classList.remove('visible'); }
+
+    async function runSelectiveReanalysis() {
+      var fields = Array.from(document.querySelectorAll('#selectiveModal input[type="checkbox"]:checked')).map(function(cb) { return cb.value; });
+      if (!fields.length) { document.getElementById('selective-status').textContent = 'Select at least one field.'; return; }
+      closeSelectiveModal();
+      if (_selectiveMode === 'single' && _selectiveSingleSlug) {
+        var statusEl = document.getElementById('claim-reanalyze-status');
+        if (statusEl) statusEl.textContent = 'Running selective reanalysis...';
+        try {
+          var res = await fetch('/editor/reanalyze-claim-by-slug/' + _selectiveSingleSlug, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'selective', fields: fields }) });
+          var data = await res.json();
+          if (res.ok && data.ok) {
+            if (statusEl) statusEl.textContent = 'Done. Updated: ' + data.fields_updated.filter(function(f) { return !['Last Reanalyzed','Reanalyzed By','Last Updated'].includes(f); }).join(', ');
+            setTimeout(function() { window.location.reload(); }, 2000);
+          } else { if (statusEl) statusEl.textContent = 'Error: ' + (data.error || 'Failed'); }
+        } catch(err) { if (statusEl) statusEl.textContent = 'Error: ' + err.message; }
+      } else {
+        await bulkReanalyze('selective', fields);
+      }
+    }
+
+    // ── CLAIM PAGE REANALYZE MODAL ──
+    var _claimReanalyzeSlug = '';
+
+    function openReanalyzeModal(slug) {
+      _claimReanalyzeSlug = slug;
+      document.getElementById('claim-reanalyze-slug-display').textContent = 'Claim: ' + slug;
+      document.getElementById('claim-reanalyze-status').textContent = '';
+      document.getElementById('claimReanalyzeModal').classList.add('visible');
+    }
+
+    function closeClaimReanalyzeModal() {
+      document.getElementById('claimReanalyzeModal').classList.remove('visible');
+      _claimReanalyzeSlug = '';
+    }
+
+    async function runClaimReanalyze(mode) {
+      if (!_claimReanalyzeSlug) return;
+      var statusEl = document.getElementById('claim-reanalyze-status');
+      statusEl.textContent = 'Running ' + mode + ' reanalysis. This may take 30-60 seconds...';
+      document.getElementById('claimReanalyzeModal').querySelectorAll('button').forEach(function(b) { b.disabled = true; });
+      try {
+        var res = await fetch('/editor/reanalyze-claim-by-slug/' + _claimReanalyzeSlug, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: mode }) });
+        var data = await res.json();
+        if (res.ok && data.ok) {
+          statusEl.textContent = 'Done. Reanalyzed by ' + data.reanalyzed_by + ' on ' + data.last_reanalyzed + '. Reloading...';
+          setTimeout(function() { closeClaimReanalyzeModal(); window.location.reload(); }, 2000);
+        } else { statusEl.textContent = 'Error: ' + (data.error || 'Failed'); document.getElementById('claimReanalyzeModal').querySelectorAll('button').forEach(function(b) { b.disabled = false; }); }
+      } catch(err) { statusEl.textContent = 'Error: ' + err.message; document.getElementById('claimReanalyzeModal').querySelectorAll('button').forEach(function(b) { b.disabled = false; }); }
+    }
+
+    function openSelectiveFromClaim() {
+      _selectiveMode = 'single';
+      _selectiveSingleSlug = _claimReanalyzeSlug;
+      document.getElementById('selective-target-info').textContent = 'Claim: ' + _claimReanalyzeSlug;
+      document.getElementById('selective-status').textContent = '';
+      closeClaimReanalyzeModal();
+      document.getElementById('selectiveModal').classList.add('visible');
     }
 
     function setMobileEditorTab(tab, btn) {
@@ -6689,50 +6799,56 @@ console.error('Dispute submission failed:', err);
 
 </script>
 
-<!-- RESOLVE CONFIRMATION MODAL -->
-<div class="update-preview-overlay" id="resolveConfirmModal">
-  <div class="update-preview-box" style="max-width:520px;">
-    <div class="modal-kicker">Confirm Resolution</div>
-    <div class="update-preview-title" style="font-size:22px; margin-bottom:8px;" id="resolveConfirmTitle">Resolve this dispute?</div>
-    <div style="margin-bottom:20px; font-size:15px; color:var(--text-light); font-style:italic;" id="resolveConfirmSub"></div>
-
-    <div id="resolveStatusWarning" style="display:none; background:rgba(232,112,112,.08); border:1px solid rgba(232,112,112,.28); border-radius:10px; padding:12px 14px; margin-bottom:16px; font-size:14px; color:#ef9a9a; line-height:1.55;"></div>
-
-    <div style="margin-bottom:16px;">
-      <label class="editor-control-label" style="display:block; margin-bottom:6px;">Set Final Status</label>
-      <select class="editor-select" id="resolveFinalStatus" style="width:100%;">
-        <option value="Resolved">Resolved</option>
-        <option value="Closed">Closed</option>
-        <option value="In Review">In Review (keep open)</option>
-        <option value="No Update">No Update</option>
-      </select>
+<!-- SELECTIVE REANALYSIS MODAL -->
+<div class="update-preview-overlay" id="selectiveModal">
+  <div class="update-preview-box" style="max-width:560px;">
+    <div class="modal-kicker">Selective Reanalysis</div>
+    <div class="update-preview-title" style="font-size:22px; margin-bottom:8px;">Choose fields to update</div>
+    <div style="font-size:14px; color:var(--text-light); font-style:italic; margin-bottom:4px;">
+      AI will rewrite only the selected fields. All other fields stay as-is.
     </div>
-
+    <div id="selective-target-info" style="font-size:13px; color:var(--gold); margin-bottom:16px;"></div>
+    <div class="selective-check-grid">
+      <label class="selective-check-item"><input type="checkbox" value="Quick Explanation" checked> Quick Explanation</label>
+      <label class="selective-check-item"><input type="checkbox" value="Overall Verdict"> Overall Verdict</label>
+      <label class="selective-check-item"><input type="checkbox" value="Direct Facts" checked> Direct Facts</label>
+      <label class="selective-check-item"><input type="checkbox" value="Adjacent Facts" checked> Adjacent Facts</label>
+      <label class="selective-check-item"><input type="checkbox" value="Root Concern" checked> Root Concern</label>
+      <label class="selective-check-item"><input type="checkbox" value="Values Divergence"> Values Divergence</label>
+      <label class="selective-check-item"><input type="checkbox" value="Constitutional Framework"> Constitutional Framework</label>
+      <label class="selective-check-item"><input type="checkbox" value="Common Ground" checked> Common Ground</label>
+      <label class="selective-check-item"><input type="checkbox" value="Bottom Line" checked> Bottom Line</label>
+      <label class="selective-check-item"><input type="checkbox" value="Left Perspective"> Left Perspective</label>
+      <label class="selective-check-item"><input type="checkbox" value="Right Perspective"> Right Perspective</label>
+      <label class="selective-check-item"><input type="checkbox" value="Sub Claims"> Sub Claims</label>
+    </div>
     <div class="update-actions">
-      <button type="button" class="modal-btn-secondary" onclick="closeResolveConfirm()">Cancel</button>
-      <button type="button" class="modal-btn-primary" id="resolveConfirmBtn" onclick="confirmResolve()">Confirm Resolve</button>
+      <button type="button" class="modal-btn-secondary" onclick="closeSelectiveModal()">Cancel</button>
+      <button type="button" class="modal-btn-primary" onclick="runSelectiveReanalysis()">Run Selective Reanalysis</button>
     </div>
-    <div id="resolveConfirmStatus" style="margin-top:10px; font-size:13px; color:var(--text-mid); font-style:italic;"></div>
+    <div id="selective-status" style="margin-top:10px; font-size:13px; color:var(--text-mid); font-style:italic;"></div>
   </div>
 </div>
 
-
-<!-- UPDATE PREVIEW MODAL -->
-<div class="update-preview-overlay" id="updatePreviewModal">
-  <div class="update-preview-box">
-    <div class="modal-kicker">Editor Review</div>
-    <div class="update-preview-title" id="updatePreviewTitle">AI Recommended Update</div>
-    <div class="update-preview-sub" id="updatePreviewSub">Review the proposed changes before applying them to the live claim.</div>
-    <div id="updatePreviewLoading" class="update-loading">Generating preview. Asking AI to structure the recommended changes...</div>
-    <div id="updatePreviewContent" style="display:none;">
-      <div class="update-editor-note" id="updateEditorNote" style="display:none;"></div>
-      <div id="updateSectionsContainer"></div>
-      <div class="update-actions">
-        <button type="button" class="modal-btn-secondary" onclick="closeUpdatePreview()">Cancel</button>
-        <button type="button" class="modal-btn-primary" id="updateApproveBtn" onclick="applyApprovedSections()">Apply Approved Changes</button>
-      </div>
-      <div id="updateStatusMsg" style="margin-top:10px; font-size:14px; color:var(--text-light); font-style:italic;"></div>
+<!-- CLAIM PAGE REANALYZE MODAL -->
+<div class="update-preview-overlay" id="claimReanalyzeModal">
+  <div class="update-preview-box" style="max-width:520px;">
+    <div class="modal-kicker">Reanalyze Claim</div>
+    <div class="update-preview-title" style="font-size:22px; margin-bottom:8px;">How do you want to reanalyze?</div>
+    <div style="font-size:14px; color:var(--text-light); font-style:italic; margin-bottom:20px;" id="claim-reanalyze-slug-display"></div>
+    <div style="display:grid; gap:10px; margin-bottom:20px;">
+      <button type="button" class="gold-btn" style="text-align:left; padding:16px 18px; border-radius:12px; display:block; width:100%;"
+        onclick="runClaimReanalyze('full')">
+        <div style="font-size:13px; margin-bottom:4px;">Full Reanalysis</div>
+        <div style="font-size:12px; opacity:.7; font-weight:normal;">Rewrites all 6 layers, verdict, and every field. Takes 30-60 seconds.</div>
+      </button>
+      <button type="button" class="editor-reanalyze-btn" style="text-align:left; padding:16px 18px; border-radius:12px; display:block; width:100%; font-size:13px;"
+        onclick="openSelectiveFromClaim()">
+        Selective Reanalysis — choose which fields to update
+      </button>
     </div>
+    <button type="button" class="modal-btn-secondary" onclick="closeClaimReanalyzeModal()">Cancel</button>
+    <div id="claim-reanalyze-status" style="margin-top:12px; font-size:13px; color:var(--text-mid); font-style:italic;"></div>
   </div>
 </div>
 
