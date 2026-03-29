@@ -2186,3 +2186,243 @@ def pushback_dispute():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
+# ══════════════════════════════════════════════
+# EDITOR ADJUDICATION SYSTEM
+# ══════════════════════════════════════════════
+
+EDITOR_UPDATE_SYSTEM = """You are the claim update engine for Where the Truth Lies.
+
+An editor has reviewed a user dispute and approved applying AI-recommended changes to a published claim.
+
+Your job is to rewrite ONLY the specific sections that need updating based on the recommendation text provided.
+
+Return ONLY valid JSON in this exact structure:
+
+{
+  "sections": [
+    {
+      "field": "Quick Explanation",
+      "airtable_key": "Quick Explanation",
+      "current": "The current text of this field",
+      "proposed": "Your rewritten version of this field",
+      "changed": true
+    }
+  ],
+  "editor_note": "A 1-2 sentence summary of what was changed and why."
+}
+
+Rules:
+- Only include sections that actually need to change based on the recommendation
+- Keep changes minimal and precise. Do not rewrite sections that are fine
+- Maintain the platform's tone: plain, direct, no political bias
+- The Overall Verdict must be exactly one of: True, Mostly True, Substantially True, Plausible/Mixed, Contested, Exaggerated, Misleading, Unproven, False
+- Quick Explanation must be 1-2 sentences maximum
+- Do not add new information not supported by the recommendation or existing claim context
+- If a section does not need to change, do not include it
+"""
+
+AIRTABLE_KEY_MAP = {
+    "Quick Explanation": "Quick Explanation",
+    "Overall Verdict": "Overall Verdict",
+    "Direct Facts": "Direct Facts",
+    "Adjacent Facts": "Adjacent Facts",
+    "Root Concern": "Root Concern",
+    "Values Divergence": "Values Divergence",
+    "Constitutional Framework": "Constitutional Framework",
+    "Common Ground": "Common Ground",
+    "Bottom Line": "Strip Mode Summary",
+    "Strip Mode Summary": "Strip Mode Summary",
+}
+
+
+def generate_update_preview(claim_record, dispute_record):
+    """Call AI to generate structured before/after section rewrites."""
+    if not anthropic_client and not openai_client:
+        return None
+
+    claim_fields = claim_record.get("fields", {})
+    dispute_fields = dispute_record.get("fields", {})
+
+    recommendation = (dispute_fields.get("AI Recommended Changes") or "").strip()
+    sections_disputed = dispute_fields.get("Sections Disputed", [])
+
+    if not recommendation:
+        return None
+
+    current_sections = {
+        "Quick Explanation": claim_fields.get("Quick Explanation", ""),
+        "Overall Verdict": claim_fields.get("Overall Verdict", ""),
+        "Direct Facts": claim_fields.get("Direct Facts", ""),
+        "Adjacent Facts": claim_fields.get("Adjacent Facts", ""),
+        "Root Concern": claim_fields.get("Root Concern", ""),
+        "Values Divergence": claim_fields.get("Values Divergence", ""),
+        "Constitutional Framework": claim_fields.get("Constitutional Framework", ""),
+        "Common Ground": claim_fields.get("Common Ground", ""),
+        "Bottom Line": claim_fields.get("Strip Mode Summary", ""),
+    }
+
+    prompt = f"""Claim title: {claim_fields.get('Original Quote') or claim_fields.get('Stripped Claim', '')}
+
+Sections disputed by user: {json.dumps(sections_disputed)}
+
+Original dispute text: {dispute_fields.get('Dispute Text', '')}
+
+AI recommendation for changes:
+{recommendation}
+
+Current claim section values:
+{json.dumps(current_sections, ensure_ascii=False, indent=2)}
+
+Based on the recommendation, return the structured update JSON."""
+
+    try:
+        if anthropic_client:
+            response = anthropic_client.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=1500,
+                system=EDITOR_UPDATE_SYSTEM,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            raw = response.content[0].text
+        else:
+            response = openai_client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": EDITOR_UPDATE_SYSTEM},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0,
+                max_tokens=1500
+            )
+            raw = response.choices[0].message.content
+
+        parsed = safe_json_parse(raw)
+        if isinstance(parsed, dict) and parsed.get("sections"):
+            return parsed
+        return None
+
+    except Exception as e:
+        print("EDITOR UPDATE AI ERROR:", str(e), flush=True)
+        return None
+
+
+@app.route("/editor/preview-update/<record_id>", methods=["GET"])
+def editor_preview_update(record_id):
+    if not session.get("logged_in"):
+        return jsonify({"error": "Not logged in"}), 401
+    if not session.get("true_superuser"):
+        return jsonify({"error": "Unauthorized"}), 403
+
+    try:
+        dispute_record = get_dispute_by_id(record_id)
+        if not dispute_record:
+            return jsonify({"error": "Dispute not found"}), 404
+
+        dispute_fields = dispute_record.get("fields", {})
+        claim_links = dispute_fields.get("Claim Record ID", [])
+        claim_id = claim_links[0] if claim_links else None
+
+        if not claim_id:
+            return jsonify({"error": "No linked claim found"}), 400
+
+        claim_record = get_claim_by_record_id(claim_id)
+        if not claim_record:
+            return jsonify({"error": "Claim record not found"}), 404
+
+        preview = generate_update_preview(claim_record, dispute_record)
+        if not preview:
+            return jsonify({"error": "Could not generate update preview. Check AI Recommended Changes field."}), 500
+
+        return jsonify({
+            "ok": True,
+            "claim_title": dispute_fields.get("Original Claim Title", ""),
+            "claim_slug": dispute_fields.get("Claim Slug", ""),
+            "claim_record_id": claim_id,
+            "sections": preview.get("sections", []),
+            "editor_note": preview.get("editor_note", "")
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/editor/apply-update/<record_id>", methods=["POST"])
+def editor_apply_update(record_id):
+    """Apply approved section rewrites to the claim and log to dispute thread."""
+    if not session.get("logged_in"):
+        return jsonify({"error": "Not logged in"}), 401
+    if not session.get("true_superuser"):
+        return jsonify({"error": "Unauthorized"}), 403
+
+    try:
+        data = request.get_json() or {}
+        approved_sections = data.get("approved_sections", [])
+        editor_note = (data.get("editor_note") or "").strip()
+        claim_record_id = (data.get("claim_record_id") or "").strip()
+
+        if not approved_sections:
+            return jsonify({"error": "No sections approved"}), 400
+        if not claim_record_id:
+            return jsonify({"error": "No claim record ID provided"}), 400
+
+        # Build fields to write to claims table
+        claim_updates = {}
+        snapshot_before = {}
+        snapshot_after = {}
+
+        claim_record = get_claim_by_record_id(claim_record_id)
+        claim_fields = claim_record.get("fields", {}) if claim_record else {}
+
+        for section in approved_sections:
+            field_name = section.get("field", "")
+            airtable_key = AIRTABLE_KEY_MAP.get(field_name, field_name)
+            proposed = section.get("proposed", "")
+            current = section.get("current", "")
+
+            if airtable_key and proposed:
+                claim_updates[airtable_key] = proposed
+                snapshot_before[field_name] = current
+                snapshot_after[field_name] = proposed
+
+        if not claim_updates:
+            return jsonify({"error": "No valid fields to update"}), 400
+
+        # Write to claims table
+        update_url = f"{airtable_url(AIRTABLE_TABLE_NAME)}/{claim_record_id}"
+        update_resp = requests.patch(
+            update_url,
+            headers=airtable_headers(),
+            json={"fields": claim_updates},
+            timeout=30
+        )
+
+        if not update_resp.ok:
+            return jsonify({"error": f"Claim update failed: {update_resp.text}"}), 500
+
+        # Log thread entry to dispute record
+        applied_scope = list(snapshot_after.keys())
+        editor_username = session.get("username", "Editor")
+
+        thread_entry = f"EDITOR UPDATE by {editor_username}:\n"
+        for field_name in snapshot_after:
+            thread_entry += f"\n[{field_name}]\nBefore: {snapshot_before.get(field_name, '')}\nAfter: {snapshot_after[field_name]}\n"
+        if editor_note:
+            thread_entry += f"\nEditor note: {editor_note}"
+
+        update_dispute_record(record_id, {
+            "Status": "Resolved",
+            "Escalated To Human": False,
+            "Resolution Type": "AI Recommendation",
+            "Applied Update Scope": applied_scope,
+            "Editor Resolution": thread_entry,
+            "Last Updated": datetime.utcnow().isoformat()
+        })
+
+        return jsonify({
+            "ok": True,
+            "fields_updated": list(claim_updates.keys()),
+            "claim_slug": claim_fields.get("URL Slug", "")
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
