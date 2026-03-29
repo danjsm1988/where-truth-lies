@@ -4376,6 +4376,67 @@ html, body {
         {% else %}
           <div style="text-align:center; padding:32px 16px; color:var(--text-mid); font-style:italic;">No items currently need editor review.</div>
         {% endif %}
+
+        <!-- MOBILE CLAIM MANAGEMENT PANEL -->
+        <div id="m-claim-mgmt-panel" style="display:none;">
+          <div style="padding-bottom:14px; margin-bottom:14px; border-bottom:1px solid rgba(201,168,76,.14);">
+            <div class="section-kicker" style="margin-bottom:12px;">Claim Management</div>
+            <div style="display:grid; gap:10px;">
+              <div>
+                <label class="editor-control-label" style="display:block; margin-bottom:5px;">Topic</label>
+                <select class="editor-select" id="m-cm-filter-topic" style="width:100%;">
+                  <option value="">All Topics</option>
+                  <option>Economy</option><option>Immigration</option><option>Elections</option>
+                  <option>Foreign Policy</option><option>Healthcare</option><option>Crime</option>
+                  <option>Environment</option><option>Education</option>
+                </select>
+              </div>
+              <div>
+                <label class="editor-control-label" style="display:block; margin-bottom:5px;">Verdict</label>
+                <select class="editor-select" id="m-cm-filter-verdict" style="width:100%;">
+                  <option value="">All Verdicts</option>
+                  <option>True</option><option>Mostly True</option><option>Substantially True</option>
+                  <option>Plausible/Mixed</option><option>Contested</option><option>Exaggerated</option>
+                  <option>Misleading</option><option>Unproven</option><option>False</option>
+                </select>
+              </div>
+              <div>
+                <label class="editor-control-label" style="display:block; margin-bottom:5px;">Not Reanalyzed Since</label>
+                <input type="date" class="editor-select" id="m-cm-filter-date" style="width:100%; color:var(--cream);">
+              </div>
+              <button type="button" class="m-run-btn" onclick="mLoadClaims()">Load Claims</button>
+            </div>
+          </div>
+
+          <!-- Select all + bulk actions -->
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <input type="checkbox" id="m-cm-select-all" onchange="mCmToggleAll(this)" style="width:18px; height:18px; cursor:pointer;">
+              <label for="m-cm-select-all" class="editor-control-label" style="cursor:pointer;">Select All</label>
+              <span id="m-cm-count" style="font-size:11px; color:var(--text-mid); font-style:italic;"></span>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button type="button" class="editor-save-rec-btn" onclick="mBulkReanalyze('full')">Full</button>
+              <button type="button" class="editor-reanalyze-btn" onclick="mOpenSelectiveModal()">Selective</button>
+            </div>
+          </div>
+
+          <!-- Claims list -->
+          <div id="m-cm-claims-list">
+            <div style="text-align:center; padding:20px; color:var(--text-mid); font-style:italic; font-size:14px;">Tap Load Claims to begin.</div>
+          </div>
+
+          <!-- Progress -->
+          <div id="m-cm-progress" style="display:none; margin-top:14px;">
+            <div class="editor-note-block">
+              <div id="m-cm-progress-text" style="font-size:14px; color:var(--gold); margin-bottom:8px;"></div>
+              <div style="background:rgba(255,255,255,.06); border-radius:4px; height:6px; overflow:hidden;">
+                <div id="m-cm-progress-bar" style="height:100%; background:var(--gold); transition:width .3s ease; width:0%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
       {% endif %}
 
@@ -6923,6 +6984,10 @@ console.error('Dispute submission failed:', err);
       var fields = Array.from(document.querySelectorAll('#selectiveModal input[type="checkbox"]:checked')).map(function(cb) { return cb.value; });
       if (!fields.length) { document.getElementById('selective-status').textContent = 'Select at least one field.'; return; }
       closeSelectiveModal();
+      if (_selectiveMode === 'bulk-mobile') {
+        await mBulkReanalyze('selective', fields);
+        return;
+      }
       if (_selectiveMode === 'single' && _selectiveSingleSlug) {
         var statusEl = document.getElementById('claim-reanalyze-status');
         if (statusEl) statusEl.textContent = 'Running selective reanalysis...';
@@ -6974,18 +7039,30 @@ console.error('Dispute submission failed:', err);
 
     // Mobile editor tabs
     function setMobileEditorTab(tab, btn) {
+      var cmPanel = document.getElementById('m-claim-mgmt-panel');
+      var emptyEl = document.getElementById('m-editor-empty');
       var cards = document.querySelectorAll('.m-editor-card');
-      var visibleCount = 0;
-      for (var i = 0; i < cards.length; i++) {
-        var cat = (cards[i].getAttribute('data-category') || '').trim();
-        if (cat === tab) { cards[i].style.display = 'grid'; visibleCount++; }
-        else { cards[i].style.display = 'none'; }
+
+      if (tab === '__claims__') {
+        // Show claim management, hide dispute cards
+        for (var i = 0; i < cards.length; i++) cards[i].style.display = 'none';
+        if (emptyEl) emptyEl.style.display = 'none';
+        if (cmPanel) cmPanel.style.display = 'block';
+      } else {
+        // Hide claim management, show matching dispute cards
+        if (cmPanel) cmPanel.style.display = 'none';
+        var visibleCount = 0;
+        for (var i = 0; i < cards.length; i++) {
+          var cat = (cards[i].getAttribute('data-category') || '').trim();
+          if (cat === tab) { cards[i].style.display = 'grid'; visibleCount++; }
+          else { cards[i].style.display = 'none'; }
+        }
+        if (emptyEl) emptyEl.style.display = visibleCount === 0 ? 'block' : 'none';
       }
+
       var btns = document.querySelectorAll('.m-editor-tab-btn');
-      for (var j = 0; j < btns.length; j++) { btns[j].classList.remove('active'); }
+      for (var j = 0; j < btns.length; j++) btns[j].classList.remove('active');
       if (btn) btn.classList.add('active');
-      var empty = document.getElementById('m-editor-empty');
-      if (empty) empty.style.display = visibleCount === 0 ? 'block' : 'none';
     }
     window.addEventListener('load', function() {
       if (document.querySelector('.m-editor-queue')) {
@@ -7078,6 +7155,132 @@ console.error('Dispute submission failed:', err);
     }
 
     document.addEventListener('DOMContentLoaded', function() { chRenderJson(); });
+
+
+    // ── MOBILE CLAIM MANAGEMENT ──
+    var _mCmClaims = [];
+
+    async function mLoadClaims() {
+      var topic = (document.getElementById('m-cm-filter-topic') || {}).value || '';
+      var verdict = (document.getElementById('m-cm-filter-verdict') || {}).value || '';
+      var dateVal = (document.getElementById('m-cm-filter-date') || {}).value || '';
+      var listEl = document.getElementById('m-cm-claims-list');
+      listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gold);font-style:italic;">Loading claims...</div>';
+      var params = new URLSearchParams({ limit: 100 });
+      if (topic) params.append('topic', topic);
+      if (verdict) params.append('verdict', verdict);
+      if (dateVal) params.append('not_since', dateVal);
+      try {
+        var res = await fetch('/editor/claims?' + params.toString());
+        var data = await res.json();
+        if (!res.ok || !data.ok) {
+          listEl.innerHTML = '<div style="color:var(--bad);word-break:break-word;font-size:13px;">Error: ' + escHtml(data.error || 'Failed') + '</div>';
+          return;
+        }
+        _mCmClaims = data.claims;
+        mRenderClaims(data.claims);
+      } catch(err) {
+        listEl.innerHTML = '<div style="color:var(--bad);font-size:13px;">Error: ' + escHtml(err.message) + '</div>';
+      }
+    }
+
+    function mRenderClaims(claims) {
+      var listEl = document.getElementById('m-cm-claims-list');
+      var countEl = document.getElementById('m-cm-count');
+      if (!claims.length) {
+        listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-mid);font-style:italic;">No claims match your filters.</div>';
+        return;
+      }
+      if (countEl) countEl.textContent = '0 of ' + claims.length + ' selected';
+      listEl.innerHTML = '';
+      claims.forEach(function(claim, idx) {
+        var row = document.createElement('div');
+        row.style.cssText = 'padding:12px 0; border-bottom:1px solid rgba(255,255,255,.06); display:grid; grid-template-columns:28px 1fr auto; gap:10px; align-items:start;';
+        var reanalyzedBadge = claim.last_reanalyzed
+          ? '<div style="font-size:10px;color:#75c28d;margin-top:3px;">↻ ' + escHtml(claim.last_reanalyzed) + '</div>' : '';
+        row.innerHTML =
+          '<input type="checkbox" class="m-cm-check" data-idx="' + idx + '" onchange="mCmUpdateCount()" style="width:18px;height:18px;cursor:pointer;margin-top:2px;">' +
+          '<div>' +
+            '<a href="/claim/' + escHtml(claim.slug) + '" style="font-family:'Playfair Display',serif;font-size:15px;color:var(--cream);text-decoration:none;line-height:1.3;display:block;">' +
+              escHtml(claim.title.length > 60 ? claim.title.slice(0,60) + '...' : claim.title) +
+            '</a>' +
+            '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:3px;">' +
+              (claim.verdict ? '<span style="font-family:'Libre Baskerville',serif;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-mid);">' + escHtml(claim.verdict) + '</span>' : '') +
+              (claim.date_added ? '<span style="font-family:'Libre Baskerville',serif;font-size:9px;color:var(--text-mid);">' + claim.date_added + '</span>' : '') +
+            '</div>' +
+            reanalyzedBadge +
+          '</div>' +
+          '<button type="button" class="cm-row-btn" id="m-cm-btn-' + idx + '" style="white-space:nowrap;">Full</button>';
+        var btn = row.querySelector('.cm-row-btn');
+        var capturedId = claim.record_id;
+        var capturedIdx = idx;
+        btn.onclick = function() { mRunSingleReanalyze(capturedId, capturedIdx, 'full'); };
+        listEl.appendChild(row);
+      });
+    }
+
+    function mCmUpdateCount() {
+      var checked = document.querySelectorAll('.m-cm-check:checked').length;
+      var countEl = document.getElementById('m-cm-count');
+      if (countEl) countEl.textContent = checked + ' of ' + _mCmClaims.length + ' selected';
+    }
+
+    function mCmToggleAll(masterCb) {
+      document.querySelectorAll('.m-cm-check').forEach(function(cb) { cb.checked = masterCb.checked; });
+      mCmUpdateCount();
+    }
+
+    function mGetSelectedIds() {
+      var ids = [];
+      document.querySelectorAll('.m-cm-check:checked').forEach(function(cb) {
+        var idx = parseInt(cb.getAttribute('data-idx'));
+        if (_mCmClaims[idx]) ids.push({ record_id: _mCmClaims[idx].record_id, idx: idx });
+      });
+      return ids;
+    }
+
+    async function mRunSingleReanalyze(recordId, rowIdx, mode, fields) {
+      var btn = document.getElementById('m-cm-btn-' + rowIdx);
+      if (btn) { btn.classList.add('running'); btn.textContent = '...'; }
+      try {
+        var body = { mode: mode };
+        if (fields) body.fields = fields;
+        var res = await fetch('/editor/reanalyze-claim/' + recordId, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+        });
+        var data = await res.json();
+        if (res.ok && data.ok) {
+          if (btn) { btn.classList.remove('running'); btn.classList.add('done'); btn.textContent = '↻ ' + data.last_reanalyzed; }
+          if (_mCmClaims[rowIdx]) _mCmClaims[rowIdx].last_reanalyzed = data.last_reanalyzed;
+        } else { if (btn) { btn.classList.remove('running'); btn.textContent = 'Error'; } }
+      } catch(err) { if (btn) { btn.classList.remove('running'); btn.textContent = 'Err'; } }
+    }
+
+    async function mBulkReanalyze(mode, selectiveFields) {
+      var selected = mGetSelectedIds();
+      if (!selected.length) { alert('Select at least one claim first.'); return; }
+      var progressEl = document.getElementById('m-cm-progress');
+      var progressText = document.getElementById('m-cm-progress-text');
+      var progressBar = document.getElementById('m-cm-progress-bar');
+      if (progressEl) progressEl.style.display = 'block';
+      for (var i = 0; i < selected.length; i++) {
+        if (progressText) progressText.textContent = 'Reanalyzing ' + (i+1) + ' of ' + selected.length + '...';
+        if (progressBar) progressBar.style.width = Math.round((i / selected.length) * 100) + '%';
+        await mRunSingleReanalyze(selected[i].record_id, selected[i].idx, mode, selectiveFields);
+        if (i < selected.length - 1) await new Promise(function(r) { setTimeout(r, 1200); });
+      }
+      if (progressBar) progressBar.style.width = '100%';
+      if (progressText) progressText.textContent = 'Done. Reanalyzed ' + selected.length + ' claim' + (selected.length !== 1 ? 's' : '') + '.';
+    }
+
+    function mOpenSelectiveModal() {
+      var selected = mGetSelectedIds();
+      if (!selected.length) { alert('Select at least one claim first.'); return; }
+      _selectiveMode = 'bulk-mobile';
+      document.getElementById('selective-target-info').textContent = selected.length + ' claim' + (selected.length !== 1 ? 's' : '') + ' selected';
+      document.getElementById('selective-status').textContent = '';
+      document.getElementById('selectiveModal').classList.add('visible');
+    }
 
 </script>
 
