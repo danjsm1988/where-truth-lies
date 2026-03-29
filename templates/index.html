@@ -5173,8 +5173,6 @@ html, body {
             </div>
 
             <!-- BREAKOUT CLAIMS SECTION (DESKTOP) -->
-            {% if session.get('logged_in') if session is defined else logged_in is defined %}
-            {% endif %}
             {% if current_claim %}
               <div class="breakout-section" id="breakout-section-desktop">
                 <div class="breakout-section-title">
