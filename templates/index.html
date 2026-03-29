@@ -3426,6 +3426,61 @@ html, body {
     .cm-row-btn.done { border-color:rgba(117,194,141,.4); color:#75c28d; }
     .claim-reanalyze-btn { appearance:none; border:1px solid rgba(201,168,76,.3); background:rgba(201,168,76,.07); color:var(--gold); font-family:'Libre Baskerville',Georgia,serif; font-size:10px; letter-spacing:.12em; text-transform:uppercase; padding:5px 12px; border-radius:6px; cursor:pointer; transition:all .15s ease; }
     .claim-reanalyze-btn:hover { background:rgba(201,168,76,.14); border-color:var(--gold); }
+
+    /* ── BREAKOUT CLAIMS ── */
+    .breakout-section { margin:28px 0 22px; }
+    .breakout-section-title { font-family:'Libre Baskerville',Georgia,serif; font-size:10px; letter-spacing:.22em; text-transform:uppercase; color:var(--gold); margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid rgba(201,168,76,.15); display:flex; align-items:center; gap:10px; }
+    .breakout-section-title .breakout-count-badge { font-size:9px; background:rgba(201,168,76,.12); border:1px solid rgba(201,168,76,.25); border-radius:999px; padding:2px 8px; color:var(--gold); letter-spacing:.08em; }
+    .breakout-group { margin-bottom:18px; }
+    .breakout-group-label { font-family:'Libre Baskerville',Georgia,serif; font-size:9px; letter-spacing:.18em; text-transform:uppercase; color:var(--text-mid); margin-bottom:8px; }
+    .breakout-row { display:flex; align-items:center; gap:10px; padding:9px 12px; border:1px solid rgba(201,168,76,.12); border-radius:8px; background:rgba(255,255,255,.02); margin-bottom:6px; cursor:pointer; transition:all .15s ease; }
+    .breakout-row:hover { background:rgba(201,168,76,.06); border-color:rgba(201,168,76,.25); }
+    .breakout-row.excavated { cursor:default; border-color:rgba(117,194,141,.2); background:rgba(117,194,141,.04); }
+    .breakout-row-title { flex:1; font-size:13px; color:var(--text-primary); line-height:1.4; }
+    .breakout-row.excavated .breakout-row-title { color:var(--text-mid); }
+    .breakout-origin-badge { font-family:'Libre Baskerville',Georgia,serif; font-size:8px; letter-spacing:.1em; text-transform:uppercase; padding:3px 8px; border-radius:999px; white-space:nowrap; flex-shrink:0; }
+    .breakout-origin-main { background:rgba(201,168,76,.1); border:1px solid rgba(201,168,76,.2); color:var(--gold); }
+    .breakout-origin-dispute { background:rgba(99,132,199,.1); border:1px solid rgba(99,132,199,.25); color:#7fa3e8; }
+    .breakout-origin-pushback { background:rgba(199,132,99,.1); border:1px solid rgba(199,132,99,.25); color:#e8a87f; }
+    .breakout-status-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+    .breakout-status-dot.pending { background:rgba(201,168,76,.5); }
+    .breakout-status-dot.excavating { background:#7fa3e8; }
+    .breakout-status-dot.excavated { background:#75c28d; }
+    .breakout-empty { font-size:13px; color:var(--text-mid); font-style:italic; padding:12px 0; }
+    .breakout-detect-btn { appearance:none; border:1px solid rgba(201,168,76,.2); background:transparent; color:var(--text-mid); font-family:'Libre Baskerville',Georgia,serif; font-size:9px; letter-spacing:.12em; text-transform:uppercase; padding:4px 10px; border-radius:6px; cursor:pointer; transition:all .15s ease; }
+    .breakout-detect-btn:hover { color:var(--gold); border-color:rgba(201,168,76,.4); }
+
+    /* mobile breakout */
+    .m-breakout-section { margin:16px 0 12px; }
+    .m-breakout-title { font-family:'Libre Baskerville',Georgia,serif; font-size:9px; letter-spacing:.18em; text-transform:uppercase; color:var(--gold); margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid rgba(201,168,76,.12); }
+    .m-breakout-group-label { font-family:'Libre Baskerville',Georgia,serif; font-size:8px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-mid); margin:10px 0 5px; }
+    .m-breakout-row { display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid rgba(201,168,76,.12); border-radius:7px; background:rgba(255,255,255,.02); margin-bottom:5px; cursor:pointer; transition:all .15s; }
+    .m-breakout-row.excavated { border-color:rgba(117,194,141,.18); cursor:default; }
+    .m-breakout-row-title { flex:1; font-size:12px; color:var(--text-primary); line-height:1.35; }
+    .m-breakout-row.excavated .m-breakout-row-title { color:var(--text-mid); }
+    .m-breakout-status-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+    .m-breakout-status-dot.pending { background:rgba(201,168,76,.5); }
+    .m-breakout-status-dot.excavated { background:#75c28d; }
+    .m-breakout-origin-badge { font-size:7px; font-family:'Libre Baskerville',Georgia,serif; letter-spacing:.08em; text-transform:uppercase; padding:2px 6px; border-radius:999px; flex-shrink:0; }
+    .m-breakout-empty { font-size:12px; color:var(--text-mid); font-style:italic; padding:8px 0; }
+
+    /* excavation popup */
+    .breakout-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.72); z-index:9900; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity .2s ease; }
+    .breakout-modal-overlay.visible { opacity:1; pointer-events:all; }
+    .breakout-modal { background:var(--surface); border:1px solid rgba(201,168,76,.3); border-radius:16px; padding:32px 28px; max-width:480px; width:90%; max-height:85vh; overflow-y:auto; }
+    .breakout-modal-title { font-family:'Playfair Display',Georgia,serif; font-size:18px; color:var(--text-primary); margin-bottom:6px; line-height:1.35; }
+    .breakout-modal-source { font-size:12px; color:var(--text-mid); font-style:italic; margin-bottom:18px; padding:10px 12px; background:rgba(255,255,255,.03); border-left:2px solid rgba(201,168,76,.3); border-radius:0 6px 6px 0; line-height:1.5; }
+    .breakout-modal-label { font-family:'Libre Baskerville',Georgia,serif; font-size:9px; letter-spacing:.16em; text-transform:uppercase; color:var(--gold-dim); margin-bottom:6px; }
+    .breakout-modal-context { width:100%; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1); color:var(--text-primary); font-size:14px; font-family:Georgia,serif; padding:10px 12px; border-radius:8px; resize:vertical; min-height:80px; box-sizing:border-box; outline:none; }
+    .breakout-modal-context:focus { border-color:rgba(201,168,76,.4); }
+    .breakout-allowance-note { font-size:12px; color:var(--text-mid); margin:14px 0 18px; padding:8px 12px; background:rgba(201,168,76,.06); border-radius:6px; border:1px solid rgba(201,168,76,.15); }
+    .breakout-modal-btns { display:flex; gap:10px; justify-content:flex-end; }
+    .breakout-cancel-btn { appearance:none; background:transparent; border:1px solid rgba(255,255,255,.12); color:var(--text-mid); font-family:'Libre Baskerville',Georgia,serif; font-size:10px; letter-spacing:.12em; text-transform:uppercase; padding:9px 16px; border-radius:8px; cursor:pointer; transition:all .15s; }
+    .breakout-cancel-btn:hover { border-color:rgba(255,255,255,.25); color:var(--text-primary); }
+    .breakout-confirm-btn { appearance:none; background:rgba(201,168,76,.14); border:1px solid rgba(201,168,76,.35); color:var(--gold); font-family:'Libre Baskerville',Georgia,serif; font-size:10px; letter-spacing:.12em; text-transform:uppercase; padding:9px 18px; border-radius:8px; cursor:pointer; transition:all .15s; }
+    .breakout-confirm-btn:hover { background:rgba(201,168,76,.22); }
+    .breakout-confirm-btn:disabled { opacity:.45; cursor:not-allowed; }
+    .breakout-modal-status { font-size:13px; color:var(--text-mid); font-style:italic; margin-top:12px; min-height:20px; text-align:center; }
     .selective-check-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:16px 0; }
     .selective-check-item { display:flex; align-items:center; gap:8px; background:rgba(255,255,255,.02); border:var(--border-soft); border-radius:8px; padding:10px 12px; font-size:14px; color:var(--cream-soft); cursor:pointer; }
     .selective-check-item input { width:16px; height:16px; cursor:pointer; flex:0 0 auto; }
@@ -3938,6 +3993,41 @@ html, body {
           <span class="m-verdict-label">Verdict</span>
           <span class="m-verdict-value">{{ mv }}</span>
         </div>
+
+        <!-- MOBILE BREAKOUT CLAIMS -->
+        {% if current_claim.breakout_claims_grouped is defined %}
+          <div class="m-breakout-section">
+            <div class="m-breakout-title">
+              Breakout Claims
+              {% if true_superuser %}
+                <button type="button" class="breakout-detect-btn" style="margin-left:8px;" onclick="triggerBreakoutDetect('{{ current_claim.slug }}')">&#9881;</button>
+              {% endif %}
+            </div>
+            {% if current_claim.breakout_claims_grouped and current_claim.breakout_claims_grouped|length > 0 %}
+              {% for group in current_claim.breakout_claims_grouped %}
+                {% if group.group_key != '__ungrouped__' %}
+                  <div class="m-breakout-group-label">{{ group.group_label }}</div>
+                {% endif %}
+                {% for bo in group.claims %}
+                  {% set bo_ex = bo.breakout_status == 'Excavated' %}
+                  <div class="m-breakout-row {% if bo_ex %}excavated{% endif %}"
+                       onclick="{% if bo_ex %}window.location='/claim/{{ bo.slug }}'{% else %}openBreakoutModal('{{ bo.record_id }}', {{ bo | tojson | e }}){% endif %}">
+                    <span class="m-breakout-status-dot {% if bo_ex %}excavated{% else %}pending{% endif %}"></span>
+                    <span class="m-breakout-row-title">{{ bo.title }}</span>
+                    {% if bo.breakout_source_section == 'Dispute' %}
+                      <span class="m-breakout-origin-badge breakout-origin-dispute">Dispute</span>
+                    {% elif bo.breakout_source_section == 'Pushback' %}
+                      <span class="m-breakout-origin-badge breakout-origin-pushback">Pushback</span>
+                    {% endif %}
+                    {% if bo_ex %}<span style="font-size:10px; color:#75c28d;">↗</span>{% endif %}
+                  </div>
+                {% endfor %}
+              {% endfor %}
+            {% else %}
+              <div class="m-breakout-empty">No breakout claims detected.</div>
+            {% endif %}
+          </div>
+        {% endif %}
 
         <!-- Sub-claims -->
         {% if current_claim.subclaims %}
@@ -5082,6 +5172,58 @@ html, body {
               <span class="verdict-value">{{ verdict }}</span>
             </div>
 
+            <!-- BREAKOUT CLAIMS SECTION (DESKTOP) -->
+            {% if session.get('logged_in') if session is defined else logged_in is defined %}
+            {% endif %}
+            {% if current_claim %}
+              <div class="breakout-section" id="breakout-section-desktop">
+                <div class="breakout-section-title">
+                  Breakout Claims
+                  {% if current_claim.breakout_claims_grouped %}
+                    {% set total_bo = namespace(count=0) %}
+                    {% for g in current_claim.breakout_claims_grouped %}{% set total_bo.count = total_bo.count + g.claims|length %}{% endfor %}
+                    <span class="breakout-count-badge">{{ total_bo.count }}</span>
+                  {% endif %}
+                  {% if true_superuser %}
+                    <button type="button" class="breakout-detect-btn" onclick="triggerBreakoutDetect('{{ current_claim.slug }}')">&#9881; Detect</button>
+                  {% endif %}
+                </div>
+
+                {% if current_claim.breakout_claims_grouped and current_claim.breakout_claims_grouped|length > 0 %}
+                  {% for group in current_claim.breakout_claims_grouped %}
+                    <div class="breakout-group">
+                      {% if group.group_key != '__ungrouped__' %}
+                        <div class="breakout-group-label">{{ group.group_label }}</div>
+                      {% endif %}
+                      {% for bo in group.claims %}
+                        {% set bo_excavated = bo.breakout_status == 'Excavated' %}
+                        {% set bo_origin = bo.origin_type or 'Breakout Claim' %}
+                        <div class="breakout-row {% if bo_excavated %}excavated{% endif %}"
+                             onclick="{% if bo_excavated %}window.location='/claim/{{ bo.slug }}'{% else %}openBreakoutModal('{{ bo.record_id }}', {{ bo | tojson | e }}){% endif %}">
+                          <span class="breakout-status-dot {% if bo_excavated %}excavated{% elif bo.breakout_status == 'Excavating' %}excavating{% else %}pending{% endif %}"></span>
+                          <span class="breakout-row-title">{{ bo.title }}</span>
+                          {% if bo.breakout_source_section == 'Dispute' %}
+                            <span class="breakout-origin-badge breakout-origin-dispute">From Dispute</span>
+                          {% elif bo.breakout_source_section == 'Pushback' %}
+                            <span class="breakout-origin-badge breakout-origin-pushback">From Pushback</span>
+                          {% else %}
+                            <span class="breakout-origin-badge breakout-origin-main">Main Claim</span>
+                          {% endif %}
+                          {% if bo_excavated %}
+                            <span style="font-size:11px; color:#75c28d;">Excavated ↗</span>
+                          {% endif %}
+                        </div>
+                      {% endfor %}
+                    </div>
+                  {% endfor %}
+                {% else %}
+                  {% if logged_in %}
+                    <div class="breakout-empty">No breakout claims detected from this excavation.</div>
+                  {% endif %}
+                {% endif %}
+              </div>
+            {% endif %}
+
             {% if current_claim.subclaims %}
               <div>
                 <div class="section-title">Sub-Claims</div>
@@ -5435,6 +5577,41 @@ html, body {
               Pushback
             </button>
           </div>
+        {% endif %}
+
+        <!-- Breakout claims spawned from this dispute/pushback -->
+        {% if current_claim and current_claim.breakout_claims_grouped %}
+          {% set thread_id = dispute.record_id %}
+          {% set thread_breakouts = [] %}
+          {% for g in current_claim.breakout_claims_grouped %}
+            {% for bo in g.claims %}
+              {% if bo.origin_dispute_id == thread_id or bo.origin_pushback_id == thread_id %}
+                {% set _ = thread_breakouts.append(bo) %}
+              {% endif %}
+            {% endfor %}
+          {% endfor %}
+          {% if thread_breakouts|length > 0 %}
+            <div style="margin-top:14px; padding:12px 14px; background:rgba(255,255,255,.02); border:1px solid rgba(201,168,76,.1); border-radius:8px;">
+              <div style="font-family:'Libre Baskerville',Georgia,serif; font-size:9px; letter-spacing:.16em; text-transform:uppercase; color:var(--gold); margin-bottom:10px;">
+                Breakout Claims from this {{ dispute.dispute_type or 'Dispute' }}
+              </div>
+              {% for bo in thread_breakouts %}
+                {% set bo_ex = bo.breakout_status == 'Excavated' %}
+                <div class="breakout-row {% if bo_ex %}excavated{% endif %}"
+                     style="margin-bottom:5px;"
+                     onclick="{% if bo_ex %}window.location='/claim/{{ bo.slug }}'{% else %}openBreakoutModal('{{ bo.record_id }}', {{ bo | tojson | e }}){% endif %}">
+                  <span class="breakout-status-dot {% if bo_ex %}excavated{% else %}pending{% endif %}"></span>
+                  <span class="breakout-row-title">{{ bo.title }}</span>
+                  {% if bo.breakout_source_section == 'Dispute' %}
+                    <span class="breakout-origin-badge breakout-origin-dispute">From Dispute</span>
+                  {% elif bo.breakout_source_section == 'Pushback' %}
+                    <span class="breakout-origin-badge breakout-origin-pushback">From Pushback</span>
+                  {% endif %}
+                  {% if bo_ex %}<span style="font-size:11px; color:#75c28d;">Excavated ↗</span>{% endif %}
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
         {% endif %}
 
         <!-- Escalated notice -->
@@ -7417,6 +7594,148 @@ console.error('Dispute submission failed:', err);
     <div id="claim-reanalyze-status" style="margin-top:12px; font-size:13px; color:var(--text-mid); font-style:italic;"></div>
   </div>
 </div>
+
+<!-- BREAKOUT EXCAVATION MODAL -->
+<div class="breakout-modal-overlay" id="breakoutModal">
+  <div class="breakout-modal">
+    <div class="breakout-modal-title" id="breakout-modal-title">Breakout Claim</div>
+    <div class="breakout-modal-source" id="breakout-modal-source" style="display:none;"></div>
+    <div class="breakout-modal-label">Add context for this excavation (optional)</div>
+    <textarea class="breakout-modal-context" id="breakout-modal-context" placeholder="Any additional background or framing you want the AI to consider..."></textarea>
+    <div class="breakout-allowance-note" id="breakout-allowance-note">
+      Excavating this claim will use 1 of your monthly claim allowances.
+    </div>
+    <div class="breakout-modal-btns">
+      <button type="button" class="breakout-cancel-btn" onclick="closeBreakoutModal()">Cancel</button>
+      <button type="button" class="breakout-confirm-btn" id="breakout-confirm-btn" onclick="confirmBreakoutExcavation()">Excavate This Claim</button>
+    </div>
+    <div class="breakout-modal-status" id="breakout-modal-status"></div>
+  </div>
+</div>
+
+<script>
+  // ── BREAKOUT CLAIMS JS ──
+  var _breakoutRecordId = '';
+  var _breakoutData = null;
+
+  function openBreakoutModal(recordId, boData) {
+    _breakoutRecordId = recordId;
+    _breakoutData = boData || {};
+
+    var title = _breakoutData.title || 'Breakout Claim';
+    var sourceText = _breakoutData.breakout_source_text || '';
+
+    document.getElementById('breakout-modal-title').textContent = title;
+
+    var sourceEl = document.getElementById('breakout-modal-source');
+    if (sourceText) {
+      sourceEl.textContent = sourceText;
+      sourceEl.style.display = 'block';
+    } else {
+      sourceEl.style.display = 'none';
+    }
+
+    document.getElementById('breakout-modal-context').value = '';
+    document.getElementById('breakout-modal-status').textContent = '';
+
+    var confirmBtn = document.getElementById('breakout-confirm-btn');
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = 'Excavate This Claim';
+
+    document.getElementById('breakoutModal').classList.add('visible');
+
+    // Pre-flight lock check
+    fetch('/breakout/lock-check/' + recordId)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.breakout_status === 'Excavated' && data.slug) {
+          closeBreakoutModal();
+          window.location = '/claim/' + data.slug;
+        } else if (data.lock_status === 'Locked') {
+          document.getElementById('breakout-modal-status').textContent = 'This claim is currently being excavated. Try again shortly.';
+          confirmBtn.disabled = true;
+        }
+      })
+      .catch(function() {});
+  }
+
+  function closeBreakoutModal() {
+    document.getElementById('breakoutModal').classList.remove('visible');
+    _breakoutRecordId = '';
+    _breakoutData = null;
+  }
+
+  async function confirmBreakoutExcavation() {
+    if (!_breakoutRecordId) return;
+
+    var confirmBtn = document.getElementById('breakout-confirm-btn');
+    var statusEl = document.getElementById('breakout-modal-status');
+    var userContext = document.getElementById('breakout-modal-context').value.trim();
+
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'Excavating...';
+    statusEl.textContent = 'Running excavation. This may take 30 to 60 seconds...';
+
+    try {
+      var res = await fetch('/breakout/excavate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ record_id: _breakoutRecordId, user_context: userContext })
+      });
+      var data = await res.json();
+
+      if (res.ok && data.ok) {
+        statusEl.textContent = 'Excavation complete. Loading claim...';
+        setTimeout(function() {
+          closeBreakoutModal();
+          window.location = data.redirect_to;
+        }, 1200);
+      } else if (data.redirect_to) {
+        // Already excavated
+        statusEl.textContent = 'Already excavated. Redirecting...';
+        setTimeout(function() { window.location = data.redirect_to; }, 800);
+      } else {
+        statusEl.textContent = 'Error: ' + (data.error || 'Excavation failed.');
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = 'Excavate This Claim';
+      }
+    } catch(err) {
+      statusEl.textContent = 'Error: ' + err.message;
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = 'Excavate This Claim';
+    }
+  }
+
+  async function triggerBreakoutDetect(slug) {
+    if (!slug) return;
+    var btn = event.target;
+    btn.disabled = true;
+    btn.textContent = 'Detecting...';
+    try {
+      var res = await fetch('/breakout/detect/' + slug, { method: 'POST' });
+      var data = await res.json();
+      if (data.ok) {
+        btn.textContent = data.breakouts_created + ' found';
+        if (data.breakouts_created > 0) {
+          setTimeout(function() { window.location.reload(); }, 1000);
+        } else {
+          setTimeout(function() { btn.textContent = '&#9881; Detect'; btn.disabled = false; }, 2500);
+        }
+      } else {
+        btn.textContent = 'Error';
+        btn.disabled = false;
+      }
+    } catch(err) {
+      btn.textContent = 'Error';
+      btn.disabled = false;
+    }
+  }
+
+  // Close breakout modal on overlay click
+  document.getElementById('breakoutModal').addEventListener('click', function(e) {
+    if (e.target === this) closeBreakoutModal();
+  });
+</script>
 
 </body>
 </html>

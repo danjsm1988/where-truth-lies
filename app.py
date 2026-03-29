@@ -481,7 +481,15 @@ def build_claim_context(record):
         "models_diverged": models_diverged,
         "grok_adjudication": grok_adjudication,
         "grok_grounded": grok_grounded,
-        "grok_status": grok_status
+        "grok_status": grok_status,
+        "breakout_claims_grouped": group_breakout_claims(
+            get_breakout_claims_for_parent(record.get("id"))
+        ),
+        "has_breakout_children": fields.get("Has Breakout Children", False),
+        "claim_identifier": fields.get("Claim Identifier", ""),
+        "claim_depth": int(fields.get("Claim Depth", 0) or 0),
+        "origin_type": fields.get("Origin Type", "Original"),
+        "breakout_source_section": fields.get("Breakout Source Section", ""),
     }
 
 
@@ -1524,11 +1532,9 @@ def claim_detail(slug):
         selected_topic="",
         user_disputes=[],
         search_query="",
-        search_results=[]
+        search_results=[],
+        claims_remaining=session.get("claims_remaining", 0)
     )
-
-
-@app.route("/disputes")
 def disputes_page():
     if not session.get("logged_in"):
         return redirect("/login")
@@ -2013,6 +2019,19 @@ Now analyze this claim:
                 if update_resp.status_code == 200:
                     session["claims_remaining"] = new_count
 
+            # Auto-run breakout detection on successful save
+            if airtable_result.get("saved"):
+                try:
+                    saved_record_id = airtable_result.get("record_id")
+                    if saved_record_id:
+                        saved_record = get_claim_by_record_id(saved_record_id)
+                        if saved_record:
+                            bo_count = run_breakout_detection_for_claim(saved_record)
+                            airtable_result["breakouts_detected"] = bo_count
+                            print(f"AUTO BREAKOUT DETECTION: {bo_count} breakouts on {fields.get('URL Slug', '')}", flush=True)
+                except Exception as bo_err:
+                    print(f"AUTO BREAKOUT DETECTION ERROR: {bo_err}", flush=True)
+
     except Exception as e:
         airtable_result = {"saved": False, "error": str(e)}
 
@@ -2157,6 +2176,31 @@ def submit_dispute():
                 else:
                     print("DISPUTE AI UPDATE SUCCESS", flush=True)
 
+        # Run breakout detection on dispute text (fire-and-forget style — don't block response)
+        try:
+            if claim_record:
+                dispute_text_for_breakout = dispute_text
+                combined = dispute_text_for_breakout.strip()
+                if combined:
+                    breakout_candidates = detect_breakout_claims(combined, source_type="Dispute")
+                    claim_fields_snap = claim_record.get("fields", {})
+                    parent_id = claim_record.get("id")
+                    parent_identifier = claim_fields_snap.get("Claim Identifier", "")
+                    root_links = claim_fields_snap.get("Root Claim", [])
+                    root_id = root_links[0] if root_links else parent_id
+                    for b in breakout_candidates:
+                        create_breakout_claim_record(
+                            breakout_data=b,
+                            parent_record_id=parent_id,
+                            root_record_id=root_id,
+                            origin_type="Breakout Dispute",
+                            parent_identifier=parent_identifier,
+                            source_section="Dispute",
+                            origin_dispute_id=dispute_record_id
+                        )
+        except Exception as bo_err:
+            print(f"DISPUTE BREAKOUT DETECTION ERROR: {bo_err}", flush=True)
+
         return jsonify({
             "success": True,
             "dispute_id": dispute_record_id,
@@ -2289,6 +2333,30 @@ def pushback_dispute():
             return jsonify({"error": create_res.text}), 500
 
         new_pushback_record = create_res.json()
+
+        # Run breakout detection on pushback text
+        try:
+            pushback_combined = pushback_text.strip()
+            if pushback_combined and claim_record:
+                breakout_candidates = detect_breakout_claims(pushback_combined, source_type="Pushback")
+                claim_fields_snap = claim_record.get("fields", {})
+                parent_id = claim_record.get("id")
+                parent_identifier = claim_fields_snap.get("Claim Identifier", "")
+                root_links = claim_fields_snap.get("Root Claim", [])
+                root_id = root_links[0] if root_links else parent_id
+                pb_record_id = new_pushback_record.get("id")
+                for b in breakout_candidates:
+                    create_breakout_claim_record(
+                        breakout_data=b,
+                        parent_record_id=parent_id,
+                        root_record_id=root_id,
+                        origin_type="Breakout Pushback",
+                        parent_identifier=parent_identifier,
+                        source_section="Pushback",
+                        origin_pushback_id=pb_record_id
+                    )
+        except Exception as bo_err:
+            print(f"PUSHBACK BREAKOUT DETECTION ERROR: {bo_err}", flush=True)
 
         return jsonify({
             "success": True,
@@ -2845,3 +2913,620 @@ def editor_reanalyze_claim_by_slug(slug):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+# ══════════════════════════════════════════════
+# BREAKOUT CLAIMS SYSTEM
+# ══════════════════════════════════════════════
+
+BREAKOUT_DETECTION_SYSTEM = """You are the Breakout Claim detection engine for Where the Truth Lies.
+
+Your job is to read a body of text (a political claim, dispute, or pushback) and identify statements within it that are themselves distinct, standalone, falsifiable claims — separate from the primary claim being excavated.
+
+A breakout claim must:
+- Be a distinct, falsifiable statement in its own right
+- Be separable from the main claim being analyzed
+- Warrant its own excavation on merit
+
+A breakout claim must NOT be:
+- A restatement of the primary claim
+- A general opinion or value judgment without factual content
+- A vague inference
+- Something already fully covered by the primary claim analysis
+
+When multiple breakout claims share the same underlying topic or subject, group them together under a group key and group label.
+
+Return ONLY valid JSON. No markdown fences. No preamble.
+
+Return this exact structure:
+
+{
+  "has_breakouts": true or false,
+  "breakout_claims": [
+    {
+      "title": "A clear, plain-language title for this breakout claim. One sentence. No hyphens or dashes.",
+      "source_text": "The exact statement from the source text that triggered this breakout.",
+      "group_key": "snake_case_topic_key",
+      "group_label": "Plain Language Topic Label",
+      "confidence": 0.85
+    }
+  ]
+}
+
+If no breakout claims are found, return: {"has_breakouts": false, "breakout_claims": []}
+
+Rules:
+Never use bullet points, dashes, or hyphens in any title field.
+Write titles as plain declarative statements.
+Group related claims under the same group_key and group_label.
+Confidence should be between 0.5 and 1.0. Only include claims above 0.6 confidence.
+Maximum 8 breakout claims per source text.
+"""
+
+
+def detect_breakout_claims(source_text, source_type="Main Claim"):
+    """Run breakout detection on a text using the triple-AI pipeline."""
+    if not source_text or not source_text.strip():
+        return []
+
+    prompt = f"""Analyze this text for breakout claims:
+
+Source type: {source_type}
+Text: {source_text}"""
+
+    result = None
+
+    # Try Grok first (live layer)
+    if grok_client:
+        try:
+            response = grok_client.chat.completions.create(
+                model="grok-3-fast",
+                messages=[
+                    {"role": "system", "content": BREAKOUT_DETECTION_SYSTEM},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=1500,
+                temperature=0
+            )
+            parsed = safe_json_parse(response.choices[0].message.content)
+            if isinstance(parsed, dict) and "has_breakouts" in parsed:
+                result = parsed
+        except Exception as e:
+            print(f"GROK BREAKOUT DETECTION ERROR: {e}", flush=True)
+
+    # Fall back to Claude
+    if not result and anthropic_client:
+        try:
+            response = anthropic_client.messages.create(
+                model="claude-sonnet-4-6",
+                max_tokens=1500,
+                temperature=0,
+                system=BREAKOUT_DETECTION_SYSTEM,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            parsed = safe_json_parse(response.content[0].text)
+            if isinstance(parsed, dict) and "has_breakouts" in parsed:
+                result = parsed
+        except Exception as e:
+            print(f"CLAUDE BREAKOUT DETECTION ERROR: {e}", flush=True)
+
+    # Fall back to OpenAI
+    if not result and openai_client:
+        try:
+            response = openai_client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": BREAKOUT_DETECTION_SYSTEM},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=1500,
+                temperature=0
+            )
+            parsed = safe_json_parse(response.choices[0].message.content)
+            if isinstance(parsed, dict) and "has_breakouts" in parsed:
+                result = parsed
+        except Exception as e:
+            print(f"OPENAI BREAKOUT DETECTION ERROR: {e}", flush=True)
+
+    if not result or not result.get("has_breakouts"):
+        return []
+
+    return result.get("breakout_claims", [])
+
+
+def generate_claim_identifier(parent_identifier, origin_type, child_sequence):
+    """Generate a hierarchical claim identifier."""
+    if not parent_identifier:
+        # Root claim — no identifier yet, will be assigned on backfill
+        return None
+
+    # Determine suffix prefix based on origin type
+    if origin_type == "Breakout Claim":
+        prefix = "C"
+    elif origin_type == "Breakout Dispute":
+        prefix = "D"
+    elif origin_type == "Breakout Pushback":
+        prefix = "P"
+    else:
+        prefix = "C"
+
+    seq = str(child_sequence).zfill(2)
+
+    # If parent has a dot already (grandchild+), append .seq
+    if "." in parent_identifier:
+        return f"{parent_identifier}.{seq}"
+    else:
+        return f"{parent_identifier}.{prefix}{seq}"
+
+
+def get_next_child_sequence(parent_record_id):
+    """Count existing children of a parent to get the next child sequence number."""
+    if not parent_record_id:
+        return 1
+    try:
+        safe_id = escape_airtable_formula_value(parent_record_id)
+        params = {
+            "filterByFormula": f"FIND('{safe_id}', ARRAYJOIN({{Parent Claim}}))",
+            "fields[]": ["Child Sequence"]
+        }
+        records = airtable_get_all(AIRTABLE_TABLE_NAME, params=params)
+        if not records:
+            return 1
+        max_seq = max(
+            int(r.get("fields", {}).get("Child Sequence", 0) or 0)
+            for r in records
+        )
+        return max_seq + 1
+    except Exception as e:
+        print(f"GET NEXT CHILD SEQUENCE ERROR: {e}", flush=True)
+        return 1
+
+
+def create_breakout_claim_record(
+    breakout_data,
+    parent_record_id,
+    root_record_id,
+    origin_type,
+    parent_identifier,
+    source_section,
+    origin_dispute_id=None,
+    origin_pushback_id=None,
+    parent_slug=None
+):
+    """Create a breakout claim row in Airtable with full hierarchy metadata."""
+    title = breakout_data.get("title", "Untitled Breakout Claim")
+    source_text = breakout_data.get("source_text", "")
+    group_key = breakout_data.get("group_key", "")
+    group_label = breakout_data.get("group_label", "")
+    confidence = float(breakout_data.get("confidence", 0.75))
+
+    child_seq = get_next_child_sequence(parent_record_id)
+    claim_identifier = generate_claim_identifier(parent_identifier, origin_type, child_seq)
+    slug = slugify(title)
+    dates = now_dates()
+
+    fields = {
+        "Original Quote": title,
+        "Stripped Claim": title,
+        "Status": "Active",
+        "Published": False,
+        "Human Reviewed": False,
+        "Date": dates["display_date"],
+        "Date Added": dates["short_date"],
+        "Last Updated": dates["short_date"],
+        "URL Slug": slug,
+        "Origin Type": origin_type,
+        "Breakout Source Section": source_section,
+        "Breakout Status": "Pending Excavation",
+        "Breakout Source Text": source_text,
+        "Breakout Group Key": group_key,
+        "Breakout Group Label": group_label,
+        "Breakout Confidence": confidence,
+        "Child Sequence": child_seq,
+        "Claim Depth": 0,  # will calculate below
+        "Lock Status": "Unlocked",
+    }
+
+    if claim_identifier:
+        fields["Claim Identifier"] = claim_identifier
+
+    # Link fields
+    if parent_record_id:
+        fields["Parent Claim"] = [parent_record_id]
+        # Calculate depth from parent
+        try:
+            parent_rec = get_claim_by_record_id(parent_record_id)
+            if parent_rec:
+                parent_depth = int(parent_rec.get("fields", {}).get("Claim Depth", 0) or 0)
+                fields["Claim Depth"] = parent_depth + 1
+        except Exception:
+            fields["Claim Depth"] = 1
+
+    if root_record_id:
+        fields["Root Claim"] = [root_record_id]
+    elif parent_record_id:
+        fields["Root Claim"] = [parent_record_id]
+
+    if origin_dispute_id:
+        fields["Origin Dispute ID"] = origin_dispute_id
+    if origin_pushback_id:
+        fields["Origin Pushback ID"] = origin_pushback_id
+
+    # Create the record
+    try:
+        resp = create_airtable_record(fields)
+        if resp.ok:
+            new_record = resp.json()
+            new_record_id = new_record.get("id")
+
+            # Mark parent as having breakout children
+            if parent_record_id:
+                update_airtable_record(parent_record_id, {"Has Breakout Children": True})
+
+            print(f"BREAKOUT CLAIM CREATED: {claim_identifier or slug} depth={fields['Claim Depth']}", flush=True)
+            return new_record
+        else:
+            print(f"BREAKOUT CLAIM CREATE ERROR: {resp.text}", flush=True)
+            return None
+    except Exception as e:
+        print(f"BREAKOUT CLAIM CREATE EXCEPTION: {e}", flush=True)
+        return None
+
+
+def run_breakout_detection_for_claim(claim_record):
+    """
+    Run full breakout detection on a claim record:
+    main claim body + all disputes + all pushbacks.
+    Creates breakout claim rows for any detected candidates.
+    Returns count of breakouts created.
+    """
+    if not claim_record:
+        return 0
+
+    fields = claim_record.get("fields", {})
+    record_id = claim_record.get("id")
+    slug = fields.get("URL Slug", "")
+    claim_text = fields.get("Original Quote") or fields.get("Stripped Claim") or ""
+    parent_identifier = fields.get("Claim Identifier", "")
+    root_record_id = record_id  # this claim is its own root for direct children
+
+    # Check if root claim has a root claim link itself
+    root_links = fields.get("Root Claim", [])
+    if root_links:
+        root_record_id = root_links[0]
+
+    created_count = 0
+
+    # 1. Detect from main claim body
+    main_breakouts = detect_breakout_claims(claim_text, source_type="Main Claim")
+    for b in main_breakouts:
+        result = create_breakout_claim_record(
+            breakout_data=b,
+            parent_record_id=record_id,
+            root_record_id=root_record_id,
+            origin_type="Breakout Claim",
+            parent_identifier=parent_identifier,
+            source_section="Main Claim"
+        )
+        if result:
+            created_count += 1
+
+    # 2. Detect from disputes and pushbacks
+    if slug:
+        claim_disputes = get_disputes_for_claim(slug)
+        for dispute in claim_disputes:
+            dispute_text = dispute.get("dispute_text", "")
+            response_text = dispute.get("response_text", "")
+            dispute_type = dispute.get("dispute_type", "Initial Dispute")
+            dispute_record_id = dispute.get("record_id", "")
+
+            is_pushback = "pushback" in dispute_type.lower()
+            source_type = "Pushback" if is_pushback else "Dispute"
+            origin_type = "Breakout Pushback" if is_pushback else "Breakout Dispute"
+
+            combined_text = " ".join(filter(None, [dispute_text, response_text]))
+            if not combined_text.strip():
+                continue
+
+            dispute_breakouts = detect_breakout_claims(combined_text, source_type=source_type)
+            for b in dispute_breakouts:
+                result = create_breakout_claim_record(
+                    breakout_data=b,
+                    parent_record_id=record_id,
+                    root_record_id=root_record_id,
+                    origin_type=origin_type,
+                    parent_identifier=parent_identifier,
+                    source_section="Dispute" if not is_pushback else "Pushback",
+                    origin_dispute_id=dispute_record_id if not is_pushback else None,
+                    origin_pushback_id=dispute_record_id if is_pushback else None
+                )
+                if result:
+                    created_count += 1
+
+    return created_count
+
+
+def get_breakout_claims_for_parent(parent_record_id):
+    """Fetch all breakout claims that have this record as parent."""
+    if not parent_record_id:
+        return []
+    try:
+        safe_id = escape_airtable_formula_value(parent_record_id)
+        params = {
+            "filterByFormula": f"FIND('{safe_id}', ARRAYJOIN({{Parent Claim}}))",
+            "sort[0][field]": "Breakout Group Key",
+            "sort[0][direction]": "asc"
+        }
+        records = airtable_get_all(AIRTABLE_TABLE_NAME, params=params)
+        breakouts = []
+        for r in records:
+            f = r.get("fields", {})
+            breakouts.append({
+                "record_id": r.get("id"),
+                "title": f.get("Stripped Claim") or f.get("Original Quote") or "Untitled",
+                "slug": f.get("URL Slug", ""),
+                "claim_identifier": f.get("Claim Identifier", ""),
+                "breakout_status": f.get("Breakout Status", "Pending Excavation"),
+                "breakout_source_section": f.get("Breakout Source Section", "Main Claim"),
+                "breakout_group_key": f.get("Breakout Group Key", ""),
+                "breakout_group_label": f.get("Breakout Group Label", ""),
+                "breakout_source_text": f.get("Breakout Source Text", ""),
+                "origin_type": f.get("Origin Type", "Breakout Claim"),
+                "origin_dispute_id": f.get("Origin Dispute ID", ""),
+                "origin_pushback_id": f.get("Origin Pushback ID", ""),
+                "claim_depth": int(f.get("Claim Depth", 0) or 0),
+                "has_breakout_children": bool(f.get("Has Breakout Children", False)),
+                "overall_verdict": f.get("Overall Verdict", ""),
+                "lock_status": f.get("Lock Status", "Unlocked"),
+            })
+        return breakouts
+    except Exception as e:
+        print(f"GET BREAKOUT CLAIMS ERROR: {e}", flush=True)
+        return []
+
+
+def group_breakout_claims(breakouts):
+    """Group breakout claims by their group_key for display."""
+    groups = {}
+    ungrouped = []
+
+    for b in breakouts:
+        gk = b.get("breakout_group_key", "").strip()
+        if gk:
+            if gk not in groups:
+                groups[gk] = {
+                    "group_key": gk,
+                    "group_label": b.get("breakout_group_label", gk.replace("_", " ").title()),
+                    "claims": []
+                }
+            groups[gk]["claims"].append(b)
+        else:
+            ungrouped.append(b)
+
+    result = list(groups.values())
+    if ungrouped:
+        result.append({
+            "group_key": "__ungrouped__",
+            "group_label": "Other Breakout Claims",
+            "claims": ungrouped
+        })
+
+    return result
+
+
+# ── BREAKOUT ROUTES ──
+
+@app.route("/breakout/detect/<slug>", methods=["POST"])
+def breakout_detect_for_claim(slug):
+    """Manually trigger breakout detection for a claim. Superuser or claim owner."""
+    if not session.get("logged_in"):
+        return jsonify({"error": "Not logged in"}), 401
+
+    record = get_claim_by_slug(slug)
+    if not record:
+        return jsonify({"error": "Claim not found"}), 404
+
+    count = run_breakout_detection_for_claim(record)
+    return jsonify({"ok": True, "breakouts_created": count, "slug": slug})
+
+
+@app.route("/breakout/list/<slug>", methods=["GET"])
+def breakout_list_for_claim(slug):
+    """Return grouped breakout claims for a claim page."""
+    if not session.get("logged_in"):
+        return jsonify({"error": "Not logged in"}), 401
+
+    record = get_claim_by_slug(slug)
+    if not record:
+        return jsonify({"error": "Claim not found"}), 404
+
+    record_id = record.get("id")
+    breakouts = get_breakout_claims_for_parent(record_id)
+    grouped = group_breakout_claims(breakouts)
+
+    return jsonify({
+        "ok": True,
+        "total": len(breakouts),
+        "groups": grouped
+    })
+
+
+@app.route("/breakout/excavate", methods=["POST"])
+def breakout_excavate():
+    """
+    User confirms excavation of a breakout claim.
+    Deducts 1 allowance, locks the record, runs full AI excavation,
+    then runs recursive breakout detection on the new child claim.
+    """
+    if not session.get("logged_in"):
+        return jsonify({"error": "Not logged in"}), 401
+
+    user_info = get_fresh_user_session_info()
+    if not user_info or not user_info.get("active"):
+        return jsonify({"error": "Account unavailable"}), 403
+
+    role = user_info["role"]
+    claims_remaining = user_info["claims_remaining"]
+
+    if role == "standard":
+        return jsonify({"error": "Your account cannot run new excavations."}), 403
+
+    if role == "limited_superuser" and claims_remaining <= 0:
+        return jsonify({"error": "Claim limit reached."}), 403
+
+    data = request.get_json() or {}
+    breakout_record_id = (data.get("record_id") or "").strip()
+    user_context = (data.get("user_context") or "").strip()
+
+    if not breakout_record_id:
+        return jsonify({"error": "Breakout record ID required"}), 400
+
+    # Fetch the breakout claim record
+    breakout_record = get_claim_by_record_id(breakout_record_id)
+    if not breakout_record:
+        return jsonify({"error": "Breakout claim not found"}), 404
+
+    bf = breakout_record.get("fields", {})
+
+    # Check lock
+    lock_status = (bf.get("Lock Status") or "Unlocked").strip()
+    if lock_status == "Locked":
+        lock_expires = (bf.get("Lock Expires At") or "")
+        if lock_expires:
+            try:
+                exp = datetime.fromisoformat(lock_expires.replace("Z", "+00:00"))
+                if datetime.utcnow().replace(tzinfo=exp.tzinfo) < exp:
+                    return jsonify({"error": "This claim is currently being excavated by another user."}), 409
+            except Exception:
+                pass
+
+    # Check status
+    current_status = (bf.get("Breakout Status") or "Pending Excavation").strip()
+    if current_status == "Excavated":
+        existing_slug = bf.get("URL Slug", "")
+        return jsonify({"error": "Already excavated", "redirect_to": f"/claim/{existing_slug}"}), 409
+
+    # Lock the record
+    lock_expiry = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+    update_airtable_record(breakout_record_id, {
+        "Lock Status": "Locked",
+        "Locked By": session.get("username", "Unknown"),
+        "Lock Expires At": lock_expiry,
+        "Breakout Status": "Excavating"
+    })
+
+    # Deduct allowance
+    if role == "limited_superuser":
+        new_count = max(0, claims_remaining - 1)
+        update_user_claims_remaining(user_info["record_id"], new_count)
+        session["claims_remaining"] = new_count
+
+    # Build claim text with user context
+    claim_text = bf.get("Original Quote") or bf.get("Stripped Claim") or ""
+    if user_context:
+        claim_text = f"{claim_text}\n\nAdditional context from user: {user_context}"
+
+    # Save user context
+    if user_context:
+        update_airtable_record(breakout_record_id, {"User Added Context": user_context})
+
+    # Run AI excavation
+    reality_anchor, grok_adjudication = build_reality_anchor_with_grok(claim_text)
+    prompt_text = f"{reality_anchor}\n\nNow analyze this claim:\n\"{claim_text}\"".strip()
+
+    claude_json = {}
+    openai_json = {}
+    try:
+        if anthropic_client:
+            r = anthropic_client.messages.create(
+                model="claude-sonnet-4-6",
+                max_tokens=4000,
+                temperature=0,
+                system=CLAIMLAB_SYSTEM,
+                messages=[{"role": "user", "content": prompt_text}]
+            )
+            claude_json = safe_json_parse(r.content[0].text)
+    except Exception as e:
+        claude_json = {"error": str(e)}
+
+    try:
+        if openai_client:
+            r = openai_client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": CLAIMLAB_SYSTEM},
+                    {"role": "user", "content": prompt_text}
+                ],
+                max_tokens=4000,
+                temperature=0
+            )
+            openai_json = safe_json_parse(r.choices[0].message.content)
+    except Exception as e:
+        openai_json = {"error": str(e)}
+
+    primary = claude_json if "error" not in claude_json else openai_json
+    if "error" in primary:
+        # Unlock on failure
+        update_airtable_record(breakout_record_id, {
+            "Lock Status": "Unlocked",
+            "Breakout Status": "Pending Excavation"
+        })
+        return jsonify({"error": f"AI excavation failed: {primary['error']}"}), 500
+
+    # Build update fields — preserve hierarchy fields, add full excavation
+    existing_fields = bf
+    username = session.get("username", "Unknown")
+    update_fields = extract_primary_record_fields(
+        claim=claim_text,
+        parsed=primary,
+        mode="full",
+        username=username,
+        existing_fields=existing_fields
+    )
+    update_fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
+    update_fields["OpenAI Raw JSON"] = json.dumps(openai_json, ensure_ascii=False)[:100000]
+    if grok_adjudication:
+        update_fields["Grok Raw JSON"] = json.dumps(grok_adjudication, ensure_ascii=False)[:100000]
+    update_fields["Breakout Status"] = "Excavated"
+    update_fields["Lock Status"] = "Unlocked"
+    update_fields["Locked By"] = ""
+    update_fields["Excavation Record ID"] = breakout_record_id
+
+    resp = update_airtable_record(breakout_record_id, update_fields)
+    if not resp.ok:
+        return jsonify({"error": f"Failed to save excavation: {resp.text}"}), 500
+
+    final_slug = update_fields.get("URL Slug", bf.get("URL Slug", ""))
+
+    # Mark parent as having breakout children (already done on create, but ensure)
+    parent_links = bf.get("Parent Claim", [])
+    if parent_links:
+        update_airtable_record(parent_links[0], {"Has Breakout Children": True})
+
+    # Run recursive breakout detection on the newly excavated child
+    refreshed = get_claim_by_record_id(breakout_record_id)
+    if refreshed:
+        child_count = run_breakout_detection_for_claim(refreshed)
+        print(f"RECURSIVE BREAKOUT DETECTION: {child_count} children found on {final_slug}", flush=True)
+
+    return jsonify({
+        "ok": True,
+        "redirect_to": f"/claim/{final_slug}",
+        "slug": final_slug,
+        "verdict": primary.get("Overall Verdict", ""),
+        "claims_remaining": session.get("claims_remaining")
+    })
+
+
+@app.route("/breakout/lock-check/<record_id>", methods=["GET"])
+def breakout_lock_check(record_id):
+    """Quick check if a breakout claim is locked or already excavated."""
+    if not session.get("logged_in"):
+        return jsonify({"error": "Not logged in"}), 401
+    record = get_claim_by_record_id(record_id)
+    if not record:
+        return jsonify({"error": "Not found"}), 404
+    f = record.get("fields", {})
+    return jsonify({
+        "lock_status": f.get("Lock Status", "Unlocked"),
+        "breakout_status": f.get("Breakout Status", "Pending Excavation"),
+        "slug": f.get("URL Slug", "")
+    })
