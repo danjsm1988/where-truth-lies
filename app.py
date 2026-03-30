@@ -408,7 +408,7 @@ def build_claim_context(record):
     claim_slug = fields.get("URL Slug", "")
     claim_disputes = get_disputes_for_claim(claim_slug)
     dispute_threads = group_disputes_into_threads(claim_disputes)
-    title = clean_display_title(fields.get("Original Quote") or fields.get("Stripped Claim") or "Untitled Claim")
+    title = clean_display_title(fields.get("Analyzed Claim") or fields.get("Original Quote") or fields.get("Stripped Claim") or "Untitled Claim")
 
     claude_parsed = safe_json_parse(fields.get("Claude Raw JSON", ""))
     openai_parsed = safe_json_parse(fields.get("OpenAI Raw JSON", ""))
@@ -496,6 +496,7 @@ def build_claim_context(record):
     return {
         "record_id": record.get("id"),
         "slug": fields.get("URL Slug", ""),
+        "original_quote": fields.get("Original Quote", ""),
         "title": title,
         "stripped_claim": stripped_claim,
         "quick_explanation": quick_explanation,
@@ -633,7 +634,6 @@ def extract_primary_record_fields(claim, parsed, mode, username, existing_fields
         if sub_claims:
             fields["Sub-Claims"] = " | ".join([sc.get("claim", "") for sc in sub_claims if sc.get("claim")]).strip()
 
-    # Framing layer fields
     if framing_data and isinstance(framing_data, dict):
         if framing_data.get("primary_claim"):
             fields["Analyzed Claim"] = framing_data["primary_claim"]
@@ -663,7 +663,7 @@ def get_recent_claims(limit=10):
         for record in records[:limit]:
             f = record.get("fields", {})
             recent.append({
-    "title": clean_display_title(f.get("Original Quote") or f.get("Stripped Claim") or "Untitled Claim"),
+    "title": clean_display_title(f.get("Analyzed Claim") or f.get("Original Quote") or f.get("Stripped Claim") or "Untitled Claim"),
     "slug": f.get("URL Slug", ""),
     "date": f.get("Date") or f.get("Date Added", ""),
     "verdict": f.get("Overall Verdict", "Unproven"),
@@ -692,7 +692,7 @@ def get_all_claims():
             f = record.get("fields", {})
             claims.append({
                 "record_id": record.get("id"),
-                "title": clean_display_title(f.get("Original Quote") or f.get("Stripped Claim") or "Untitled Claim"),
+                "title": clean_display_title(f.get("Analyzed Claim") or f.get("Original Quote") or f.get("Stripped Claim") or "Untitled Claim"),
                 "slug": f.get("URL Slug", ""),
                 "date": f.get("Date") or f.get("Date Added", ""),
                 "verdict": f.get("Overall Verdict", "Unproven"),
@@ -1504,7 +1504,7 @@ def get_trending():
         for rec in records:
             f = rec.get("fields", {})
             trending.append({
-                "title": clean_display_title(f.get("Original Quote") or f.get("Stripped Claim") or "Untitled"),
+                "title": clean_display_title(f.get("Analyzed Claim") or f.get("Original Quote") or f.get("Stripped Claim") or "Untitled"),
                 "slug": f.get("URL Slug", ""),
                 "verdict": f.get("Overall Verdict", "Unproven"),
                 "view_count": int(f.get("View Count", 0) or 0)
@@ -2121,21 +2121,16 @@ CRITICAL RULES:
 2. Identify the FOUNDATIONAL PREMISE first — the central animating assertion. Not downstream statements or supporting facts.
 3. Rhetorical slogans and compressed narratives (like "No Kings", "Defund the Police", "Stop the Steal") must be recognized as compressed claims and unpacked to their foundational premise.
 4. Sourced content, press releases, manifestos, and "About" page text must be treated as raw material — extract what the user most likely wants examined.
-5. Preserve the original text exactly — never rewrite it. Produce a clarified version separately.
-6. The system leads. Propose the primary framing. The user may adjust from system-generated options but cannot replace the framing with an unrelated claim.
+5. The system leads. Propose the primary framing. The user may adjust from system-generated options but cannot replace with an unrelated claim.
 
 INPUT TYPES: single_claim, multi_claim, sourced_content, rhetorical_slogan, question, unclear
-
 CONFIDENCE: 0.85+ auto proceed. 0.60-0.84 inline banner. Under 0.60 full modal.
-
-FOUNDATIONAL PREMISE: When input contains a slogan or movement name, identify the fundamental claim the slogan asserts.
-Example: "No Kings protest" -> foundational premise is "Trump is acting with the authority of an unelected ruler"
 
 Return ONLY valid JSON. No markdown. No preamble.
 
 {
   "input_type": "single_claim",
-  "primary_claim": "The foundational premise — what this is ACTUALLY about. One sentence.",
+  "primary_claim": "The foundational premise. One sentence.",
   "clarified_text": "Clean readable version preserving meaning.",
   "alternate_claims": ["Second interpretation", "Third if genuinely distinct"],
   "breakout_candidates": ["Distinct sub-claim that can stand alone"],
@@ -2147,7 +2142,6 @@ Return ONLY valid JSON. No markdown. No preamble.
 
 
 def frame_claim_input(raw_input):
-    """Run pre-excavation framing. Returns structured framing dict."""
     fallback = {
         "input_type": "single_claim", "primary_claim": raw_input,
         "clarified_text": raw_input, "alternate_claims": [],
@@ -3119,7 +3113,7 @@ def editor_claims_list():
                 topic_str = str(topics)
             claims.append({
                 "record_id": r.get("id"),
-                "title": clean_display_title(f.get("Original Quote") or f.get("Stripped Claim") or "Untitled"),
+                "title": clean_display_title(f.get("Analyzed Claim") or f.get("Original Quote") or f.get("Stripped Claim") or "Untitled"),
                 "slug": f.get("URL Slug", ""),
                 "verdict": f.get("Overall Verdict", ""),
                 "topic": topic_str,
@@ -3258,7 +3252,6 @@ def editor_reanalyze_claim_by_slug(slug):
         if not raw_claim_text:
             return jsonify({"error": "No claim text found"}), 400
 
-        # Run framing — use existing Analyzed Claim if present, else re-frame
         existing_analyzed = (claim_fields.get("Analyzed Claim") or "").strip()
         if existing_analyzed:
             claim_text = existing_analyzed
@@ -3281,7 +3274,6 @@ def editor_reanalyze_claim_by_slug(slug):
                 username=editor_username, existing_fields=claim_fields,
                 framing_data=reanalysis_framing
             )
-            # Build new slug from framed primary claim if framing ran
             if reanalysis_framing and reanalysis_framing.get("primary_claim"):
                 new_slug = slugify(reanalysis_framing["primary_claim"])
                 update_fields["URL Slug"] = new_slug
@@ -3311,8 +3303,7 @@ def editor_reanalyze_claim_by_slug(slug):
             "ok": True, "record_id": record_id, "mode": mode,
             "reanalyzed_by": editor_username, "last_reanalyzed": now_str,
             "fields_updated": list(update_fields.keys()),
-            "new_slug": new_slug,
-            "slug_changed": slug_changed,
+            "new_slug": new_slug, "slug_changed": slug_changed,
             "redirect_to": f"/claim/{new_slug}" if slug_changed else None
         })
 
@@ -3702,7 +3693,7 @@ def get_breakout_claims_for_parent(parent_record_id):
             f = r.get("fields", {})
             breakouts.append({
                 "record_id": r.get("id"),
-                "title": clean_display_title(f.get("Stripped Claim") or f.get("Original Quote") or "Untitled"),
+                "title": clean_display_title(f.get("Analyzed Claim") or f.get("Stripped Claim") or f.get("Original Quote") or "Untitled"),
                 "slug": f.get("URL Slug", ""),
                 "claim_identifier": f.get("Claim Identifier", ""),
                 "breakout_status": f.get("Breakout Status", "Pending Excavation"),
