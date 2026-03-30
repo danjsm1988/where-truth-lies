@@ -603,17 +603,13 @@
       transition: background .14s; text-align: left; width: 100%;
     }
     .frame-alt-item:hover { background: rgba(255,255,255,.06); }
-    .frame-alt-item.selected {
-      background: rgba(201,168,76,.1); border-color: rgba(201,168,76,.3);
-    }
+    .frame-alt-item.selected { background: rgba(201,168,76,.1); border-color: rgba(201,168,76,.3); }
     .frame-alt-radio {
       width: 14px; height: 14px; border-radius: 50%;
       border: 1px solid rgba(201,168,76,.4); flex-shrink: 0; margin-top: 2px;
       background: transparent; transition: background .14s;
     }
-    .frame-alt-item.selected .frame-alt-radio {
-      background: var(--gold); border-color: var(--gold);
-    }
+    .frame-alt-item.selected .frame-alt-radio { background: var(--gold); border-color: var(--gold); }
     .frame-alt-text {
       font-family: 'Crimson Text', Georgia, serif;
       font-size: 15px; color: var(--text-light); line-height: 1.45;
@@ -628,8 +624,7 @@
       background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1);
       border-radius: 8px; padding: 10px 12px; color: var(--cream);
       font-family: 'Crimson Text', Georgia, serif; font-size: 15px;
-      line-height: 1.5; resize: vertical; min-height: 60px;
-      margin-bottom: 16px;
+      line-height: 1.5; resize: vertical; min-height: 60px; margin-bottom: 16px;
     }
     .frame-context-input:focus { outline: none; border-color: rgba(201,168,76,.3); }
     .frame-modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
@@ -649,8 +644,6 @@
       color: var(--gold); cursor: pointer; transition: background .15s;
     }
     .frame-proceed-btn:hover { background: rgba(201,168,76,.25); }
-
-    /* Inline framing adjustment banner (0.60-0.84 confidence) */
     .frame-inline-banner {
       display: none; background: rgba(201,168,76,.06);
       border: 1px solid rgba(201,168,76,.2); border-radius: 10px;
@@ -673,6 +666,44 @@
       background: none; border: none; padding: 0;
     }
     .frame-inline-adjust:hover { opacity: 1; }
+
+    /* Original quote popup */
+    .orig-quote-btn {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--text-dim); background: none;
+      border: 1px solid rgba(255,255,255,.09); border-radius: 999px;
+      padding: 3px 10px; cursor: pointer; transition: border-color .14s;
+    }
+    .orig-quote-btn:hover { border-color: rgba(255,255,255,.2); color: var(--text-light); }
+    .orig-quote-popup {
+      display: none; position: fixed; inset: 0; z-index: 9950;
+      background: rgba(0,0,0,.7); align-items: center; justify-content: center;
+    }
+    .orig-quote-popup.visible { display: flex; }
+    .orig-quote-box {
+      background: #0d2035; border: 1px solid rgba(255,255,255,.12);
+      border-radius: 14px; padding: 24px; max-width: 480px; width: 90%;
+      max-height: 70vh; overflow-y: auto;
+    }
+    .orig-quote-label {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px; letter-spacing: .16em; text-transform: uppercase;
+      color: var(--text-dim); margin-bottom: 10px;
+    }
+    .orig-quote-text {
+      font-family: 'Crimson Text', Georgia, serif;
+      font-size: 15px; color: var(--text-light); line-height: 1.6;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .orig-quote-close {
+      margin-top: 16px; display: block; width: 100%;
+      padding: 8px; border-radius: 8px; background: none;
+      border: 1px solid rgba(255,255,255,.1); color: var(--text-mid);
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+      cursor: pointer;
+    }
 
     .gold-btn,
     .gold-btn-mobile {
@@ -4264,6 +4295,15 @@ html, body {
 
 
   <!-- CONFIRMATION MODAL -->
+  <!-- ORIGINAL QUOTE POPUP -->
+  <div class="orig-quote-popup" id="origQuotePopup">
+    <div class="orig-quote-box">
+      <div class="orig-quote-label">Original Quote — Exactly As Submitted</div>
+      <div class="orig-quote-text" id="origQuoteText"></div>
+      <button class="orig-quote-close" onclick="closeOrigQuote()">Close</button>
+    </div>
+  </div>
+
   <!-- PRE-EXCAVATION FRAMING MODAL -->
   <div class="frame-modal-overlay" id="frameModal">
     <div class="frame-modal">
@@ -4304,7 +4344,7 @@ html, body {
   <div class="modal-overlay" id="confirmModal">
     <div class="modal-box">
       <div class="frame-inline-banner" id="frameInlineBanner">
-        <div class="frame-inline-label">We interpreted your claim as</div>
+        <div class="frame-inline-label">Here&#8217;s the main claim we found. Adjust if needed.</div>
         <div class="frame-inline-text" id="frameInlineText"></div>
         <button class="frame-inline-adjust" onclick="openFrameModalFromInline()">Adjust focus &#8594;</button>
       </div>
@@ -5747,7 +5787,12 @@ html, body {
   </button>
 </div>
 
-        <div class="article-eyebrow">ClaimLab<sup class="tm">TM</sup> Excavation</div>
+        <div class="article-eyebrow" style="display:flex; align-items:center; gap:10px;">
+          ClaimLab<sup class="tm">TM</sup> Excavation
+          {% if current_claim.original_quote and current_claim.original_quote != current_claim.title %}
+            <button class="orig-quote-btn" onclick="openOrigQuote({{ current_claim.original_quote | tojson }})">View Original</button>
+          {% endif %}
+        </div>
 <div class="claim-body-wrap" id="claimBodyWrap">
   <h1 class="article-title" id="claimTitle">{{ current_claim.title }}</h1>
   {% if current_claim.stripped_claim and current_claim.stripped_claim != current_claim.title %}
@@ -7245,7 +7290,12 @@ console.error('Dispute submission failed:', err);
         const res = await fetch('/analyze', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ claim, mode: currentMode })
+          body: JSON.stringify({
+            claim: _framingOriginalInput || claim,
+            mode: currentMode,
+            framing_data: _framingData || null,
+            user_context: _pendingUserContext || ''
+          })
         });
 
         const ct = res.headers.get('content-type') || '';
@@ -7354,7 +7404,12 @@ console.error('Dispute submission failed:', err);
         const res = await fetch('/analyze', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ claim, mode: 'full' })
+          body: JSON.stringify({
+            claim: _framingOriginalInput || claim,
+            mode: 'full',
+            framing_data: _framingData || null,
+            user_context: _pendingUserContext || ''
+          })
         });
 
         const ct = res.headers.get('content-type') || '';
@@ -8570,21 +8625,19 @@ console.error('Dispute submission failed:', err);
   });
 
   // ── Pre-Excavation Framing Layer ──
-  var _framingData = null;       // Full /frame-claim response
-  var _framingSelectedClaim = ''; // What the user selected/confirmed
-  var _framingOriginalInput = ''; // Original raw input, preserved exactly
+  var _framingData = null;
+  var _framingSelectedClaim = '';
+  var _framingOriginalInput = '';
 
   function closeFrameModal() {
     document.getElementById('frameModal').classList.remove('visible');
   }
 
   function openFrameModalFromInline() {
-    // Open full modal from inline banner
     document.getElementById('frameModal').classList.add('visible');
   }
 
   function selectFrameAlt(idx) {
-    // User picks an alternate framing
     document.querySelectorAll('.frame-alt-item').forEach(function(el, i) {
       el.classList.toggle('selected', i === idx);
     });
@@ -8597,22 +8650,16 @@ console.error('Dispute submission failed:', err);
   function proceedWithFraming() {
     var context = (document.getElementById('frameContextInput').value || '').trim();
     var claim = _framingSelectedClaim || (_framingData && _framingData.primary_claim) || _framingOriginalInput;
-    // Append user context if provided
-    if (context) {
-      claim = claim + '\n\nAdditional context from user: ' + context;
-    }
     closeFrameModal();
     _pendingClaim = claim;
+    _pendingUserContext = context;
     _pendingSource === 'mobile' ? _showMobileConfirm(claim) : _showDesktopConfirm(claim);
   }
 
   function _buildFrameModal(data) {
-    // Populate the full clarification modal
     document.getElementById('frameModalNote').textContent = data.framing_note || '';
     document.getElementById('framePrimaryText').textContent = data.primary_claim || _framingOriginalInput;
     _framingSelectedClaim = data.primary_claim || _framingOriginalInput;
-
-    // Alternate claims
     var altsSection = document.getElementById('frameAltsSection');
     var altList = document.getElementById('frameAltList');
     altList.innerHTML = '';
@@ -8624,19 +8671,16 @@ console.error('Dispute submission failed:', err);
         btn.className = 'frame-alt-item';
         btn.type = 'button';
         btn.onclick = function() { selectFrameAlt(idx); };
-        btn.innerHTML = '<div class="frame-alt-radio"></div>' +
-                        '<div class="frame-alt-text">' + escHtml(alt) + '</div>';
+        btn.innerHTML = '<div class="frame-alt-radio"></div><div class="frame-alt-text">' + escHtml(alt) + '</div>';
         altList.appendChild(btn);
       });
     } else {
       altsSection.style.display = 'none';
     }
-    // Reset context
     document.getElementById('frameContextInput').value = '';
   }
 
   function _showInlineBanner(data) {
-    // Show lightweight banner in confirm modal for mid-confidence (0.60-0.84)
     var banner = document.getElementById('frameInlineBanner');
     var text = document.getElementById('frameInlineText');
     if (banner && text) {
@@ -8651,7 +8695,6 @@ console.error('Dispute submission failed:', err);
   }
 
   async function frameAndProceed(claim, source) {
-    // Run /frame-claim then decide what to show
     _framingOriginalInput = claim;
     _pendingSource = source;
     try {
@@ -8665,33 +8708,41 @@ console.error('Dispute submission failed:', err);
       var needsClarification = data.needs_clarification === true;
       var primary = data.primary_claim || claim;
       _framingSelectedClaim = primary;
-
       if (needsClarification || score < 0.60) {
-        // Full modal
         _buildFrameModal(data);
         document.getElementById('frameModal').classList.add('visible');
       } else if (score < 0.85) {
-        // Inline banner — proceed to confirm modal but show banner
         _pendingClaim = primary;
         _showInlineBanner(data);
         source === 'mobile' ? _showMobileConfirm(primary) : _showDesktopConfirm(primary);
       } else {
-        // High confidence — proceed silently with clarified claim
         _hideInlineBanner();
         _pendingClaim = primary;
         source === 'mobile' ? _showMobileConfirm(primary) : _showDesktopConfirm(primary);
       }
     } catch(e) {
-      // Frame check failed — proceed with original input
       _pendingClaim = claim;
       _hideInlineBanner();
       source === 'mobile' ? _showMobileConfirm(claim) : _showDesktopConfirm(claim);
     }
   }
 
+  // Original quote popup
+  function openOrigQuote(text) {
+    document.getElementById('origQuoteText').textContent = text;
+    document.getElementById('origQuotePopup').classList.add('visible');
+  }
+  function closeOrigQuote() {
+    document.getElementById('origQuotePopup').classList.remove('visible');
+  }
+  document.addEventListener('click', function(e) {
+    if (e.target === document.getElementById('origQuotePopup')) closeOrigQuote();
+  });
+
   // ── Dedup state and functions ──
   var _pendingClaim = '';
   var _pendingSource = 'desktop';
+  var _pendingUserContext = '';
 
   function closeDupModal() {
     document.getElementById('dupModal').classList.remove('visible');
@@ -8699,7 +8750,6 @@ console.error('Dispute submission failed:', err);
 
   function dupContinueAnyway() {
     closeDupModal();
-    // After dedup passes, run framing layer
     frameAndProceed(_pendingClaim, _pendingSource);
   }
 
@@ -8745,8 +8795,7 @@ console.error('Dispute submission failed:', err);
       }
       dupContinueAnyway();
     } catch(e) {
-      // Dedup failed — go straight to framing
-      frameAndProceed(_pendingClaim, _pendingSource);
+      dupContinueAnyway();
     }
   }
 
