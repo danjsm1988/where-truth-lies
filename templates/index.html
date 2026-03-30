@@ -551,6 +551,129 @@
       border-radius: 10px; padding: 12px 14px; margin-bottom: 8px;
     }
 
+    /* ── Pre-Excavation Framing Layer ── */
+    .frame-modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.75);
+      z-index: 9900; display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity .2s ease;
+    }
+    .frame-modal-overlay.visible { opacity: 1; pointer-events: all; }
+    .frame-modal {
+      background: #0d2035; border: 1px solid rgba(201,168,76,.3);
+      border-radius: 16px; padding: 28px 26px; max-width: 520px; width: 92%;
+      max-height: 85vh; overflow-y: auto; box-shadow: 0 24px 60px rgba(0,0,0,.7);
+    }
+    .frame-modal-kicker {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 8px;
+    }
+    .frame-modal-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 20px; font-weight: 700; color: var(--cream);
+      margin-bottom: 8px; line-height: 1.3;
+    }
+    .frame-modal-note {
+      font-size: 13px; color: var(--text-mid); margin-bottom: 18px;
+      line-height: 1.55; font-style: italic;
+    }
+    .frame-primary-claim {
+      background: rgba(201,168,76,.08); border: 1px solid rgba(201,168,76,.25);
+      border-radius: 12px; padding: 14px 16px; margin-bottom: 14px;
+    }
+    .frame-primary-label {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px; letter-spacing: .15em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 6px;
+    }
+    .frame-primary-text {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 16px; color: var(--cream); line-height: 1.4;
+    }
+    .frame-alts-label {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px; letter-spacing: .15em; text-transform: uppercase;
+      color: var(--text-dim); margin-bottom: 8px;
+    }
+    .frame-alt-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+    .frame-alt-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 10px 12px; border-radius: 9px; cursor: pointer;
+      background: rgba(255,255,255,.025); border: 1px solid rgba(255,255,255,.07);
+      transition: background .14s; text-align: left; width: 100%;
+    }
+    .frame-alt-item:hover { background: rgba(255,255,255,.06); }
+    .frame-alt-item.selected {
+      background: rgba(201,168,76,.1); border-color: rgba(201,168,76,.3);
+    }
+    .frame-alt-radio {
+      width: 14px; height: 14px; border-radius: 50%;
+      border: 1px solid rgba(201,168,76,.4); flex-shrink: 0; margin-top: 2px;
+      background: transparent; transition: background .14s;
+    }
+    .frame-alt-item.selected .frame-alt-radio {
+      background: var(--gold); border-color: var(--gold);
+    }
+    .frame-alt-text {
+      font-family: 'Crimson Text', Georgia, serif;
+      font-size: 15px; color: var(--text-light); line-height: 1.45;
+    }
+    .frame-context-label {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
+      color: var(--text-dim); margin-bottom: 6px;
+    }
+    .frame-context-input {
+      width: 100%; box-sizing: border-box;
+      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1);
+      border-radius: 8px; padding: 10px 12px; color: var(--cream);
+      font-family: 'Crimson Text', Georgia, serif; font-size: 15px;
+      line-height: 1.5; resize: vertical; min-height: 60px;
+      margin-bottom: 16px;
+    }
+    .frame-context-input:focus { outline: none; border-color: rgba(201,168,76,.3); }
+    .frame-modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
+    .frame-cancel-btn {
+      padding: 9px 18px; border-radius: 999px; background: none;
+      border: 1px solid rgba(255,255,255,.12);
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--text-mid); cursor: pointer; transition: border-color .15s;
+    }
+    .frame-cancel-btn:hover { border-color: rgba(255,255,255,.25); }
+    .frame-proceed-btn {
+      padding: 9px 20px; border-radius: 999px;
+      background: rgba(201,168,76,.15); border: 1px solid rgba(201,168,76,.35);
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--gold); cursor: pointer; transition: background .15s;
+    }
+    .frame-proceed-btn:hover { background: rgba(201,168,76,.25); }
+
+    /* Inline framing adjustment banner (0.60-0.84 confidence) */
+    .frame-inline-banner {
+      display: none; background: rgba(201,168,76,.06);
+      border: 1px solid rgba(201,168,76,.2); border-radius: 10px;
+      padding: 12px 14px; margin-bottom: 12px;
+    }
+    .frame-inline-banner.visible { display: block; }
+    .frame-inline-label {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 6px;
+    }
+    .frame-inline-text {
+      font-family: 'Crimson Text', Georgia, serif;
+      font-size: 14px; color: var(--text-light); line-height: 1.5; margin-bottom: 8px;
+    }
+    .frame-inline-adjust {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
+      color: var(--gold); cursor: pointer; opacity: .75;
+      background: none; border: none; padding: 0;
+    }
+    .frame-inline-adjust:hover { opacity: 1; }
+
     .gold-btn,
     .gold-btn-mobile {
       appearance: none;
@@ -4141,6 +4264,29 @@ html, body {
 
 
   <!-- CONFIRMATION MODAL -->
+  <!-- PRE-EXCAVATION FRAMING MODAL -->
+  <div class="frame-modal-overlay" id="frameModal">
+    <div class="frame-modal">
+      <div class="frame-modal-kicker">ClaimLab&#8482; Claim Framing</div>
+      <div class="frame-modal-title">We found a few ways to read this.</div>
+      <div class="frame-modal-note" id="frameModalNote"></div>
+      <div class="frame-primary-claim" id="framePrimary">
+        <div class="frame-primary-label">Most Likely Focus</div>
+        <div class="frame-primary-text" id="framePrimaryText"></div>
+      </div>
+      <div id="frameAltsSection" style="display:none;">
+        <div class="frame-alts-label">Other angles we found</div>
+        <div class="frame-alt-list" id="frameAltList"></div>
+      </div>
+      <div class="frame-context-label">Want to add context? (optional)</div>
+      <textarea class="frame-context-input" id="frameContextInput" placeholder="Add any details that would help us focus the analysis..."></textarea>
+      <div class="frame-modal-btns">
+        <button class="frame-cancel-btn" onclick="closeFrameModal()">Cancel</button>
+        <button class="frame-proceed-btn" onclick="proceedWithFraming()">Analyze This Claim &#8594;</button>
+      </div>
+    </div>
+  </div>
+
   <!-- DUPLICATE / SIMILAR CLAIMS MODAL -->
   <div class="dup-modal-overlay" id="dupModal">
     <div class="dup-modal">
@@ -4157,6 +4303,11 @@ html, body {
 
   <div class="modal-overlay" id="confirmModal">
     <div class="modal-box">
+      <div class="frame-inline-banner" id="frameInlineBanner">
+        <div class="frame-inline-label">We interpreted your claim as</div>
+        <div class="frame-inline-text" id="frameInlineText"></div>
+        <button class="frame-inline-adjust" onclick="openFrameModalFromInline()">Adjust focus &#8594;</button>
+      </div>
       <div class="modal-kicker">Confirm Excavation</div>
       <div class="modal-title" id="modalTitle">Run Quick Claim?</div>
       <div class="modal-body" id="modalBody">You will get the verdict, a short explanation, and sub-claims. You can still edit the wording before continuing.</div>
@@ -6623,6 +6774,7 @@ html, body {
 
     function closeModal() {
       document.getElementById('confirmModal').classList.remove('visible');
+      _hideInlineBanner();
     }
 
     function switchToQuickFromModal() {
@@ -8417,6 +8569,128 @@ console.error('Dispute submission failed:', err);
     }
   });
 
+  // ── Pre-Excavation Framing Layer ──
+  var _framingData = null;       // Full /frame-claim response
+  var _framingSelectedClaim = ''; // What the user selected/confirmed
+  var _framingOriginalInput = ''; // Original raw input, preserved exactly
+
+  function closeFrameModal() {
+    document.getElementById('frameModal').classList.remove('visible');
+  }
+
+  function openFrameModalFromInline() {
+    // Open full modal from inline banner
+    document.getElementById('frameModal').classList.add('visible');
+  }
+
+  function selectFrameAlt(idx) {
+    // User picks an alternate framing
+    document.querySelectorAll('.frame-alt-item').forEach(function(el, i) {
+      el.classList.toggle('selected', i === idx);
+    });
+    if (_framingData && _framingData.alternate_claims && _framingData.alternate_claims[idx] !== undefined) {
+      _framingSelectedClaim = _framingData.alternate_claims[idx];
+      document.getElementById('framePrimaryText').textContent = _framingSelectedClaim;
+    }
+  }
+
+  function proceedWithFraming() {
+    var context = (document.getElementById('frameContextInput').value || '').trim();
+    var claim = _framingSelectedClaim || (_framingData && _framingData.primary_claim) || _framingOriginalInput;
+    // Append user context if provided
+    if (context) {
+      claim = claim + '
+
+Additional context from user: ' + context;
+    }
+    closeFrameModal();
+    _pendingClaim = claim;
+    _pendingSource === 'mobile' ? _showMobileConfirm(claim) : _showDesktopConfirm(claim);
+  }
+
+  function _buildFrameModal(data) {
+    // Populate the full clarification modal
+    document.getElementById('frameModalNote').textContent = data.framing_note || '';
+    document.getElementById('framePrimaryText').textContent = data.primary_claim || _framingOriginalInput;
+    _framingSelectedClaim = data.primary_claim || _framingOriginalInput;
+
+    // Alternate claims
+    var altsSection = document.getElementById('frameAltsSection');
+    var altList = document.getElementById('frameAltList');
+    altList.innerHTML = '';
+    var alts = (data.alternate_claims || []).filter(function(a) { return a && a.trim(); });
+    if (alts.length > 0) {
+      altsSection.style.display = '';
+      alts.forEach(function(alt, idx) {
+        var btn = document.createElement('button');
+        btn.className = 'frame-alt-item';
+        btn.type = 'button';
+        btn.onclick = function() { selectFrameAlt(idx); };
+        btn.innerHTML = '<div class="frame-alt-radio"></div>' +
+                        '<div class="frame-alt-text">' + escHtml(alt) + '</div>';
+        altList.appendChild(btn);
+      });
+    } else {
+      altsSection.style.display = 'none';
+    }
+    // Reset context
+    document.getElementById('frameContextInput').value = '';
+  }
+
+  function _showInlineBanner(data) {
+    // Show lightweight banner in confirm modal for mid-confidence (0.60-0.84)
+    var banner = document.getElementById('frameInlineBanner');
+    var text = document.getElementById('frameInlineText');
+    if (banner && text) {
+      text.textContent = data.clarified_text || data.primary_claim || '';
+      banner.classList.add('visible');
+    }
+  }
+
+  function _hideInlineBanner() {
+    var banner = document.getElementById('frameInlineBanner');
+    if (banner) banner.classList.remove('visible');
+  }
+
+  async function frameAndProceed(claim, source) {
+    // Run /frame-claim then decide what to show
+    _framingOriginalInput = claim;
+    _pendingSource = source;
+    try {
+      var res = await fetch('/frame-claim', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({claim: claim})
+      });
+      var data = await res.json();
+      _framingData = data;
+      var score = parseFloat(data.confidence_score || 0.9);
+      var needsClarification = data.needs_clarification === true;
+      var primary = data.primary_claim || claim;
+      _framingSelectedClaim = primary;
+
+      if (needsClarification || score < 0.60) {
+        // Full modal
+        _buildFrameModal(data);
+        document.getElementById('frameModal').classList.add('visible');
+      } else if (score < 0.85) {
+        // Inline banner — proceed to confirm modal but show banner
+        _pendingClaim = primary;
+        _showInlineBanner(data);
+        source === 'mobile' ? _showMobileConfirm(primary) : _showDesktopConfirm(primary);
+      } else {
+        // High confidence — proceed silently with clarified claim
+        _hideInlineBanner();
+        _pendingClaim = primary;
+        source === 'mobile' ? _showMobileConfirm(primary) : _showDesktopConfirm(primary);
+      }
+    } catch(e) {
+      // Frame check failed — proceed with original input
+      _pendingClaim = claim;
+      _hideInlineBanner();
+      source === 'mobile' ? _showMobileConfirm(claim) : _showDesktopConfirm(claim);
+    }
+  }
+
   // ── Dedup state and functions ──
   var _pendingClaim = '';
   var _pendingSource = 'desktop';
@@ -8427,7 +8701,8 @@ console.error('Dispute submission failed:', err);
 
   function dupContinueAnyway() {
     closeDupModal();
-    _pendingSource === 'mobile' ? _showMobileConfirm(_pendingClaim) : _showDesktopConfirm(_pendingClaim);
+    // After dedup passes, run framing layer
+    frameAndProceed(_pendingClaim, _pendingSource);
   }
 
   async function checkDuplicateThen(claim, source) {
@@ -8472,7 +8747,8 @@ console.error('Dispute submission failed:', err);
       }
       dupContinueAnyway();
     } catch(e) {
-      dupContinueAnyway();
+      // Dedup failed — go straight to framing
+      frameAndProceed(_pendingClaim, _pendingSource);
     }
   }
 

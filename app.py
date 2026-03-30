@@ -2079,6 +2079,115 @@ def check_duplicate():
     return jsonify(result), 200
 
 
+FRAME_CLAIM_PROMPT = """You are a pre-excavation claim framing engine for Where the Truth Lies, a political intelligence platform.
+
+Your job is to analyze a user's raw input BEFORE full excavation begins. You must understand what the user actually intends to have analyzed — not just what they literally typed.
+
+CRITICAL RULES:
+1. Evaluate claims, not writing ability. Slang, ebonics, dyslexic spelling, incomplete sentences, and informal grammar must all be interpreted for intent.
+2. Identify the FOUNDATIONAL PREMISE first — the central animating assertion. Not downstream statements or supporting facts.
+3. Rhetorical slogans and compressed narratives (like "No Kings", "Defund the Police", "Stop the Steal") must be recognized as compressed claims and unpacked to their foundational premise.
+4. Sourced content, press releases, manifestos, and "About" page text must be treated as raw material — extract what the user most likely wants examined.
+5. Preserve the original text exactly — never rewrite it. Produce a clarified version separately.
+6. The system leads. Propose the primary framing. The user may adjust from system-generated options but cannot replace the framing with an unrelated claim.
+
+INPUT TYPES:
+- single_claim: One clear assertion
+- multi_claim: Multiple distinct claims in one input
+- sourced_content: Press release, article excerpt, manifesto, "About" page, speech text
+- rhetorical_slogan: Compressed narrative, protest slogan, political shorthand
+- question: User is asking rather than asserting
+- unclear: Cannot determine intent with confidence
+
+CONFIDENCE SCORING:
+- 0.85-1.0: Single clear claim, obvious intent → auto proceed
+- 0.60-0.84: Multiple interpretations possible, one dominant → show inline adjustment banner
+- 0.00-0.59: Genuinely ambiguous, multiple equally plausible claims → show full clarification modal
+
+FOUNDATIONAL PREMISE DETECTION:
+When input contains a slogan or movement name, identify what fundamental claim about reality the slogan asserts.
+Example: "No Kings protest — we mobilized millions" → foundational premise is "Trump is acting with the authority of an unelected ruler, justifying comparison to monarchy"
+Example: "Defund the police" → foundational premise is "Police departments should have their funding reduced or eliminated"
+
+Return ONLY valid JSON. No markdown. No preamble.
+
+{
+  "input_type": "single_claim | multi_claim | sourced_content | rhetorical_slogan | question | unclear",
+  "primary_claim": "The foundational premise or focal claim — what this is ACTUALLY about. One sentence. Plain language. This is what gets analyzed.",
+  "clarified_text": "A clean, readable version of the primary claim. Fixes spelling, normalizes dialect, removes rhetoric while preserving meaning. If already clear, same as primary_claim.",
+  "alternate_claims": [
+    "A second plausible interpretation or focal angle — one sentence",
+    "A third plausible interpretation if genuinely distinct — one sentence"
+  ],
+  "breakout_candidates": [
+    "A distinct sub-claim that can be independently analyzed",
+    "Another distinct sub-claim"
+  ],
+  "confidence_score": 0.0,
+  "needs_clarification": false,
+  "framing_note": "One sentence explaining why you chose this primary claim over alternatives, or what the key ambiguity is. Plain language."
+}
+
+IMPORTANT: alternate_claims should only include genuinely distinct angles, not rewordings. breakout_candidates should only include claims that can STAND ALONE — if they cannot be analyzed without the primary claim, they do not qualify.
+"""
+
+
+def frame_claim_input(raw_input):
+    """Run pre-excavation framing on raw user input. Returns structured framing dict."""
+    if not raw_input or not anthropic_client:
+        return {
+            "input_type": "single_claim",
+            "primary_claim": raw_input,
+            "clarified_text": raw_input,
+            "alternate_claims": [],
+            "breakout_candidates": [],
+            "confidence_score": 0.9,
+            "needs_clarification": False,
+            "framing_note": ""
+        }
+    try:
+        response = anthropic_client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=800,
+            temperature=0,
+            system=FRAME_CLAIM_PROMPT,
+            messages=[{"role": "user", "content": f"Frame this input:\n\n{raw_input}"}]
+        )
+        result = safe_json_parse(response.content[0].text)
+        if not isinstance(result, dict) or "primary_claim" not in result:
+            raise ValueError("Invalid framing response")
+        # Enforce needs_clarification from score if not explicitly set
+        score = float(result.get("confidence_score", 0.9))
+        if "needs_clarification" not in result:
+            result["needs_clarification"] = score < 0.60
+        return result
+    except Exception as e:
+        print(f"FRAME CLAIM ERROR: {e}", flush=True)
+        return {
+            "input_type": "single_claim",
+            "primary_claim": raw_input,
+            "clarified_text": raw_input,
+            "alternate_claims": [],
+            "breakout_candidates": [],
+            "confidence_score": 0.9,
+            "needs_clarification": False,
+            "framing_note": ""
+        }
+
+
+@app.route("/frame-claim", methods=["POST"])
+def frame_claim():
+    """Pre-excavation claim framing. Runs before /analyze."""
+    if not session.get("logged_in"):
+        return jsonify({"error": "Not logged in"}), 401
+    data = request.get_json() or {}
+    raw_input = (data.get("claim") or "").strip()
+    if not raw_input:
+        return jsonify({"error": "Claim required"}), 400
+    result = frame_claim_input(raw_input)
+    return jsonify(result), 200
+
+
 @app.route("/analyze", methods=["POST"])
 def analyze():
     if not session.get("logged_in"):
