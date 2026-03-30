@@ -87,7 +87,7 @@ Always return this exact JSON structure:
 
 {
   "Stripped Claim": "Rewrite the claim in plain, accessible language that any ordinary person can understand immediately. Remove emotional rhetoric, dramatic framing, and inflammatory decoration. Do not substitute or sanitize specific terms — if the original claim uses a particular word or phrase, preserve it unless it is purely emotional amplification with no factual content. One sentence only.",
-  "Quick Explanation": "Provide a neutral 1 to 2 sentence explanation using this structure: This claim is [verdict] because [core factual reality]. It [overstates, misrepresents, or confuses] [key distinction]. Plain language. No jargon. No sarcasm. No political tone. Not a full analytical paragraph.",
+  "Quick Explanation": "Write exactly four labeled lines. Each line starts with its label followed by a colon. Line 1 — ONE-LINE READ: One sentence with deliberate tension between two truths. Do not summarize. Make the reader feel they almost understand but need to go deeper. Example shape: The claim is grounded in real evidence, but its strongest version goes further than the current record supports. Line 2 — WHAT HOLDS UP: One sentence on what the record actually supports. Line 3 — WHAT IS DISPUTED: One sentence on what remains contested or unsupported. Line 4 — WHERE AGREEMENT EXISTS: One sentence identifying narrow genuine common ground, or state plainly that none exists. No bullet points. No dashes. Plain language only. No preamble before the first label.",
   "Speaker": "Who made the claim, or Unknown if not specified.",
   "Topic": "Exactly one of: Iran War, Energy, Healthcare, Social Security, Medicare, Medicaid, Defense, Military, Elections, Economy, Immigration, Foreign Policy, Crime, Gender Issues, Constitutional Rights, Education, Other",
   "Sub Claims": [
@@ -401,6 +401,18 @@ def build_claim_context(record):
         and bool(openai_verdict)
         and claude_verdict.strip().lower() != openai_verdict.strip().lower()
     )
+    # Also check stored divergence flag and note
+    stored_diverged = fields.get("Models Diverged", False)
+    divergence_note = (fields.get("Model Divergence Note") or "").strip()
+    # Use stored flag if available (more reliable than re-comparing)
+    if stored_diverged:
+        models_diverged = True
+
+    # OpenAI challenge layer data
+    openai_challenge = safe_json_parse(fields.get("OpenAI Challenge JSON", "{}") or "{}")
+    where_claude_wrong = (openai_challenge.get("where_claude_is_most_likely_wrong") or "").strip()
+    what_claude_missed = (openai_challenge.get("what_claude_missed") or "").strip()
+    strongest_alternative = (openai_challenge.get("strongest_alternative_interpretation") or "").strip()
 
     grok_grounded = False
     grok_status = "not_run"
@@ -501,9 +513,17 @@ def build_claim_context(record):
         "claude_verdict": claude_verdict,
         "openai_verdict": openai_verdict,
         "models_diverged": models_diverged,
+        "divergence_note": divergence_note,
+        "where_claude_wrong": where_claude_wrong,
+        "what_claude_missed": what_claude_missed,
+        "strongest_alternative": strongest_alternative,
         "grok_adjudication": grok_adjudication,
         "grok_grounded": grok_grounded,
         "grok_status": grok_status,
+        "confirmed_current_facts": (grok_adjudication or {}).get("confirmed_current_facts") or [],
+        "contested_current_facts": (grok_adjudication or {}).get("contested_current_facts") or [],
+        "current_narratives": (grok_adjudication or {}).get("current_narratives") or [],
+        "view_count": int(fields.get("View Count", 0) or 0),
         "breakout_claims_grouped": _safe_get_breakout_grouped(record.get("id"), fields),
         "has_breakout_children": fields.get("Has Breakout Children", False),
         "claim_identifier": fields.get("Claim Identifier", ""),
@@ -1275,6 +1295,10 @@ Search X and the web for the claim. Then return this exact structure:
   "attribution_status": "verified" or "unverified" or "misattributed" or "no_attribution" or "not_applicable",
   "risk_level": "high" or "medium" or "low",
   "ground_truth_summary": "1-2 sentences. What did you actually find? Be direct. If you found nothing, say so.",
+  "confirmed_current_facts": ["A specific fact confirmed by live sources right now.", "Another confirmed fact."],
+  "contested_current_facts": ["A specific point that live sources show is disputed or unclear right now.", "Another contested point."],
+  "current_narratives": ["The dominant narrative currently circulating around this claim.", "An opposing or alternative narrative currently in circulation."],
+  "recent_developments": ["A specific recent development relevant to this claim.", "Another recent development if applicable."],
   "established_facts": ["Fact 1 confirmed by sources.", "Fact 2 confirmed by sources."],
   "contested_points": ["Point 1 that remains unverified or disputed.", "Point 2 still unclear."],
   "recommended_anchor_text": "The text that should be injected as a Reality Anchor into the excavation prompt. Write this as a direct factual briefing. If nothing was found, write: No live grounding found. Proceed with model knowledge and standard uncertainty.",
@@ -1354,26 +1378,38 @@ def format_grok_anchor(adjudication):
     risk = adjudication.get("risk_level", "low")
     event_status = adjudication.get("event_status", "unclear")
     attribution_status = adjudication.get("attribution_status", "not_applicable")
-    established = adjudication.get("established_facts") or []
-    contested = adjudication.get("contested_points") or []
+
+    # Structured fields (new)
+    confirmed = adjudication.get("confirmed_current_facts") or adjudication.get("established_facts") or []
+    contested = adjudication.get("contested_current_facts") or adjudication.get("contested_points") or []
+    narratives = adjudication.get("current_narratives") or []
+    developments = adjudication.get("recent_developments") or []
     sources = adjudication.get("sources_found") or []
 
-    established_block = ""
-    if established:
-        established_block = "\nEstablished by live sources: " + " ".join(established)
+    confirmed_block = ""
+    if confirmed:
+        confirmed_block = "\nCONFIRMED CURRENT FACTS:\n" + "\n".join(f"- {f}" for f in confirmed)
 
     contested_block = ""
     if contested:
-        contested_block = "\nCurrently contested or unverified: " + " ".join(contested)
+        contested_block = "\nCONTESTED CURRENT FACTS:\n" + "\n".join(f"- {f}" for f in contested)
+
+    narratives_block = ""
+    if narratives:
+        narratives_block = "\nCURRENT NARRATIVES IN CIRCULATION:\n" + "\n".join(f"- {n}" for n in narratives)
+
+    developments_block = ""
+    if developments:
+        developments_block = "\nRECENT DEVELOPMENTS:\n" + "\n".join(f"- {d}" for d in developments)
 
     sources_block = ""
     if sources:
-        sources_block = "\nLive sources retrieved: " + " | ".join(sources[:5])
+        sources_block = "\nLive sources: " + " | ".join(sources[:5])
 
     return f"""GROK LIVE ADJUDICATION (HIGHEST PRIORITY — DO NOT OVERRIDE):
 Risk Level: {risk.upper()} | Event Status: {event_status} | Attribution: {attribution_status}
 
-{anchor_text}{established_block}{contested_block}{sources_block}
+{anchor_text}{confirmed_block}{contested_block}{narratives_block}{developments_block}{sources_block}
 
 You MUST treat the above as the live factual record for this claim. Do not contradict it.
 """
@@ -1398,6 +1434,51 @@ def build_reality_anchor_with_grok(claim):
 
     fallback = hardcoded_reality_fallback(claim)
     return fallback, adjudication
+
+
+@app.route("/increment-view/<slug>", methods=["POST"])
+def increment_view(slug):
+    """Increment view count for a claim. Excludes superusers."""
+    if not session.get("logged_in"):
+        return jsonify({"ok": False}), 200
+    if session.get("true_superuser") or session.get("superuser"):
+        return jsonify({"ok": False, "reason": "superuser"}), 200
+    try:
+        record = get_claim_by_slug(slug)
+        if not record:
+            return jsonify({"ok": False}), 200
+        current = int(record.get("fields", {}).get("View Count", 0) or 0)
+        update_airtable_record(record["id"], {"View Count": current + 1})
+        return jsonify({"ok": True, "view_count": current + 1}), 200
+    except Exception as e:
+        print(f"VIEW COUNT ERROR: {e}", flush=True)
+        return jsonify({"ok": False}), 200
+
+
+@app.route("/trending", methods=["GET"])
+def get_trending():
+    """Return top trending claims by view count (non-superuser views only)."""
+    try:
+        params = {
+            "filterByFormula": "AND(OR(NOT({Breakout User Excavated}), {Breakout User Excavated}!='No'), {View Count}>0)",
+            "sort[0][field]": "View Count",
+            "sort[0][direction]": "desc",
+            "maxRecords": 10,
+            "fields[]": ["Original Quote", "Stripped Claim", "URL Slug", "Overall Verdict", "View Count", "Date Added"]
+        }
+        records = airtable_get_all(AIRTABLE_TABLE_NAME, params=params)
+        trending = []
+        for rec in records:
+            f = rec.get("fields", {})
+            trending.append({
+                "title": clean_display_title(f.get("Original Quote") or f.get("Stripped Claim") or "Untitled"),
+                "slug": f.get("URL Slug", ""),
+                "verdict": f.get("Overall Verdict", "Unproven"),
+                "view_count": int(f.get("View Count", 0) or 0)
+            })
+        return jsonify({"trending": trending}), 200
+    except Exception as e:
+        return jsonify({"trending": [], "error": str(e)}), 200
 
 
 @app.route("/health")
@@ -1913,10 +1994,10 @@ def profile_page():
 
 def normalize_claim_text(text):
     """Normalize claim for comparison: lowercase, strip punctuation, collapse whitespace."""
-    import re
+    import re as _re
     text = text.lower().strip()
-    text = re.sub(r'[^\w\s]', ' ', text)
-    text = re.sub(r'\s+', ' ', text).strip()
+    text = _re.sub(r'[^\w\s]', ' ', text)
+    text = _re.sub(r'\s+', ' ', text).strip()
     return text
 
 
@@ -1987,7 +2068,7 @@ def find_duplicate_and_similar_claims(claim_text, threshold=0.30, max_similar=4)
 
 @app.route('/check-duplicate', methods=['POST'])
 def check_duplicate():
-    """Pre-creation duplicate/similar check — called before /analyze."""
+    """Pre-creation duplicate/similar check — runs before /analyze."""
     if not session.get('logged_in'):
         return jsonify({'error': 'Not logged in'}), 401
     data = request.get_json() or {}
@@ -2055,22 +2136,85 @@ Now analyze this claim:
     except Exception as e:
         claude_json = {"error": str(e)}
 
+    # ── OpenAI Challenge Layer ──
+    # OpenAI reviews Claude's output + Grok context to find where Claude may be wrong
+    openai_challenge = {}
     try:
-        if openai_client:
-            openai_response = openai_client.chat.completions.create(
+        if openai_client and "error" not in claude_json:
+            grok_context_block = ""
+            if grok_adjudication and isinstance(grok_adjudication, dict):
+                confirmed = grok_adjudication.get("confirmed_current_facts") or grok_adjudication.get("established_facts") or []
+                contested = grok_adjudication.get("contested_current_facts") or grok_adjudication.get("contested_points") or []
+                narratives = grok_adjudication.get("current_narratives") or []
+                developments = grok_adjudication.get("recent_developments") or []
+                if confirmed or contested or narratives or developments:
+                    grok_context_block = "LIVE GROK CONTEXT:\n"
+                    if confirmed: grok_context_block += "Confirmed: " + "; ".join(confirmed[:3]) + "\n"
+                    if contested: grok_context_block += "Contested: " + "; ".join(contested[:3]) + "\n"
+                    if narratives: grok_context_block += "Narratives: " + "; ".join(narratives[:2]) + "\n"
+                    if developments: grok_context_block += "Recent: " + "; ".join(developments[:2]) + "\n"
+
+            challenge_prompt = f"""You are a critical review layer for a political intelligence platform.
+
+Claude has produced the following analysis of this claim:
+CLAIM: "{claim}"
+
+CLAUDE'S VERDICT: {claude_json.get("Overall Verdict", "Unknown")}
+CLAUDE'S ONE-LINE READ: {claude_json.get("Quick Explanation", "")[:500]}
+CLAUDE'S DIRECT FACTS: {claude_json.get("Direct Facts", "")[:500]}
+CLAUDE'S COMMON GROUND: {claude_json.get("Common Ground", "")[:300]}
+
+{grok_context_block}
+Your job is to challenge Claude's analysis. Answer these four questions in JSON only. No markdown fences. No preamble.
+
+Return exactly this structure:
+{{
+  "where_claude_is_most_likely_wrong": "One sentence identifying the single most likely error or overconfidence in Claude's analysis.",
+  "what_claude_overstated": "One sentence on what Claude leaned too hard on.",
+  "what_claude_missed": "One sentence on a meaningful angle, fact, or interpretation Claude did not address.",
+  "strongest_alternative_interpretation": "One sentence describing the most credible alternative reading of this claim.",
+  "openai_verdict": "Exactly one of: True, Mostly True, Substantially True, Plausible/Mixed, Contested, Exaggerated, Misleading, Unproven, False",
+  "divergence_note": "If your verdict differs from Claude's, explain the core disagreement in one sentence. If aligned, write: Aligned with Claude's assessment."
+}}"""
+
+            challenge_response = openai_client.chat.completions.create(
                 model="gpt-4o-mini",
-                messages=[
-                    {"role": "system", "content": CLAIMLAB_SYSTEM},
-                    {"role": "user", "content": prompt_text}
-                ],
-                max_tokens=4000,
+                messages=[{"role": "user", "content": challenge_prompt}],
+                max_tokens=800,
                 temperature=0
             )
-            openai_json = safe_json_parse(openai_response.choices[0].message.content)
-        else:
+            openai_challenge = safe_json_parse(challenge_response.choices[0].message.content)
+            openai_json = openai_challenge  # store challenge as openai_json for compatibility
+        elif not openai_client:
             openai_json = {"error": "OpenAI not configured"}
+            openai_challenge = {}
+        else:
+            # Claude failed — run OpenAI as primary instead
+            try:
+                openai_response = openai_client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": CLAIMLAB_SYSTEM},
+                        {"role": "user", "content": prompt_text}
+                    ],
+                    max_tokens=4000,
+                    temperature=0
+                )
+                openai_json = safe_json_parse(openai_response.choices[0].message.content)
+                openai_challenge = {}
+            except Exception as e2:
+                openai_json = {"error": str(e2)}
+                openai_challenge = {}
     except Exception as e:
         openai_json = {"error": str(e)}
+        openai_challenge = {}
+
+    # ── Reconciliation Layer ──
+    claude_v = (claude_json.get("Overall Verdict") or "").strip()
+    openai_v = (openai_challenge.get("openai_verdict") or "").strip()
+    models_diverged_now = bool(claude_v and openai_v and claude_v.lower() != openai_v.lower())
+    divergence_note = openai_challenge.get("divergence_note", "")
+    where_wrong = openai_challenge.get("where_claude_is_most_likely_wrong", "")
 
     airtable_result = {}
     try:
@@ -2091,6 +2235,13 @@ Now analyze this claim:
 
             fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
             fields["OpenAI Raw JSON"] = json.dumps(openai_json, ensure_ascii=False)[:100000]
+            if openai_challenge:
+                fields["OpenAI Challenge JSON"] = json.dumps(openai_challenge, ensure_ascii=False)[:50000]
+            if models_diverged_now and divergence_note:
+                fields["Model Divergence Note"] = divergence_note[:2000]
+                fields["Models Diverged"] = True
+            else:
+                fields["Models Diverged"] = False
             fields["Grok Raw JSON"] = json.dumps(grok_adjudication, ensure_ascii=False)[:100000] if grok_adjudication is not None else ""
 
             if existing_record:
@@ -2153,6 +2304,9 @@ Now analyze this claim:
     return jsonify({
         "claude": claude_json,
         "openai": openai_json,
+        "openai_challenge": openai_challenge,
+        "models_diverged": models_diverged_now,
+        "divergence_note": divergence_note,
         "airtable": airtable_result,
         "superuser": session.get("superuser", False),
         "claims_remaining": session.get("claims_remaining"),

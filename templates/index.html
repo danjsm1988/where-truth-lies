@@ -330,7 +330,145 @@
     .claimlab-tip:hover .claimlab-tip-box,
     .claimlab-tip.tip-open .claimlab-tip-box { display: block; }
 
-    /* ── Duplicate / Similar Claims Modal ── */
+    /* ── Quick View Hook Structure ── */
+    .qv-block {
+      display: flex; flex-direction: column; gap: 0;
+      margin-bottom: 20px;
+    }
+    .qv-verdict-row {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+    }
+    .qv-one-liner {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 19px; font-weight: 700; line-height: 1.4;
+      color: var(--cream); margin-bottom: 18px;
+      border-left: 3px solid rgba(201,168,76,.4);
+      padding-left: 14px;
+    }
+    .qv-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+      margin-bottom: 14px;
+    }
+    .qv-cell {
+      background: rgba(255,255,255,.025);
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 12px; padding: 14px 16px;
+    }
+    .qv-cell-label {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px; letter-spacing: .15em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 7px; opacity: .8;
+    }
+    .qv-cell-text {
+      font-family: 'Crimson Text', Georgia, serif;
+      font-size: 16px; line-height: 1.55; color: var(--text-light);
+    }
+    .qv-agreement-row {
+      background: rgba(201,168,76,.05);
+      border: 1px solid rgba(201,168,76,.18);
+      border-radius: 12px; padding: 13px 16px;
+    }
+    .qv-agreement-label {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px; letter-spacing: .15em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 6px; opacity: .8;
+    }
+    .qv-agreement-text {
+      font-family: 'Crimson Text', Georgia, serif;
+      font-size: 16px; line-height: 1.55; color: var(--text-light);
+    }
+    .qv-dive-prompt {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 11px; letter-spacing: .06em;
+      color: var(--text-dim); margin-top: 12px; font-style: italic;
+    }
+    .qv-dive-prompt a { color: var(--gold); text-decoration: none; }
+    .qv-dive-prompt a:hover { text-decoration: underline; }
+
+    /* Divergence banner */
+    .divergence-banner {
+      background: rgba(201,168,76,.07);
+      border: 1px solid rgba(201,168,76,.3);
+      border-radius: 12px; padding: 14px 16px; margin-bottom: 16px;
+    }
+    .divergence-banner-label {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px; letter-spacing: .15em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 6px;
+    }
+    .divergence-banner-text {
+      font-size: 14px; line-height: 1.55; color: var(--text-light);
+    }
+
+    /* Breakout tooltip */
+    .breakout-section-title { position: relative; }
+    .breakout-info-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14);
+      font-size: 9px; color: var(--text-dim); cursor: help;
+      margin-left: 6px; vertical-align: middle; position: relative;
+      flex-shrink: 0;
+    }
+    .breakout-info-tip {
+      display: none; position: absolute; bottom: calc(100% + 8px); left: 50%;
+      transform: translateX(-50%); width: 260px;
+      background: #0c1e30; border: 1px solid rgba(201,168,76,.22);
+      border-radius: 10px; padding: 12px 14px;
+      font-family: 'Crimson Text', Georgia, serif;
+      font-size: 13px; line-height: 1.55; color: var(--text-light);
+      box-shadow: 0 12px 32px rgba(0,0,0,.5); z-index: 9000;
+      pointer-events: none; white-space: normal; text-align: left;
+    }
+    .breakout-info-tip::after {
+      content: ''; position: absolute; top: 100%; left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent; border-top-color: rgba(201,168,76,.22);
+    }
+    .breakout-info-btn:hover .breakout-info-tip { display: block; }
+
+    /* View count badge */
+    .view-count-badge {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--text-dim); padding: 4px 10px;
+      background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07);
+      border-radius: 999px; display: inline-flex; align-items: center; gap: 5px;
+    }
+    .view-count-badge .vc-num { color: var(--text-light); font-size: 11px; }
+
+    /* Trending strip */
+    .trending-strip {
+      background: rgba(255,255,255,.015); border: 1px solid rgba(255,255,255,.07);
+      border-radius: 14px; padding: 18px 20px; margin-bottom: 20px;
+    }
+    .trending-header {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 10px; letter-spacing: .16em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 12px; opacity: .85;
+    }
+    .trending-list { display: flex; flex-direction: column; gap: 8px; }
+    .trending-item {
+      display: flex; align-items: center; gap: 10px; text-decoration: none;
+      padding: 8px 10px; border-radius: 8px; transition: background .14s;
+    }
+    .trending-item:hover { background: rgba(255,255,255,.04); }
+    .trending-item-num {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 10px; color: var(--text-dim); min-width: 16px;
+    }
+    .trending-item-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 14px; color: var(--cream); flex: 1; line-height: 1.3;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .trending-item-views {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px; letter-spacing: .08em; color: var(--text-dim);
+      white-space: nowrap;
+    }
+
+    /* Dedup modal */
     .dup-modal-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,.72);
       z-index: 9800; display: flex; align-items: center; justify-content: center;
@@ -387,6 +525,31 @@
       color: var(--gold); cursor: pointer; transition: background .15s;
     }
     .dup-continue-btn:hover { background: rgba(201,168,76,.22); }
+
+    /* Mobile Quick View */
+    .m-qv-one-liner {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 16px; font-weight: 700; line-height: 1.4;
+      color: var(--cream); margin-bottom: 12px;
+      border-left: 3px solid rgba(201,168,76,.4); padding-left: 12px;
+    }
+    .m-qv-cell {
+      background: rgba(255,255,255,.025); border: 1px solid rgba(255,255,255,.07);
+      border-radius: 10px; padding: 12px 14px; margin-bottom: 8px;
+    }
+    .m-qv-cell-label {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 5px; opacity: .8;
+    }
+    .m-qv-cell-text {
+      font-family: 'Crimson Text', Georgia, serif;
+      font-size: 15px; line-height: 1.55; color: var(--text-light);
+    }
+    .m-qv-agreement {
+      background: rgba(201,168,76,.05); border: 1px solid rgba(201,168,76,.18);
+      border-radius: 10px; padding: 12px 14px; margin-bottom: 8px;
+    }
 
     .gold-btn,
     .gold-btn-mobile {
@@ -3970,7 +4133,7 @@ html, body {
 
 </style>
 </head>
-<body>
+<body{% if current_claim and current_claim.slug %} data-claim-slug="{{ current_claim.slug }}"{% endif %}>
   <div class="tooltip-popup" id="tooltipPopup">
     <div class="tooltip-term-label" id="tooltipLabel"></div>
     <div class="tooltip-body" id="tooltipBody"></div>
@@ -4238,12 +4401,51 @@ html, body {
 
         <!-- EXCAVATION PANEL -->
         <div id="m-claim-excavation-panel" class="m-claim-panel">
-        <!-- Quick Explanation -->
+        <!-- Quick View (structured hook) -->
         {% if current_claim.quick_explanation %}
-          <div class="m-qe-card">
-            <div class="m-qe-label">Quick Explanation</div>
-            <div class="m-qe-text">{{ current_claim.quick_explanation }}</div>
-          </div>
+          {% set qe_raw = current_claim.quick_explanation %}
+          {% set qe_one_liner = '' %}
+          {% set qe_holds_up = '' %}
+          {% set qe_disputed = '' %}
+          {% set qe_agreement = '' %}
+          {% for line in qe_raw.split('
+') %}
+            {% set line = line.strip() %}
+            {% if line.startswith('ONE-LINE READ:') %}{% set qe_one_liner = line[14:].strip() %}
+            {% elif line.startswith('WHAT HOLDS UP:') %}{% set qe_holds_up = line[14:].strip() %}
+            {% elif line.startswith('WHAT IS DISPUTED:') %}{% set qe_disputed = line[17:].strip() %}
+            {% elif line.startswith('WHERE AGREEMENT EXISTS:') %}{% set qe_agreement = line[23:].strip() %}
+            {% endif %}
+          {% endfor %}
+          {% if current_claim.models_diverged and current_claim.divergence_note %}
+            <div class="divergence-banner" style="margin-bottom:10px;">
+              <div class="divergence-banner-label">&#9670; Model Divergence</div>
+              <div class="divergence-banner-text" style="font-size:13px;">{{ current_claim.divergence_note }}</div>
+            </div>
+          {% endif %}
+          {% if qe_one_liner %}
+            <div class="m-qv-one-liner">{{ qe_one_liner }}</div>
+          {% else %}
+            <div class="m-qv-one-liner">{{ current_claim.quick_explanation }}</div>
+          {% endif %}
+          {% if qe_holds_up %}
+            <div class="m-qv-cell">
+              <div class="m-qv-cell-label">What Holds Up</div>
+              <div class="m-qv-cell-text">{{ qe_holds_up }}</div>
+            </div>
+          {% endif %}
+          {% if qe_disputed %}
+            <div class="m-qv-cell">
+              <div class="m-qv-cell-label">What Is Disputed</div>
+              <div class="m-qv-cell-text">{{ qe_disputed }}</div>
+            </div>
+          {% endif %}
+          {% if qe_agreement %}
+            <div class="m-qv-agreement">
+              <div class="m-qv-cell-label">Where Agreement Exists</div>
+              <div class="m-qv-cell-text">{{ qe_agreement }}</div>
+            </div>
+          {% endif %}
         {% endif %}
 
         <!-- Verdict -->
@@ -5264,6 +5466,12 @@ html, body {
           </div>
         </div>
 
+        <!-- Trending Strip -->
+        <div class="sidebar-card trending-strip" id="trendingStrip" style="display:none;">
+          <div class="trending-header">&#9650; Trending Claims</div>
+          <div class="trending-list" id="trendingList"></div>
+        </div>
+
         <!-- Recent Claims Card -->
         <div class="sidebar-card">
           <div class="sidebar-title">Recent Claims</div>
@@ -5377,6 +5585,9 @@ html, body {
 {% endif %}
   </div>
 
+  {% if current_claim.view_count is defined and current_claim.view_count > 0 %}
+    <span class="view-count-badge"><span class="vc-num">{{ current_claim.view_count }}</span> views</span>
+  {% endif %}
   <button
     class="dispute-btn"
     type="button"
@@ -5424,9 +5635,66 @@ html, body {
             </div>
 
             {% if current_claim.quick_explanation %}
-              <div class="quick-explanation-block">
-                <div class="quick-explanation-label">Quick Explanation</div>
-                <div class="quick-explanation-text" id="quickExplanationText">{{ current_claim.quick_explanation }}</div>
+              {# Parse structured Quick Explanation lines #}
+              {% set qe_raw = current_claim.quick_explanation %}
+              {% set qe_one_liner = '' %}
+              {% set qe_holds_up = '' %}
+              {% set qe_disputed = '' %}
+              {% set qe_agreement = '' %}
+              {% for line in qe_raw.split('
+') %}
+                {% set line = line.strip() %}
+                {% if line.startswith('ONE-LINE READ:') %}
+                  {% set qe_one_liner = line[14:].strip() %}
+                {% elif line.startswith('WHAT HOLDS UP:') %}
+                  {% set qe_holds_up = line[14:].strip() %}
+                {% elif line.startswith('WHAT IS DISPUTED:') %}
+                  {% set qe_disputed = line[17:].strip() %}
+                {% elif line.startswith('WHERE AGREEMENT EXISTS:') %}
+                  {% set qe_agreement = line[23:].strip() %}
+                {% endif %}
+              {% endfor %}
+
+              {# Divergence banner #}
+              {% if current_claim.models_diverged and current_claim.divergence_note %}
+                <div class="divergence-banner">
+                  <div class="divergence-banner-label">&#9670; Model Divergence Detected</div>
+                  <div class="divergence-banner-text">{{ current_claim.divergence_note }}</div>
+                </div>
+              {% endif %}
+
+              <div class="qv-block">
+                {% if qe_one_liner %}
+                  <div class="qv-one-liner">{{ qe_one_liner }}</div>
+                {% else %}
+                  <div class="qv-one-liner">{{ current_claim.quick_explanation }}</div>
+                {% endif %}
+
+                {% if qe_holds_up or qe_disputed %}
+                  <div class="qv-grid">
+                    {% if qe_holds_up %}
+                      <div class="qv-cell">
+                        <div class="qv-cell-label">What Holds Up</div>
+                        <div class="qv-cell-text">{{ qe_holds_up }}</div>
+                      </div>
+                    {% endif %}
+                    {% if qe_disputed %}
+                      <div class="qv-cell">
+                        <div class="qv-cell-label">What Is Disputed</div>
+                        <div class="qv-cell-text">{{ qe_disputed }}</div>
+                      </div>
+                    {% endif %}
+                  </div>
+                {% endif %}
+
+                {% if qe_agreement %}
+                  <div class="qv-agreement-row">
+                    <div class="qv-agreement-label">Where Agreement Exists</div>
+                    <div class="qv-agreement-text">{{ qe_agreement }}</div>
+                  </div>
+                {% endif %}
+
+                <p class="qv-dive-prompt">See the full excavation for underlying layers, competing interpretations, and connected breakout claims. <a onclick="switchTab('full')" href="#">Open Full Excavation &#8594;</a></p>
               </div>
             {% endif %}
 
@@ -5451,6 +5719,7 @@ html, body {
               <div class="breakout-section" id="breakout-section-desktop">
                 <div class="breakout-section-title">
                   Breakout Claims
+                  <span class="breakout-info-btn">?<span class="breakout-info-tip">A breakout claim is a separate claim identified within the original that can stand on its own and be independently analyzed. Each one can be excavated on its own. If it cannot stand alone, it does not qualify.</span></span>
                   {% if current_claim.breakout_claims_grouped %}
                     {% set total_bo = namespace(count=0) %}
                     {% for g in current_claim.breakout_claims_grouped %}{% set total_bo.count = total_bo.count + g.claims|length %}{% endfor %}
@@ -6340,88 +6609,6 @@ html, body {
       showTooltip(e, info.title, info.body);
     }
 
-    // ── Dedup state and functions ──
-    var _pendingClaim = '';
-    var _pendingSource = 'desktop';
-
-    function closeDupModal() {
-      document.getElementById('dupModal').classList.remove('visible');
-    }
-
-    function dupContinueAnyway() {
-      closeDupModal();
-      _pendingSource === 'mobile' ? _showMobileConfirm(_pendingClaim) : _showDesktopConfirm(_pendingClaim);
-    }
-
-    async function checkDuplicateThen(claim, source) {
-      _pendingClaim = claim;
-      _pendingSource = source;
-      try {
-        var res = await fetch('/check-duplicate', {
-          method: 'POST', headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({claim: claim})
-        });
-        var data = await res.json();
-        if (data.exact && data.exact.slug) {
-          document.getElementById('dupModalKicker').textContent = 'Claim Already Exists';
-          document.getElementById('dupModalTitle').textContent = 'This claim has already been excavated.';
-          document.getElementById('dupModalSub').textContent = 'Redirecting you to the existing claim now…';
-          document.getElementById('dupContinueBtn').style.display = 'none';
-          var list = document.getElementById('dupClaimList');
-          list.innerHTML = '<a class="dup-claim-item" href="/claim/' + data.exact.slug + '">' +
-            '<div class="dup-claim-title">' + escHtml(data.exact.title) + '</div>' +
-            '<div class="dup-claim-hint">Open Existing Claim ↗</div></a>';
-          document.getElementById('dupModal').classList.add('visible');
-          setTimeout(function() { window.location = '/claim/' + data.exact.slug; }, 2200);
-          return;
-        }
-        if (data.similar && data.similar.length > 0) {
-          document.getElementById('dupModalKicker').textContent = 'Similar Claims Found';
-          document.getElementById('dupModalTitle').textContent = 'This claim may already exist';
-          document.getElementById('dupModalSub').textContent = 'These claims cover similar ground. Open one or continue creating yours.';
-          document.getElementById('dupContinueBtn').style.display = '';
-          var list = document.getElementById('dupClaimList');
-          list.innerHTML = '';
-          data.similar.forEach(function(c) {
-            var a = document.createElement('a');
-            a.className = 'dup-claim-item';
-            a.href = '/claim/' + c.slug;
-            a.innerHTML = '<div class="dup-claim-title">' + escHtml(c.title) + '</div>' +
-                          '<div class="dup-claim-hint">View Existing Claim ↗</div>';
-            list.appendChild(a);
-          });
-          document.getElementById('dupModal').classList.add('visible');
-          return;
-        }
-        dupContinueAnyway();
-      } catch(e) {
-        dupContinueAnyway();
-      }
-    }
-
-    function _showDesktopConfirm(claim) {
-      document.getElementById('modalClaimPreview').textContent = claim.length > 200 ? claim.slice(0, 200) + '...' : claim;
-
-      const title = document.getElementById('modalTitle');
-      const body = document.getElementById('modalBody');
-      const switchBtn = document.getElementById('modalSwitchBtn');
-      const confirmBtn = document.getElementById('modalConfirmBtn');
-
-      if (currentMode === 'full') {
-        title.textContent = 'Run Full Excavation?';
-        body.textContent = 'Full Excavation includes the complete layered analysis and is part of the paid experience. You can still edit the wording before continuing.';
-        confirmBtn.textContent = 'Continue to Full';
-        switchBtn.style.display = 'block';
-      } else {
-        title.textContent = 'Run Quick Claim?';
-        body.textContent = 'You will get the verdict, a short explanation, and sub-claims. You can still edit the wording before continuing.';
-        confirmBtn.textContent = 'Continue';
-        switchBtn.style.display = 'none';
-      }
-      confirmBtn.onclick = submitClaim;
-      document.getElementById('confirmModal').classList.add('visible');
-    }
-
     function openConfirmModal() {
       if (USER_ROLE === 'standard') {
         alert('Your account can browse existing claim files, but cannot run new excavations.');
@@ -6433,7 +6620,8 @@ html, body {
       }
       const claim = document.getElementById('claim-input').value.trim();
       if (!claim) { document.getElementById('claim-input').focus(); return; }
-      checkDuplicateThen(claim, 'desktop');
+      checkDuplicateThen(claim, 'desktop'); return; // dedup intercept
+      // unreachable: legacy confirm modal path below kept for reference
     }
 
     function closeModal() {
@@ -6978,20 +7166,6 @@ console.error('Dispute submission failed:', err);
     }
 
     // Mobile confirm modal
-    function _showMobileConfirm(claim) {
-      const preview = document.getElementById('modalClaimPreview');
-      if (preview) preview.textContent = claim.length > 200 ? claim.slice(0, 200) + '...' : claim;
-      const title = document.getElementById('modalTitle');
-      const body = document.getElementById('modalBody');
-      const switchBtn = document.getElementById('modalSwitchBtn');
-      const confirmBtn = document.getElementById('modalConfirmBtn');
-      if (title) title.textContent = 'Run Full Excavation?';
-      if (body) body.textContent = 'The full analysis will run in the background. You will see the Quick Explanation, verdict, and sub-claims immediately.';
-      if (confirmBtn) { confirmBtn.textContent = 'Excavate'; confirmBtn.onclick = mSubmitClaim; }
-      if (switchBtn) switchBtn.style.display = 'none';
-      document.getElementById('confirmModal')?.classList.add('visible');
-    }
-
     function mOpenConfirm() {
       const claim = document.getElementById('mClaimInput')?.value.trim();
       if (!claim) { document.getElementById('mClaimInput')?.focus(); return; }
@@ -8206,6 +8380,130 @@ console.error('Dispute submission failed:', err);
       document.querySelectorAll('.claimlab-tip.tip-open').forEach(function(t) { t.classList.remove('tip-open'); });
     }
   });
+
+  // ── Dedup state and functions ──
+  var _pendingClaim = '';
+  var _pendingSource = 'desktop';
+
+  function closeDupModal() {
+    document.getElementById('dupModal').classList.remove('visible');
+  }
+
+  function dupContinueAnyway() {
+    closeDupModal();
+    _pendingSource === 'mobile' ? _showMobileConfirm(_pendingClaim) : _showDesktopConfirm(_pendingClaim);
+  }
+
+  async function checkDuplicateThen(claim, source) {
+    _pendingClaim = claim;
+    _pendingSource = source;
+    try {
+      var res = await fetch('/check-duplicate', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({claim: claim})
+      });
+      var data = await res.json();
+      if (data.exact && data.exact.slug) {
+        document.getElementById('dupModalKicker').textContent = 'Claim Already Exists';
+        document.getElementById('dupModalTitle').textContent = 'This claim has already been excavated.';
+        document.getElementById('dupModalSub').textContent = 'Redirecting you to the existing claim now…';
+        document.getElementById('dupContinueBtn').style.display = 'none';
+        var list = document.getElementById('dupClaimList');
+        list.innerHTML = '<a class="dup-claim-item" href="/claim/' + data.exact.slug + '">' +
+          '<div class="dup-claim-title">' + escHtml(data.exact.title) + '</div>' +
+          '<div class="dup-claim-hint">Open Existing Claim ↗</div></a>';
+        document.getElementById('dupModal').classList.add('visible');
+        setTimeout(function() { window.location = '/claim/' + data.exact.slug; }, 2200);
+        return;
+      }
+      if (data.similar && data.similar.length > 0) {
+        document.getElementById('dupModalKicker').textContent = 'Similar Claims Found';
+        document.getElementById('dupModalTitle').textContent = 'This claim may already exist';
+        document.getElementById('dupModalSub').textContent = 'These claims cover similar ground. Open one or continue creating yours.';
+        document.getElementById('dupContinueBtn').style.display = '';
+        var list = document.getElementById('dupClaimList');
+        list.innerHTML = '';
+        data.similar.forEach(function(c) {
+          var a = document.createElement('a');
+          a.className = 'dup-claim-item';
+          a.href = '/claim/' + c.slug;
+          a.innerHTML = '<div class="dup-claim-title">' + escHtml(c.title) + '</div>' +
+                        '<div class="dup-claim-hint">View Existing Claim ↗</div>';
+          list.appendChild(a);
+        });
+        document.getElementById('dupModal').classList.add('visible');
+        return;
+      }
+      dupContinueAnyway();
+    } catch(e) {
+      dupContinueAnyway();
+    }
+  }
+
+  function _showDesktopConfirm(claim) {
+    document.getElementById('modalClaimPreview').textContent = claim.length > 200 ? claim.slice(0, 200) + '...' : claim;
+    var title = document.getElementById('modalTitle');
+    var body = document.getElementById('modalBody');
+    var switchBtn = document.getElementById('modalSwitchBtn');
+    var confirmBtn = document.getElementById('modalConfirmBtn');
+    if (currentMode === 'full') {
+      title.textContent = 'Run Full Excavation?';
+      body.textContent = 'Full Excavation includes the complete layered analysis and is part of the paid experience.';
+      confirmBtn.textContent = 'Continue to Full';
+      switchBtn.style.display = 'block';
+    } else {
+      title.textContent = 'Run Quick Claim?';
+      body.textContent = 'You will get the verdict, a short explanation, and sub-claims.';
+      confirmBtn.textContent = 'Continue';
+      switchBtn.style.display = 'none';
+    }
+    confirmBtn.onclick = submitClaim;
+    document.getElementById('confirmModal').classList.add('visible');
+  }
+
+  function _showMobileConfirm(claim) {
+    var preview = document.getElementById('modalClaimPreview');
+    if (preview) preview.textContent = claim.length > 200 ? claim.slice(0, 200) + '...' : claim;
+    var confirmBtn = document.getElementById('modalConfirmBtn');
+    var title = document.getElementById('modalTitle');
+    var body = document.getElementById('modalBody');
+    var switchBtn = document.getElementById('modalSwitchBtn');
+    if (title) title.textContent = 'Run Full Excavation?';
+    if (body) body.textContent = 'The full analysis will run. You will see the verdict and explanation immediately.';
+    if (confirmBtn) { confirmBtn.textContent = 'Excavate'; confirmBtn.onclick = mSubmitClaim; }
+    if (switchBtn) switchBtn.style.display = 'none';
+    document.getElementById('confirmModal')?.classList.add('visible');
+  }
+
+  // ── View count increment ──
+  (function() {
+    var slug = document.body.getAttribute('data-claim-slug') ||
+               (window.location.pathname.startsWith('/claim/') ? window.location.pathname.replace('/claim/', '') : '');
+    if (!slug) return;
+    fetch('/increment-view/' + encodeURIComponent(slug), {method: 'POST'}).catch(function() {});
+  })();
+
+  // ── Trending strip loader ──
+  (function() {
+    var strip = document.getElementById('trendingStrip');
+    var list = document.getElementById('trendingList');
+    if (!strip || !list) return;
+    fetch('/trending').then(function(r) { return r.json(); }).then(function(data) {
+      var items = (data.trending || []).filter(function(t) { return t.view_count > 0; });
+      if (!items.length) return;
+      strip.style.display = '';
+      list.innerHTML = '';
+      items.slice(0, 6).forEach(function(t, i) {
+        var a = document.createElement('a');
+        a.className = 'trending-item';
+        a.href = '/claim/' + t.slug;
+        a.innerHTML = '<span class="trending-item-num">' + (i + 1) + '</span>' +
+          '<span class="trending-item-title">' + escHtml(t.title) + '</span>' +
+          '<span class="trending-item-views">' + t.view_count + ' views</span>';
+        list.appendChild(a);
+      });
+    }).catch(function() {});
+  })();
 
   // Close breakout modal on overlay click
   document.getElementById('breakoutModal').addEventListener('click', function(e) {
