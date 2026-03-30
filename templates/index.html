@@ -7716,19 +7716,58 @@ console.error('Dispute submission failed:', err);
 
     function closeClaimReanalyzeModal() { document.getElementById('claimReanalyzeModal').classList.remove('visible'); _claimReanalyzeSlug = ''; }
 
+    var _reanalyzeMessages = [
+      'Locking claim record...',
+      'Consulting Grok live layer for real-time grounding...',
+      'Grok searching live web and X sources...',
+      'Anchoring facts against known reality...',
+      'Sending to Claude for deep excavation...',
+      'Claude parsing direct facts and adjacent facts...',
+      'Claude mapping root concern and values divergence...',
+      'Claude drafting constitutional framework layer...',
+      'Sending to OpenAI for challenge review...',
+      'OpenAI identifying where Claude may be wrong...',
+      'Comparing Claude and OpenAI analyses...',
+      'Writing excavation to Airtable...',
+      'Running breakout detection...',
+      'Finalizing. Almost done...'
+    ];
+    var _reanalyzeInterval = null;
+
+    function _startReanalyzeCycle(el) {
+      var idx = 0;
+      el.textContent = _reanalyzeMessages[0];
+      _reanalyzeInterval = setInterval(function() {
+        idx = (idx + 1) % _reanalyzeMessages.length;
+        el.textContent = _reanalyzeMessages[idx];
+      }, 4000);
+    }
+
+    function _stopReanalyzeCycle() {
+      if (_reanalyzeInterval) { clearInterval(_reanalyzeInterval); _reanalyzeInterval = null; }
+    }
+
     async function runClaimReanalyze(mode) {
       if (!_claimReanalyzeSlug) return;
       var statusEl = document.getElementById('claim-reanalyze-status');
-      statusEl.textContent = 'Running ' + mode + ' reanalysis. This may take 30-60 seconds...';
       document.getElementById('claimReanalyzeModal').querySelectorAll('button').forEach(function(b) { b.disabled = true; });
+      _startReanalyzeCycle(statusEl);
       try {
         var res = await fetch('/editor/reanalyze-claim-by-slug/' + _claimReanalyzeSlug, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: mode }) });
         var data = await res.json();
+        _stopReanalyzeCycle();
         if (res.ok && data.ok) {
           statusEl.textContent = 'Done by ' + data.reanalyzed_by + ' on ' + data.last_reanalyzed + '. Reloading...';
           setTimeout(function() { closeClaimReanalyzeModal(); window.location.reload(); }, 2000);
-        } else { statusEl.textContent = 'Error: ' + (data.error || 'Failed'); document.getElementById('claimReanalyzeModal').querySelectorAll('button').forEach(function(b) { b.disabled = false; }); }
-      } catch(err) { statusEl.textContent = 'Error: ' + err.message; document.getElementById('claimReanalyzeModal').querySelectorAll('button').forEach(function(b) { b.disabled = false; }); }
+        } else {
+          statusEl.textContent = 'Error: ' + (data.error || 'Failed');
+          document.getElementById('claimReanalyzeModal').querySelectorAll('button').forEach(function(b) { b.disabled = false; });
+        }
+      } catch(err) {
+        _stopReanalyzeCycle();
+        statusEl.textContent = 'Error: ' + err.message;
+        document.getElementById('claimReanalyzeModal').querySelectorAll('button').forEach(function(b) { b.disabled = false; });
+      }
     }
 
     function openSelectiveFromClaim() {
@@ -8100,7 +8139,7 @@ console.error('Dispute submission failed:', err);
     <div style="display:grid; gap:10px; margin-bottom:20px;">
       <button type="button" class="gold-btn" style="text-align:left; padding:16px 18px; border-radius:12px; display:block; width:100%;" onclick="runClaimReanalyze('full')">
         <div style="font-size:13px; margin-bottom:4px;">Full Reanalysis</div>
-        <div style="font-size:12px; opacity:.7; font-weight:normal;">Rewrites all 6 layers, verdict, and every field. Takes 30-60 seconds.</div>
+        <div style="font-size:12px; opacity:.7; font-weight:normal;">Rewrites all 6 layers, verdict, and every field.</div>
       </button>
       <button type="button" class="editor-reanalyze-btn" style="text-align:left; padding:16px 18px; border-radius:12px; display:block; width:100%; font-size:13px;" onclick="openSelectiveFromClaim()">
         Selective — choose which fields to update
