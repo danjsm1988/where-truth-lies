@@ -4649,7 +4649,7 @@ html, body {
             <div class="m-breakout-title">
               Breakout Claims
               {% if true_superuser %}
-                <button type="button" class="breakout-detect-btn" style="margin-left:8px;" onclick="triggerBreakoutDetect('{{ current_claim.slug }}')">&#9881;</button>
+                <button type="button" class="breakout-detect-btn" style="margin-left:8px;" onclick="triggerBreakoutDetect('{{ current_claim.slug }}')">⚙</button>
               {% endif %}
             </div>
             {% if current_claim.breakout_claims_grouped and current_claim.breakout_claims_grouped|length > 0 %}
@@ -5919,7 +5919,7 @@ html, body {
                     <span class="breakout-count-badge">{{ total_bo.count }}</span>
                   {% endif %}
                   {% if true_superuser %}
-                    <button type="button" class="breakout-detect-btn" onclick="triggerBreakoutDetect('{{ current_claim.slug }}')">&#9881; Detect</button>
+                    <button type="button" class="breakout-detect-btn" onclick="triggerBreakoutDetect('{{ current_claim.slug }}')">⚙ Detect</button>
                   {% endif %}
                 </div>
 
