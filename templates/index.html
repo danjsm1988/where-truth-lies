@@ -4403,49 +4403,45 @@ html, body {
         <div id="m-claim-excavation-panel" class="m-claim-panel">
         <!-- Quick View (structured hook) -->
         {% if current_claim.quick_explanation %}
-          {% set qe_raw = current_claim.quick_explanation %}
-          {% set qe_one_liner = '' %}
-          {% set qe_holds_up = '' %}
-          {% set qe_disputed = '' %}
-          {% set qe_agreement = '' %}
-          {% for line in qe_raw.split('
-') %}
-            {% set line = line.strip() %}
-            {% if line.startswith('ONE-LINE READ:') %}{% set qe_one_liner = line[14:].strip() %}
-            {% elif line.startswith('WHAT HOLDS UP:') %}{% set qe_holds_up = line[14:].strip() %}
-            {% elif line.startswith('WHAT IS DISPUTED:') %}{% set qe_disputed = line[17:].strip() %}
-            {% elif line.startswith('WHERE AGREEMENT EXISTS:') %}{% set qe_agreement = line[23:].strip() %}
-            {% endif %}
-          {% endfor %}
           {% if current_claim.models_diverged and current_claim.divergence_note %}
             <div class="divergence-banner" style="margin-bottom:10px;">
               <div class="divergence-banner-label">&#9670; Model Divergence</div>
               <div class="divergence-banner-text" style="font-size:13px;">{{ current_claim.divergence_note }}</div>
             </div>
           {% endif %}
-          {% if qe_one_liner %}
-            <div class="m-qv-one-liner">{{ qe_one_liner }}</div>
-          {% else %}
-            <div class="m-qv-one-liner">{{ current_claim.quick_explanation }}</div>
-          {% endif %}
-          {% if qe_holds_up %}
-            <div class="m-qv-cell">
-              <div class="m-qv-cell-label">What Holds Up</div>
-              <div class="m-qv-cell-text">{{ qe_holds_up }}</div>
-            </div>
-          {% endif %}
-          {% if qe_disputed %}
-            <div class="m-qv-cell">
-              <div class="m-qv-cell-label">What Is Disputed</div>
-              <div class="m-qv-cell-text">{{ qe_disputed }}</div>
-            </div>
-          {% endif %}
-          {% if qe_agreement %}
-            <div class="m-qv-agreement">
-              <div class="m-qv-cell-label">Where Agreement Exists</div>
-              <div class="m-qv-cell-text">{{ qe_agreement }}</div>
-            </div>
-          {% endif %}
+          <div class="m-qv-one-liner" id="mqvOneLiner"></div>
+          <div id="mqvHoldsUpCell" class="m-qv-cell" style="display:none;">
+            <div class="m-qv-cell-label">What Holds Up</div>
+            <div class="m-qv-cell-text" id="mqvHoldsUp"></div>
+          </div>
+          <div id="mqvDisputedCell" class="m-qv-cell" style="display:none;">
+            <div class="m-qv-cell-label">What Is Disputed</div>
+            <div class="m-qv-cell-text" id="mqvDisputed"></div>
+          </div>
+          <div id="mqvAgreementRow" class="m-qv-agreement" style="display:none;">
+            <div class="m-qv-cell-label">Where Agreement Exists</div>
+            <div class="m-qv-cell-text" id="mqvAgreement"></div>
+          </div>
+          <script>
+          (function() {
+            var raw = {{ current_claim.quick_explanation | tojson }};
+            function extract(text, label) {
+              var idx = text.indexOf(label);
+              if (idx === -1) return '';
+              var after = text.slice(idx + label.length).trim();
+              var next = after.search(/ONE-LINE READ:|WHAT HOLDS UP:|WHAT IS DISPUTED:|WHERE AGREEMENT EXISTS:/);
+              return next === -1 ? after.trim() : after.slice(0, next).trim();
+            }
+            var oneLiner = extract(raw, 'ONE-LINE READ:');
+            var holdsUp = extract(raw, 'WHAT HOLDS UP:');
+            var disputed = extract(raw, 'WHAT IS DISPUTED:');
+            var agreement = extract(raw, 'WHERE AGREEMENT EXISTS:');
+            document.getElementById('mqvOneLiner').textContent = oneLiner || raw;
+            if (holdsUp) { document.getElementById('mqvHoldsUp').textContent = holdsUp; document.getElementById('mqvHoldsUpCell').style.display = ''; }
+            if (disputed) { document.getElementById('mqvDisputed').textContent = disputed; document.getElementById('mqvDisputedCell').style.display = ''; }
+            if (agreement) { document.getElementById('mqvAgreement').textContent = agreement; document.getElementById('mqvAgreementRow').style.display = ''; }
+          })();
+          </script>
         {% endif %}
 
         <!-- Verdict -->
@@ -5635,25 +5631,8 @@ html, body {
             </div>
 
             {% if current_claim.quick_explanation %}
-              {# Parse structured Quick Explanation lines #}
+              {# Parse structured Quick Explanation — done in JS to handle single-line output #}
               {% set qe_raw = current_claim.quick_explanation %}
-              {% set qe_one_liner = '' %}
-              {% set qe_holds_up = '' %}
-              {% set qe_disputed = '' %}
-              {% set qe_agreement = '' %}
-              {% for line in qe_raw.split('
-') %}
-                {% set line = line.strip() %}
-                {% if line.startswith('ONE-LINE READ:') %}
-                  {% set qe_one_liner = line[14:].strip() %}
-                {% elif line.startswith('WHAT HOLDS UP:') %}
-                  {% set qe_holds_up = line[14:].strip() %}
-                {% elif line.startswith('WHAT IS DISPUTED:') %}
-                  {% set qe_disputed = line[17:].strip() %}
-                {% elif line.startswith('WHERE AGREEMENT EXISTS:') %}
-                  {% set qe_agreement = line[23:].strip() %}
-                {% endif %}
-              {% endfor %}
 
               {# Divergence banner #}
               {% if current_claim.models_diverged and current_claim.divergence_note %}
@@ -5663,39 +5642,57 @@ html, body {
                 </div>
               {% endif %}
 
-              <div class="qv-block">
-                {% if qe_one_liner %}
-                  <div class="qv-one-liner">{{ qe_one_liner }}</div>
-                {% else %}
-                  <div class="qv-one-liner">{{ current_claim.quick_explanation }}</div>
-                {% endif %}
-
-                {% if qe_holds_up or qe_disputed %}
-                  <div class="qv-grid">
-                    {% if qe_holds_up %}
-                      <div class="qv-cell">
-                        <div class="qv-cell-label">What Holds Up</div>
-                        <div class="qv-cell-text">{{ qe_holds_up }}</div>
-                      </div>
-                    {% endif %}
-                    {% if qe_disputed %}
-                      <div class="qv-cell">
-                        <div class="qv-cell-label">What Is Disputed</div>
-                        <div class="qv-cell-text">{{ qe_disputed }}</div>
-                      </div>
-                    {% endif %}
+              <div class="qv-block" id="qvBlock">
+                <div class="qv-one-liner" id="qvOneLiner"></div>
+                <div class="qv-grid" id="qvGrid" style="display:none;">
+                  <div class="qv-cell" id="qvHoldsUpCell" style="display:none;">
+                    <div class="qv-cell-label">What Holds Up</div>
+                    <div class="qv-cell-text" id="qvHoldsUp"></div>
                   </div>
-                {% endif %}
-
-                {% if qe_agreement %}
-                  <div class="qv-agreement-row">
-                    <div class="qv-agreement-label">Where Agreement Exists</div>
-                    <div class="qv-agreement-text">{{ qe_agreement }}</div>
+                  <div class="qv-cell" id="qvDisputedCell" style="display:none;">
+                    <div class="qv-cell-label">What Is Disputed</div>
+                    <div class="qv-cell-text" id="qvDisputed"></div>
                   </div>
-                {% endif %}
-
+                </div>
+                <div class="qv-agreement-row" id="qvAgreementRow" style="display:none;">
+                  <div class="qv-agreement-label">Where Agreement Exists</div>
+                  <div class="qv-agreement-text" id="qvAgreement"></div>
+                </div>
                 <p class="qv-dive-prompt">See the full excavation for underlying layers, competing interpretations, and connected breakout claims. <a onclick="switchTab('full')" href="#">Open Full Excavation &#8594;</a></p>
               </div>
+              <script>
+              (function() {
+                var raw = {{ current_claim.quick_explanation | tojson }};
+                function extract(text, label) {
+                  var idx = text.indexOf(label);
+                  if (idx === -1) return '';
+                  var after = text.slice(idx + label.length).trim();
+                  // Stop at next label
+                  var next = after.search(/ONE-LINE READ:|WHAT HOLDS UP:|WHAT IS DISPUTED:|WHERE AGREEMENT EXISTS:/);
+                  return next === -1 ? after.trim() : after.slice(0, next).trim();
+                }
+                var oneLiner = extract(raw, 'ONE-LINE READ:');
+                var holdsUp = extract(raw, 'WHAT HOLDS UP:');
+                var disputed = extract(raw, 'WHAT IS DISPUTED:');
+                var agreement = extract(raw, 'WHERE AGREEMENT EXISTS:');
+                var hasStructure = !!oneLiner;
+                document.getElementById('qvOneLiner').textContent = hasStructure ? oneLiner : raw;
+                if (holdsUp) {
+                  document.getElementById('qvHoldsUp').textContent = holdsUp;
+                  document.getElementById('qvHoldsUpCell').style.display = '';
+                  document.getElementById('qvGrid').style.display = '';
+                }
+                if (disputed) {
+                  document.getElementById('qvDisputed').textContent = disputed;
+                  document.getElementById('qvDisputedCell').style.display = '';
+                  document.getElementById('qvGrid').style.display = '';
+                }
+                if (agreement) {
+                  document.getElementById('qvAgreement').textContent = agreement;
+                  document.getElementById('qvAgreementRow').style.display = '';
+                }
+              })();
+              </script>
             {% endif %}
 
             {% set verdict = current_claim.overall_verdict or 'Unproven' %}
