@@ -554,7 +554,7 @@ def build_claim_context(record):
     }
 
 
-def extract_primary_record_fields(claim, parsed, mode, username, existing_fields=None):
+def extract_primary_record_fields(claim, parsed, mode, username, existing_fields=None, framing_data=None):
     dates = now_dates()
     existing_fields = existing_fields or {}
     is_full_reexcavate = mode == "full"
@@ -632,6 +632,18 @@ def extract_primary_record_fields(claim, parsed, mode, username, existing_fields
                 fields["Verdict: Sub-Claim 3"] = sub_claims[2]["verdict"]
         if sub_claims:
             fields["Sub-Claims"] = " | ".join([sc.get("claim", "") for sc in sub_claims if sc.get("claim")]).strip()
+
+    # Framing layer fields
+    if framing_data and isinstance(framing_data, dict):
+        if framing_data.get("primary_claim"):
+            fields["Analyzed Claim"] = framing_data["primary_claim"]
+        if framing_data.get("input_type"):
+            fields["Input Type"] = framing_data["input_type"]
+        if framing_data.get("confidence_score") is not None:
+            try:
+                fields["Framing Confidence"] = float(framing_data["confidence_score"])
+            except Exception:
+                pass
 
     return fields
 
