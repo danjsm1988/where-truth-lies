@@ -3050,11 +3050,33 @@
   margin: 0;
   overflow-wrap: break-word;
   word-break: break-word;
-  display: -webkit-box;
-  -webkit-line-clamp: 6;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
+/* Threshold scaling for mobile long claims */
+.m-claim-title.claim-md { font-size: 20px; }
+.m-claim-title.claim-lg { font-size: 18px; line-height: 1.22; }
+.m-claim-title.claim-xl { font-size: 16px; line-height: 1.25; }
+
+/* Mobile claim collapse */
+.m-claim-body-wrap { position: relative; }
+.m-claim-body-wrap.collapsed { max-height: 200px; overflow: hidden; }
+.m-claim-body-wrap.collapsed::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0; height: 60px;
+  background: linear-gradient(to bottom, transparent, rgba(8,23,38,.97));
+  pointer-events: none;
+}
+.m-claim-see-more {
+  display: none;
+  margin-top: 10px;
+  background: none; border: none;
+  font-family: 'Libre Baskerville', Georgia, serif;
+  font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--gold); cursor: pointer; padding: 6px 0;
+  opacity: .85; width: 100%; text-align: left;
+}
+.m-claim-see-more:hover { opacity: 1; }
+.m-claim-needs-expand + .m-claim-see-more { display: block; }
 
 .m-claim-dek {
   font-size: 15px;
@@ -4120,11 +4142,13 @@ html, body {
 </div>
 
 <div class="m-claim-eyebrow">ClaimLab Excavation</div>
-<h1 class="m-claim-title">{{ current_claim.title }}</h1>
-
-        {% if current_claim.stripped_claim and current_claim.stripped_claim != current_claim.title %}
-          <div class="m-claim-dek">{{ current_claim.stripped_claim }}</div>
-        {% endif %}
+<div class="m-claim-body-wrap" id="mClaimBodyWrap">
+  <h1 class="m-claim-title" id="mClaimTitle">{{ current_claim.title }}</h1>
+  {% if current_claim.stripped_claim and current_claim.stripped_claim != current_claim.title %}
+    <div class="m-claim-dek">{{ current_claim.stripped_claim }}</div>
+  {% endif %}
+</div>
+<button class="m-claim-see-more" id="mClaimSeeMore" onclick="toggleMobileClaimExpand()">See More &#8595;</button>
 
         {% if true_superuser and current_claim.entered_by %}
           <div class="m-entered-by" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
@@ -7968,7 +7992,7 @@ console.error('Dispute submission failed:', err);
     }
   }
 
-  // ── Claim title auto-scaling + collapse ──
+  // ── Claim title auto-scaling + collapse (desktop) ──
   (function() {
     var titleEl = document.getElementById('claimTitle');
     var wrapEl = document.getElementById('claimBodyWrap');
@@ -7990,6 +8014,30 @@ console.error('Dispute submission failed:', err);
     _claimExpanded = !_claimExpanded;
     w.classList.toggle('collapsed', !_claimExpanded);
     b.textContent = _claimExpanded ? 'Show Less ↑' : 'See More ↓';
+  }
+
+  // ── Mobile claim title auto-scaling + collapse ──
+  (function() {
+    var titleEl = document.getElementById('mClaimTitle');
+    var wrapEl = document.getElementById('mClaimBodyWrap');
+    var btn = document.getElementById('mClaimSeeMore');
+    if (!titleEl) return;
+    var len = titleEl.textContent.trim().length;
+    if (len > 500) titleEl.classList.add('claim-xl');
+    else if (len > 220) titleEl.classList.add('claim-lg');
+    else if (len > 100) titleEl.classList.add('claim-md');
+    if (len > 220 && wrapEl && btn) {
+      wrapEl.classList.add('collapsed', 'm-claim-needs-expand');
+    }
+  })();
+  var _mClaimExpanded = false;
+  function toggleMobileClaimExpand() {
+    var w = document.getElementById('mClaimBodyWrap');
+    var b = document.getElementById('mClaimSeeMore');
+    if (!w || !b) return;
+    _mClaimExpanded = !_mClaimExpanded;
+    w.classList.toggle('collapsed', !_mClaimExpanded);
+    b.textContent = _mClaimExpanded ? 'Show Less ↑' : 'See More ↓';
   }
 
   // ── Desktop nav menu ──
