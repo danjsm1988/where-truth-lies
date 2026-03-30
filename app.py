@@ -1911,6 +1911,108 @@ def profile_page():
     )
 
 
+def normalize_claim_text(text):
+    """Normalize claim for comparison: lowercase, strip punctuation, collapse whitespace."""
+    import re
+    text = text.lower().strip()
+    text = re.sub(r'[^\w\s]', ' ', text)
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text
+
+
+def keyword_overlap_score(norm_a, norm_b):
+    """Return 0.0-1.0 Jaccard overlap of meaningful keywords between two normalized strings."""
+    STOP = {'the','a','an','is','are','was','were','be','been','have','has','had',
+            'do','does','did','will','would','could','should','may','might','can',
+            'to','of','in','for','on','with','at','by','from','as','and','but',
+            'or','not','no','it','its','this','that','they','we','you','he','she',
+            'his','his','her','their','our','said','says','also','just','than',
+            'then','when','who','what','which','how','if','so','up','out','into'}
+    def kw(text):
+        return {w for w in text.split() if len(w) > 3 and w not in STOP}
+    kw_a, kw_b = kw(norm_a), kw(norm_b)
+    if not kw_a or not kw_b:
+        return 0.0
+    inter = len(kw_a & kw_b)
+    union = len(kw_a | kw_b)
+    return inter / union if union else 0.0
+
+
+def find_duplicate_and_similar_claims(claim_text, similarity_threshold=0.30, max_similar=4):
+    """
+    Check for exact and similar claims.
+    Returns dict:
+      exact: record dict or None
+      similar: list of {record_id, title, slug, score}
+    """
+    result = {'exact': None, 'similar': []}
+    if not claim_text or not AIRTABLE_TOKEN:
+        return result
+
+    norm_input = normalize_claim_text(claim_text)
+
+    try:
+        params = {
+            'filterByFormula': "OR(NOT({Breakout User Excavated}), {Breakout User Excavated}!='No')",
+            'fields[]': ['Original Quote', 'Stripped Claim', 'URL Slug'],
+            'maxRecords': 200
+        }
+        response = requests.get(
+            airtable_url(AIRTABLE_TABLE_NAME),
+            headers={'Authorization': f'Bearer {AIRTABLE_TOKEN}'},
+            params=params,
+            timeout=20
+        )
+        response.raise_for_status()
+        records = response.json().get('records', [])
+    except Exception as e:
+        print(f'DUPLICATE CHECK ERROR: {e}', flush=True)
+        return result
+
+    scored = []
+    for rec in records:
+        f = rec.get('fields', {})
+        raw = f.get('Original Quote') or f.get('Stripped Claim') or ''
+        if not raw:
+            continue
+        norm_existing = normalize_claim_text(raw)
+        # Exact match
+        if norm_existing == norm_input:
+            result['exact'] = {
+                'record_id': rec.get('id'),
+                'title': clean_display_title(raw),
+                'slug': f.get('URL Slug', '')
+            }
+            return result  # Stop — exact match found, no need for similar
+        # Similar
+        score = keyword_overlap_score(norm_input, norm_existing)
+        if score >= similarity_threshold:
+            scored.append({
+                'record_id': rec.get('id'),
+                'title': clean_display_title(raw),
+                'slug': f.get('URL Slug', ''),
+                'score': round(score, 3)
+            })
+
+    # Top N by score
+    scored.sort(key=lambda x: x['score'], reverse=True)
+    result['similar'] = scored[:max_similar]
+    return result
+
+
+@app.route('/check-duplicate', methods=['POST'])
+def check_duplicate():
+    """Pre-creation duplicate/similar check. Called before /analyze."""
+    if not session.get('logged_in'):
+        return jsonify({'error': 'Not logged in'}), 401
+    data = request.get_json() or {}
+    claim = (data.get('claim') or '').strip()
+    if not claim:
+        return jsonify({'exact': None, 'similar': []}), 200
+    result = find_duplicate_and_similar_claims(claim)
+    return jsonify(result), 200
+
+
 @app.route("/analyze", methods=["POST"])
 def analyze():
     if not session.get("logged_in"):
@@ -3456,14 +3558,11 @@ def breakout_excavate():
                 pass
     current_status = (bf.get("Breakout Status") or "Pending Excavation").strip()
     if current_status == "Excavated":
-        existing_slug = bf.get("URL Slug", "")
-        return jsonify({"ok": True, "redirect_to": f"/claim/{existing_slug}"}), 200
+        return jsonify({"ok": True, "redirect_to": f"/claim/{bf.get('URL Slug', '')}"}), 200
     lock_expiry = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
     update_airtable_record(breakout_record_id, {
-        "Lock Status": "Locked",
-        "Locked By": session.get("username", "Unknown"),
-        "Lock Expires At": lock_expiry,
-        "Breakout Status": "Excavating",
+        "Lock Status": "Locked", "Locked By": session.get("username", "Unknown"),
+        "Lock Expires At": lock_expiry, "Breakout Status": "Excavating",
         "Breakout User Excavated": "Yes"
     })
     if role == "limited_superuser":
@@ -3482,32 +3581,24 @@ def breakout_excavate():
         openai_json = {}
         try:
             if anthropic_client:
-                r = anthropic_client.messages.create(
-                    model="claude-sonnet-4-6", max_tokens=4000, temperature=0,
-                    system=CLAIMLAB_SYSTEM, messages=[{"role": "user", "content": prompt_text}]
-                )
+                r = anthropic_client.messages.create(model="claude-sonnet-4-6", max_tokens=4000, temperature=0,
+                    system=CLAIMLAB_SYSTEM, messages=[{"role": "user", "content": prompt_text}])
                 claude_json = safe_json_parse(r.content[0].text)
         except Exception as e:
             claude_json = {"error": str(e)}
         try:
             if openai_client:
-                r = openai_client.chat.completions.create(
-                    model="gpt-4o-mini",
+                r = openai_client.chat.completions.create(model="gpt-4o-mini",
                     messages=[{"role": "system", "content": CLAIMLAB_SYSTEM}, {"role": "user", "content": prompt_text}],
-                    max_tokens=4000, temperature=0
-                )
+                    max_tokens=4000, temperature=0)
                 openai_json = safe_json_parse(r.choices[0].message.content)
         except Exception as e:
             openai_json = {"error": str(e)}
         primary = claude_json if "error" not in claude_json else openai_json
         if "error" in primary:
-            update_airtable_record(breakout_record_id, {
-                "Lock Status": "Unlocked", "Breakout Status": "Pending Excavation", "Breakout User Excavated": "No"
-            })
+            update_airtable_record(breakout_record_id, {"Lock Status": "Unlocked", "Breakout Status": "Pending Excavation", "Breakout User Excavated": "No"})
             return jsonify({"error": f"AI excavation failed: {primary.get('error', 'Unknown')}"}), 500
-        update_fields = extract_primary_record_fields(
-            claim=claim_text, parsed=primary, mode="full", username=username, existing_fields=bf
-        )
+        update_fields = extract_primary_record_fields(claim=claim_text, parsed=primary, mode="full", username=username, existing_fields=bf)
         update_fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
         update_fields["OpenAI Raw JSON"] = json.dumps(openai_json, ensure_ascii=False)[:100000]
         if grok_adjudication:
@@ -3518,9 +3609,7 @@ def breakout_excavate():
         update_fields["Excavation Record ID"] = breakout_record_id
         resp = update_airtable_record(breakout_record_id, update_fields)
         if not resp.ok:
-            update_airtable_record(breakout_record_id, {
-                "Lock Status": "Unlocked", "Breakout Status": "Pending Excavation", "Breakout User Excavated": "No"
-            })
+            update_airtable_record(breakout_record_id, {"Lock Status": "Unlocked", "Breakout Status": "Pending Excavation", "Breakout User Excavated": "No"})
             return jsonify({"error": f"Failed to save excavation: {resp.text}"}), 500
         final_slug = update_fields.get("URL Slug", bf.get("URL Slug", ""))
         parent_links = bf.get("Parent Claim", [])
@@ -3533,9 +3622,7 @@ def breakout_excavate():
         return jsonify({"ok": True, "redirect_to": f"/claim/{final_slug}", "slug": final_slug, "claims_remaining": session.get("claims_remaining")})
     except Exception as e:
         print(f"BREAKOUT ERROR: {e}", flush=True)
-        update_airtable_record(breakout_record_id, {
-            "Lock Status": "Unlocked", "Breakout Status": "Pending Excavation", "Breakout User Excavated": "No"
-        })
+        update_airtable_record(breakout_record_id, {"Lock Status": "Unlocked", "Breakout Status": "Pending Excavation", "Breakout User Excavated": "No"})
         return jsonify({"error": f"Excavation error: {str(e)}"}), 500
 
 

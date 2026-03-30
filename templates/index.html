@@ -271,64 +271,69 @@
       color: var(--gold);
     }
 
-    a.logout-badge {
-      padding: 6px 12px; border-radius: 999px;
+    /* Duplicate / Similar Claims Modal */
+    .dup-modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.72);
+      z-index: 9800; display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity .2s ease;
+    }
+    .dup-modal-overlay.visible { opacity: 1; pointer-events: all; }
+    .dup-modal {
+      background: #0d2035; border: 1px solid rgba(201,168,76,.3);
+      border-radius: 16px; padding: 28px 26px; max-width: 480px; width: 90%;
+      max-height: 80vh; overflow-y: auto;
+      box-shadow: 0 24px 60px rgba(0,0,0,.7);
+    }
+    .dup-modal-kicker {
       font-family: 'Libre Baskerville', Georgia, serif;
-      font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
-      white-space: nowrap; color: var(--gold);
-      background: rgba(201,168,76,.12); border: 1px solid rgba(201,168,76,.28);
-      text-decoration: none; transition: background .15s;
+      font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 8px;
     }
-    a.logout-badge:hover { background: rgba(201,168,76,.22); }
-
-    .nav-menu-wrap { position: relative; display: inline-flex; align-items: center; vertical-align: middle; }
-    .nav-menu-btn {
-      display: flex; align-items: center; gap: 4px;
-      padding: 6px 10px; border-radius: 999px;
+    .dup-modal-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 20px; font-weight: 700; color: var(--cream);
+      margin-bottom: 6px; line-height: 1.3;
+    }
+    .dup-modal-sub {
+      font-size: 14px; color: var(--text-mid); margin-bottom: 18px;
+      line-height: 1.55;
+    }
+    .dup-claim-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+    .dup-claim-item {
+      display: block; text-decoration: none;
+      padding: 12px 14px; border-radius: 10px;
+      background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08);
+      transition: background .15s;
+    }
+    .dup-claim-item:hover { background: rgba(255,255,255,.07); }
+    .dup-claim-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 15px; color: var(--cream); line-height: 1.35;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .dup-claim-action {
       font-family: 'Libre Baskerville', Georgia, serif;
-      font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
-      color: var(--text-light); background: rgba(255,255,255,.04);
-      border: 1px solid rgba(255,255,255,.1);
-      cursor: pointer; white-space: nowrap; transition: background .15s;
+      font-size: 9px; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--gold); margin-top: 5px; opacity: .7;
     }
-    .nav-menu-btn:hover { background: rgba(255,255,255,.09); }
-    .nav-menu-btn .nav-chevron { font-size: 7px; opacity: .55; transition: transform .2s; }
-    .nav-menu-btn.open .nav-chevron { transform: rotate(180deg); }
-    .nav-menu-panel {
-      display: none; position: absolute; top: calc(100% + 10px); right: 0;
-      background: #0c1e30; border: 1px solid rgba(201,168,76,.22);
-      border-radius: 12px; padding: 6px; min-width: 180px;
-      box-shadow: 0 16px 40px rgba(0,0,0,.55); z-index: 9999;
-    }
-    .nav-menu-panel.open { display: block; }
-    .nav-menu-panel a {
-      display: block; padding: 10px 14px; border-radius: 7px;
+    .dup-modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
+    .dup-cancel-btn {
+      padding: 9px 18px; border-radius: 999px;
+      background: none; border: 1px solid rgba(255,255,255,.12);
       font-family: 'Libre Baskerville', Georgia, serif;
-      font-size: 11px; letter-spacing: .04em;
-      color: var(--text-light); text-decoration: none; transition: background .12s;
+      font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--text-mid); cursor: pointer; transition: border-color .15s;
     }
-    .nav-menu-panel a:hover { background: rgba(255,255,255,.06); }
-    .nav-menu-panel .menu-div { height: 1px; background: rgba(255,255,255,.07); margin: 5px 2px; }
-    .nav-menu-panel .menu-red { color: #e97b7b; }
-    .nav-menu-panel .menu-red:hover { background: rgba(233,123,123,.08); }
-
-    /* ClaimLab tooltip */
-    .claimlab-tip { position: relative; display: inline; cursor: help; border-bottom: 1px dotted rgba(201,168,76,.5); }
-    .claimlab-tip-box {
-      display: none; position: absolute; bottom: calc(100% + 10px); left: 50%;
-      transform: translateX(-50%); width: 280px;
-      background: #0c1e30; border: 1px solid rgba(201,168,76,.25);
-      border-radius: 10px; padding: 14px 16px;
-      font-family: 'Crimson Text', Georgia, serif; font-size: 14px; line-height: 1.55;
-      color: var(--text-light); box-shadow: 0 12px 32px rgba(0,0,0,.5);
-      z-index: 999; pointer-events: none;
+    .dup-cancel-btn:hover { border-color: rgba(255,255,255,.25); }
+    .dup-continue-btn {
+      padding: 9px 18px; border-radius: 999px;
+      background: rgba(201,168,76,.12); border: 1px solid rgba(201,168,76,.3);
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--gold); cursor: pointer; transition: background .15s;
     }
-    .claimlab-tip-box::after {
-      content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
-      border: 6px solid transparent; border-top-color: rgba(201,168,76,.25);
-    }
-    .claimlab-tip:hover .claimlab-tip-box,
-    .claimlab-tip.tip-open .claimlab-tip-box { display: block; }
+    .dup-continue-btn:hover { background: rgba(201,168,76,.22); }
 
     .gold-btn,
     .gold-btn-mobile {
@@ -448,11 +453,11 @@
     .hero-inner {
       width: min(var(--content-width), calc(100% - 32px));
       margin: 0 auto;
-      padding: 20px 0 18px;
+      padding: 24px 0 20px;
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
-      align-items: stretch;
+      grid-template-columns: 1.35fr .9fr;
+      gap: 28px;
+      align-items: start;
     }
 
     .hero-card,
@@ -477,19 +482,11 @@
 
     .hero-title {
       font-family: 'Playfair Display', Georgia, serif;
-      font-size: clamp(26px, 3vw, 40px);
-      line-height: 1.1;
+      font-size: clamp(30px, 4vw, 50px);
+      line-height: 1.08;
       font-weight: 900;
       color: var(--cream);
-      margin-bottom: 12px;
-    }
-    .trust-card h3 {
-      font-family: 'Playfair Display', Georgia, serif;
-      font-size: clamp(26px, 3vw, 40px);
-      line-height: 1.1;
-      font-weight: 900;
-      color: var(--cream);
-      margin-bottom: 12px;
+      margin-bottom: 14px;
     }
 
     .hero-text {
@@ -669,9 +666,6 @@
       margin-bottom: 26px;
       padding-bottom: 24px;
       border-bottom: 1px solid rgba(201,168,76,.14);
-      min-width: 0;
-      overflow-wrap: break-word;
-      word-break: break-word;
     }
 
     .status-row {
@@ -721,35 +715,7 @@
       line-height: 1.12;
       color: var(--cream);
       margin-bottom: 14px;
-      overflow-wrap: break-word;
-      word-break: break-word;
     }
-    /* Threshold-based scaling applied by JS */
-    .article-title.claim-md { font-size: clamp(24px, 3vw, 36px); line-height: 1.15; }
-    .article-title.claim-lg { font-size: clamp(20px, 2.5vw, 30px); line-height: 1.2; }
-    .article-title.claim-xl { font-size: clamp(17px, 2vw, 24px); line-height: 1.25; }
-
-    /* Collapsed long claim */
-    .claim-body-wrap { position: relative; }
-    .claim-body-wrap.collapsed { max-height: 160px; overflow: hidden; }
-    .claim-body-wrap.collapsed::after {
-      content: '';
-      position: absolute;
-      bottom: 0; left: 0; right: 0; height: 60px;
-      background: linear-gradient(to bottom, transparent, rgba(8,23,38,.95));
-      pointer-events: none;
-    }
-    .claim-see-more {
-      display: none;
-      margin-top: 10px;
-      background: none; border: none;
-      font-family: 'Libre Baskerville', Georgia, serif;
-      font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
-      color: var(--gold); cursor: pointer; padding: 4px 0;
-      opacity: .8; transition: opacity .15s;
-    }
-    .claim-see-more:hover { opacity: 1; }
-    .claim-needs-expand + .claim-see-more { display: inline-block; }
 
     .article-dek {
       font-size: 19px;
@@ -1441,8 +1407,6 @@
       border: var(--border-soft);
       border-radius: 14px;
       padding: 14px 14px 13px;
-      min-width: 0;
-      overflow: hidden;
     }
 
     .recent-link {
@@ -1456,17 +1420,11 @@
 
     .recent-title {
       font-family: 'Playfair Display', Georgia, serif;
-      font-size: 16px;
+      font-size: 17px;
       line-height: 1.3;
       color: var(--cream);
       margin-bottom: 8px;
       transition: color .16s ease;
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      overflow-wrap: break-word;
-      word-break: break-word;
     }
 
     .recent-meta,
@@ -1636,9 +1594,6 @@
       border-radius: 16px;
       padding: 16px;
       min-width: 0;
-      overflow: hidden;
-      word-break: break-word;
-      overflow-wrap: break-word;
     }
 
     .archive-card-title {
@@ -1646,12 +1601,6 @@
       font-size: 19px;
       line-height: 1.28;
       color: var(--cream);
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      overflow-wrap: break-word;
-      word-break: break-word;
     }
 
     .archive-card-title a {
@@ -1666,11 +1615,6 @@
       color: var(--text-light);
       font-size: 16px;
       line-height: 1.52;
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      overflow-wrap: break-word;
     }
 
     .archive-card-footer {
@@ -2900,24 +2844,14 @@
   border-radius: 14px;
   padding: 12px;
   scroll-snap-align: start;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
 }
 
 .m-card-title {
   color: var(--cream);
   font-family: 'Playfair Display', Georgia, serif;
-  font-size: 15px;
+  font-size: 17px;
   line-height: 1.3;
   margin-bottom: 10px;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  overflow-wrap: break-word;
-  word-break: break-word;
 }
 
 .m-card-meta {
@@ -3048,64 +2982,13 @@
   line-height: 1.18;
   color: var(--cream);
   margin: 0;
-  overflow-wrap: break-word;
-  word-break: break-word;
+  overflow-wrap: anywhere;
 }
-/* Threshold scaling for mobile long claims */
-.m-claim-title.claim-md { font-size: 20px; }
-.m-claim-title.claim-lg { font-size: 18px; line-height: 1.22; }
-.m-claim-title.claim-xl { font-size: 16px; line-height: 1.25; }
-
-/* Mobile claim collapse */
-.m-claim-body-wrap { position: relative; }
-.m-claim-body-wrap.collapsed { max-height: 200px; overflow: hidden; }
-.m-claim-body-wrap.collapsed::after {
-  content: '';
-  position: absolute;
-  bottom: 0; left: 0; right: 0; height: 60px;
-  background: linear-gradient(to bottom, transparent, rgba(8,23,38,.97));
-  pointer-events: none;
-}
-.m-claim-see-more {
-  display: none;
-  margin-top: 10px;
-  background: none; border: none;
-  font-family: 'Libre Baskerville', Georgia, serif;
-  font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
-  color: var(--gold); cursor: pointer; padding: 6px 0;
-  opacity: .85; width: 100%; text-align: left;
-}
-.m-claim-see-more:hover { opacity: 1; }
-.m-claim-needs-expand + .m-claim-see-more { display: block; }
 
 .m-claim-dek {
   font-size: 15px;
   line-height: 1.55;
   color: var(--text-light);
-}
-
-.m-archive-claim-card {
-  display: block;
-  text-decoration: none;
-  padding: 12px 14px;
-  background: rgba(255,255,255,.02);
-  border: 1px solid rgba(255,255,255,.07);
-  border-radius: 12px;
-  min-width: 0;
-  overflow: hidden;
-}
-.m-archive-claim-card:hover { background: rgba(255,255,255,.04); }
-.m-archive-claim-title {
-  font-family: 'Playfair Display', Georgia, serif;
-  font-size: 15px;
-  line-height: 1.35;
-  color: var(--cream);
-  overflow-wrap: break-word;
-  word-break: break-word;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
 .m-entered-by {
@@ -3447,7 +3330,6 @@ html, body {
 .m-preview-card {
   min-width: 78vw;
   max-width: 78vw;
-  overflow: hidden;
 }
 
 .m-topbar,
@@ -3496,11 +3378,11 @@ html, body {
 
 /* Trademark styling */
 .tm {
-  font-size: 0.38em;
+  font-size: 0.55em;
   vertical-align: super;
-  margin-left: 1px;
-  letter-spacing: 0.06em;
-  opacity: 0.65;
+  margin-left: 2px;
+  letter-spacing: 0.08em;
+  opacity: 0.85;
 }
 
 /* Slightly smaller in navigation */
@@ -3598,7 +3480,7 @@ html, body {
     .cm-action-bar { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:12px 0; border-bottom:1px solid rgba(201,168,76,.12); flex-wrap:wrap; }
     .cm-claim-row { display:grid; grid-template-columns:28px 1fr auto; gap:10px; align-items:center; padding:12px 0; border-bottom:1px solid rgba(255,255,255,.06); }
     .cm-claim-row:last-child { border-bottom:none; }
-    .cm-claim-title { font-family:'Playfair Display',Georgia,serif; font-size:16px; line-height:1.3; color:var(--cream); text-decoration:none; overflow-wrap:break-word; word-break:break-word; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+    .cm-claim-title { font-family:'Playfair Display',Georgia,serif; font-size:16px; line-height:1.3; color:var(--cream); text-decoration:none; }
     .cm-claim-title:hover { color:var(--gold); }
     .cm-claim-meta { font-family:'Libre Baskerville',Georgia,serif; font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-mid); white-space:nowrap; }
     .cm-reanalyzed-badge { font-family:'Libre Baskerville',Georgia,serif; font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:#75c28d; white-space:nowrap; }
@@ -3653,7 +3535,7 @@ html, body {
     /* excavation popup */
     .breakout-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.72); z-index:9900; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity .2s ease; }
     .breakout-modal-overlay.visible { opacity:1; pointer-events:all; }
-    .breakout-modal { background:#0d2035; border:1px solid rgba(201,168,76,.35); border-radius:16px; padding:32px 28px; max-width:480px; width:90%; max-height:85vh; overflow-y:auto; box-shadow:0 28px 70px rgba(0,0,0,.75); }
+    .breakout-modal { background:var(--surface); border:1px solid rgba(201,168,76,.3); border-radius:16px; padding:32px 28px; max-width:480px; width:90%; max-height:85vh; overflow-y:auto; }
     .breakout-modal-title { font-family:'Playfair Display',Georgia,serif; font-size:18px; color:var(--text-primary); margin-bottom:6px; line-height:1.35; }
     .breakout-modal-source { font-size:12px; color:var(--text-mid); font-style:italic; margin-bottom:18px; padding:10px 12px; background:rgba(255,255,255,.03); border-left:2px solid rgba(201,168,76,.3); border-radius:0 6px 6px 0; line-height:1.5; }
     .breakout-modal-label { font-family:'Libre Baskerville',Georgia,serif; font-size:9px; letter-spacing:.16em; text-transform:uppercase; color:var(--gold-dim); margin-bottom:6px; }
@@ -3920,6 +3802,20 @@ html, body {
 
 
   <!-- CONFIRMATION MODAL -->
+  <!-- DUPLICATE / SIMILAR CLAIMS MODAL -->
+  <div class="dup-modal-overlay" id="dupModal">
+    <div class="dup-modal">
+      <div class="dup-modal-kicker" id="dupModalKicker">Similar Claims Found</div>
+      <div class="dup-modal-title" id="dupModalTitle">This claim may already exist</div>
+      <div class="dup-modal-sub" id="dupModalSub">These claims cover similar ground. You can open one or continue creating yours.</div>
+      <div class="dup-claim-list" id="dupClaimList"></div>
+      <div class="dup-modal-btns">
+        <button class="dup-cancel-btn" onclick="closeDupModal()">Cancel</button>
+        <button class="dup-continue-btn" id="dupContinueBtn" onclick="dupContinueAnyway()">Create Anyway</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="confirmModal">
     <div class="modal-box">
       <div class="modal-kicker">Confirm Excavation</div>
@@ -4142,13 +4038,11 @@ html, body {
 </div>
 
 <div class="m-claim-eyebrow">ClaimLab Excavation</div>
-<div class="m-claim-body-wrap" id="mClaimBodyWrap">
-  <h1 class="m-claim-title" id="mClaimTitle">{{ current_claim.title }}</h1>
-  {% if current_claim.stripped_claim and current_claim.stripped_claim != current_claim.title %}
-    <div class="m-claim-dek">{{ current_claim.stripped_claim }}</div>
-  {% endif %}
-</div>
-<button class="m-claim-see-more" id="mClaimSeeMore" onclick="toggleMobileClaimExpand()">See More &#8595;</button>
+<h1 class="m-claim-title">{{ current_claim.title }}</h1>
+
+        {% if current_claim.stripped_claim and current_claim.stripped_claim != current_claim.title %}
+          <div class="m-claim-dek">{{ current_claim.stripped_claim }}</div>
+        {% endif %}
 
         {% if true_superuser and current_claim.entered_by %}
           <div class="m-entered-by" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
@@ -4199,7 +4093,7 @@ html, body {
                 {% for bo in group.claims %}
                   {% set bo_ex = bo.breakout_status == 'Excavated' %}
                   <div class="m-breakout-row {% if bo_ex %}excavated{% endif %}"
-                       data-bo-id="{{ bo.record_id }}" onclick="handleBreakoutClick(this)">
+                       data-bo-id="{{ bo.record_id }}" data-bo="{{ bo | tojson | e }}" onclick="handleBreakoutClick(this)">
                     <span class="m-breakout-status-dot {% if bo_ex %}excavated{% else %}pending{% endif %}"></span>
                     <span class="m-breakout-row-title">{{ bo.title }}</span>
                     {% if bo.breakout_source_section == 'Dispute' %}
@@ -4787,25 +4681,13 @@ html, body {
         <span class="user-badge">{{ session.get("username") }}</span>
       {% endif %}
 
-      <a href="/logout" class="logout-badge">Logout</a>
-
-      <div class="nav-menu-wrap">
-        <button class="nav-menu-btn" id="navMenuBtn" onclick="toggleNavMenu()" aria-expanded="false">
-          Menu <span class="nav-chevron">&#9660;</span>
-        </button>
-        <div class="nav-menu-panel" id="navMenuPanel">
-          <a href="/">ClaimLab Home</a>
-          <a href="/archives">Claims Archive</a>
-          <a href="#methodology-section">Methodology</a>
-          {% if true_superuser %}<a href="/editor">Editor Queue</a>{% endif %}
-          <div class="menu-div"></div>
-          <a href="/profile">Profile</a>
-          <a href="/disputes">My Disputes</a>
-          <div class="menu-div"></div>
-          <a href="/logout" class="menu-red">Log Out</a>
-        </div>
-      </div>
+      <a href="#claim-entry-module" class="gold-btn">Run a Claim</a>
+      <a href="/logout">Logout</a>
     </nav>
+
+    {% if session.get("username") %}
+  <span class="user-badge mobile-user">{{ session.get("username") }}</span>
+{% endif %}
 
     <!-- Mobile Menu Button -->
     <button
@@ -4837,18 +4719,24 @@ html, body {
       <div class="hero-inner">
         <div class="hero-card">
           <div class="hero-kicker">Political Intelligence Platform</div>
-          <h1 class="hero-title">This platform breaks down what claims are actually made of.</h1>
-          <p class="hero-text">It goes beyond the argument, using <span class="claimlab-tip">ClaimLab&#8482;<span class="claimlab-tip-box">ClaimLab&#8482; is the structured evaluation system behind Where the Truth Lies. It tests how claims hold up against the available record, breaking them into layers so what is known, what is unclear, where people disagree, and where real agreement exists can be examined clearly.</span></span> to surface the layers beneath.</p>
-          <p class="hero-text">Facts, missing context, underlying concerns, and competing interpretations are examined together, not in isolation.</p>
-          <p class="hero-text">The goal is simple. Cut through the noise and show where the record supports real agreement.</p>
+          <h1 class="hero-title">Where trust has to come before everything else.</h1>
+          <p class="hero-text">
+  <strong>Where the Truth Lies</strong> is built to expose what political claims actually contain beneath the surface. Most platforms stop at surface-level judgments. That is where they fail.
+</p>
+<p class="hero-text">
+  Every claim has structure. Documented facts. Missing context. Underlying concerns. Value conflicts. This platform excavates all of it.
+</p>
         </div>
 
         <div class="trust-card">
           <div class="mini-kicker">Editorial Standard</div>
-          <h3>Bringing back common ground.</h3>
-          <p>We start with the record as it exists today. Not opinion, not narrative.</p>
-          <p>Each claim is stripped of noise and broken into its underlying structure, revealing what is supported, what is missing, and where interpretations diverge.</p>
-          <p>Common ground is not assumed. It is identified where the record actually supports agreement.</p>
+          <h3>Common Ground is not compromise.</h3>
+          <p>
+            Layer 06 exists only when the documented record supports something narrow, specific, lawful, institutionally achievable, and measurably better than deadlock.
+          </p>
+          <p>
+            No platitudes. No fake unity. No manufactured midpoint. If no genuine common ground exists, the platform should say so plainly.
+          </p>
         </div>
       </div>
     </section>
@@ -5318,13 +5206,11 @@ html, body {
 </div>
 
         <div class="article-eyebrow">ClaimLab<sup class="tm">TM</sup> Excavation</div>
-<div class="claim-body-wrap" id="claimBodyWrap">
-  <h1 class="article-title" id="claimTitle">{{ current_claim.title }}</h1>
-  {% if current_claim.stripped_claim and current_claim.stripped_claim != current_claim.title %}
-    <p class="article-dek">{{ current_claim.stripped_claim }}</p>
-  {% endif %}
-</div>
-<button class="claim-see-more" id="claimSeeMore" onclick="toggleClaimExpand()">See More &#8595;</button>
+<h1 class="article-title">{{ current_claim.title }}</h1>
+
+{% if current_claim.stripped_claim and current_claim.stripped_claim != current_claim.title %}
+  <p class="article-dek">{{ current_claim.stripped_claim }}</p>
+{% endif %}
 
 {% if true_superuser %}
   <div class="entered-by-line">
@@ -5399,7 +5285,7 @@ html, body {
                         {% set bo_excavated = bo.breakout_status == 'Excavated' %}
                         {% set bo_origin = bo.origin_type or 'Breakout Claim' %}
                         <div class="breakout-row {% if bo_excavated %}excavated{% endif %}"
-                             data-bo-id="{{ bo.record_id }}" onclick="handleBreakoutClick(this)">
+                             data-bo-id="{{ bo.record_id }}" data-bo="{{ bo | tojson | e }}" onclick="handleBreakoutClick(this)">
                           <span class="breakout-status-dot {% if bo_excavated %}excavated{% elif bo.breakout_status == 'Excavating' %}excavating{% else %}pending{% endif %}"></span>
                           <span class="breakout-row-title">{{ bo.title }}</span>
                           {% if bo.breakout_source_section == 'Dispute' %}
@@ -5801,7 +5687,7 @@ html, body {
                 {% set bo_ex = bo.breakout_status == 'Excavated' %}
                 <div class="breakout-row {% if bo_ex %}excavated{% endif %}"
                      style="margin-bottom:5px;"
-                     data-bo-id="{{ bo.record_id }}" onclick="handleBreakoutClick(this)">
+                     data-bo-id="{{ bo.record_id }}" data-bo="{{ bo | tojson | e }}" onclick="handleBreakoutClick(this)">
                   <span class="breakout-status-dot {% if bo_ex %}excavated{% else %}pending{% endif %}"></span>
                   <span class="breakout-row-title">{{ bo.title }}</span>
                   {% if bo.breakout_source_section == 'Dispute' %}
@@ -6268,18 +6154,83 @@ html, body {
       showTooltip(e, info.title, info.body);
     }
 
-    function openConfirmModal() {
-      if (USER_ROLE === 'standard') {
-        alert('Your account can browse existing claim files, but cannot run new excavations.');
-        return;
-      }
-      if (USER_ROLE === 'limited_superuser' && CLAIMS_REMAINING <= 0) {
-        alert('Claim limit reached. You can still browse existing claims, but new excavations are blocked.');
-        return;
-      }
-      const claim = document.getElementById('claim-input').value.trim();
-      if (!claim) { document.getElementById('claim-input').focus(); return; }
+    // ── Duplicate check state ──
+    var _pendingClaimText = '';
+    var _pendingClaimSource = 'desktop'; // 'desktop' or 'mobile'
 
+    function closeDupModal() {
+      document.getElementById('dupModal').classList.remove('visible');
+    }
+
+    function dupContinueAnyway() {
+      closeDupModal();
+      if (_pendingClaimSource === 'mobile') {
+        _showMobileConfirmModal(_pendingClaimText);
+      } else {
+        _showDesktopConfirmModal(_pendingClaimText);
+      }
+    }
+
+    function showDupModal(similar) {
+      var list = document.getElementById('dupClaimList');
+      list.innerHTML = '';
+      similar.forEach(function(c) {
+        var a = document.createElement('a');
+        a.className = 'dup-claim-item';
+        a.href = '/claim/' + c.slug;
+        a.innerHTML = '<div class="dup-claim-title">' + escHtml(c.title) + '</div>' +
+                      '<div class="dup-claim-action">View Existing Claim &#8599;</div>';
+        list.appendChild(a);
+      });
+      document.getElementById('dupModal').classList.add('visible');
+    }
+
+    async function checkDuplicateThen(claim, source) {
+      _pendingClaimText = claim;
+      _pendingClaimSource = source;
+      try {
+        var res = await fetch('/check-duplicate', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({claim: claim})
+        });
+        var data = await res.json();
+        if (data.exact && data.exact.slug) {
+          // Exact match — show brief message then redirect
+          var kicker = document.getElementById('dupModalKicker');
+          var title = document.getElementById('dupModalTitle');
+          var sub = document.getElementById('dupModalSub');
+          var btn = document.getElementById('dupContinueBtn');
+          var list = document.getElementById('dupClaimList');
+          kicker.textContent = 'Claim Already Exists';
+          title.textContent = 'This claim has already been excavated.';
+          sub.textContent = 'Redirecting you to the existing claim now...';
+          btn.style.display = 'none';
+          list.innerHTML = '<a class="dup-claim-item" href="/claim/' + data.exact.slug + '">' +
+            '<div class="dup-claim-title">' + escHtml(data.exact.title) + '</div>' +
+            '<div class="dup-claim-action">Open Existing Claim &#8599;</div></a>';
+          document.getElementById('dupModal').classList.add('visible');
+          setTimeout(function() { window.location = '/claim/' + data.exact.slug; }, 2200);
+          return;
+        }
+        if (data.similar && data.similar.length > 0) {
+          // Reset modal to similar state
+          document.getElementById('dupModalKicker').textContent = 'Similar Claims Found';
+          document.getElementById('dupModalTitle').textContent = 'This claim may already exist';
+          document.getElementById('dupModalSub').textContent = 'These claims cover similar ground. You can open one or continue creating yours.';
+          document.getElementById('dupContinueBtn').style.display = '';
+          showDupModal(data.similar);
+          return;
+        }
+        // No duplicates — proceed straight to confirm modal
+        dupContinueAnyway();
+      } catch(e) {
+        // On check failure, proceed normally — don't block the user
+        dupContinueAnyway();
+      }
+    }
+
+    function _showDesktopConfirmModal(claim) {
       document.getElementById('modalClaimPreview').textContent = claim.length > 200 ? claim.slice(0, 200) + '...' : claim;
 
       const title = document.getElementById('modalTitle');
@@ -6298,8 +6249,22 @@ html, body {
         confirmBtn.textContent = 'Continue';
         switchBtn.style.display = 'none';
       }
-
+      confirmBtn.onclick = submitClaim;
       document.getElementById('confirmModal').classList.add('visible');
+    }
+
+    function openConfirmModal() {
+      if (USER_ROLE === 'standard') {
+        alert('Your account can browse existing claim files, but cannot run new excavations.');
+        return;
+      }
+      if (USER_ROLE === 'limited_superuser' && CLAIMS_REMAINING <= 0) {
+        alert('Claim limit reached. You can still browse existing claims, but new excavations are blocked.');
+        return;
+      }
+      const claim = document.getElementById('claim-input').value.trim();
+      if (!claim) { document.getElementById('claim-input').focus(); return; }
+      checkDuplicateThen(claim, 'desktop');
     }
 
     function closeModal() {
@@ -6844,13 +6809,7 @@ console.error('Dispute submission failed:', err);
     }
 
     // Mobile confirm modal
-    function mOpenConfirm() {
-      const claim = document.getElementById('mClaimInput')?.value.trim();
-      if (!claim) {
-        document.getElementById('mClaimInput')?.focus();
-        return;
-      }
-      // Reuse the existing confirm modal
+    function _showMobileConfirmModal(claim) {
       const preview = document.getElementById('modalClaimPreview');
       if (preview) preview.textContent = claim.length > 200 ? claim.slice(0, 200) + '...' : claim;
       const title = document.getElementById('modalTitle');
@@ -6862,6 +6821,15 @@ console.error('Dispute submission failed:', err);
       if (confirmBtn) { confirmBtn.textContent = 'Excavate'; confirmBtn.onclick = mSubmitClaim; }
       if (switchBtn) switchBtn.style.display = 'none';
       document.getElementById('confirmModal')?.classList.add('visible');
+    }
+
+    function mOpenConfirm() {
+      const claim = document.getElementById('mClaimInput')?.value.trim();
+      if (!claim) {
+        document.getElementById('mClaimInput')?.focus();
+        return;
+      }
+      checkDuplicateThen(claim, 'mobile');
     }
 
     // Mobile submit claim — always full mode
@@ -7822,25 +7790,6 @@ console.error('Dispute submission failed:', err);
 </div>
 
 <script>
-  // ── BREAKOUT DATA MAP ──
-  window._boData = {};
-  {% if current_claim and current_claim.breakout_claims_grouped %}
-    {% for group in current_claim.breakout_claims_grouped %}
-      {% for bo in group.claims %}
-        window._boData["{{ bo.record_id }}"] = {{ bo | tojson }};
-      {% endfor %}
-    {% endfor %}
-  {% endif %}
-  {% if current_claim and current_claim.dispute_breakout_groups %}
-    {% for g in current_claim.dispute_breakout_groups %}
-      {% for bo in g.claims %}
-        window._boData["{{ bo.record_id }}"] = {{ bo | tojson }};
-      {% endfor %}
-    {% endfor %}
-  {% endif %}
-</script>
-
-<script>
   // ── BREAKOUT CLAIMS JS ──
   var _breakoutRecordId = '';
   var _breakoutData = null;
@@ -7887,48 +7836,22 @@ console.error('Dispute submission failed:', err);
   }
 
   function closeBreakoutModal() {
-    _stopStatusCycle();
     document.getElementById('breakoutModal').classList.remove('visible');
     _breakoutRecordId = '';
     _breakoutData = null;
   }
 
-  var _excavationMessages = [
-    'Locking claim record in Airtable...',
-    'Consulting Grok live layer for real-time grounding...',
-    'Grok searching live web and X sources...',
-    'Anchoring facts against known reality...',
-    'Sending to Claude for deep excavation...',
-    'Claude parsing direct facts and adjacent facts...',
-    'Claude mapping root concern and values divergence...',
-    'Claude drafting constitutional framework layer...',
-    'Sending to ChatGPT for cross-analysis...',
-    'ChatGPT building scenario and common ground map...',
-    'Comparing Claude and ChatGPT analyses...',
-    'Writing excavation to Airtable...',
-    'Running breakout detection on newly excavated claim...',
-    'Finalizing. Almost done...'
-  ];
-  var _breakoutStatusInterval = null;
-  function _startStatusCycle(el) {
-    var idx = 0; el.textContent = _excavationMessages[0];
-    _breakoutStatusInterval = setInterval(function() {
-      idx = (idx + 1) % _excavationMessages.length;
-      el.textContent = _excavationMessages[idx];
-    }, 4000);
-  }
-  function _stopStatusCycle() {
-    if (_breakoutStatusInterval) { clearInterval(_breakoutStatusInterval); _breakoutStatusInterval = null; }
-  }
-
   async function confirmBreakoutExcavation() {
     if (!_breakoutRecordId) return;
+
     var confirmBtn = document.getElementById('breakout-confirm-btn');
     var statusEl = document.getElementById('breakout-modal-status');
     var userContext = document.getElementById('breakout-modal-context').value.trim();
+
     confirmBtn.disabled = true;
     confirmBtn.textContent = 'Excavating...';
-    _startStatusCycle(statusEl);
+    statusEl.textContent = 'Running excavation. This may take 30 to 60 seconds...';
+
     try {
       var res = await fetch('/breakout/excavate', {
         method: 'POST',
@@ -7936,11 +7859,15 @@ console.error('Dispute submission failed:', err);
         body: JSON.stringify({ record_id: _breakoutRecordId, user_context: userContext })
       });
       var data = await res.json();
-      _stopStatusCycle();
-      if (res.ok && data.ok && data.redirect_to) {
+
+      if (res.ok && data.ok) {
         statusEl.textContent = 'Excavation complete. Loading claim...';
-        setTimeout(function() { closeBreakoutModal(); window.location = data.redirect_to; }, 800);
+        setTimeout(function() {
+          closeBreakoutModal();
+          window.location = data.redirect_to;
+        }, 1200);
       } else if (data.redirect_to) {
+        // Already excavated
         statusEl.textContent = 'Already excavated. Redirecting...';
         setTimeout(function() { window.location = data.redirect_to; }, 800);
       } else {
@@ -7949,7 +7876,6 @@ console.error('Dispute submission failed:', err);
         confirmBtn.textContent = 'Excavate This Claim';
       }
     } catch(err) {
-      _stopStatusCycle();
       statusEl.textContent = 'Error: ' + err.message;
       confirmBtn.disabled = false;
       confirmBtn.textContent = 'Excavate This Claim';
@@ -7958,7 +7884,9 @@ console.error('Dispute submission failed:', err);
 
   function handleBreakoutClick(el) {
     var recordId = el.getAttribute('data-bo-id');
-    var boData = (window._boData && window._boData[recordId]) || {};
+    var boRaw = el.getAttribute('data-bo');
+    var boData = {};
+    try { boData = JSON.parse(boRaw); } catch(e) {}
     var status = boData.breakout_status || '';
     if (status === 'Excavated' && boData.slug) {
       window.location = '/claim/' + boData.slug;
@@ -7991,87 +7919,6 @@ console.error('Dispute submission failed:', err);
       btn.disabled = false;
     }
   }
-
-  // ── Claim title auto-scaling + collapse (desktop) ──
-  (function() {
-    var titleEl = document.getElementById('claimTitle');
-    var wrapEl = document.getElementById('claimBodyWrap');
-    var btn = document.getElementById('claimSeeMore');
-    if (!titleEl) return;
-    var len = titleEl.textContent.trim().length;
-    if (len > 500) titleEl.classList.add('claim-xl');
-    else if (len > 220) titleEl.classList.add('claim-lg');
-    else if (len > 100) titleEl.classList.add('claim-md');
-    if (len > 500 && wrapEl && btn) {
-      wrapEl.classList.add('collapsed', 'claim-needs-expand');
-    }
-  })();
-  var _claimExpanded = false;
-  function toggleClaimExpand() {
-    var w = document.getElementById('claimBodyWrap');
-    var b = document.getElementById('claimSeeMore');
-    if (!w || !b) return;
-    _claimExpanded = !_claimExpanded;
-    w.classList.toggle('collapsed', !_claimExpanded);
-    b.textContent = _claimExpanded ? 'Show Less ↑' : 'See More ↓';
-  }
-
-  // ── Mobile claim title auto-scaling + collapse ──
-  (function() {
-    var titleEl = document.getElementById('mClaimTitle');
-    var wrapEl = document.getElementById('mClaimBodyWrap');
-    var btn = document.getElementById('mClaimSeeMore');
-    if (!titleEl) return;
-    var len = titleEl.textContent.trim().length;
-    if (len > 500) titleEl.classList.add('claim-xl');
-    else if (len > 220) titleEl.classList.add('claim-lg');
-    else if (len > 100) titleEl.classList.add('claim-md');
-    if (len > 220 && wrapEl && btn) {
-      wrapEl.classList.add('collapsed', 'm-claim-needs-expand');
-    }
-  })();
-  var _mClaimExpanded = false;
-  function toggleMobileClaimExpand() {
-    var w = document.getElementById('mClaimBodyWrap');
-    var b = document.getElementById('mClaimSeeMore');
-    if (!w || !b) return;
-    _mClaimExpanded = !_mClaimExpanded;
-    w.classList.toggle('collapsed', !_mClaimExpanded);
-    b.textContent = _mClaimExpanded ? 'Show Less ↑' : 'See More ↓';
-  }
-
-  // ── Desktop nav menu ──
-  function toggleNavMenu() {
-    var btn = document.getElementById('navMenuBtn');
-    var panel = document.getElementById('navMenuPanel');
-    if (!btn || !panel) return;
-    var isOpen = panel.classList.contains('open');
-    panel.classList.toggle('open', !isOpen);
-    btn.classList.toggle('open', !isOpen);
-    btn.setAttribute('aria-expanded', String(!isOpen));
-  }
-  document.addEventListener('click', function(e) {
-    var wrap = document.querySelector('.nav-menu-wrap');
-    if (wrap && !wrap.contains(e.target)) {
-      var p = document.getElementById('navMenuPanel');
-      var b = document.getElementById('navMenuBtn');
-      if (p) p.classList.remove('open');
-      if (b) { b.classList.remove('open'); b.setAttribute('aria-expanded','false'); }
-    }
-    // ClaimLab tooltip — mobile tap
-    var tip = e.target.closest('.claimlab-tip');
-    if (tip) {
-      var isMobile = window.matchMedia('(hover: none)').matches;
-      if (isMobile) {
-        e.preventDefault();
-        var wasOpen = tip.classList.contains('tip-open');
-        document.querySelectorAll('.claimlab-tip.tip-open').forEach(function(t) { t.classList.remove('tip-open'); });
-        if (!wasOpen) tip.classList.add('tip-open');
-      }
-    } else {
-      document.querySelectorAll('.claimlab-tip.tip-open').forEach(function(t) { t.classList.remove('tip-open'); });
-    }
-  });
 
   // Close breakout modal on overlay click
   document.getElementById('breakoutModal').addEventListener('click', function(e) {
