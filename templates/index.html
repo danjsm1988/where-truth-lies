@@ -330,6 +330,64 @@
     .claimlab-tip:hover .claimlab-tip-box,
     .claimlab-tip.tip-open .claimlab-tip-box { display: block; }
 
+    /* ── Duplicate / Similar Claims Modal ── */
+    .dup-modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.72);
+      z-index: 9800; display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity .2s ease;
+    }
+    .dup-modal-overlay.visible { opacity: 1; pointer-events: all; }
+    .dup-modal {
+      background: #0d2035; border: 1px solid rgba(201,168,76,.3);
+      border-radius: 16px; padding: 28px 26px; max-width: 480px; width: 90%;
+      max-height: 80vh; overflow-y: auto; box-shadow: 0 24px 60px rgba(0,0,0,.7);
+    }
+    .dup-modal-kicker {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 8px;
+    }
+    .dup-modal-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 20px; font-weight: 700; color: var(--cream);
+      margin-bottom: 6px; line-height: 1.3;
+    }
+    .dup-modal-sub { font-size: 14px; color: var(--text-mid); margin-bottom: 18px; line-height: 1.55; }
+    .dup-claim-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+    .dup-claim-item {
+      display: block; text-decoration: none; padding: 12px 14px; border-radius: 10px;
+      background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08);
+      transition: background .15s;
+    }
+    .dup-claim-item:hover { background: rgba(255,255,255,.07); }
+    .dup-claim-title {
+      font-family: 'Playfair Display', Georgia, serif; font-size: 15px;
+      color: var(--cream); line-height: 1.35;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .dup-claim-hint {
+      font-family: 'Libre Baskerville', Georgia, serif; font-size: 9px;
+      letter-spacing: .1em; text-transform: uppercase; color: var(--gold);
+      margin-top: 5px; opacity: .7;
+    }
+    .dup-modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
+    .dup-cancel-btn {
+      padding: 9px 18px; border-radius: 999px; background: none;
+      border: 1px solid rgba(255,255,255,.12);
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--text-mid); cursor: pointer; transition: border-color .15s;
+    }
+    .dup-cancel-btn:hover { border-color: rgba(255,255,255,.25); }
+    .dup-continue-btn {
+      padding: 9px 18px; border-radius: 999px;
+      background: rgba(201,168,76,.12); border: 1px solid rgba(201,168,76,.3);
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--gold); cursor: pointer; transition: background .15s;
+    }
+    .dup-continue-btn:hover { background: rgba(201,168,76,.22); }
+
     .gold-btn,
     .gold-btn-mobile {
       appearance: none;
@@ -3920,6 +3978,20 @@ html, body {
 
 
   <!-- CONFIRMATION MODAL -->
+  <!-- DUPLICATE / SIMILAR CLAIMS MODAL -->
+  <div class="dup-modal-overlay" id="dupModal">
+    <div class="dup-modal">
+      <div class="dup-modal-kicker" id="dupModalKicker">Similar Claims Found</div>
+      <div class="dup-modal-title" id="dupModalTitle">This claim may already exist</div>
+      <div class="dup-modal-sub" id="dupModalSub">These claims cover similar ground. Open one or continue creating yours.</div>
+      <div class="dup-claim-list" id="dupClaimList"></div>
+      <div class="dup-modal-btns">
+        <button class="dup-cancel-btn" onclick="closeDupModal()">Cancel</button>
+        <button class="dup-continue-btn" id="dupContinueBtn" onclick="dupContinueAnyway()">Create Anyway</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="confirmModal">
     <div class="modal-box">
       <div class="modal-kicker">Confirm Excavation</div>
@@ -6268,18 +6340,66 @@ html, body {
       showTooltip(e, info.title, info.body);
     }
 
-    function openConfirmModal() {
-      if (USER_ROLE === 'standard') {
-        alert('Your account can browse existing claim files, but cannot run new excavations.');
-        return;
-      }
-      if (USER_ROLE === 'limited_superuser' && CLAIMS_REMAINING <= 0) {
-        alert('Claim limit reached. You can still browse existing claims, but new excavations are blocked.');
-        return;
-      }
-      const claim = document.getElementById('claim-input').value.trim();
-      if (!claim) { document.getElementById('claim-input').focus(); return; }
+    // ── Dedup state and functions ──
+    var _pendingClaim = '';
+    var _pendingSource = 'desktop';
 
+    function closeDupModal() {
+      document.getElementById('dupModal').classList.remove('visible');
+    }
+
+    function dupContinueAnyway() {
+      closeDupModal();
+      _pendingSource === 'mobile' ? _showMobileConfirm(_pendingClaim) : _showDesktopConfirm(_pendingClaim);
+    }
+
+    async function checkDuplicateThen(claim, source) {
+      _pendingClaim = claim;
+      _pendingSource = source;
+      try {
+        var res = await fetch('/check-duplicate', {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({claim: claim})
+        });
+        var data = await res.json();
+        if (data.exact && data.exact.slug) {
+          document.getElementById('dupModalKicker').textContent = 'Claim Already Exists';
+          document.getElementById('dupModalTitle').textContent = 'This claim has already been excavated.';
+          document.getElementById('dupModalSub').textContent = 'Redirecting you to the existing claim now…';
+          document.getElementById('dupContinueBtn').style.display = 'none';
+          var list = document.getElementById('dupClaimList');
+          list.innerHTML = '<a class="dup-claim-item" href="/claim/' + data.exact.slug + '">' +
+            '<div class="dup-claim-title">' + escHtml(data.exact.title) + '</div>' +
+            '<div class="dup-claim-hint">Open Existing Claim ↗</div></a>';
+          document.getElementById('dupModal').classList.add('visible');
+          setTimeout(function() { window.location = '/claim/' + data.exact.slug; }, 2200);
+          return;
+        }
+        if (data.similar && data.similar.length > 0) {
+          document.getElementById('dupModalKicker').textContent = 'Similar Claims Found';
+          document.getElementById('dupModalTitle').textContent = 'This claim may already exist';
+          document.getElementById('dupModalSub').textContent = 'These claims cover similar ground. Open one or continue creating yours.';
+          document.getElementById('dupContinueBtn').style.display = '';
+          var list = document.getElementById('dupClaimList');
+          list.innerHTML = '';
+          data.similar.forEach(function(c) {
+            var a = document.createElement('a');
+            a.className = 'dup-claim-item';
+            a.href = '/claim/' + c.slug;
+            a.innerHTML = '<div class="dup-claim-title">' + escHtml(c.title) + '</div>' +
+                          '<div class="dup-claim-hint">View Existing Claim ↗</div>';
+            list.appendChild(a);
+          });
+          document.getElementById('dupModal').classList.add('visible');
+          return;
+        }
+        dupContinueAnyway();
+      } catch(e) {
+        dupContinueAnyway();
+      }
+    }
+
+    function _showDesktopConfirm(claim) {
       document.getElementById('modalClaimPreview').textContent = claim.length > 200 ? claim.slice(0, 200) + '...' : claim;
 
       const title = document.getElementById('modalTitle');
@@ -6298,8 +6418,22 @@ html, body {
         confirmBtn.textContent = 'Continue';
         switchBtn.style.display = 'none';
       }
-
+      confirmBtn.onclick = submitClaim;
       document.getElementById('confirmModal').classList.add('visible');
+    }
+
+    function openConfirmModal() {
+      if (USER_ROLE === 'standard') {
+        alert('Your account can browse existing claim files, but cannot run new excavations.');
+        return;
+      }
+      if (USER_ROLE === 'limited_superuser' && CLAIMS_REMAINING <= 0) {
+        alert('Claim limit reached. You can still browse existing claims, but new excavations are blocked.');
+        return;
+      }
+      const claim = document.getElementById('claim-input').value.trim();
+      if (!claim) { document.getElementById('claim-input').focus(); return; }
+      checkDuplicateThen(claim, 'desktop');
     }
 
     function closeModal() {
@@ -6844,13 +6978,7 @@ console.error('Dispute submission failed:', err);
     }
 
     // Mobile confirm modal
-    function mOpenConfirm() {
-      const claim = document.getElementById('mClaimInput')?.value.trim();
-      if (!claim) {
-        document.getElementById('mClaimInput')?.focus();
-        return;
-      }
-      // Reuse the existing confirm modal
+    function _showMobileConfirm(claim) {
       const preview = document.getElementById('modalClaimPreview');
       if (preview) preview.textContent = claim.length > 200 ? claim.slice(0, 200) + '...' : claim;
       const title = document.getElementById('modalTitle');
@@ -6862,6 +6990,12 @@ console.error('Dispute submission failed:', err);
       if (confirmBtn) { confirmBtn.textContent = 'Excavate'; confirmBtn.onclick = mSubmitClaim; }
       if (switchBtn) switchBtn.style.display = 'none';
       document.getElementById('confirmModal')?.classList.add('visible');
+    }
+
+    function mOpenConfirm() {
+      const claim = document.getElementById('mClaimInput')?.value.trim();
+      if (!claim) { document.getElementById('mClaimInput')?.focus(); return; }
+      checkDuplicateThen(claim, 'mobile');
     }
 
     // Mobile submit claim — always full mode

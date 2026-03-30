@@ -1911,6 +1911,93 @@ def profile_page():
     )
 
 
+def normalize_claim_text(text):
+    """Normalize claim for comparison: lowercase, strip punctuation, collapse whitespace."""
+    import re
+    text = text.lower().strip()
+    text = re.sub(r'[^\w\s]', ' ', text)
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text
+
+
+def keyword_overlap_score(norm_a, norm_b):
+    """Jaccard overlap of meaningful keywords. Returns 0.0-1.0."""
+    STOP = {'the','a','an','is','are','was','were','be','been','have','has','had',
+            'do','does','did','will','would','could','should','may','might','can',
+            'to','of','in','for','on','with','at','by','from','as','and','but',
+            'or','not','no','it','its','this','that','they','we','you','he','she',
+            'his','her','their','our','said','says','also','just','than','then',
+            'when','who','what','which','how','if','so','up','out','into'}
+    def kw(t):
+        return {w for w in t.split() if len(w) > 3 and w not in STOP}
+    a, b = kw(norm_a), kw(norm_b)
+    if not a or not b:
+        return 0.0
+    return len(a & b) / len(a | b)
+
+
+def find_duplicate_and_similar_claims(claim_text, threshold=0.30, max_similar=4):
+    """Check for exact and similar claims. Returns dict with exact and similar."""
+    result = {'exact': None, 'similar': []}
+    if not claim_text or not AIRTABLE_TOKEN:
+        return result
+    norm_input = normalize_claim_text(claim_text)
+    try:
+        params = {
+            'filterByFormula': "OR(NOT({Breakout User Excavated}), {Breakout User Excavated}!='No')",
+            'fields[]': ['Original Quote', 'Stripped Claim', 'URL Slug'],
+            'maxRecords': 200
+        }
+        response = requests.get(
+            airtable_url(AIRTABLE_TABLE_NAME),
+            headers={'Authorization': f'Bearer {AIRTABLE_TOKEN}'},
+            params=params, timeout=20
+        )
+        response.raise_for_status()
+        records = response.json().get('records', [])
+    except Exception as e:
+        print(f'DUPLICATE CHECK ERROR: {e}', flush=True)
+        return result
+    scored = []
+    for rec in records:
+        f = rec.get('fields', {})
+        raw = f.get('Original Quote') or f.get('Stripped Claim') or ''
+        if not raw:
+            continue
+        norm_existing = normalize_claim_text(raw)
+        if norm_existing == norm_input:
+            result['exact'] = {
+                'record_id': rec.get('id'),
+                'title': clean_display_title(raw),
+                'slug': f.get('URL Slug', '')
+            }
+            return result
+        score = keyword_overlap_score(norm_input, norm_existing)
+        if score >= threshold:
+            scored.append({
+                'record_id': rec.get('id'),
+                'title': clean_display_title(raw),
+                'slug': f.get('URL Slug', ''),
+                'score': round(score, 3)
+            })
+    scored.sort(key=lambda x: x['score'], reverse=True)
+    result['similar'] = scored[:max_similar]
+    return result
+
+
+@app.route('/check-duplicate', methods=['POST'])
+def check_duplicate():
+    """Pre-creation duplicate/similar check — called before /analyze."""
+    if not session.get('logged_in'):
+        return jsonify({'error': 'Not logged in'}), 401
+    data = request.get_json() or {}
+    claim = (data.get('claim') or '').strip()
+    if not claim:
+        return jsonify({'exact': None, 'similar': []}), 200
+    result = find_duplicate_and_similar_claims(claim)
+    return jsonify(result), 200
+
+
 @app.route("/analyze", methods=["POST"])
 def analyze():
     if not session.get("logged_in"):
