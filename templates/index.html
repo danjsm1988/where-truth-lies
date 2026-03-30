@@ -271,32 +271,23 @@
       color: var(--gold);
     }
 
-    /* Logout as gold badge pill */
     a.logout-badge {
-      padding: 6px 12px;
-      border-radius: 999px;
+      padding: 6px 12px; border-radius: 999px;
       font-family: 'Libre Baskerville', Georgia, serif;
-      font-size: 9px;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-      white-space: nowrap;
-      color: var(--gold);
-      background: rgba(201,168,76,.12);
-      border: 1px solid rgba(201,168,76,.28);
-      text-decoration: none;
-      transition: background .15s;
+      font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
+      white-space: nowrap; color: var(--gold);
+      background: rgba(201,168,76,.12); border: 1px solid rgba(201,168,76,.28);
+      text-decoration: none; transition: background .15s;
     }
     a.logout-badge:hover { background: rgba(201,168,76,.22); }
 
-    /* Menu dropdown */
     .nav-menu-wrap { position: relative; display: inline-flex; align-items: center; vertical-align: middle; }
     .nav-menu-btn {
       display: flex; align-items: center; gap: 4px;
       padding: 6px 10px; border-radius: 999px;
       font-family: 'Libre Baskerville', Georgia, serif;
       font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
-      color: var(--text-light);
-      background: rgba(255,255,255,.04);
+      color: var(--text-light); background: rgba(255,255,255,.04);
       border: 1px solid rgba(255,255,255,.1);
       cursor: pointer; white-space: nowrap; transition: background .15s;
     }
@@ -314,13 +305,30 @@
       display: block; padding: 10px 14px; border-radius: 7px;
       font-family: 'Libre Baskerville', Georgia, serif;
       font-size: 11px; letter-spacing: .04em;
-      color: var(--text-light); text-decoration: none;
-      transition: background .12s;
+      color: var(--text-light); text-decoration: none; transition: background .12s;
     }
     .nav-menu-panel a:hover { background: rgba(255,255,255,.06); }
     .nav-menu-panel .menu-div { height: 1px; background: rgba(255,255,255,.07); margin: 5px 2px; }
     .nav-menu-panel .menu-red { color: #e97b7b; }
     .nav-menu-panel .menu-red:hover { background: rgba(233,123,123,.08); }
+
+    /* ClaimLab tooltip */
+    .claimlab-tip { position: relative; display: inline; cursor: help; border-bottom: 1px dotted rgba(201,168,76,.5); }
+    .claimlab-tip-box {
+      display: none; position: absolute; bottom: calc(100% + 10px); left: 50%;
+      transform: translateX(-50%); width: 280px;
+      background: #0c1e30; border: 1px solid rgba(201,168,76,.25);
+      border-radius: 10px; padding: 14px 16px;
+      font-family: 'Crimson Text', Georgia, serif; font-size: 14px; line-height: 1.55;
+      color: var(--text-light); box-shadow: 0 12px 32px rgba(0,0,0,.5);
+      z-index: 999; pointer-events: none;
+    }
+    .claimlab-tip-box::after {
+      content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+      border: 6px solid transparent; border-top-color: rgba(201,168,76,.25);
+    }
+    .claimlab-tip:hover .claimlab-tip-box,
+    .claimlab-tip.tip-open .claimlab-tip-box { display: block; }
 
     .gold-btn,
     .gold-btn-mobile {
@@ -475,7 +483,6 @@
       color: var(--cream);
       margin-bottom: 12px;
     }
-
     .trust-card h3 {
       font-family: 'Playfair Display', Georgia, serif;
       font-size: clamp(26px, 3vw, 40px);
@@ -484,44 +491,6 @@
       color: var(--cream);
       margin-bottom: 12px;
     }
-
-    /* ClaimLab tooltip */
-    .claimlab-tip {
-      position: relative;
-      display: inline;
-      cursor: help;
-      border-bottom: 1px dotted rgba(201,168,76,.5);
-    }
-    .claimlab-tip-box {
-      display: none;
-      position: absolute;
-      bottom: calc(100% + 10px);
-      left: 50%;
-      transform: translateX(-50%);
-      width: 280px;
-      background: #0c1e30;
-      border: 1px solid rgba(201,168,76,.25);
-      border-radius: 10px;
-      padding: 14px 16px;
-      font-family: 'Crimson Text', Georgia, serif;
-      font-size: 14px;
-      line-height: 1.55;
-      color: var(--text-light);
-      box-shadow: 0 12px 32px rgba(0,0,0,.5);
-      z-index: 999;
-      pointer-events: none;
-    }
-    .claimlab-tip-box::after {
-      content: '';
-      position: absolute;
-      top: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-      border: 6px solid transparent;
-      border-top-color: rgba(201,168,76,.25);
-    }
-    .claimlab-tip:hover .claimlab-tip-box,
-    .claimlab-tip.tip-open .claimlab-tip-box { display: block; }
 
     .hero-text {
   font-size: 19px;
@@ -700,6 +669,9 @@
       margin-bottom: 26px;
       padding-bottom: 24px;
       border-bottom: 1px solid rgba(201,168,76,.14);
+      min-width: 0;
+      overflow-wrap: break-word;
+      word-break: break-word;
     }
 
     .status-row {
@@ -749,7 +721,35 @@
       line-height: 1.12;
       color: var(--cream);
       margin-bottom: 14px;
+      overflow-wrap: break-word;
+      word-break: break-word;
     }
+    /* Threshold-based scaling applied by JS */
+    .article-title.claim-md { font-size: clamp(24px, 3vw, 36px); line-height: 1.15; }
+    .article-title.claim-lg { font-size: clamp(20px, 2.5vw, 30px); line-height: 1.2; }
+    .article-title.claim-xl { font-size: clamp(17px, 2vw, 24px); line-height: 1.25; }
+
+    /* Collapsed long claim */
+    .claim-body-wrap { position: relative; }
+    .claim-body-wrap.collapsed { max-height: 160px; overflow: hidden; }
+    .claim-body-wrap.collapsed::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0; height: 60px;
+      background: linear-gradient(to bottom, transparent, rgba(8,23,38,.95));
+      pointer-events: none;
+    }
+    .claim-see-more {
+      display: none;
+      margin-top: 10px;
+      background: none; border: none;
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--gold); cursor: pointer; padding: 4px 0;
+      opacity: .8; transition: opacity .15s;
+    }
+    .claim-see-more:hover { opacity: 1; }
+    .claim-needs-expand + .claim-see-more { display: inline-block; }
 
     .article-dek {
       font-size: 19px;
@@ -1628,6 +1628,9 @@
       border-radius: 16px;
       padding: 16px;
       min-width: 0;
+      overflow: hidden;
+      word-break: break-word;
+      overflow-wrap: break-word;
     }
 
     .archive-card-title {
@@ -1635,6 +1638,12 @@
       font-size: 19px;
       line-height: 1.28;
       color: var(--cream);
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      overflow-wrap: break-word;
+      word-break: break-word;
     }
 
     .archive-card-title a {
@@ -1649,6 +1658,11 @@
       color: var(--text-light);
       font-size: 16px;
       line-height: 1.52;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      overflow-wrap: break-word;
     }
 
     .archive-card-footer {
@@ -3016,13 +3030,42 @@
   line-height: 1.18;
   color: var(--cream);
   margin: 0;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .m-claim-dek {
   font-size: 15px;
   line-height: 1.55;
   color: var(--text-light);
+}
+
+.m-archive-claim-card {
+  display: block;
+  text-decoration: none;
+  padding: 12px 14px;
+  background: rgba(255,255,255,.02);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 12px;
+  min-width: 0;
+  overflow: hidden;
+}
+.m-archive-claim-card:hover { background: rgba(255,255,255,.04); }
+.m-archive-claim-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 15px;
+  line-height: 1.35;
+  color: var(--cream);
+  overflow-wrap: break-word;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .m-entered-by {
@@ -3514,7 +3557,7 @@ html, body {
     .cm-action-bar { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:12px 0; border-bottom:1px solid rgba(201,168,76,.12); flex-wrap:wrap; }
     .cm-claim-row { display:grid; grid-template-columns:28px 1fr auto; gap:10px; align-items:center; padding:12px 0; border-bottom:1px solid rgba(255,255,255,.06); }
     .cm-claim-row:last-child { border-bottom:none; }
-    .cm-claim-title { font-family:'Playfair Display',Georgia,serif; font-size:16px; line-height:1.3; color:var(--cream); text-decoration:none; }
+    .cm-claim-title { font-family:'Playfair Display',Georgia,serif; font-size:16px; line-height:1.3; color:var(--cream); text-decoration:none; overflow-wrap:break-word; word-break:break-word; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
     .cm-claim-title:hover { color:var(--gold); }
     .cm-claim-meta { font-family:'Libre Baskerville',Georgia,serif; font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-mid); white-space:nowrap; }
     .cm-reanalyzed-badge { font-family:'Libre Baskerville',Georgia,serif; font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:#75c28d; white-space:nowrap; }
@@ -4721,7 +4764,6 @@ html, body {
       </div>
     </nav>
 
-
     <!-- Mobile Menu Button -->
     <button
       class="mobile-menu-btn"
@@ -5233,11 +5275,13 @@ html, body {
 </div>
 
         <div class="article-eyebrow">ClaimLab<sup class="tm">TM</sup> Excavation</div>
-<h1 class="article-title">{{ current_claim.title }}</h1>
-
-{% if current_claim.stripped_claim and current_claim.stripped_claim != current_claim.title %}
-  <p class="article-dek">{{ current_claim.stripped_claim }}</p>
-{% endif %}
+<div class="claim-body-wrap" id="claimBodyWrap">
+  <h1 class="article-title" id="claimTitle">{{ current_claim.title }}</h1>
+  {% if current_claim.stripped_claim and current_claim.stripped_claim != current_claim.title %}
+    <p class="article-dek">{{ current_claim.stripped_claim }}</p>
+  {% endif %}
+</div>
+<button class="claim-see-more" id="claimSeeMore" onclick="toggleClaimExpand()">See More &#8595;</button>
 
 {% if true_superuser %}
   <div class="entered-by-line">
@@ -7823,31 +7867,25 @@ console.error('Dispute submission failed:', err);
     'Finalizing. Almost done...'
   ];
   var _breakoutStatusInterval = null;
-
-  function _startStatusCycle(statusEl) {
-    var idx = 0;
-    statusEl.textContent = _excavationMessages[0];
+  function _startStatusCycle(el) {
+    var idx = 0; el.textContent = _excavationMessages[0];
     _breakoutStatusInterval = setInterval(function() {
       idx = (idx + 1) % _excavationMessages.length;
-      statusEl.textContent = _excavationMessages[idx];
+      el.textContent = _excavationMessages[idx];
     }, 4000);
   }
-
   function _stopStatusCycle() {
     if (_breakoutStatusInterval) { clearInterval(_breakoutStatusInterval); _breakoutStatusInterval = null; }
   }
 
   async function confirmBreakoutExcavation() {
     if (!_breakoutRecordId) return;
-
     var confirmBtn = document.getElementById('breakout-confirm-btn');
     var statusEl = document.getElementById('breakout-modal-status');
     var userContext = document.getElementById('breakout-modal-context').value.trim();
-
     confirmBtn.disabled = true;
     confirmBtn.textContent = 'Excavating...';
     _startStatusCycle(statusEl);
-
     try {
       var res = await fetch('/breakout/excavate', {
         method: 'POST',
@@ -7856,7 +7894,6 @@ console.error('Dispute submission failed:', err);
       });
       var data = await res.json();
       _stopStatusCycle();
-
       if (res.ok && data.ok && data.redirect_to) {
         statusEl.textContent = 'Excavation complete. Loading claim...';
         setTimeout(function() { closeBreakoutModal(); window.location = data.redirect_to; }, 800);
@@ -7912,25 +7949,31 @@ console.error('Dispute submission failed:', err);
     }
   }
 
-  // ClaimLab tooltip — tap to show on mobile
-  document.addEventListener('click', function(e) {
-    var tip = e.target.closest('.claimlab-tip');
-    if (tip) {
-      // Toggle on mobile tap
-      var isMobile = window.matchMedia('(hover: none)').matches;
-      if (isMobile) {
-        e.preventDefault();
-        var wasOpen = tip.classList.contains('tip-open');
-        document.querySelectorAll('.claimlab-tip.tip-open').forEach(function(t) { t.classList.remove('tip-open'); });
-        if (!wasOpen) tip.classList.add('tip-open');
-      }
-    } else {
-      // Close any open tooltips when clicking elsewhere
-      document.querySelectorAll('.claimlab-tip.tip-open').forEach(function(t) { t.classList.remove('tip-open'); });
+  // ── Claim title auto-scaling + collapse ──
+  (function() {
+    var titleEl = document.getElementById('claimTitle');
+    var wrapEl = document.getElementById('claimBodyWrap');
+    var btn = document.getElementById('claimSeeMore');
+    if (!titleEl) return;
+    var len = titleEl.textContent.trim().length;
+    if (len > 500) titleEl.classList.add('claim-xl');
+    else if (len > 220) titleEl.classList.add('claim-lg');
+    else if (len > 100) titleEl.classList.add('claim-md');
+    if (len > 500 && wrapEl && btn) {
+      wrapEl.classList.add('collapsed', 'claim-needs-expand');
     }
-  });
+  })();
+  var _claimExpanded = false;
+  function toggleClaimExpand() {
+    var w = document.getElementById('claimBodyWrap');
+    var b = document.getElementById('claimSeeMore');
+    if (!w || !b) return;
+    _claimExpanded = !_claimExpanded;
+    w.classList.toggle('collapsed', !_claimExpanded);
+    b.textContent = _claimExpanded ? 'Show Less ↑' : 'See More ↓';
+  }
 
-  // Desktop nav menu dropdown
+  // ── Desktop nav menu ──
   function toggleNavMenu() {
     var btn = document.getElementById('navMenuBtn');
     var panel = document.getElementById('navMenuPanel');
@@ -7947,6 +7990,19 @@ console.error('Dispute submission failed:', err);
       var b = document.getElementById('navMenuBtn');
       if (p) p.classList.remove('open');
       if (b) { b.classList.remove('open'); b.setAttribute('aria-expanded','false'); }
+    }
+    // ClaimLab tooltip — mobile tap
+    var tip = e.target.closest('.claimlab-tip');
+    if (tip) {
+      var isMobile = window.matchMedia('(hover: none)').matches;
+      if (isMobile) {
+        e.preventDefault();
+        var wasOpen = tip.classList.contains('tip-open');
+        document.querySelectorAll('.claimlab-tip.tip-open').forEach(function(t) { t.classList.remove('tip-open'); });
+        if (!wasOpen) tip.classList.add('tip-open');
+      }
+    } else {
+      document.querySelectorAll('.claimlab-tip.tip-open').forEach(function(t) { t.classList.remove('tip-open'); });
     }
   });
 
