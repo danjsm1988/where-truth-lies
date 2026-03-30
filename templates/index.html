@@ -8599,9 +8599,7 @@ console.error('Dispute submission failed:', err);
     var claim = _framingSelectedClaim || (_framingData && _framingData.primary_claim) || _framingOriginalInput;
     // Append user context if provided
     if (context) {
-      claim = claim + '
-
-Additional context from user: ' + context;
+      claim = claim + '\n\nAdditional context from user: ' + context;
     }
     closeFrameModal();
     _pendingClaim = claim;
