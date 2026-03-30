@@ -5790,7 +5790,7 @@ html, body {
         <div class="article-eyebrow" style="display:flex; align-items:center; gap:10px;">
           ClaimLab<sup class="tm">TM</sup> Excavation
           {% if current_claim.original_quote and current_claim.original_quote != current_claim.title %}
-            <button class="orig-quote-btn" onclick="openOrigQuote({{ current_claim.original_quote | tojson }})">View Original</button>
+            <button class="orig-quote-btn" data-orig="{{ current_claim.original_quote | e }}" onclick="openOrigQuote(this.getAttribute('data-orig'))">View Original</button>
           {% endif %}
         </div>
 <div class="claim-body-wrap" id="claimBodyWrap">
@@ -7961,8 +7961,13 @@ console.error('Dispute submission failed:', err);
         var data = await res.json();
         _stopReanalyzeCycle();
         if (res.ok && data.ok) {
-          statusEl.textContent = 'Done by ' + data.reanalyzed_by + ' on ' + data.last_reanalyzed + '. Reloading...';
-          setTimeout(function() { closeClaimReanalyzeModal(); window.location.reload(); }, 2000);
+          if (data.slug_changed && data.redirect_to) {
+            statusEl.textContent = 'Done. Claim refocused — redirecting to updated claim...';
+            setTimeout(function() { closeClaimReanalyzeModal(); window.location = data.redirect_to; }, 2000);
+          } else {
+            statusEl.textContent = 'Done by ' + data.reanalyzed_by + ' on ' + data.last_reanalyzed + '. Reloading...';
+            setTimeout(function() { closeClaimReanalyzeModal(); window.location.reload(); }, 2000);
+          }
         } else {
           statusEl.textContent = 'Error: ' + (data.error || 'Failed');
           document.getElementById('claimReanalyzeModal').querySelectorAll('button').forEach(function(b) { b.disabled = false; });

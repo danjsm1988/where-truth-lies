@@ -2100,6 +2100,79 @@ def check_duplicate():
     return jsonify(result), 200
 
 
+FRAME_CLAIM_PROMPT = """You are a pre-excavation claim framing engine for Where the Truth Lies.
+
+Your job is to analyze raw user input BEFORE full excavation begins. Understand what the user actually intends to have analyzed — not just what they literally typed.
+
+CRITICAL RULES:
+1. Evaluate claims not writing ability. Slang, ebonics, dyslexic spelling, incomplete sentences, and informal grammar must all be interpreted for intent.
+2. Identify the FOUNDATIONAL PREMISE first — the central animating assertion. Not downstream statements or supporting facts.
+3. Rhetorical slogans and compressed narratives (like "No Kings", "Defund the Police", "Stop the Steal") must be recognized as compressed claims and unpacked to their foundational premise.
+4. Sourced content, press releases, manifestos, and "About" page text must be treated as raw material — extract what the user most likely wants examined.
+5. Preserve the original text exactly — never rewrite it. Produce a clarified version separately.
+6. The system leads. Propose the primary framing. The user may adjust from system-generated options but cannot replace the framing with an unrelated claim.
+
+INPUT TYPES: single_claim, multi_claim, sourced_content, rhetorical_slogan, question, unclear
+
+CONFIDENCE: 0.85+ auto proceed. 0.60-0.84 inline banner. Under 0.60 full modal.
+
+FOUNDATIONAL PREMISE: When input contains a slogan or movement name, identify the fundamental claim the slogan asserts.
+Example: "No Kings protest" -> foundational premise is "Trump is acting with the authority of an unelected ruler"
+
+Return ONLY valid JSON. No markdown. No preamble.
+
+{
+  "input_type": "single_claim",
+  "primary_claim": "The foundational premise — what this is ACTUALLY about. One sentence.",
+  "clarified_text": "Clean readable version preserving meaning.",
+  "alternate_claims": ["Second interpretation", "Third if genuinely distinct"],
+  "breakout_candidates": ["Distinct sub-claim that can stand alone"],
+  "confidence_score": 0.0,
+  "needs_clarification": false,
+  "framing_note": "One sentence explaining the framing choice."
+}
+"""
+
+
+def frame_claim_input(raw_input):
+    """Run pre-excavation framing. Returns structured framing dict."""
+    fallback = {
+        "input_type": "single_claim", "primary_claim": raw_input,
+        "clarified_text": raw_input, "alternate_claims": [],
+        "breakout_candidates": [], "confidence_score": 0.9,
+        "needs_clarification": False, "framing_note": ""
+    }
+    if not raw_input or not anthropic_client:
+        return fallback
+    try:
+        response = anthropic_client.messages.create(
+            model="claude-haiku-4-5-20251001", max_tokens=800, temperature=0,
+            system=FRAME_CLAIM_PROMPT,
+            messages=[{"role": "user", "content": f"Frame this input:\n\n{raw_input}"}]
+        )
+        result = safe_json_parse(response.content[0].text)
+        if not isinstance(result, dict) or "primary_claim" not in result:
+            return fallback
+        score = float(result.get("confidence_score", 0.9))
+        if "needs_clarification" not in result:
+            result["needs_clarification"] = score < 0.60
+        return result
+    except Exception as e:
+        print(f"FRAME CLAIM ERROR: {e}", flush=True)
+        return fallback
+
+
+@app.route("/frame-claim", methods=["POST"])
+def frame_claim():
+    if not session.get("logged_in"):
+        return jsonify({"error": "Not logged in"}), 401
+    data = request.get_json() or {}
+    raw_input = (data.get("claim") or "").strip()
+    if not raw_input:
+        return jsonify({"error": "Claim required"}), 400
+    return jsonify(frame_claim_input(raw_input)), 200
+
+
 @app.route("/analyze", methods=["POST"])
 def analyze():
     if not session.get("logged_in"):
@@ -3169,9 +3242,18 @@ def editor_reanalyze_claim_by_slug(slug):
         request._cached_json = {"mode": mode, "fields": selective_fields}
 
         claim_fields = records[0].get("fields", {})
-        claim_text = claim_fields.get("Original Quote") or claim_fields.get("Stripped Claim") or ""
-        if not claim_text:
+        raw_claim_text = claim_fields.get("Original Quote") or claim_fields.get("Stripped Claim") or ""
+        if not raw_claim_text:
             return jsonify({"error": "No claim text found"}), 400
+
+        # Run framing — use existing Analyzed Claim if present, else re-frame
+        existing_analyzed = (claim_fields.get("Analyzed Claim") or "").strip()
+        if existing_analyzed:
+            claim_text = existing_analyzed
+            reanalysis_framing = None
+        else:
+            reanalysis_framing = frame_claim_input(raw_claim_text)
+            claim_text = reanalysis_framing.get("primary_claim") or raw_claim_text
 
         primary, claude_json, openai_json, grok_adjudication = run_reanalysis_ai(claim_text, mode)
         if "error" in primary:
@@ -3179,17 +3261,26 @@ def editor_reanalyze_claim_by_slug(slug):
 
         editor_username = session.get("username", "Editor")
         now_str = datetime.utcnow().strftime("%Y-%m-%d")
+        old_slug = slug
 
         if mode == "full":
             update_fields = extract_primary_record_fields(
-                claim=claim_text, parsed=primary, mode="full",
-                username=editor_username, existing_fields=claim_fields
+                claim=raw_claim_text, parsed=primary, mode="full",
+                username=editor_username, existing_fields=claim_fields,
+                framing_data=reanalysis_framing
             )
+            # Build new slug from framed primary claim if framing ran
+            if reanalysis_framing and reanalysis_framing.get("primary_claim"):
+                new_slug = slugify(reanalysis_framing["primary_claim"])
+                update_fields["URL Slug"] = new_slug
+            else:
+                new_slug = update_fields.get("URL Slug", old_slug)
             update_fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
             update_fields["OpenAI Raw JSON"] = json.dumps(openai_json, ensure_ascii=False)[:100000]
             if grok_adjudication:
                 update_fields["Grok Raw JSON"] = json.dumps(grok_adjudication, ensure_ascii=False)[:100000]
         else:
+            new_slug = old_slug
             update_fields = {"Last Updated": now_str}
             for field_name in selective_fields:
                 airtable_key = SELECTIVE_FIELD_MAP.get(field_name)
@@ -3203,10 +3294,14 @@ def editor_reanalyze_claim_by_slug(slug):
         if not resp.ok:
             return jsonify({"error": f"Airtable update failed: {resp.text}"}), 500
 
+        slug_changed = new_slug != old_slug
         return jsonify({
             "ok": True, "record_id": record_id, "mode": mode,
             "reanalyzed_by": editor_username, "last_reanalyzed": now_str,
-            "fields_updated": list(update_fields.keys())
+            "fields_updated": list(update_fields.keys()),
+            "new_slug": new_slug,
+            "slug_changed": slug_changed,
+            "redirect_to": f"/claim/{new_slug}" if slug_changed else None
         })
 
     except Exception as e:
