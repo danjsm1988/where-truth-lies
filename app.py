@@ -1614,7 +1614,6 @@ def logout():
     return redirect("/login")
 
 
-@app.route("/")
 def get_site_settings():
     """Read site mode from Settings table. Defaults to Live on any failure."""
     try:
@@ -1638,6 +1637,7 @@ def get_site_settings():
     return {"site_mode": "Live", "message_title": "", "message_body": ""}
 
 
+@app.route("/")
 def home():
     if not session.get("logged_in"):
         return redirect("/login")
@@ -3339,14 +3339,14 @@ SELECTIVE_FIELD_MAP = {
 
 def run_reanalysis_ai(claim_text, mode="full", analyzed_claim=None):
     """Run the AI excavation pipeline on an existing claim text. Returns merged parsed JSON.
-    claim_text = Original Quote (full context, factual grounding)
+    claim_text = Original Quote (full context, factual grounding — always used)
     analyzed_claim = framed/structured version (structural guide only, never replaces raw)
     """
     reality_anchor, grok_adjudication = build_reality_anchor_with_grok(claim_text)
     if analyzed_claim and analyzed_claim.strip() and analyzed_claim.strip() != claim_text.strip():
         prompt_text = f"""{reality_anchor}
 
-Structured framing (use as interpretive guide only, do not replace the original):
+Structured framing (use as interpretive guide only — do not replace the original):
 "{analyzed_claim}"
 
 Now analyze this claim in full — use the original text below as the factual source of truth:
@@ -3583,8 +3583,8 @@ def editor_reanalyze_claim_by_slug(slug):
 
         existing_analyzed = (claim_fields.get("Analyzed Claim") or "").strip()
 
-        # Always excavate against Original Quote for full context and factual grounding
-        # Analyzed Claim is passed as structural framing guide only — never replaces raw input
+        # Always excavate against Original Quote — full context, factual grounding
+        # Analyzed Claim is passed as structural guide only — never replaces raw input
         if existing_analyzed:
             reanalysis_framing = None
         else:
@@ -3608,7 +3608,7 @@ def editor_reanalyze_claim_by_slug(slug):
                 framing_data=reanalysis_framing
             )
             if existing_analyzed:
-                # Display fields are locked — never let reanalysis overwrite them
+                # Display fields locked — never overwritten when Analyzed Claim is set
                 new_slug = old_slug
                 update_fields["URL Slug"] = old_slug
                 update_fields["Analyzed Claim"] = existing_analyzed
