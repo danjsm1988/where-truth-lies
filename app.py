@@ -3568,13 +3568,9 @@ def editor_reanalyze_claim_by_slug(slug):
         if not raw_claim_text:
             return jsonify({"error": "No claim text found"}), 400
 
-        existing_analyzed = (claim_fields.get("Analyzed Claim") or "").strip()
-        if existing_analyzed:
-            claim_text = existing_analyzed
-            reanalysis_framing = None
-        else:
-            reanalysis_framing = frame_claim_input(raw_claim_text)
-            claim_text = reanalysis_framing.get("primary_claim") or raw_claim_text
+        # Always analyze from the original raw claim text — never from the short "Analyzed Claim" display field
+        reanalysis_framing = frame_claim_input(raw_claim_text)
+        claim_text = reanalysis_framing.get("primary_claim") or raw_claim_text
 
         primary, claude_json, openai_json, grok_adjudication = run_reanalysis_ai(claim_text, mode)
         if "error" in primary:
