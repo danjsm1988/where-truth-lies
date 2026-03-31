@@ -100,7 +100,7 @@ Historical precedent is not decoration. It is the test. When a claim characteriz
 Charged terminology — king, dictator, fascist, traitor, authoritarian, communist, or similar — must be tested against the actual historical and legal definition of those terms, not just the underlying concern they express. If the terminology does not hold up to its own definition, that must be stated plainly.
 
 TERMINOLOGY VALIDATION RULE:
-When a claim uses charged or contested terminology — such as monarchy, authoritarian, dictator, fascist, traitor, communist, coup, insurrection, or similar — the analysis must do three things explicitly. First, briefly state what the term actually means in its legal, historical, or political context. Second, test whether the current situation meets that definition by the established standard. Third, state plainly whether the term holds up, partially applies, or does not apply — and why. Vague language like "comparisons have been drawn" without definition testing is insufficient. In Quick View, signal that this test is happening. In Full Excavation, execute it fully.
+When a claim uses charged or contested terminology — such as monarchy, authoritarian, dictator, fascist, traitor, communist, coup, insurrection, or similar — the analysis must do three things explicitly. First, briefly state what the term actually means in its legal, historical, or political context. Second, test whether the current situation meets that definition by the established standard. Third, state plainly whether the term holds up, partially applies, or does not apply — and why. In Quick View, signal that this test is happening. In Full Excavation, execute it fully.
 
 EXPLICIT CONDITIONS RULE:
 When evaluating any claim about government action, executive authority, or institutional behavior, explicitly identify the conditions present before rendering any judgment about fit or proportionality. State what is actually happening: what level of institutional breakdown exists, whether courts are functioning, whether elections are proceeding, whether legislative oversight is present or absent, and what the comparative urgency level is relative to historical crises. Do not imply conditions — state them.
@@ -3327,30 +3327,29 @@ def editor_reanalyze_claim_by_slug(slug):
 
 BREAKOUT_DETECTION_SYSTEM = """You are the Breakout Claim detection engine for Where the Truth Lies.
 
-Your job is to read a body of text and identify EXCAVATION-WORTHY breakout claims — branches that deserve their own full analysis, separate from the primary claim.
+Your job is to identify EXCAVATION-WORTHY breakout claims — branches that deserve their own full analysis, separate from the primary claim being examined.
 
 This is a two-step process. Do not skip step one.
 
 STEP ONE — EXTRACTION:
-Identify all distinct, falsifiable assertions in the text. Note their topic, actor, domain, and the type of adjudication they would require.
+Identify all distinct, falsifiable assertions in the text. Note each one's actor, domain, and the type of evidence and adjudication it would require.
 
 STEP TWO — COLLAPSING:
-Before creating breakout claims, apply this rule: when multiple extracted assertions share the same actor, same domain, same underlying accusation, and would require substantially the same evidence and adjudication logic — collapse them into ONE representative breakout claim that captures the pattern.
+Before creating any breakout claim, apply this rule: when multiple extracted assertions share the same actor, same domain, same underlying accusation, and would require substantially the same evidence and adjudication logic — collapse them into ONE representative breakout claim that captures the pattern.
 
-A representative breakout claim is a single sentence that synthesizes the pattern. It is NOT a list. It is NOT a header. It stands alone as a testable assertion.
+A representative breakout claim is a single sentence that synthesizes the pattern AND carries the tension of what is being tested. It is NOT a list. It is NOT a header. It stands alone as a testable assertion that signals what the excavation will examine.
 
-Examples of collapsing:
-Multiple immigration-enforcement assertions (targeting families, detentions without warrants, profiling) → one breakout: "The Trump administration is conducting immigration enforcement actions that critics argue violate due process and constitutional protections."
-Multiple election-integrity assertions (rigging maps, threatening elections, suppressing voters) → one breakout: "The Trump administration is taking actions that critics argue undermine electoral integrity and voter access."
-Multiple spending assertions (missile strikes, billionaire giveaways) → one breakout: "The Trump administration is pursuing spending and policy decisions that critics argue favor wealthy interests while burdening ordinary citizens."
+Examples of correct collapsing:
+Multiple immigration enforcement assertions (targeting families, detentions without warrants, profiling) → ONE breakout: "The Trump administration is conducting immigration enforcement operations that critics argue violate due process protections — and whether those operations fall within existing legal authority is disputed."
+Multiple election integrity assertions (rigging maps, threatening elections, suppressing voters) → ONE breakout: "The Trump administration is taking actions that critics argue threaten electoral integrity and voter access — and whether those actions cross a constitutional or statutory line remains contested."
+Multiple spending assertions (missile strikes, billionaire giveaways) → ONE breakout: "The administration is pursuing spending and economic decisions that critics argue systematically favor wealthy interests — and whether those decisions represent legitimate policy or improper favoritism is disputed."
 
 Keep separate ONLY when claims would require meaningfully different evidence, different legal standards, or different historical comparisons to adjudicate.
 
 A breakout claim must:
-- Be a distinct falsifiable assertion that can be independently analyzed against a factual record
-- Be separable from the primary claim being analyzed
-- Represent a branch worth its own full excavation
-- Ask: can this be analyzed without the primary claim? If no, exclude it.
+- Be independently analyzable against a factual record without relying on the primary claim
+- Represent a genuinely distinct branch of investigation
+- Carry the tension of what is being tested, not just describe a category
 
 A breakout claim must NOT be:
 - A restatement of the primary claim
@@ -3360,7 +3359,9 @@ A breakout claim must NOT be:
 - Rhetorical framing without a falsifiable factual core
 - One of several nearly identical assertions that should be collapsed into one
 
-Target 3 to 5 strong grouped breakout claims. Only exceed 5 if the text is genuinely sprawling with unrelated topics requiring different adjudication. Never exceed 7.
+Before finalizing each breakout claim, ask: would analyzing this separately produce meaningfully different evidence, reasoning, or conclusions than analyzing it as part of the main claim? If no, merge it or exclude it.
+
+Target 3 to 5 strong grouped breakout claims. Only exceed 5 if the text contains genuinely unrelated topics requiring different adjudication paths. Never exceed 7.
 
 Return ONLY valid JSON. No markdown fences. No preamble.
 
@@ -3368,7 +3369,7 @@ Return ONLY valid JSON. No markdown fences. No preamble.
   "has_breakouts": true or false,
   "breakout_claims": [
     {
-      "title": "One sentence representative claim capturing the pattern. Plain language. No hyphens or dashes.",
+      "title": "One sentence representative claim capturing the pattern and its tension. Plain language. No hyphens or dashes.",
       "source_text": "The key assertion from the source text that triggered this breakout.",
       "group_key": "snake_case_topic_key",
       "group_label": "Plain Language Topic Label",
@@ -3383,7 +3384,6 @@ Rules:
 Never use bullet points, dashes, or hyphens in any title field.
 Write titles as plain declarative statements.
 Confidence should be between 0.5 and 1.0. Only include claims above 0.6 confidence.
-Before finalizing each breakout claim, ask: would analyzing this separately produce meaningfully different evidence, reasoning, or conclusions than analyzing it as part of the main claim? If no, merge it or exclude it.
 """
 
 
@@ -3633,8 +3633,27 @@ def run_breakout_detection_for_claim(claim_record, detection_source_override=Non
     fields = claim_record.get("fields", {})
     record_id = claim_record.get("id")
     slug = fields.get("URL Slug", "")
-    # Use Analyzed Claim (framed) for detection — prevents blob explosion on long original quotes
-    claim_text = fields.get("Analyzed Claim") or fields.get("Original Quote") or fields.get("Stripped Claim") or ""
+    # For breakout detection, use the richest available source text
+    # Original Quote has the full assertions; supplement with analyzed content
+    original_quote = fields.get("Original Quote") or ""
+    stripped_claim = fields.get("Stripped Claim") or ""
+    direct_facts = fields.get("Direct Facts") or ""
+    sub_claims_raw = fields.get("Sub-Claims") or ""
+
+    # Build detection text: original quote is primary (has all assertions)
+    # Fall back to stripped claim + direct facts if no original quote
+    if original_quote and len(original_quote) > 50:
+        claim_text = original_quote
+    elif stripped_claim:
+        # Combine stripped claim with direct facts for richer detection
+        parts = [stripped_claim]
+        if direct_facts:
+            parts.append(direct_facts)
+        if sub_claims_raw:
+            parts.append(sub_claims_raw)
+        claim_text = " ".join(parts)
+    else:
+        claim_text = ""
     parent_identifier = fields.get("Claim Identifier", "")
     root_record_id = record_id  # this claim is its own root for direct children
 
