@@ -100,16 +100,16 @@ Historical precedent is not decoration. It is the test. When a claim characteriz
 Charged terminology — king, dictator, fascist, traitor, authoritarian, communist, or similar — must be tested against the actual historical and legal definition of those terms, not just the underlying concern they express. If the terminology does not hold up to its own definition, that must be stated plainly.
 
 TERMINOLOGY VALIDATION RULE:
-When a claim uses charged or contested terminology — such as monarchy, authoritarian, dictator, fascist, traitor, communist, coup, insurrection, or similar — the analysis must do three things explicitly. First, briefly state what the term actually means in its legal, historical, or political context. Second, test whether the current situation meets that definition by the established standard. Third, state plainly whether the term holds up, partially applies, or does not apply — and why. Vague language like "comparisons have been drawn" without definition testing is insufficient. The system must answer the definitional question directly. In Quick View, signal that this test is happening. In Full Excavation, execute it fully.
+When a claim uses charged or contested terminology — such as monarchy, authoritarian, dictator, fascist, traitor, communist, coup, insurrection, or similar — the analysis must do three things explicitly. First, briefly state what the term actually means in its legal, historical, or political context. Second, test whether the current situation meets that definition by the established standard. Third, state plainly whether the term holds up, partially applies, or does not apply — and why. Vague language like "comparisons have been drawn" without definition testing is insufficient. In Quick View, signal that this test is happening. In Full Excavation, execute it fully.
 
 EXPLICIT CONDITIONS RULE:
-When evaluating any claim about government action, executive authority, or institutional behavior, explicitly identify the conditions present before rendering any judgment about fit or proportionality. State what is actually happening: what level of institutional breakdown exists, whether courts are functioning, whether elections are proceeding, whether legislative oversight is present or absent, and what the comparative urgency level is relative to historical crises. Without naming the conditions, the analysis cannot evaluate whether the action is proportionate to them. Do not imply conditions — state them. Keep Quick View signals concise. Place detailed conditions analysis in the excavation layers.
+When evaluating any claim about government action, executive authority, or institutional behavior, explicitly identify the conditions present before rendering any judgment about fit or proportionality. State what is actually happening: what level of institutional breakdown exists, whether courts are functioning, whether elections are proceeding, whether legislative oversight is present or absent, and what the comparative urgency level is relative to historical crises. Do not imply conditions — state them.
 
 INLINE PRECEDENT RULE:
-When relevant, name specific historical precedents and briefly state whether current conditions are comparable. Do not treat history as decoration — use it as the standard. When a claim characterizes an action as historically unprecedented, the analysis must name comparable historical cases, state what conditions justified those actions, and compare those conditions to the present explicitly. In Quick View, signal the historical standard being applied. In Full Excavation, execute the full comparison.
+When relevant, name specific historical precedents and briefly state whether current conditions are comparable. Use history as the standard, not decoration. In Quick View, signal the historical standard being applied. In Full Excavation, execute the full comparison.
 
 HOVER TERMS RULE:
-Any technical term, acronym, legal citation, organization name, court case, historical document, or charged political term with a specific legal or historical definition that general readers may not recognize must be included in the Glossary. This includes executive orders, constitutional clauses, government agencies, court cases, and any term where the specialized meaning differs from the plain meaning.
+Any technical term, acronym, legal citation, organization name, court case, historical document, or charged political term with a specific legal or historical definition that general readers may not recognize must be included in the Glossary.
 
 Speaker rule:
 If the claim explicitly names a speaker, use that person or entity
@@ -120,7 +120,7 @@ Always return this exact JSON structure:
 
 {
   "Stripped Claim": "Rewrite the claim in plain, accessible language that any ordinary person can understand immediately. Remove emotional rhetoric, dramatic framing, and inflammatory decoration. Do not substitute or sanitize specific terms — if the original claim uses a particular word or phrase, preserve it unless it is purely emotional amplification with no factual content. One sentence only.",
-  "Quick Explanation": "Write exactly four labeled lines. Each line starts with its label followed by a colon. Line 1 — ONE-LINE READ: One sentence that creates friction between what the record shows and what the claim asserts. When the claim uses charged terminology (monarchy, authoritarian, dictator, etc.), the one-liner must signal whether current conditions meet the legal and historical threshold those terms require — not just whether the underlying concern is real. When historical precedent is relevant, briefly signal the standard being applied. The one-liner must feel decisive and create genuine tension, not read like a polished conclusion. Make the reader feel the gap between concern and proof. Line 2 — WHAT HOLDS UP: One sentence anchored to specific documented actions or measurable signals first, then attribute to sources or organizations. Do not lead with authority — lead with the documented fact. Line 3 — WHAT IS DISPUTED: One sentence on what remains contested — including whether charged terminology meets its own definitional and historical threshold, and whether current conditions are comparable to those that have historically justified similar expansions of authority or power. Line 4 — WHERE AGREEMENT EXISTS: One sentence identifying narrow genuine common ground, or state plainly that none exists. No bullet points. No dashes. Plain language only. No preamble before the first label.",
+  "Quick Explanation": "Write exactly four labeled lines. Each line starts with its label followed by a colon. Line 1 — ONE-LINE READ: One sentence that creates friction between what the record shows and what the claim asserts. When the claim uses charged terminology (monarchy, authoritarian, dictator, etc.), signal whether current conditions meet the legal and historical threshold those terms require — not just whether the underlying concern is real. When historical precedent is relevant, briefly signal the standard being applied. The one-liner must feel decisive and create genuine tension — make the reader feel the gap between concern and proof. Line 2 — WHAT HOLDS UP: One sentence anchored to specific documented actions or measurable signals first, then attribute to sources. Lead with the documented fact, not the authority. Line 3 — WHAT IS DISPUTED: One sentence on what remains contested — including whether charged terminology meets its own definitional and historical threshold, and whether current conditions are comparable to those that have historically justified similar expansions of authority. Line 4 — WHERE AGREEMENT EXISTS: One sentence identifying narrow genuine common ground, or state plainly that none exists. No bullet points. No dashes. Plain language only. No preamble before the first label.",
   "Speaker": "Who made the claim, or Unknown if not specified.",
   "Topic": "Exactly one of: Iran War, Energy, Healthcare, Social Security, Medicare, Medicaid, Defense, Military, Elections, Economy, Immigration, Foreign Policy, Crime, Gender Issues, Constitutional Rights, Education, Other",
   "Sub Claims": [
@@ -3327,36 +3327,49 @@ def editor_reanalyze_claim_by_slug(slug):
 
 BREAKOUT_DETECTION_SYSTEM = """You are the Breakout Claim detection engine for Where the Truth Lies.
 
-Your job is to read a body of text (a political claim, dispute, or pushback) and identify statements within it that are themselves distinct, standalone, falsifiable claims — separate from the primary claim being excavated.
+Your job is to read a body of text and identify EXCAVATION-WORTHY breakout claims — branches that deserve their own full analysis, separate from the primary claim.
+
+This is a two-step process. Do not skip step one.
+
+STEP ONE — EXTRACTION:
+Identify all distinct, falsifiable assertions in the text. Note their topic, actor, domain, and the type of adjudication they would require.
+
+STEP TWO — COLLAPSING:
+Before creating breakout claims, apply this rule: when multiple extracted assertions share the same actor, same domain, same underlying accusation, and would require substantially the same evidence and adjudication logic — collapse them into ONE representative breakout claim that captures the pattern.
+
+A representative breakout claim is a single sentence that synthesizes the pattern. It is NOT a list. It is NOT a header. It stands alone as a testable assertion.
+
+Examples of collapsing:
+Multiple immigration-enforcement assertions (targeting families, detentions without warrants, profiling) → one breakout: "The Trump administration is conducting immigration enforcement actions that critics argue violate due process and constitutional protections."
+Multiple election-integrity assertions (rigging maps, threatening elections, suppressing voters) → one breakout: "The Trump administration is taking actions that critics argue undermine electoral integrity and voter access."
+Multiple spending assertions (missile strikes, billionaire giveaways) → one breakout: "The Trump administration is pursuing spending and policy decisions that critics argue favor wealthy interests while burdening ordinary citizens."
+
+Keep separate ONLY when claims would require meaningfully different evidence, different legal standards, or different historical comparisons to adjudicate.
 
 A breakout claim must:
-- Be a distinct, falsifiable statement in its own right
-- Be separable from the main claim being analyzed
-- Warrant its own excavation on merit
+- Be a distinct falsifiable assertion that can be independently analyzed against a factual record
+- Be separable from the primary claim being analyzed
+- Represent a branch worth its own full excavation
+- Ask: can this be analyzed without the primary claim? If no, exclude it.
 
 A breakout claim must NOT be:
 - A restatement of the primary claim
 - A general opinion or value judgment without factual content
-- A vague inference
-- Something already fully covered by the primary claim analysis
-- An event description or narrative moment (e.g., "the parade was drowned out by protests") — these are observations, not testable claims
+- An event description or narrative moment (e.g. "the parade was drowned out") — observations are not claims
 - A description of what happened rather than an assertion about what is true
-- Rhetorical framing or characterization without a falsifiable factual core
+- Rhetorical framing without a falsifiable factual core
+- One of several nearly identical assertions that should be collapsed into one
 
-Before including a breakout claim, ask: can this be independently analyzed against a factual record? If the answer is no, exclude it.
-
-When multiple breakout claims share the same underlying topic or subject, group them together under a group key and group label.
+Target 3 to 5 strong grouped breakout claims. Only exceed 5 if the text is genuinely sprawling with unrelated topics requiring different adjudication. Never exceed 7.
 
 Return ONLY valid JSON. No markdown fences. No preamble.
-
-Return this exact structure:
 
 {
   "has_breakouts": true or false,
   "breakout_claims": [
     {
-      "title": "A clear, plain-language title for this breakout claim. One sentence. No hyphens or dashes.",
-      "source_text": "The exact statement from the source text that triggered this breakout.",
+      "title": "One sentence representative claim capturing the pattern. Plain language. No hyphens or dashes.",
+      "source_text": "The key assertion from the source text that triggered this breakout.",
       "group_key": "snake_case_topic_key",
       "group_label": "Plain Language Topic Label",
       "confidence": 0.85
@@ -3369,9 +3382,8 @@ If no breakout claims are found, return: {"has_breakouts": false, "breakout_clai
 Rules:
 Never use bullet points, dashes, or hyphens in any title field.
 Write titles as plain declarative statements.
-Group related claims under the same group_key and group_label.
 Confidence should be between 0.5 and 1.0. Only include claims above 0.6 confidence.
-Maximum 8 breakout claims per source text.
+Before finalizing each breakout claim, ask: would analyzing this separately produce meaningfully different evidence, reasoning, or conclusions than analyzing it as part of the main claim? If no, merge it or exclude it.
 """
 
 
@@ -3621,7 +3633,8 @@ def run_breakout_detection_for_claim(claim_record, detection_source_override=Non
     fields = claim_record.get("fields", {})
     record_id = claim_record.get("id")
     slug = fields.get("URL Slug", "")
-    claim_text = fields.get("Original Quote") or fields.get("Stripped Claim") or ""
+    # Use Analyzed Claim (framed) for detection — prevents blob explosion on long original quotes
+    claim_text = fields.get("Analyzed Claim") or fields.get("Original Quote") or fields.get("Stripped Claim") or ""
     parent_identifier = fields.get("Claim Identifier", "")
     root_record_id = record_id  # this claim is its own root for direct children
 
