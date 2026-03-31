@@ -2139,26 +2139,53 @@ def find_duplicate_and_similar_claims(claim_text, threshold=0.30, max_similar=4,
             continue  # question vs statement — skip entirely
 
         # ── Containment check: same proposition, more detail ──
-        # If one canonical claim is a more specific version of the same actor+action+target,
-        # treat as duplicate even if Jaccard overlap is modest.
-        # This runs AFTER polarity/type guards so protected wins from Tests 1-3 are preserved.
+        # Runs AFTER polarity/type guards — Tests 1-3 protected wins are preserved.
         if framing_data and framing_data.get('canonical_claim'):
             canon_input = normalize_claim_text(framing_data['canonical_claim'])
-            # Extract core keywords (4+ chars, non-stop) from both
-            STOP = {'the','a','an','is','are','was','were','have','has','had',
-                    'to','of','in','for','on','with','at','by','from','and','but',
-                    'or','not','it','its','this','that','they','their','which'}
+
+            # Semantic normalization — map action synonyms to canonical tokens
+            # Only high-impact domains; don't try to solve all language
+            ACTION_MAP = {
+                # Military actions
+                'bombing': 'strike', 'bombings': 'strike', 'bombed': 'strike',
+                'airstrike': 'strike', 'airstrikes': 'strike',
+                'attack': 'strike', 'attacks': 'strike', 'attacked': 'strike',
+                'assault': 'strike', 'assaults': 'strike',
+                'invasion': 'strike', 'invaded': 'strike',
+                'shelling': 'strike', 'shelled': 'strike',
+                'missiles': 'strike', 'missile': 'strike',
+                # Economic harm
+                'destroyed': 'harmed', 'wrecked': 'harmed', 'devastated': 'harmed',
+                'ruined': 'harmed', 'collapsed': 'harmed', 'cratered': 'harmed',
+                # Election fraud synonyms
+                'rigged': 'stolen', 'fraudulent': 'stolen', 'stolen': 'stolen',
+                # Enforcement
+                'detained': 'arrested', 'deported': 'removed', 'expelled': 'removed',
+            }
+
+            def semantic_normalize(text):
+                words = text.split()
+                return ' '.join(ACTION_MAP.get(w, w) for w in words)
+
             def core_kw(t):
+                STOP = {'the','a','an','is','are','was','were','have','has','had',
+                        'to','of','in','for','on','with','at','by','from','and','but',
+                        'or','not','it','its','this','that','they','their','which',
+                        'that','been','being','will','would','could','should','does','did'}
                 return {w for w in t.split() if len(w) >= 4 and w not in STOP}
-            input_core = core_kw(canon_input)
-            existing_core = core_kw(norm_existing)
+
+            # Apply semantic normalization before keyword extraction
+            norm_input_sem = semantic_normalize(canon_input)
+            norm_existing_sem = semantic_normalize(norm_existing)
+
+            input_core = core_kw(norm_input_sem)
+            existing_core = core_kw(norm_existing_sem)
+
             if input_core and existing_core:
-                # Containment: smaller set is fully contained in larger set
                 smaller = input_core if len(input_core) <= len(existing_core) else existing_core
                 larger = existing_core if len(input_core) <= len(existing_core) else input_core
                 containment_ratio = len(smaller & larger) / len(smaller) if smaller else 0
                 if containment_ratio >= 0.75 and len(smaller) >= 3:
-                    # Strong containment — treat as high-confidence similar match
                     scored.append({
                         'record_id': rec.get('id'),
                         'title': clean_display_title(f.get('Analyzed Claim') or f.get('Original Quote') or raw),
