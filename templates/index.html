@@ -5788,7 +5788,7 @@ html, body {
 </div>
 
         <div class="article-eyebrow" style="display:flex; align-items:center; gap:10px;">
-          ClaimLab<sup style="font-size:0.55em; vertical-align:super; margin-left:0; margin-right:2px; opacity:0.65; letter-spacing:0; text-transform:none; line-height:0;">TM</sup> Excavation
+          ClaimLab<sup style="font-size:0.38em; vertical-align:super; margin-left:1px; opacity:0.65; letter-spacing:0.06em;">TM</sup> Excavation
           {% if current_claim.original_quote and current_claim.original_quote != current_claim.title %}
             <button class="orig-quote-btn" data-orig="{{ current_claim.original_quote | e }}" onclick="openOrigQuote(this.getAttribute('data-orig'))">View Original</button>
           {% endif %}
@@ -8536,7 +8536,7 @@ console.error('Dispute submission failed:', err);
         if (data.breakouts_created > 0) {
           setTimeout(function() { window.location.reload(); }, 1000);
         } else {
-          setTimeout(function() { btn.textContent = '&#9881; Detect'; btn.disabled = false; }, 2500);
+          setTimeout(function() { btn.innerHTML = '⚙ Detect'; btn.disabled = false; }, 2500);
         }
       } else {
         btn.textContent = 'Error';
