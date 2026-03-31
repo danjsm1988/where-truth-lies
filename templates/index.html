@@ -5801,10 +5801,10 @@ html, body {
   </button>
 </div>
 
-        <div class="article-eyebrow" style="display:flex; align-items:center; gap:10px;">
-          ClaimLab<sup style="font-size:0.5em; vertical-align:super; margin-left:0; margin-right:0; letter-spacing:0 !important; text-transform:none !important; line-height:0; opacity:0.65; display:inline-block;">TM</sup> Excavation
+        <div class="article-eyebrow" style="display:flex; align-items:center;">
+          <span style="letter-spacing:.18em;">ClaimLab<sup style="font-size:0.45em; vertical-align:super; letter-spacing:0; text-transform:none; line-height:0; margin-left:0; margin-right:0; opacity:0.65; display:inline-block;">TM</sup>&thinsp;Excavation</span>
           {% if current_claim.original_quote and current_claim.original_quote != current_claim.title %}
-            <button class="orig-quote-btn" data-orig="{{ current_claim.original_quote | e }}" onclick="openOrigQuote(this.getAttribute('data-orig'))">View Original</button>
+            <button class="orig-quote-btn" style="margin-left:12px;" data-orig="{{ current_claim.original_quote | e }}" onclick="openOrigQuote(this.getAttribute('data-orig'))">View Original</button>
           {% endif %}
         </div>
 <div class="claim-body-wrap" id="claimBodyWrap">
