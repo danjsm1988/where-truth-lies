@@ -2115,6 +2115,30 @@ def find_duplicate_and_similar_claims(claim_text, threshold=0.30, max_similar=4,
             }
             return result
 
+        # ── POLARITY AND CLAIM TYPE GUARDS — run BEFORE scoring ──
+
+        # Guard 1: Block opposing polarity on factual claims
+        # affirming vs rejecting on the same topic = opposite claims, never a match
+        if input_polarity in ('affirming', 'rejecting') and input_claim_type == 'factual':
+            rejecting_signals = {'stolen', 'fraud', 'rigged', 'illegal', 'unconstitutional',
+                                 'false', 'hoax', 'fake', 'lie', 'corrupt', 'never',
+                                 'denied', 'refuted', 'disproven', 'invalid', 'not'}
+            affirming_signals = {'won', 'occurred', 'confirmed', 'verified', 'proven',
+                                 'documented', 'established', 'legitimate', 'valid', 'true'}
+            existing_words = set(norm_existing.split())
+            existing_leans_rejecting = bool(existing_words & rejecting_signals)
+            existing_leans_affirming = bool(existing_words & affirming_signals)
+
+            if input_polarity == 'affirming' and existing_leans_rejecting and not existing_leans_affirming:
+                continue  # opposite polarity — skip entirely
+            if input_polarity == 'rejecting' and existing_leans_affirming and not existing_leans_rejecting:
+                continue  # opposite polarity — skip entirely
+
+        # Guard 2: inquiry claims should never match declarative factual claims
+        if input_claim_type == 'inquiry' and len(norm_existing.split()) > 8 and '?' not in raw:
+            continue  # question vs statement — skip entirely
+
+        # ── Similarity scoring ──
         score = keyword_overlap_score(norm_input, norm_existing)
         if score >= threshold:
             scored.append({
@@ -2124,7 +2148,6 @@ def find_duplicate_and_similar_claims(claim_text, threshold=0.30, max_similar=4,
                 'score': round(score, 3)
             })
 
-    # Sort by score
     scored.sort(key=lambda x: x['score'], reverse=True)
     result['similar'] = scored[:max_similar]
     return result
