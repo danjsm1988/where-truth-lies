@@ -682,7 +682,8 @@ def get_recent_claims(limit=10):
     "verdict": f.get("Overall Verdict", "Unproven"),
     "topics": parse_topics(f.get("Topic")),
     "speaker": f.get("Speaker", "Unknown"),
-    "entered_by": f.get("Entered By", "")
+    "entered_by": f.get("Entered By", ""),
+    "view_count": int(f.get("View Count", 0) or 0)
 })
         return recent
     except Exception as e:

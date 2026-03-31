@@ -775,6 +775,15 @@
       color: var(--text-mid); font-style: italic; margin-top: 8px; min-height: 18px;
     }
 
+    /* ── View Count ── */
+    .vc-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px; letter-spacing: .08em;
+      color: var(--text-dim); opacity: .75;
+    }
+    .vc-badge svg { width: 10px; height: 10px; flex-shrink: 0; }
+
     .gold-btn,
     .gold-btn-mobile {
       appearance: none;
@@ -4631,6 +4640,12 @@ html, body {
                   <div class="m-card-meta">
                     <span class="verdict-pill {% if rv_lower == 'true' %}v-true{% elif 'mostly true' in rv_lower %}v-mostly-true{% elif 'substantially true' in rv_lower %}v-substantially-true{% elif 'plausible' in rv_lower or 'mixed' in rv_lower %}v-plausible{% elif rv_lower == 'contested' %}v-contested{% elif rv_lower == 'exaggerated' %}v-exaggerated{% elif rv_lower == 'misleading' %}v-misleading{% elif rv_lower == 'false' %}v-false{% else %}v-unproven{% endif %}" style="font-size:8px; padding:4px 8px;">{{ rv }}</span>
                     {% if claim.date %}<span class="m-card-date">{{ claim.date }}</span>{% endif %}
+                    {% if claim.view_count is defined and claim.view_count > 0 %}
+                      <span class="vc-badge">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg>
+                        {{ claim.view_count }}
+                      </span>
+                    {% endif %}
                   </div>
                 </a>
               {% endfor %}
@@ -6668,6 +6683,13 @@ html, body {
 
                           {% if claim.speaker and claim.speaker != 'Unknown' %}
                             <span class="micro-meta">{{ claim.speaker }}</span>
+                          {% endif %}
+
+                          {% if claim.view_count is defined and claim.view_count > 0 %}
+                            <span class="vc-badge">
+                              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg>
+                              {{ claim.view_count }}
+                            </span>
                           {% endif %}
 
                           <span class="verdict-pill
