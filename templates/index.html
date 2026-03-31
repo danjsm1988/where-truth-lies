@@ -3884,6 +3884,20 @@ html, body {
   opacity: 0.7;
 }
 
+/* Article eyebrow TM — breaks out of uppercase + letter-spacing inheritance */
+.article-eyebrow sup,
+.article-eyebrow .tm {
+  font-size: 0.5em;
+  vertical-align: super;
+  margin-left: 0px;
+  margin-right: 0px;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  line-height: 0;
+  opacity: 0.65;
+  display: inline-block;
+}
+
 
     /* ── EDITOR CARD ENHANCEMENTS ── */
     .editor-sections-row { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-bottom:12px; }
@@ -5788,7 +5802,7 @@ html, body {
 </div>
 
         <div class="article-eyebrow" style="display:flex; align-items:center; gap:10px;">
-          ClaimLab<sup style="font-size:0.38em; vertical-align:super; margin-left:1px; opacity:0.65; letter-spacing:0.06em;">TM</sup> Excavation
+          ClaimLab<sup style="font-size:0.5em; vertical-align:super; margin-left:0; margin-right:0; letter-spacing:0 !important; text-transform:none !important; line-height:0; opacity:0.65; display:inline-block;">TM</sup> Excavation
           {% if current_claim.original_quote and current_claim.original_quote != current_claim.title %}
             <button class="orig-quote-btn" data-orig="{{ current_claim.original_quote | e }}" onclick="openOrigQuote(this.getAttribute('data-orig'))">View Original</button>
           {% endif %}
