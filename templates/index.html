@@ -705,6 +705,131 @@
       cursor: pointer;
     }
 
+    /* ── Civic Layer ── */
+    .civic-block {
+      background: linear-gradient(135deg, rgba(10,22,38,.95) 0%, rgba(8,18,32,.98) 100%);
+      border: 1px solid rgba(201,168,76,.2);
+      border-left: 3px solid rgba(201,168,76,.45);
+      border-radius: 14px;
+      padding: 22px 22px 18px;
+      margin-top: 0;
+    }
+    .civic-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+    .civic-title {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 10px;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .civic-tip-wrap { position: relative; display: inline-flex; align-items: center; }
+    .civic-tip-btn {
+      width: 15px; height: 15px; border-radius: 50%;
+      border: 1px solid rgba(201,168,76,.35);
+      background: rgba(201,168,76,.07);
+      color: var(--gold); font-size: 9px;
+      font-family: 'Libre Baskerville', Georgia, serif;
+      cursor: default; display: flex; align-items: center; justify-content: center;
+    }
+    .civic-tip-box {
+      display: none;
+      position: absolute; bottom: calc(100% + 6px); left: 50%;
+      transform: translateX(-50%);
+      background: #0a1626; border: 1px solid rgba(201,168,76,.22);
+      border-radius: 8px; padding: 8px 11px; width: 230px;
+      font-family: 'Crimson Text', Georgia, serif; font-size: 13px;
+      color: var(--text-light); line-height: 1.5; z-index: 200; pointer-events: none;
+      white-space: normal;
+    }
+    .civic-tip-wrap:hover .civic-tip-box { display: block; }
+    .civic-section { margin-bottom: 16px; }
+    .civic-section:last-child { margin-bottom: 0; }
+    .civic-section-label {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px; letter-spacing: .15em; text-transform: uppercase;
+      color: var(--text-dim); margin-bottom: 8px;
+    }
+    .civic-impact-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .civic-chip {
+      background: rgba(201,168,76,.07); border: 1px solid rgba(201,168,76,.18);
+      border-radius: 999px; padding: 3px 11px;
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 10px; letter-spacing: .05em; color: var(--gold);
+    }
+    .civic-consequence-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+    @media (max-width: 600px) { .civic-consequence-grid { grid-template-columns: 1fr; } }
+    .civic-consequence-col {
+      background: rgba(255,255,255,.025); border: 1px solid rgba(255,255,255,.07);
+      border-radius: 10px; padding: 12px 14px;
+    }
+    .civic-consequence-label {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px; letter-spacing: .13em; text-transform: uppercase;
+      color: var(--text-mid); margin-bottom: 8px;
+    }
+    .civic-consequence-list { list-style: none; padding: 0; margin: 0; }
+    .civic-consequence-list li {
+      font-family: 'Crimson Text', Georgia, serif; font-size: 15px;
+      color: var(--text-light); line-height: 1.5;
+      padding: 3px 0 3px 13px; position: relative;
+    }
+    .civic-consequence-list li::before {
+      content: "—"; position: absolute; left: 0;
+      color: rgba(201,168,76,.35); font-size: 12px;
+    }
+    .civic-why-text {
+      font-family: 'Crimson Text', Georgia, serif; font-size: 16px;
+      color: var(--text-light); line-height: 1.6;
+    }
+    .civic-role-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 9px; }
+    .civic-role-item {
+      font-family: 'Crimson Text', Georgia, serif; font-size: 15px;
+      color: var(--text-light); line-height: 1.55;
+      padding-left: 16px; position: relative;
+    }
+    .civic-role-item::before {
+      content: "◆"; position: absolute; left: 0;
+      color: rgba(201,168,76,.45); font-size: 7px; top: 6px;
+    }
+
+    /* Quick View civic teaser */
+    .civic-qv-block {
+      margin-top: 18px; padding-top: 16px;
+      border-top: 1px solid rgba(255,255,255,.06);
+    }
+    .civic-qv-label {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px; letter-spacing: .15em; text-transform: uppercase;
+      color: var(--text-dim); margin-bottom: 7px;
+    }
+    .civic-qv-why {
+      font-family: 'Crimson Text', Georgia, serif; font-size: 15px;
+      color: var(--text-light); line-height: 1.55; margin-bottom: 8px;
+    }
+    .civic-qv-bullet {
+      font-family: 'Crimson Text', Georgia, serif; font-size: 14px;
+      color: var(--text-mid); font-style: italic; line-height: 1.5;
+      padding-left: 14px; position: relative;
+    }
+    .civic-qv-bullet::before {
+      content: "◆"; position: absolute; left: 0;
+      color: rgba(201,168,76,.4); font-size: 7px; top: 5px;
+    }
+    .civic-qv-cta {
+      display: inline-block; margin-top: 9px;
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--gold); opacity: .65; cursor: pointer; background: none; border: none; padding: 0;
+    }
+    .civic-qv-cta:hover { opacity: 1; }
+
     .gold-btn,
     .gold-btn-mobile {
       appearance: none;
@@ -5870,6 +5995,17 @@ html, body {
                   <div class="qv-agreement-text" id="qvAgreement"></div>
                 </div>
                 <p class="qv-dive-prompt">See the full excavation for underlying layers, competing interpretations, and connected breakout claims. <a onclick="switchTab('full')" href="#">Open Full Excavation &#8594;</a></p>
+
+                {% if current_claim.civic_layer and current_claim.civic_layer.why_it_matters %}
+                <div class="civic-qv-block">
+                  <div class="civic-qv-label">Why This Matters</div>
+                  <div class="civic-qv-why">{{ current_claim.civic_layer.why_it_matters }}</div>
+                  {% if current_claim.civic_layer.citizens_role and current_claim.civic_layer.citizens_role|length > 0 %}
+                  <div class="civic-qv-bullet">{{ current_claim.civic_layer.citizens_role[0] }}</div>
+                  {% endif %}
+                  <button class="civic-qv-cta" onclick="switchTab('full')">Full Citizen&#8217;s Role in Full Excavation &#8594;</button>
+                </div>
+                {% endif %}
               </div>
               <script>
               (function() {
@@ -6110,6 +6246,76 @@ html, body {
                 <div class="layer-block-body open">
                   <div class="layer-block-text" id="commonGroundText">{{ current_claim.common_ground }}</div>
                 </div>
+              </div>
+            {% endif %}
+
+            {% if current_claim.civic_layer and current_claim.civic_layer.why_it_matters %}
+              <div class="ornamental">
+                <div class="ornamental-line"></div>
+                <div class="ornamental-diamond"></div>
+                <div class="ornamental-line"></div>
+              </div>
+
+              <div class="civic-block">
+                <div class="civic-header">
+                  <span class="civic-title">Civic Layer</span>
+                  <span class="civic-tip-wrap">
+                    <span class="civic-tip-btn">?</span>
+                    <span class="civic-tip-box">How to think about this claim as a citizen &#8212; not what to think.</span>
+                  </span>
+                </div>
+
+                {% if current_claim.civic_layer.civic_impact and current_claim.civic_layer.civic_impact|length > 0 %}
+                <div class="civic-section">
+                  <div class="civic-section-label">Civic Impact</div>
+                  <div class="civic-impact-chips">
+                    {% for item in current_claim.civic_layer.civic_impact %}
+                      <span class="civic-chip">{{ item }}</span>
+                    {% endfor %}
+                  </div>
+                </div>
+                {% endif %}
+
+                {% if current_claim.civic_layer.consequences and current_claim.civic_layer.consequences.consequences_a %}
+                <div class="civic-section">
+                  <div class="civic-section-label">Real World Consequences</div>
+                  <div class="civic-consequence-grid">
+                    <div class="civic-consequence-col">
+                      <div class="civic-consequence-label">{{ current_claim.civic_layer.consequences.label_a or 'If True' }}</div>
+                      <ul class="civic-consequence-list">
+                        {% for item in current_claim.civic_layer.consequences.consequences_a %}
+                          <li>{{ item }}</li>
+                        {% endfor %}
+                      </ul>
+                    </div>
+                    <div class="civic-consequence-col">
+                      <div class="civic-consequence-label">{{ current_claim.civic_layer.consequences.label_b or 'If False' }}</div>
+                      <ul class="civic-consequence-list">
+                        {% for item in current_claim.civic_layer.consequences.consequences_b or [] %}
+                          <li>{{ item }}</li>
+                        {% endfor %}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                {% endif %}
+
+                <div class="civic-section">
+                  <div class="civic-section-label">Why This Matters</div>
+                  <div class="civic-why-text">{{ current_claim.civic_layer.why_it_matters }}</div>
+                </div>
+
+                {% if current_claim.civic_layer.citizens_role and current_claim.civic_layer.citizens_role|length > 0 %}
+                <div class="civic-section">
+                  <div class="civic-section-label">Citizen&#8217;s Role</div>
+                  <ul class="civic-role-list">
+                    {% for item in current_claim.civic_layer.citizens_role %}
+                      <li class="civic-role-item">{{ item }}</li>
+                    {% endfor %}
+                  </ul>
+                </div>
+                {% endif %}
+
               </div>
             {% endif %}
 

@@ -111,6 +111,26 @@ When relevant, name specific historical precedents and briefly state whether cur
 HOVER TERMS RULE:
 Any technical term, acronym, legal citation, organization name, court case, historical document, or charged political term with a specific legal or historical definition that general readers may not recognize must be included in the Glossary.
 
+CIVIC LAYER RULE:
+Populate Civic Layer for every claim. This is a responsibility layer — it shows what systems are affected, what the realistic consequences are, why the claim matters to public decision-making, and how the structure works so a person can evaluate it themselves. It does not tell users what to think or what conclusion to reach.
+
+CIVIC IMPACT: List 2 to 4 specific affected systems or institutions. Name the actual mechanisms: federal courts, electoral process, congressional oversight, public health authority, federal budget, legislative process, civil liberties framework. Do not generalize. Do not editorialize.
+
+REAL WORLD CONSEQUENCES: Strictly limited to institutional, procedural, and policy-level effects. Never include emotional outcomes, fear-based language, vague collapse statements, or political narratives.
+Acceptable: "Courts may be asked to rule on the legality of the action." "Agency jurisdiction and enforcement capacity may shift."
+Not acceptable: "Democracy could be at risk." "This could cause widespread fear." "The country might fall apart."
+Consequence labels depend on claim_type:
+Factual claims: label_a = "If true" / label_b = "If false"
+Normative claims: label_a = "If adopted" / label_b = "If rejected"
+Inquiry claims: label_a = "If confirmed" / label_b = "If not confirmed"
+
+WHY THIS MATTERS: 1 to 3 sentences. Explain why this claim is relevant to public understanding, institutional trust, law, voting, or daily decision-making. Not a restatement of the verdict. Plain language. No moralizing.
+
+CITIZENS ROLE: This is the anchor section. 3 to 5 bullets. Each bullet describes a structural reality the user can orient to — who holds authority, how the issue gets resolved, what the claim depends on factually, what lawful civic pathways exist, what precedent applies. The bullets show how the system works. They do not tell the user what to do or how to think.
+HARD RULES — Citizens Role must NOT use: directive language ("you should," "consider," "make sure," "it is important to"), moral instruction, activist framing, generic advice ("stay informed," "be engaged"), explicit founder references or quotes.
+HARD RULES — Citizens Role must: describe authority, process, evidence requirements, and civic pathways as structural facts. Be specific to this claim. Let the user draw their own conclusions from the structure presented.
+The invisible logic embedded in every bullet: distributed authority, process-based resolution, evidence-based judgment. Never stated. Always present.
+
 Speaker rule:
 If the claim explicitly names a speaker, use that person or entity
 If the claim does not explicitly name a speaker but is strongly associated with a dominant public figure or institution, infer that speaker
@@ -154,7 +174,18 @@ Always return this exact JSON structure:
   ],
   "Sources": "Primary sources:\\nSource description one: https://url-one.com\\nSource description two: https://url-two.com\\nSource description three: https://url-three.com\\nSource description four: https://url-four.com\\nSource description five: https://url-five.com\\n\\nInclude 6 to 10 real, verifiable URLs from major news outlets, government sites, institutional bodies, or authoritative sources. Format each line exactly as: Label: URL",
   "Overall Verdict": "Exactly one of: True, Mostly True, Substantially True, Plausible/Mixed, Contested, Exaggerated, Misleading, Unproven, False",
-  "Strip Mode Summary": "This is the full paid analytical paragraph, not the short Quick Explanation. Write this in the spirit of Thomas Paine's Common Sense — plain language, no jargon, no hedging, accessible to anyone regardless of political background or education level. Answer three things clearly: what is actually happening beneath the claim, why it matters in real terms, and what someone should be paying attention to next. This should reflect the full excavation without referencing the layers directly. 3 to 4 sentences. No bullet points. No dashes. Do not be condescending. Do not be sarcastic. Avoid phrases like obviously or clearly. Do not over-explain uncertainty, but do not present future outcomes as guaranteed. Let the tone reflect that situations evolve. Write with calm, grounded clarity."
+  "Strip Mode Summary": "This is the full paid analytical paragraph, not the short Quick Explanation. Write this in the spirit of Thomas Paine's Common Sense — plain language, no jargon, no hedging, accessible to anyone regardless of political background or education level. Answer three things clearly: what is actually happening beneath the claim, why it matters in real terms, and what someone should be paying attention to next. This should reflect the full excavation without referencing the layers directly. 3 to 4 sentences. No bullet points. No dashes. Do not be condescending. Do not be sarcastic. Avoid phrases like obviously or clearly. Do not over-explain uncertainty, but do not present future outcomes as guaranteed. Let the tone reflect that situations evolve. Write with calm, grounded clarity.",
+  "Civic Layer": {
+    "Civic Impact": ["Affected system or institution", "Second affected system or institution"],
+    "Real World Consequences": {
+      "label_a": "If true",
+      "consequences_a": ["Institutional or procedural outcome", "Policy or legal effect", "Structural or behavioral change"],
+      "label_b": "If false",
+      "consequences_b": ["Institutional or procedural outcome", "Policy or legal effect", "Structural or behavioral change"]
+    },
+    "Why This Matters": "1 to 3 sentences on why this claim is relevant to public understanding, institutional trust, law, voting, or daily decision-making. Not a restatement of the verdict. The bridge between analysis and relevance.",
+    "Citizens Role": ["Authority: [who actually holds decision-making power and through what mechanism]", "Process: [how this claim or its underlying dispute is lawfully resolved]", "Evidence: [what the claim depends on factually and what would confirm or contradict it]", "Action or Pathway: [what lawful civic path applies — courts, elections, legislation, public record, comparison to precedent]"]
+  }
 }"""
 
 
@@ -477,6 +508,18 @@ def build_claim_context(record):
     right_perspective = fields.get("Right Perspective", "") or parsed_json.get("Right Perspective", "")
     scenario_map = fields.get("Scenario Map", "") or parsed_json.get("Scenario Map", "")
     strip_mode_summary = fields.get("Strip Mode Summary", "") or parsed_json.get("Strip Mode Summary", "")
+
+    # Civic Layer — parsed from Claude Raw JSON, not stored as separate Airtable fields
+    raw_civic = parsed_json.get("Civic Layer", {})
+    if isinstance(raw_civic, dict):
+        civic_layer = {
+            "civic_impact": raw_civic.get("Civic Impact", []),
+            "consequences": raw_civic.get("Real World Consequences", {}),
+            "why_it_matters": raw_civic.get("Why This Matters", ""),
+            "citizens_role": raw_civic.get("Citizens Role", [])
+        }
+    else:
+        civic_layer = {}
     source_urls = fields.get("Source URLs", "") or parsed_json.get("Sources", "")
     founders_perspectives = parse_founders(fields.get("Founders Perspectives", "") or parsed_json.get("Founders Perspectives", {}))
     glossary = parse_glossary(fields.get("Glossary", "") or parsed_json.get("Glossary", []))
@@ -499,6 +542,7 @@ def build_claim_context(record):
         "left_perspective": left_perspective,
         "right_perspective": right_perspective,
         "founders_perspectives": founders_perspectives,
+        "civic_layer": civic_layer,
         "scenario_map": scenario_map,
         "source_urls": source_urls,
         "glossary": glossary,
@@ -527,6 +571,7 @@ def build_claim_context(record):
         "right_perspective": right_perspective,
         "scenario_map": scenario_map,
         "source_urls": source_urls,
+        "civic_layer": civic_layer,
         "founders_perspectives": founders_perspectives,
         "glossary": glossary,
         "subclaims": subclaims,
