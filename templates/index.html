@@ -705,130 +705,75 @@
       cursor: pointer;
     }
 
-    /* ── Civic Layer ── */
-    .civic-block {
-      background: linear-gradient(135deg, rgba(10,22,38,.95) 0%, rgba(8,18,32,.98) 100%);
-      border: 1px solid rgba(201,168,76,.2);
-      border-left: 3px solid rgba(201,168,76,.45);
-      border-radius: 14px;
-      padding: 22px 22px 18px;
-      margin-top: 0;
+    /* ── Site Mode Overlay (non-superusers only) ── */
+    .site-mode-overlay {
+      position: fixed; inset: 0; z-index: 99999;
+      background: #050f1a;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 40px 24px;
     }
-    .civic-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 18px;
+    .site-mode-overlay-logo {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 22px; font-weight: 900; color: var(--gold); letter-spacing: .04em; margin-bottom: 6px;
     }
-    .civic-title {
+    .site-mode-overlay-tagline {
       font-family: 'Libre Baskerville', Georgia, serif;
-      font-size: 10px;
-      letter-spacing: .2em;
-      text-transform: uppercase;
-      color: var(--gold);
+      font-size: 9px; letter-spacing: .2em; text-transform: uppercase;
+      color: var(--text-dim); margin-bottom: 48px;
     }
-    .civic-tip-wrap { position: relative; display: inline-flex; align-items: center; }
-    .civic-tip-btn {
-      width: 15px; height: 15px; border-radius: 50%;
-      border: 1px solid rgba(201,168,76,.35);
-      background: rgba(201,168,76,.07);
-      color: var(--gold); font-size: 9px;
+    .site-mode-overlay-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(22px, 4vw, 32px); font-weight: 700;
+      color: var(--cream); text-align: center; margin-bottom: 16px;
+      max-width: 560px; line-height: 1.3;
+    }
+    .site-mode-overlay-body {
+      font-family: 'Crimson Text', Georgia, serif;
+      font-size: 18px; color: var(--text-mid); text-align: center;
+      max-width: 480px; line-height: 1.65; margin-bottom: 40px;
+    }
+    .site-mode-overlay-logout {
       font-family: 'Libre Baskerville', Georgia, serif;
-      cursor: default; display: flex; align-items: center; justify-content: center;
+      font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+      color: var(--text-dim); background: none;
+      border: 1px solid rgba(255,255,255,.15); border-radius: 999px;
+      padding: 9px 22px; cursor: pointer; text-decoration: none;
+      transition: border-color .15s, color .15s; display: inline-block;
     }
-    .civic-tip-box {
-      display: none;
-      position: absolute; bottom: calc(100% + 6px); left: 50%;
-      transform: translateX(-50%);
-      background: #0a1626; border: 1px solid rgba(201,168,76,.22);
-      border-radius: 8px; padding: 8px 11px; width: 230px;
-      font-family: 'Crimson Text', Georgia, serif; font-size: 13px;
-      color: var(--text-light); line-height: 1.5; z-index: 200; pointer-events: none;
-      white-space: normal;
-    }
-    .civic-tip-wrap:hover .civic-tip-box { display: block; }
-    .civic-section { margin-bottom: 16px; }
-    .civic-section:last-child { margin-bottom: 0; }
-    .civic-section-label {
-      font-family: 'Libre Baskerville', Georgia, serif;
-      font-size: 9px; letter-spacing: .15em; text-transform: uppercase;
-      color: var(--text-dim); margin-bottom: 8px;
-    }
-    .civic-impact-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-    .civic-chip {
-      background: rgba(201,168,76,.07); border: 1px solid rgba(201,168,76,.18);
-      border-radius: 999px; padding: 3px 11px;
-      font-family: 'Libre Baskerville', Georgia, serif;
-      font-size: 10px; letter-spacing: .05em; color: var(--gold);
-    }
-    .civic-consequence-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-    }
-    @media (max-width: 600px) { .civic-consequence-grid { grid-template-columns: 1fr; } }
-    .civic-consequence-col {
-      background: rgba(255,255,255,.025); border: 1px solid rgba(255,255,255,.07);
-      border-radius: 10px; padding: 12px 14px;
-    }
-    .civic-consequence-label {
-      font-family: 'Libre Baskerville', Georgia, serif;
-      font-size: 9px; letter-spacing: .13em; text-transform: uppercase;
-      color: var(--text-mid); margin-bottom: 8px;
-    }
-    .civic-consequence-list { list-style: none; padding: 0; margin: 0; }
-    .civic-consequence-list li {
-      font-family: 'Crimson Text', Georgia, serif; font-size: 15px;
-      color: var(--text-light); line-height: 1.5;
-      padding: 3px 0 3px 13px; position: relative;
-    }
-    .civic-consequence-list li::before {
-      content: "—"; position: absolute; left: 0;
-      color: rgba(201,168,76,.35); font-size: 12px;
-    }
-    .civic-why-text {
-      font-family: 'Crimson Text', Georgia, serif; font-size: 16px;
-      color: var(--text-light); line-height: 1.6;
-    }
-    .civic-role-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 9px; }
-    .civic-role-item {
-      font-family: 'Crimson Text', Georgia, serif; font-size: 15px;
-      color: var(--text-light); line-height: 1.55;
-      padding-left: 16px; position: relative;
-    }
-    .civic-role-item::before {
-      content: "◆"; position: absolute; left: 0;
-      color: rgba(201,168,76,.45); font-size: 7px; top: 6px;
-    }
+    .site-mode-overlay-logout:hover { border-color: rgba(255,255,255,.3); color: var(--text-light); }
 
-    /* Quick View civic teaser */
-    .civic-qv-block {
-      margin-top: 18px; padding-top: 16px;
-      border-top: 1px solid rgba(255,255,255,.06);
+    /* ── Site Mode Editor Control ── */
+    .site-mode-control {
+      background: rgba(201,168,76,.05); border: 1px solid rgba(201,168,76,.2);
+      border-radius: 12px; padding: 16px 18px; margin-bottom: 24px;
     }
-    .civic-qv-label {
+    .site-mode-control-label {
       font-family: 'Libre Baskerville', Georgia, serif;
-      font-size: 9px; letter-spacing: .15em; text-transform: uppercase;
-      color: var(--text-dim); margin-bottom: 7px;
+      font-size: 9px; letter-spacing: .16em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 10px;
     }
-    .civic-qv-why {
-      font-family: 'Crimson Text', Georgia, serif; font-size: 15px;
-      color: var(--text-light); line-height: 1.55; margin-bottom: 8px;
+    .site-mode-control-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .site-mode-select {
+      background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.15);
+      border-radius: 8px; color: var(--cream); padding: 8px 12px;
+      font-family: 'Libre Baskerville', Georgia, serif; font-size: 11px;
+      cursor: pointer; flex: 1; min-width: 200px;
     }
-    .civic-qv-bullet {
-      font-family: 'Crimson Text', Georgia, serif; font-size: 14px;
-      color: var(--text-mid); font-style: italic; line-height: 1.5;
-      padding-left: 14px; position: relative;
-    }
-    .civic-qv-bullet::before {
-      content: "◆"; position: absolute; left: 0;
-      color: rgba(201,168,76,.4); font-size: 7px; top: 5px;
-    }
-    .civic-qv-cta {
-      display: inline-block; margin-top: 9px;
+    .site-mode-select:focus { outline: none; border-color: rgba(201,168,76,.4); }
+    .site-mode-save-btn {
+      padding: 8px 20px; border-radius: 999px;
+      background: rgba(201,168,76,.15); border: 1px solid rgba(201,168,76,.35);
       font-family: 'Libre Baskerville', Georgia, serif;
-      font-size: 9px; letter-spacing: .1em; text-transform: uppercase;
-      color: var(--gold); opacity: .65; cursor: pointer; background: none; border: none; padding: 0;
+      font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--gold); cursor: pointer; white-space: nowrap;
+      transition: background .15s;
     }
-    .civic-qv-cta:hover { opacity: 1; }
+    .site-mode-save-btn:hover { background: rgba(201,168,76,.28); }
+    .site-mode-status {
+      font-family: 'Crimson Text', Georgia, serif; font-size: 13px;
+      color: var(--text-mid); font-style: italic; margin-top: 8px; min-height: 18px;
+    }
 
     .gold-btn,
     .gold-btn-mobile {
@@ -4427,6 +4372,21 @@ html, body {
 </style>
 </head>
 <body{% if current_claim and current_claim.slug %} data-claim-slug="{{ current_claim.slug }}"{% endif %}>
+{% if site_mode is defined and site_mode != "Live" and not true_superuser %}
+<div class="site-mode-overlay">
+  <div class="site-mode-overlay-logo">Where the Truth Lies</div>
+  <div class="site-mode-overlay-tagline">Beyond the Argument</div>
+  {% if site_message_title is defined and site_message_title %}
+  <div class="site-mode-overlay-title">{{ site_message_title }}</div>
+  {% else %}
+  <div class="site-mode-overlay-title">This site is temporarily unavailable.</div>
+  {% endif %}
+  {% if site_message_body is defined and site_message_body %}
+  <div class="site-mode-overlay-body">{{ site_message_body }}</div>
+  {% endif %}
+  <a href="/logout" class="site-mode-overlay-logout">Logout</a>
+</div>
+{% endif %}
   <div class="tooltip-popup" id="tooltipPopup">
     <div class="tooltip-term-label" id="tooltipLabel"></div>
     <div class="tooltip-body" id="tooltipBody"></div>
@@ -5180,6 +5140,20 @@ html, body {
 
            {% if page_mode == "editor" %}
       <div class="m-editor-queue" id="mEditor">
+        {% if true_superuser %}
+        <div class="site-mode-control" style="margin-bottom:16px;">
+          <div class="site-mode-control-label">&#9632; Site Mode</div>
+          <div class="site-mode-control-row">
+            <select class="site-mode-select" id="siteModeSelectMobile">
+              <option value="Live" {% if site_mode is defined and site_mode == "Live" %}selected{% endif %}>Live</option>
+              <option value="Construction/ Site Maintenance" {% if site_mode is defined and site_mode == "Construction/ Site Maintenance" %}selected{% endif %}>Construction / Maintenance</option>
+              <option value="Testing" {% if site_mode is defined and site_mode == "Testing" %}selected{% endif %}>Testing</option>
+            </select>
+            <button type="button" class="site-mode-save-btn" onclick="saveSiteMode('siteModeSelectMobile','siteModeStatusMobile')">Save</button>
+          </div>
+          <div class="site-mode-status" id="siteModeStatusMobile"></div>
+        </div>
+        {% endif %}
         <div class="m-editor-header">
           <div class="m-editor-title">Editor Queue</div>
           <div class="m-editor-sub">Disputes needing human attention.</div>
@@ -5566,6 +5540,21 @@ html, body {
     <div class="main-grid editor-page-grid">
       <div class="content-stack">
         <article class="main-card">
+          {% if true_superuser %}
+          <div class="site-mode-control">
+            <div class="site-mode-control-label">&#9632; Site Mode Control</div>
+            <div class="site-mode-control-row">
+              <select class="site-mode-select" id="siteModeSelect">
+                <option value="Live" {% if site_mode is defined and site_mode == "Live" %}selected{% endif %}>Live</option>
+                <option value="Construction/ Site Maintenance" {% if site_mode is defined and site_mode == "Construction/ Site Maintenance" %}selected{% endif %}>Construction / Site Maintenance</option>
+                <option value="Testing" {% if site_mode is defined and site_mode == "Testing" %}selected{% endif %}>Testing</option>
+              </select>
+              <button type="button" class="site-mode-save-btn" onclick="saveSiteMode()">Save</button>
+            </div>
+            <div class="site-mode-status" id="siteModeStatus"></div>
+          </div>
+          {% endif %}
+
           <div class="archives-header" style="margin-bottom:0;">
             <div class="archives-title-wrap">
               <h2>Editor Queue</h2>
@@ -5995,17 +5984,6 @@ html, body {
                   <div class="qv-agreement-text" id="qvAgreement"></div>
                 </div>
                 <p class="qv-dive-prompt">See the full excavation for underlying layers, competing interpretations, and connected breakout claims. <a onclick="switchTab('full')" href="#">Open Full Excavation &#8594;</a></p>
-
-                {% if current_claim.civic_layer and current_claim.civic_layer.why_it_matters %}
-                <div class="civic-qv-block">
-                  <div class="civic-qv-label">Why This Matters</div>
-                  <div class="civic-qv-why">{{ current_claim.civic_layer.why_it_matters }}</div>
-                  {% if current_claim.civic_layer.citizens_role and current_claim.civic_layer.citizens_role|length > 0 %}
-                  <div class="civic-qv-bullet">{{ current_claim.civic_layer.citizens_role[0] }}</div>
-                  {% endif %}
-                  <button class="civic-qv-cta" onclick="switchTab('full')">Full Citizen&#8217;s Role in Full Excavation &#8594;</button>
-                </div>
-                {% endif %}
               </div>
               <script>
               (function() {
@@ -6246,76 +6224,6 @@ html, body {
                 <div class="layer-block-body open">
                   <div class="layer-block-text" id="commonGroundText">{{ current_claim.common_ground }}</div>
                 </div>
-              </div>
-            {% endif %}
-
-            {% if current_claim.civic_layer and current_claim.civic_layer.why_it_matters %}
-              <div class="ornamental">
-                <div class="ornamental-line"></div>
-                <div class="ornamental-diamond"></div>
-                <div class="ornamental-line"></div>
-              </div>
-
-              <div class="civic-block">
-                <div class="civic-header">
-                  <span class="civic-title">Civic Layer</span>
-                  <span class="civic-tip-wrap">
-                    <span class="civic-tip-btn">?</span>
-                    <span class="civic-tip-box">How to think about this claim as a citizen &#8212; not what to think.</span>
-                  </span>
-                </div>
-
-                {% if current_claim.civic_layer.civic_impact and current_claim.civic_layer.civic_impact|length > 0 %}
-                <div class="civic-section">
-                  <div class="civic-section-label">Civic Impact</div>
-                  <div class="civic-impact-chips">
-                    {% for item in current_claim.civic_layer.civic_impact %}
-                      <span class="civic-chip">{{ item }}</span>
-                    {% endfor %}
-                  </div>
-                </div>
-                {% endif %}
-
-                {% if current_claim.civic_layer.consequences and current_claim.civic_layer.consequences.consequences_a %}
-                <div class="civic-section">
-                  <div class="civic-section-label">Real World Consequences</div>
-                  <div class="civic-consequence-grid">
-                    <div class="civic-consequence-col">
-                      <div class="civic-consequence-label">{{ current_claim.civic_layer.consequences.label_a or 'If True' }}</div>
-                      <ul class="civic-consequence-list">
-                        {% for item in current_claim.civic_layer.consequences.consequences_a %}
-                          <li>{{ item }}</li>
-                        {% endfor %}
-                      </ul>
-                    </div>
-                    <div class="civic-consequence-col">
-                      <div class="civic-consequence-label">{{ current_claim.civic_layer.consequences.label_b or 'If False' }}</div>
-                      <ul class="civic-consequence-list">
-                        {% for item in current_claim.civic_layer.consequences.consequences_b or [] %}
-                          <li>{{ item }}</li>
-                        {% endfor %}
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-                {% endif %}
-
-                <div class="civic-section">
-                  <div class="civic-section-label">Why This Matters</div>
-                  <div class="civic-why-text">{{ current_claim.civic_layer.why_it_matters }}</div>
-                </div>
-
-                {% if current_claim.civic_layer.citizens_role and current_claim.civic_layer.citizens_role|length > 0 %}
-                <div class="civic-section">
-                  <div class="civic-section-label">Citizen&#8217;s Role</div>
-                  <ul class="civic-role-list">
-                    {% for item in current_claim.civic_layer.citizens_role %}
-                      <li class="civic-role-item">{{ item }}</li>
-                    {% endfor %}
-                  </ul>
-                </div>
-                {% endif %}
-
               </div>
             {% endif %}
 
@@ -9124,6 +9032,32 @@ console.error('Dispute submission failed:', err);
   document.getElementById('breakoutModal').addEventListener('click', function(e) {
     if (e.target === this) closeBreakoutModal();
   });
+
+  // ── Site Mode Control ──
+  function saveSiteMode(selectId, statusId) {
+    var sel = document.getElementById(selectId || 'siteModeSelect');
+    var statusEl = document.getElementById(statusId || 'siteModeStatus');
+    if (!sel) return;
+    var mode = sel.value;
+    if (statusEl) statusEl.textContent = 'Saving…';
+    fetch('/editor/update-site-mode', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({site_mode: mode})
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.ok) {
+        if (statusEl) statusEl.textContent = 'Saved. Site mode: ' + data.site_mode;
+      } else {
+        if (statusEl) statusEl.textContent = 'Error: ' + (data.error || 'Unknown error');
+      }
+    })
+    .catch(function(e) {
+      if (statusEl) statusEl.textContent = 'Request failed.';
+    });
+  }
+
 </script>
 
 </body>
