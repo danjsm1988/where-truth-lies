@@ -3623,16 +3623,13 @@ def editor_reanalyze_claim_by_slug(slug):
 
         existing_analyzed = (claim_fields.get("Analyzed Claim") or "").strip()
 
-        # Always excavate against Original Quote — full context, factual grounding
-        # Analyzed Claim is passed as structural guide only — never replaces raw input
-        if existing_analyzed:
-            reanalysis_framing = None
-        else:
-            reanalysis_framing = frame_claim_input(raw_claim_text)
+        # Always reframe from Original Quote during full reanalysis so stale framing cannot loop
+        reanalysis_framing = frame_claim_input(raw_claim_text)
 
         primary, claude_json, openai_json, grok_adjudication = run_reanalysis_ai(
-            raw_claim_text, mode,
-            analyzed_claim=existing_analyzed or (reanalysis_framing.get("primary_claim") if reanalysis_framing else None)
+            raw_claim_text,
+            mode,
+            analyzed_claim=reanalysis_framing.get("primary_claim") if reanalysis_framing else existing_analyzed or None
         )
         if "error" in primary:
             return jsonify({"error": f"AI failed: {primary['error']}"}), 500
@@ -3647,17 +3644,15 @@ def editor_reanalyze_claim_by_slug(slug):
                 username=editor_username, existing_fields=claim_fields,
                 framing_data=reanalysis_framing
             )
-            if existing_analyzed:
-                # Display fields locked — never overwritten when Analyzed Claim is set
-                new_slug = old_slug
-                update_fields["URL Slug"] = old_slug
-                update_fields["Analyzed Claim"] = existing_analyzed
-                update_fields["Stripped Claim"] = existing_analyzed
-            elif reanalysis_framing and reanalysis_framing.get("primary_claim"):
+
+            if reanalysis_framing and reanalysis_framing.get("primary_claim"):
                 new_slug = slugify(reanalysis_framing["primary_claim"])
                 update_fields["URL Slug"] = new_slug
+                update_fields["Analyzed Claim"] = reanalysis_framing["primary_claim"]
             else:
                 new_slug = update_fields.get("URL Slug", old_slug)
+
+            update_fields["Stripped Claim"] = primary.get("Stripped Claim", raw_claim_text)
             update_fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
             update_fields["OpenAI Raw JSON"] = json.dumps(openai_json, ensure_ascii=False)[:100000]
             if grok_adjudication:
