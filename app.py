@@ -408,7 +408,7 @@ def build_claim_context(record):
     claim_slug = fields.get("URL Slug", "")
     claim_disputes = get_disputes_for_claim(claim_slug)
     dispute_threads = group_disputes_into_threads(claim_disputes)
-    title = clean_display_title(fields.get("Original Quote") or fields.get("Stripped Claim") or "Untitled Claim")
+    title = clean_display_title(fields.get("Analyzed Claim") or fields.get("Original Quote") or fields.get("Stripped Claim") or "Untitled Claim")
 
     claude_parsed = safe_json_parse(fields.get("Claude Raw JSON", ""))
     openai_parsed = safe_json_parse(fields.get("OpenAI Raw JSON", ""))
@@ -496,6 +496,7 @@ def build_claim_context(record):
     return {
         "record_id": record.get("id"),
         "slug": fields.get("URL Slug", ""),
+        "original_quote": fields.get("Original Quote", ""),
         "title": title,
         "stripped_claim": stripped_claim,
         "quick_explanation": quick_explanation,
@@ -554,7 +555,7 @@ def build_claim_context(record):
     }
 
 
-def extract_primary_record_fields(claim, parsed, mode, username, existing_fields=None):
+def extract_primary_record_fields(claim, parsed, mode, username, existing_fields=None, framing_data=None):
     dates = now_dates()
     existing_fields = existing_fields or {}
     is_full_reexcavate = mode == "full"
@@ -633,6 +634,17 @@ def extract_primary_record_fields(claim, parsed, mode, username, existing_fields
         if sub_claims:
             fields["Sub-Claims"] = " | ".join([sc.get("claim", "") for sc in sub_claims if sc.get("claim")]).strip()
 
+    if framing_data and isinstance(framing_data, dict):
+        if framing_data.get("primary_claim"):
+            fields["Analyzed Claim"] = framing_data["primary_claim"]
+        if framing_data.get("input_type"):
+            fields["Input Type"] = framing_data["input_type"]
+        if framing_data.get("confidence_score") is not None:
+            try:
+                fields["Framing Confidence"] = float(framing_data["confidence_score"])
+            except Exception:
+                pass
+
     return fields
 
 
@@ -651,7 +663,7 @@ def get_recent_claims(limit=10):
         for record in records[:limit]:
             f = record.get("fields", {})
             recent.append({
-    "title": clean_display_title(f.get("Original Quote") or f.get("Stripped Claim") or "Untitled Claim"),
+    "title": clean_display_title(f.get("Analyzed Claim") or f.get("Original Quote") or f.get("Stripped Claim") or "Untitled Claim"),
     "slug": f.get("URL Slug", ""),
     "date": f.get("Date") or f.get("Date Added", ""),
     "verdict": f.get("Overall Verdict", "Unproven"),
@@ -680,7 +692,7 @@ def get_all_claims():
             f = record.get("fields", {})
             claims.append({
                 "record_id": record.get("id"),
-                "title": clean_display_title(f.get("Original Quote") or f.get("Stripped Claim") or "Untitled Claim"),
+                "title": clean_display_title(f.get("Analyzed Claim") or f.get("Original Quote") or f.get("Stripped Claim") or "Untitled Claim"),
                 "slug": f.get("URL Slug", ""),
                 "date": f.get("Date") or f.get("Date Added", ""),
                 "verdict": f.get("Overall Verdict", "Unproven"),
@@ -1492,7 +1504,7 @@ def get_trending():
         for rec in records:
             f = rec.get("fields", {})
             trending.append({
-                "title": clean_display_title(f.get("Original Quote") or f.get("Stripped Claim") or "Untitled"),
+                "title": clean_display_title(f.get("Analyzed Claim") or f.get("Original Quote") or f.get("Stripped Claim") or "Untitled"),
                 "slug": f.get("URL Slug", ""),
                 "verdict": f.get("Overall Verdict", "Unproven"),
                 "view_count": int(f.get("View Count", 0) or 0)
@@ -2098,6 +2110,73 @@ def check_duplicate():
         return jsonify({'exact': None, 'similar': []}), 200
     result = find_duplicate_and_similar_claims(claim)
     return jsonify(result), 200
+
+
+FRAME_CLAIM_PROMPT = """You are a pre-excavation claim framing engine for Where the Truth Lies.
+
+Your job is to analyze raw user input BEFORE full excavation begins. Understand what the user actually intends to have analyzed — not just what they literally typed.
+
+CRITICAL RULES:
+1. Evaluate claims not writing ability. Slang, ebonics, dyslexic spelling, incomplete sentences, and informal grammar must all be interpreted for intent.
+2. Identify the FOUNDATIONAL PREMISE first — the central animating assertion. Not downstream statements or supporting facts.
+3. Rhetorical slogans and compressed narratives (like "No Kings", "Defund the Police", "Stop the Steal") must be recognized as compressed claims and unpacked to their foundational premise.
+4. Sourced content, press releases, manifestos, and "About" page text must be treated as raw material — extract what the user most likely wants examined.
+5. The system leads. Propose the primary framing. The user may adjust from system-generated options but cannot replace with an unrelated claim.
+
+INPUT TYPES: single_claim, multi_claim, sourced_content, rhetorical_slogan, question, unclear
+CONFIDENCE: 0.85+ auto proceed. 0.60-0.84 inline banner. Under 0.60 full modal.
+
+Return ONLY valid JSON. No markdown. No preamble.
+
+{
+  "input_type": "single_claim",
+  "primary_claim": "The foundational premise. One sentence.",
+  "clarified_text": "Clean readable version preserving meaning.",
+  "alternate_claims": ["Second interpretation", "Third if genuinely distinct"],
+  "breakout_candidates": ["Distinct sub-claim that can stand alone"],
+  "confidence_score": 0.0,
+  "needs_clarification": false,
+  "framing_note": "One sentence explaining the framing choice."
+}
+"""
+
+
+def frame_claim_input(raw_input):
+    fallback = {
+        "input_type": "single_claim", "primary_claim": raw_input,
+        "clarified_text": raw_input, "alternate_claims": [],
+        "breakout_candidates": [], "confidence_score": 0.9,
+        "needs_clarification": False, "framing_note": ""
+    }
+    if not raw_input or not anthropic_client:
+        return fallback
+    try:
+        response = anthropic_client.messages.create(
+            model="claude-haiku-4-5-20251001", max_tokens=800, temperature=0,
+            system=FRAME_CLAIM_PROMPT,
+            messages=[{"role": "user", "content": f"Frame this input:\n\n{raw_input}"}]
+        )
+        result = safe_json_parse(response.content[0].text)
+        if not isinstance(result, dict) or "primary_claim" not in result:
+            return fallback
+        score = float(result.get("confidence_score", 0.9))
+        if "needs_clarification" not in result:
+            result["needs_clarification"] = score < 0.60
+        return result
+    except Exception as e:
+        print(f"FRAME CLAIM ERROR: {e}", flush=True)
+        return fallback
+
+
+@app.route("/frame-claim", methods=["POST"])
+def frame_claim():
+    if not session.get("logged_in"):
+        return jsonify({"error": "Not logged in"}), 401
+    data = request.get_json() or {}
+    raw_input = (data.get("claim") or "").strip()
+    if not raw_input:
+        return jsonify({"error": "Claim required"}), 400
+    return jsonify(frame_claim_input(raw_input)), 200
 
 
 @app.route("/analyze", methods=["POST"])
@@ -3034,7 +3113,7 @@ def editor_claims_list():
                 topic_str = str(topics)
             claims.append({
                 "record_id": r.get("id"),
-                "title": clean_display_title(f.get("Original Quote") or f.get("Stripped Claim") or "Untitled"),
+                "title": clean_display_title(f.get("Analyzed Claim") or f.get("Original Quote") or f.get("Stripped Claim") or "Untitled"),
                 "slug": f.get("URL Slug", ""),
                 "verdict": f.get("Overall Verdict", ""),
                 "topic": topic_str,
@@ -3169,9 +3248,17 @@ def editor_reanalyze_claim_by_slug(slug):
         request._cached_json = {"mode": mode, "fields": selective_fields}
 
         claim_fields = records[0].get("fields", {})
-        claim_text = claim_fields.get("Original Quote") or claim_fields.get("Stripped Claim") or ""
-        if not claim_text:
+        raw_claim_text = claim_fields.get("Original Quote") or claim_fields.get("Stripped Claim") or ""
+        if not raw_claim_text:
             return jsonify({"error": "No claim text found"}), 400
+
+        existing_analyzed = (claim_fields.get("Analyzed Claim") or "").strip()
+        if existing_analyzed:
+            claim_text = existing_analyzed
+            reanalysis_framing = None
+        else:
+            reanalysis_framing = frame_claim_input(raw_claim_text)
+            claim_text = reanalysis_framing.get("primary_claim") or raw_claim_text
 
         primary, claude_json, openai_json, grok_adjudication = run_reanalysis_ai(claim_text, mode)
         if "error" in primary:
@@ -3179,17 +3266,25 @@ def editor_reanalyze_claim_by_slug(slug):
 
         editor_username = session.get("username", "Editor")
         now_str = datetime.utcnow().strftime("%Y-%m-%d")
+        old_slug = slug
 
         if mode == "full":
             update_fields = extract_primary_record_fields(
-                claim=claim_text, parsed=primary, mode="full",
-                username=editor_username, existing_fields=claim_fields
+                claim=raw_claim_text, parsed=primary, mode="full",
+                username=editor_username, existing_fields=claim_fields,
+                framing_data=reanalysis_framing
             )
+            if reanalysis_framing and reanalysis_framing.get("primary_claim"):
+                new_slug = slugify(reanalysis_framing["primary_claim"])
+                update_fields["URL Slug"] = new_slug
+            else:
+                new_slug = update_fields.get("URL Slug", old_slug)
             update_fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
             update_fields["OpenAI Raw JSON"] = json.dumps(openai_json, ensure_ascii=False)[:100000]
             if grok_adjudication:
                 update_fields["Grok Raw JSON"] = json.dumps(grok_adjudication, ensure_ascii=False)[:100000]
         else:
+            new_slug = old_slug
             update_fields = {"Last Updated": now_str}
             for field_name in selective_fields:
                 airtable_key = SELECTIVE_FIELD_MAP.get(field_name)
@@ -3203,10 +3298,13 @@ def editor_reanalyze_claim_by_slug(slug):
         if not resp.ok:
             return jsonify({"error": f"Airtable update failed: {resp.text}"}), 500
 
+        slug_changed = new_slug != old_slug
         return jsonify({
             "ok": True, "record_id": record_id, "mode": mode,
             "reanalyzed_by": editor_username, "last_reanalyzed": now_str,
-            "fields_updated": list(update_fields.keys())
+            "fields_updated": list(update_fields.keys()),
+            "new_slug": new_slug, "slug_changed": slug_changed,
+            "redirect_to": f"/claim/{new_slug}" if slug_changed else None
         })
 
     except Exception as e:
@@ -3595,7 +3693,7 @@ def get_breakout_claims_for_parent(parent_record_id):
             f = r.get("fields", {})
             breakouts.append({
                 "record_id": r.get("id"),
-                "title": clean_display_title(f.get("Stripped Claim") or f.get("Original Quote") or "Untitled"),
+                "title": clean_display_title(f.get("Analyzed Claim") or f.get("Stripped Claim") or f.get("Original Quote") or "Untitled"),
                 "slug": f.get("URL Slug", ""),
                 "claim_identifier": f.get("Claim Identifier", ""),
                 "breakout_status": f.get("Breakout Status", "Pending Excavation"),
