@@ -952,6 +952,34 @@ def get_latest_claim():
         return None
 
 
+def get_featured_claim():
+    """Return the claim with the highest non-superuser view count for homepage feature.
+    Falls back to get_latest_claim() if no views exist yet."""
+    if not AIRTABLE_TOKEN or not AIRTABLE_BASE_ID or not AIRTABLE_TABLE_NAME:
+        return None
+    try:
+        params = {
+            "maxRecords": 1,
+            "filterByFormula": "AND(OR(NOT({Breakout User Excavated}), {Breakout User Excavated}!='No'), {View Count}>0)",
+            "sort[0][field]": "View Count",
+            "sort[0][direction]": "desc"
+        }
+        response = requests.get(
+            airtable_url(AIRTABLE_TABLE_NAME),
+            headers={"Authorization": f"Bearer {AIRTABLE_TOKEN}"},
+            params=params,
+            timeout=20
+        )
+        response.raise_for_status()
+        records = response.json().get("records", [])
+        if records:
+            return records[0]
+    except Exception as e:
+        print("GET FEATURED CLAIM ERROR:", str(e), flush=True)
+    # Fall back to latest if no views exist
+    return get_latest_claim()
+
+
 def get_user_by_username(username):
     if not username:
         return None
@@ -1484,17 +1512,28 @@ def build_reality_anchor_with_grok(claim):
 
 @app.route("/increment-view/<slug>", methods=["POST"])
 def increment_view(slug):
-    """Increment view count for a claim. Excludes superusers."""
+    """Increment view count for a claim. Excludes superusers. 30-min cooldown per slug per session."""
     if not session.get("logged_in"):
         return jsonify({"ok": False}), 200
     if session.get("true_superuser") or session.get("superuser"):
         return jsonify({"ok": False, "reason": "superuser"}), 200
+    # Anti-spam: check session cooldown (30 minutes per slug)
+    view_timestamps = session.get("view_timestamps", {})
+    last_viewed = view_timestamps.get(slug, 0)
+    now_ts = datetime.utcnow().timestamp()
+    cooldown_seconds = 1800  # 30 minutes
+    if now_ts - last_viewed < cooldown_seconds:
+        return jsonify({"ok": False, "reason": "cooldown"}), 200
     try:
         record = get_claim_by_slug(slug)
         if not record:
             return jsonify({"ok": False}), 200
         current = int(record.get("fields", {}).get("View Count", 0) or 0)
         update_airtable_record(record["id"], {"View Count": current + 1})
+        # Update session cooldown
+        view_timestamps[slug] = now_ts
+        session["view_timestamps"] = view_timestamps
+        session.modified = True
         return jsonify({"ok": True, "view_count": current + 1}), 200
     except Exception as e:
         print(f"VIEW COUNT ERROR: {e}", flush=True)
@@ -1642,7 +1681,7 @@ def home():
     if not session.get("logged_in"):
         return redirect("/login")
     recent_claims = get_recent_claims(limit=10)
-    latest_record = get_latest_claim()
+    latest_record = get_featured_claim()
     current_claim = build_claim_context(latest_record) if latest_record else None
     _s = get_site_settings()
     return render_template(
