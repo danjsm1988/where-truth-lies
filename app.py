@@ -1616,16 +1616,12 @@ def logout():
 
 @app.route("/")
 def get_site_settings():
-    """Read site_mode record from Settings table. Defaults to Live on any failure."""
+    """Read site mode from Settings table. Defaults to Live on any failure."""
     try:
-        params = {
-            "filterByFormula": "{Setting Key}='site_mode'",
-            "maxRecords": 1
-        }
         resp = requests.get(
             airtable_url(AIRTABLE_SETTINGS_TABLE_NAME),
             headers={"Authorization": f"Bearer {AIRTABLE_TOKEN}"},
-            params=params,
+            params={"filterByFormula": "{Setting Key}='site_mode'", "maxRecords": 1},
             timeout=10
         )
         resp.raise_for_status()
@@ -1781,8 +1777,7 @@ def editor_update_site_mode():
             headers={"Authorization": f"Bearer {AIRTABLE_TOKEN}", "Content-Type": "application/json"},
             json={"fields": {
                 "Site Mode": new_mode,
-                "Updated By": session.get("username", "Editor"),
-                "Last Updated": datetime.utcnow().strftime("%Y-%m-%d")
+                "Updated By": session.get("username", "Editor")
             }},
             timeout=10
         )
