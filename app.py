@@ -3337,10 +3337,28 @@ SELECTIVE_FIELD_MAP = {
 }
 
 
-def run_reanalysis_ai(claim_text, mode="full"):
-    """Run the AI excavation pipeline on an existing claim text. Returns merged parsed JSON."""
+def run_reanalysis_ai(claim_text, mode="full", framed_claim=None):
+    """Run the AI excavation pipeline on an existing claim text. Returns merged parsed JSON.
+    claim_text = raw original quote (factual grounding, always primary)
+    framed_claim = structured/normalized version (structural guide only, optional)
+    When both are present: raw drives facts, framed guides decomposition and wording.
+    If they conflict, raw_claim_text wins on factual content.
+    """
     reality_anchor, grok_adjudication = build_reality_anchor_with_grok(claim_text)
-    prompt_text = f"{reality_anchor}\n\nNow analyze this claim:\n\"{claim_text}\"".strip()
+    if framed_claim and framed_claim.strip() and framed_claim.strip() != claim_text.strip():
+        prompt_text = (
+            f"{reality_anchor}\n\n"
+            f"ORIGINAL QUOTE (primary source — excavate facts from this, ground all claims here):\n"
+            f"\"{claim_text}\"\n\n"
+            f"FRAMED CLAIM (structural guide only — use to guide decomposition, neutral wording, and focal hierarchy; "
+            f"do NOT treat as a source of facts; if it conflicts with the Original Quote, the Original Quote governs):\n"
+            f"\"{framed_claim}\"\n\n"
+            f"Instructions: Analyze the Original Quote. Use the Framed Claim only to guide how you structure "
+            f"the decomposition and neutralize rhetorical language. Derive all factual assertions from the "
+            f"Original Quote. Do not blend or average the two inputs."
+        ).strip()
+    else:
+        prompt_text = f"{reality_anchor}\n\nNow analyze this claim:\n\"{claim_text}\"".strip()
 
     claude_json = {}
     openai_json = {}
@@ -3468,8 +3486,12 @@ def editor_reanalyze_claim(record_id):
         if not claim_text:
             return jsonify({"error": "No claim text found on this record"}), 400
 
+        # Pass both raw and framed to AI -- raw for grounding, framed for structure
+        reanalysis_framing = frame_claim_input(claim_text)
+        framed_claim = reanalysis_framing.get("primary_claim") or ""
+
         # Run AI
-        primary, claude_json, openai_json, grok_adjudication = run_reanalysis_ai(claim_text, mode)
+        primary, claude_json, openai_json, grok_adjudication = run_reanalysis_ai(claim_text, mode, framed_claim=framed_claim)
 
         if "error" in primary:
             return jsonify({"error": f"AI failed: {primary['error']}"}), 500
@@ -3568,11 +3590,14 @@ def editor_reanalyze_claim_by_slug(slug):
         if not raw_claim_text:
             return jsonify({"error": "No claim text found"}), 400
 
-        # Always analyze from the original raw claim text — never from the short "Analyzed Claim" display field
+        # Frame the raw claim for structure -- but pass BOTH to the AI
+        # raw_claim_text = factual grounding (always used)
+        # framed_claim = structural/neutral guide (used alongside raw, never replaces it)
         reanalysis_framing = frame_claim_input(raw_claim_text)
-        claim_text = reanalysis_framing.get("primary_claim") or raw_claim_text
+        framed_claim = reanalysis_framing.get("primary_claim") or ""
+        claim_text = raw_claim_text  # AI always receives the full original as primary input
 
-        primary, claude_json, openai_json, grok_adjudication = run_reanalysis_ai(claim_text, mode)
+        primary, claude_json, openai_json, grok_adjudication = run_reanalysis_ai(claim_text, mode, framed_claim=framed_claim)
         if "error" in primary:
             return jsonify({"error": f"AI failed: {primary['error']}"}), 500
 
@@ -3687,12 +3712,25 @@ Confidence should be between 0.5 and 1.0. Only include claims above 0.6 confiden
 """
 
 
-def detect_breakout_claims(source_text, source_type="Main Claim"):
-    """Run breakout detection on a text using the triple-AI pipeline."""
+def detect_breakout_claims(source_text, source_type="Main Claim", framed_claim=None):
+    """Run breakout detection on a text using the triple-AI pipeline.
+    source_text = original raw text, factual source for all breakout content
+    framed_claim = optional structural guide for grouping and focal hierarchy only
+    """
     if not source_text or not source_text.strip():
         return []
 
-    prompt = f"""Analyze this text for breakout claims:
+    if framed_claim and framed_claim.strip() and framed_claim.strip() != source_text.strip():
+        prompt = (
+            f"Analyze this text for breakout claims.\n\n"
+            f"Source type: {source_type}\n\n"
+            f"ORIGINAL TEXT (derive all breakout claims from this — this is the factual source):\n{source_text}\n\n"
+            f"FRAMED CLAIM (use only to guide grouping and focal hierarchy — do not use as a source of facts):\n{framed_claim}\n\n"
+            f"Extract breakout claims from the Original Text. Normalize each into a neutral, testable statement. "
+            f"Use the Framed Claim only to inform how you group and prioritize claims, not what the claims say."
+        )
+    else:
+        prompt = f"""Analyze this text for breakout claims:
 
 Source type: {source_type}
 Text: {source_text}"""
@@ -3954,6 +3992,10 @@ def run_breakout_detection_for_claim(claim_record, detection_source_override=Non
         claim_text = " ".join(parts)
     else:
         claim_text = ""
+
+    # Framed claim: used as structural guide for grouping/hierarchy, not as factual source
+    breakout_framed_guide = fields.get("Analyzed Claim") or ""
+
     parent_identifier = fields.get("Claim Identifier", "")
     root_record_id = record_id  # this claim is its own root for direct children
 
@@ -3965,7 +4007,7 @@ def run_breakout_detection_for_claim(claim_record, detection_source_override=Non
     created_count = 0
 
     # 1. Detect from main claim body
-    main_breakouts = detect_breakout_claims(claim_text, source_type="Main Claim")
+    main_breakouts = detect_breakout_claims(claim_text, source_type="Main Claim", framed_claim=breakout_framed_guide)
     for b in main_breakouts:
         result = create_breakout_claim_record(
             breakout_data=b,
