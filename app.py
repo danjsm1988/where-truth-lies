@@ -3485,8 +3485,12 @@ def editor_reanalyze_claim_by_slug(slug):
             return jsonify({"error": "No claim text found"}), 400
 
         existing_analyzed = (claim_fields.get("Analyzed Claim") or "").strip()
+        existing_slug = (claim_fields.get("URL Slug") or "").strip()
+
         if existing_analyzed:
-            claim_text = existing_analyzed
+            # Always analyze against Original Quote for full context
+            # Analyzed Claim and URL Slug are display fields — protect them
+            claim_text = raw_claim_text
             reanalysis_framing = None
         else:
             reanalysis_framing = frame_claim_input(raw_claim_text)
@@ -3507,16 +3511,16 @@ def editor_reanalyze_claim_by_slug(slug):
                 framing_data=reanalysis_framing
             )
             if reanalysis_framing and reanalysis_framing.get("primary_claim"):
-                # Framing ran — use framed claim for slug
+                # First time framing ran — set slug from framed claim
                 new_slug = slugify(reanalysis_framing["primary_claim"])
                 update_fields["URL Slug"] = new_slug
-            elif existing_analyzed:
-                # Analyzed Claim already set — lock slug to it, never let AI Stripped Claim override
-                new_slug = slugify(existing_analyzed)
-                update_fields["URL Slug"] = new_slug
-                # Also lock Stripped Claim to existing_analyzed so it doesn't revert to blob
-                if not update_fields.get("Stripped Claim") or len(update_fields.get("Stripped Claim", "")) > 300:
-                    update_fields["Stripped Claim"] = existing_analyzed
+            elif existing_analyzed and existing_slug:
+                # Analyzed Claim already set — lock slug and display fields
+                new_slug = existing_slug
+                update_fields["URL Slug"] = existing_slug
+                update_fields["Analyzed Claim"] = existing_analyzed
+                # Lock Stripped Claim to analyzed version — never let AI overwrite with blob
+                update_fields["Stripped Claim"] = existing_analyzed
             else:
                 new_slug = update_fields.get("URL Slug", old_slug)
             update_fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
