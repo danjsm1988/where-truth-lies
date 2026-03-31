@@ -4347,6 +4347,7 @@ html, body {
       <div class="dup-modal-kicker" id="dupModalKicker">Similar Claims Found</div>
       <div class="dup-modal-title" id="dupModalTitle">This claim may already exist</div>
       <div class="dup-modal-sub" id="dupModalSub">These claims cover similar ground. Open one or continue creating yours.</div>
+      <div class="dup-modal-reason" id="dupModalReason" style="display:none; font-family:'Crimson Text',Georgia,serif; font-size:13px; color:var(--text-mid); font-style:italic; margin-top:6px; margin-bottom:2px; padding:0 2px;"></div>
       <div class="dup-claim-list" id="dupClaimList"></div>
       <div class="dup-modal-btns">
         <button class="dup-cancel-btn" onclick="closeDupModal()">Cancel</button>
@@ -8769,7 +8770,26 @@ console.error('Dispute submission failed:', err);
 
   function dupContinueAnyway() {
     closeDupModal();
-    frameAndProceed(_pendingClaim, _pendingSource);
+    // If framing already ran during dedup, skip re-framing and proceed directly
+    if (window._pendingFramingData) {
+      _framingData = window._pendingFramingData;
+      _framingSelectedClaim = _framingData.primary_claim || _pendingClaim;
+      _framingOriginalInput = _pendingClaim;
+      window._pendingFramingData = null;
+      var score = parseFloat(_framingData.confidence_score || 0.9);
+      if (score < 0.60) {
+        _buildFrameModal(_framingData);
+        document.getElementById('frameModal').classList.add('visible');
+      } else if (score < 0.85) {
+        _showInlineBanner(_framingData);
+        _pendingSource === 'mobile' ? _showMobileConfirm(_framingData.primary_claim) : _showDesktopConfirm(_framingData.primary_claim);
+      } else {
+        _hideInlineBanner();
+        _pendingSource === 'mobile' ? _showMobileConfirm(_framingData.primary_claim) : _showDesktopConfirm(_framingData.primary_claim);
+      }
+    } else {
+      frameAndProceed(_pendingClaim, _pendingSource);
+    }
   }
 
   async function checkDuplicateThen(claim, source) {
@@ -8785,6 +8805,7 @@ console.error('Dispute submission failed:', err);
         document.getElementById('dupModalKicker').textContent = 'Claim Already Exists';
         document.getElementById('dupModalTitle').textContent = 'This claim has already been excavated.';
         document.getElementById('dupModalSub').textContent = 'Redirecting you to the existing claim now…';
+        if (data.framing) { window._pendingFramingData = data.framing; }
         document.getElementById('dupContinueBtn').style.display = 'none';
         var list = document.getElementById('dupClaimList');
         list.innerHTML = '<a class="dup-claim-item" href="/claim/' + data.exact.slug + '">' +
@@ -8799,6 +8820,16 @@ console.error('Dispute submission failed:', err);
         document.getElementById('dupModalTitle').textContent = 'This claim may already exist';
         document.getElementById('dupModalSub').textContent = 'These claims cover similar ground. Open one or continue creating yours.';
         document.getElementById('dupContinueBtn').style.display = '';
+        // Show similarity reason from framing if available
+        var reasonEl = document.getElementById('dupModalReason');
+        if (reasonEl && data.framing && data.framing.framing_note) {
+          reasonEl.textContent = 'Matched on: ' + data.framing.framing_note;
+          reasonEl.style.display = '';
+        } else if (reasonEl) {
+          reasonEl.style.display = 'none';
+        }
+        // Store framing data for use in analysis if user continues
+        if (data.framing) { window._pendingFramingData = data.framing; }
         var list = document.getElementById('dupClaimList');
         list.innerHTML = '';
         data.similar.forEach(function(c) {

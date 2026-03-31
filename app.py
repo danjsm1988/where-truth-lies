@@ -2062,16 +2062,28 @@ def keyword_overlap_score(norm_a, norm_b):
     return len(a & b) / len(a | b)
 
 
-def find_duplicate_and_similar_claims(claim_text, threshold=0.30, max_similar=4):
-    """Check for exact and similar claims. Returns dict with exact and similar."""
+def find_duplicate_and_similar_claims(claim_text, threshold=0.30, max_similar=4, framing_data=None):
+    """Check for exact and similar claims using canonical form + polarity guard."""
     result = {'exact': None, 'similar': []}
     if not claim_text or not AIRTABLE_TOKEN:
         return result
-    norm_input = normalize_claim_text(claim_text)
+
+    # Use canonical form from framing if available, else normalize raw text
+    if framing_data and framing_data.get('canonical_claim'):
+        compare_text = framing_data['canonical_claim']
+    else:
+        compare_text = claim_text
+
+    input_polarity = (framing_data or {}).get('polarity', '')
+    input_claim_type = (framing_data or {}).get('claim_type', '')
+    input_input_type = (framing_data or {}).get('input_type', '')
+
+    norm_input = normalize_claim_text(compare_text)
+
     try:
         params = {
             'filterByFormula': "OR(NOT({Breakout User Excavated}), {Breakout User Excavated}!='No')",
-            'fields[]': ['Original Quote', 'Stripped Claim', 'URL Slug'],
+            'fields[]': ['Original Quote', 'Stripped Claim', 'Analyzed Claim', 'URL Slug'],
             'maxRecords': 200
         }
         response = requests.get(
@@ -2084,28 +2096,35 @@ def find_duplicate_and_similar_claims(claim_text, threshold=0.30, max_similar=4)
     except Exception as e:
         print(f'DUPLICATE CHECK ERROR: {e}', flush=True)
         return result
+
     scored = []
     for rec in records:
         f = rec.get('fields', {})
-        raw = f.get('Original Quote') or f.get('Stripped Claim') or ''
+        # Use Analyzed Claim for comparison if available, else Original Quote
+        raw = f.get('Analyzed Claim') or f.get('Original Quote') or f.get('Stripped Claim') or ''
         if not raw:
             continue
         norm_existing = normalize_claim_text(raw)
+
+        # Exact match check
         if norm_existing == norm_input:
             result['exact'] = {
                 'record_id': rec.get('id'),
-                'title': clean_display_title(raw),
+                'title': clean_display_title(f.get('Analyzed Claim') or f.get('Original Quote') or raw),
                 'slug': f.get('URL Slug', '')
             }
             return result
+
         score = keyword_overlap_score(norm_input, norm_existing)
         if score >= threshold:
             scored.append({
                 'record_id': rec.get('id'),
-                'title': clean_display_title(raw),
+                'title': clean_display_title(f.get('Analyzed Claim') or f.get('Original Quote') or raw),
                 'slug': f.get('URL Slug', ''),
                 'score': round(score, 3)
             })
+
+    # Sort by score
     scored.sort(key=lambda x: x['score'], reverse=True)
     result['similar'] = scored[:max_similar]
     return result
@@ -2113,14 +2132,18 @@ def find_duplicate_and_similar_claims(claim_text, threshold=0.30, max_similar=4)
 
 @app.route('/check-duplicate', methods=['POST'])
 def check_duplicate():
-    """Pre-creation duplicate/similar check — runs before /analyze."""
+    """Pre-creation duplicate/similar check — runs framing first, then dedup on canonical form."""
     if not session.get('logged_in'):
         return jsonify({'error': 'Not logged in'}), 401
     data = request.get_json() or {}
     claim = (data.get('claim') or '').strip()
     if not claim:
         return jsonify({'exact': None, 'similar': []}), 200
-    result = find_duplicate_and_similar_claims(claim)
+    # Run framing to get canonical form and polarity for smarter dedup
+    framing = frame_claim_input(claim)
+    result = find_duplicate_and_similar_claims(claim, framing_data=framing)
+    # Include framing data so the frontend can use it
+    result['framing'] = framing
     return jsonify(result), 200
 
 
@@ -2135,6 +2158,58 @@ CRITICAL RULES:
 4. Sourced content, press releases, manifestos, and "About" page text must be treated as raw material — extract what the user most likely wants examined.
 5. The system leads. Propose the primary framing. The user may adjust from system-generated options but cannot replace with an unrelated claim.
 
+ACTOR RULES:
+When input uses vague actors — "they", "them", "everyone", "the government" — do NOT convert to named entities or coordinated groups.
+Use neutral grounded phrasing: "government policies", "public health authorities", "federal institutions", "elected officials".
+Never invent specificity that is not in the input.
+
+SCOPE RULES:
+When input uses exaggerated scope — "controlled everything", "destroyed everything" — compress to scope-based language.
+"controlled everything" becomes "extensive control over daily activities".
+"destroyed the economy" becomes "caused significant economic harm".
+Do not expand exaggeration into multi-domain lists.
+
+MULTI-CLAIM RULES:
+When input contains multiple claims across different domains:
+Produce ONE high-level neutral primary claim capturing the overall pattern without tightly binding unrelated domains.
+Push each separate domain to breakout_candidates, not the primary claim.
+Example: "lockdowns destroyed businesses and forced vaccines and now they pretend it never happened" becomes primary: "Government COVID-19 policies included restrictive measures that had significant economic and social consequences." Accountability goes to breakout_candidates.
+
+CLAIM TYPE RULES:
+Preserve claim type — never convert between factual assertion, normative claim, and question.
+If input is a question, the primary_claim must stay framed as an implied premise, not asserted as fact.
+If input implies rather than asserts, signal this in primary_claim phrasing.
+Example: "why is the US bombing Iran?" implies a premise. primary_claim: "The United States is currently conducting military operations against Iran." And set implied_premise: true.
+
+CLAIM TYPE AND POLARITY RULES:
+These are two separate classifications. Both must be returned.
+
+claim_type — what kind of claim this is:
+  factual: an assertion about what is or was true
+  normative: an assertion about what should or should not happen
+  inquiry: a question rather than an assertion
+
+polarity — only applies to factual claims. What direction the factual assertion takes:
+  affirming: asserts something is true or occurred ("lockdowns caused economic damage")
+  rejecting: asserts something is false, unjust, or invalid ("the 2020 election was stolen")
+  neutral: the claim does not clearly affirm or reject (neutral description or mixed)
+
+For normative and inquiry claims, set polarity to "neutral" — polarity does not apply.
+
+HARD DEDUP RULE: Claims with opposing polarity (one affirming, one rejecting the same proposition) must NEVER be treated as duplicates or similar matches, even if their canonical forms overlap.
+Example: "COVID lockdowns were justified" (affirming) vs "COVID lockdowns were unconstitutional" (rejecting) — same topic, opposite polarity, never a dedup match.
+
+Claims of different claim_type must also never be treated as duplicates.
+Example: "The US is bombing Iran" (factual, affirming) vs "Why is the US bombing Iran?" (inquiry) — never a dedup match.
+
+CANONICAL NORMALIZATION:
+After framing, generate a canonical form by:
+1. Stripping intensity modifiers: remove severe, catastrophic, primary, sustained, extreme, massive
+2. Normalizing causality: destroyed/wrecked/caused major damage all become "caused economic harm"
+3. Collapsing time scope unless time is core to claim: "during COVID", "long-term", "beyond restrictions" become neutral baseline
+4. Stripping named actors when the claim works without them for comparison purposes
+The canonical form is used for deduplication only. Never display it.
+
 INPUT TYPES: single_claim, multi_claim, sourced_content, rhetorical_slogan, question, unclear
 CONFIDENCE: 0.85+ auto proceed. 0.60-0.84 inline banner. Under 0.60 full modal.
 
@@ -2148,7 +2223,11 @@ Return ONLY valid JSON. No markdown. No preamble.
   "breakout_candidates": ["Distinct sub-claim that can stand alone"],
   "confidence_score": 0.0,
   "needs_clarification": false,
-  "framing_note": "One sentence explaining the framing choice."
+  "framing_note": "One sentence explaining the framing choice.",
+  "canonical_claim": "Stripped normalized version for dedup comparison only. No intensity modifiers. Normalized causality. No named actors unless essential.",
+  "claim_type": "factual | normative | inquiry",
+  "polarity": "affirming | rejecting | neutral",
+  "implied_premise": false
 }
 """
 
