@@ -3383,17 +3383,39 @@ def run_reanalysis_ai(claim_text, mode="full", analyzed_claim=None):
     analyzed_claim = framed/structured version (structural guide only, never replaces raw)
     """
     reality_anchor, grok_adjudication = build_reality_anchor_with_grok(claim_text)
+
     if analyzed_claim and analyzed_claim.strip() and analyzed_claim.strip() != claim_text.strip():
         prompt_text = f"""{reality_anchor}
 
-Structured framing (use as interpretive guide only — do not replace the original):
-"{analyzed_claim}"
+    Original Quote:
+    "{claim_text}"
 
-Now analyze this claim in full — use the original text below as the factual source of truth:
-"{claim_text}"
-""".strip()
+    Framing Guide:
+    "{analyzed_claim}"
+
+    Critical instruction:
+    Use the Original Quote as the only source of claim content.
+    Use the Framing Guide only as a structural aid.
+    Do not introduce new timelines, events, locations, actors, or factual context unless they are explicitly stated in the Original Quote or Reality Anchor.
+    Do not reconstruct background context from general knowledge.
+    Do not expand the claim beyond what the Original Quote actually says.
+
+    Now analyze this claim.
+    """.strip()
     else:
-        prompt_text = f"{reality_anchor}\n\nNow analyze this claim:\n\"{claim_text}\"".strip()
+        prompt_text = f"""{reality_anchor}
+
+    Original Quote:
+    "{claim_text}"
+
+    Critical instruction:
+    Use the Original Quote as the only source of claim content.
+    Do not introduce new timelines, events, locations, actors, or factual context unless they are explicitly stated in the Original Quote or Reality Anchor.
+    Do not reconstruct background context from general knowledge.
+    Do not expand the claim beyond what the Original Quote actually says.
+
+    Now analyze this claim.
+    """.strip()
 
     claude_json = {}
     openai_json = {}
