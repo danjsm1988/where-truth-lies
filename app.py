@@ -1614,7 +1614,6 @@ def logout():
     return redirect("/login")
 
 
-@app.route("/")
 def get_site_settings():
     """Read site mode from Settings table. Defaults to Live on any failure."""
     try:
@@ -1638,6 +1637,7 @@ def get_site_settings():
     return {"site_mode": "Live", "message_title": "", "message_body": ""}
 
 
+@app.route("/")
 def home():
     if not session.get("logged_in"):
         return redirect("/login")
