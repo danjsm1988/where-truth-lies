@@ -2138,6 +2138,36 @@ def find_duplicate_and_similar_claims(claim_text, threshold=0.30, max_similar=4,
         if input_claim_type == 'inquiry' and len(norm_existing.split()) > 8 and '?' not in raw:
             continue  # question vs statement — skip entirely
 
+        # ── Containment check: same proposition, more detail ──
+        # If one canonical claim is a more specific version of the same actor+action+target,
+        # treat as duplicate even if Jaccard overlap is modest.
+        # This runs AFTER polarity/type guards so protected wins from Tests 1-3 are preserved.
+        if framing_data and framing_data.get('canonical_claim'):
+            canon_input = normalize_claim_text(framing_data['canonical_claim'])
+            # Extract core keywords (4+ chars, non-stop) from both
+            STOP = {'the','a','an','is','are','was','were','have','has','had',
+                    'to','of','in','for','on','with','at','by','from','and','but',
+                    'or','not','it','its','this','that','they','their','which'}
+            def core_kw(t):
+                return {w for w in t.split() if len(w) >= 4 and w not in STOP}
+            input_core = core_kw(canon_input)
+            existing_core = core_kw(norm_existing)
+            if input_core and existing_core:
+                # Containment: smaller set is fully contained in larger set
+                smaller = input_core if len(input_core) <= len(existing_core) else existing_core
+                larger = existing_core if len(input_core) <= len(existing_core) else input_core
+                containment_ratio = len(smaller & larger) / len(smaller) if smaller else 0
+                if containment_ratio >= 0.75 and len(smaller) >= 3:
+                    # Strong containment — treat as high-confidence similar match
+                    scored.append({
+                        'record_id': rec.get('id'),
+                        'title': clean_display_title(f.get('Analyzed Claim') or f.get('Original Quote') or raw),
+                        'slug': f.get('URL Slug', ''),
+                        'score': round(0.85 + containment_ratio * 0.1, 3),
+                        'match_reason': 'containment'
+                    })
+                    continue  # skip regular Jaccard for this record
+
         # ── Similarity scoring ──
         score = keyword_overlap_score(norm_input, norm_existing)
         if score >= threshold:
@@ -2196,7 +2226,13 @@ MULTI-CLAIM RULES:
 When input contains multiple claims across different domains:
 Produce ONE high-level neutral primary claim capturing the overall pattern without tightly binding unrelated domains.
 Push each separate domain to breakout_candidates, not the primary claim.
-Example: "lockdowns destroyed businesses and forced vaccines and now they pretend it never happened" becomes primary: "Government COVID-19 policies included restrictive measures that had significant economic and social consequences." Accountability goes to breakout_candidates.
+Example: "lockdowns destroyed businesses and forced vaccines and now they pretend it never happened" becomes primary: "Government COVID-19 policies included lockdowns and vaccine mandates that had significant economic and social consequences." The accountability/denial clause goes to breakout_candidates only.
+
+HARD PROHIBITION — primary_claim must NEVER contain:
+Denial or minimization language: denied, minimized, pretended, ignored, covered up, avoided, dismissed, downplayed
+Accountability or motive language: officials refuse to acknowledge, now pretend it never happened, avoiding responsibility, are denying
+Narrative response framing: any clause about what actors did or said AFTER the primary policy or event occurred
+When input contains both a policy/action claim AND a denial/accountability claim, stop the primary_claim at the policy-and-impact layer. The denial/accountability clause belongs in breakout_candidates only, never in primary_claim.
 
 CLAIM TYPE RULES:
 Preserve claim type — never convert between factual assertion, normative claim, and question.
@@ -2276,6 +2312,40 @@ def frame_claim_input(raw_input):
         score = float(result.get("confidence_score", 0.9))
         if "needs_clarification" not in result:
             result["needs_clarification"] = score < 0.60
+
+        # Post-processing guard: strip accountability/denial clauses from primary_claim
+        # If model still leaks these into primary_claim, move them to breakout_candidates
+        primary = result.get("primary_claim", "")
+        accountability_signals = [
+            "denied", "minimized", "pretended", "pretend", "ignored",
+            "covered up", "avoided", "dismissed", "downplayed",
+            "now pretend", "refuse to acknowledge", "never happened",
+            "avoiding responsibility", "officials have minimized",
+            "have downplayed", "are denying", "won't acknowledge"
+        ]
+        # Check if primary_claim has both a policy assertion AND a denial/accountability clause
+        has_accountability = any(sig in primary.lower() for sig in accountability_signals)
+        has_policy = any(w in primary.lower() for w in [
+            "polic", "lockdown", "mandates", "restrictions", "government",
+            "administration", "officials", "law", "order", "executive"
+        ])
+        if has_accountability and has_policy:
+            # Split on common clause connectors and keep only the policy/impact part
+            import re as _re
+            # Remove trailing accountability clauses joined by "and now", "while", "but"
+            cleaned = _re.split(r'\s+and\s+(now|they|officials|those)\s+', primary, flags=_re.IGNORECASE)[0]
+            cleaned = _re.split(r',\s+(while|but|yet)\s+\w+\s+(denied|minimized|pretended|ignored)', cleaned, flags=_re.IGNORECASE)[0]
+            cleaned = cleaned.strip().rstrip(',').strip()
+            if cleaned and len(cleaned) > 20 and cleaned != primary:
+                # Move accountability clause to breakout_candidates
+                accountability_clause = primary[len(cleaned):].strip().lstrip('and').lstrip(',').strip()
+                result["primary_claim"] = cleaned
+                if accountability_clause:
+                    existing_breakouts = result.get("breakout_candidates", [])
+                    if not isinstance(existing_breakouts, list):
+                        existing_breakouts = []
+                    result["breakout_candidates"] = existing_breakouts + [accountability_clause]
+
         return result
     except Exception as e:
         print(f"FRAME CLAIM ERROR: {e}", flush=True)
