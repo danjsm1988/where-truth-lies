@@ -3526,6 +3526,12 @@ def editor_reanalyze_claim(record_id):
                 username=editor_username,
                 existing_fields=claim_fields
             )
+
+            # Keep slug locked during normal reanalysis
+            existing_slug = claim_fields.get("URL Slug", "")
+            if existing_slug:
+                update_fields["URL Slug"] = existing_slug
+
             update_fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
             update_fields["OpenAI Raw JSON"] = json.dumps(openai_json, ensure_ascii=False)[:100000]
             if grok_adjudication:
@@ -3540,6 +3546,7 @@ def editor_reanalyze_claim(record_id):
                 "Reanalyzed By": editor_username,
                 "Last Updated": now_str
             }
+            
             for field_name in selective_fields:
                 airtable_key = SELECTIVE_FIELD_MAP.get(field_name)
                 if not airtable_key:
@@ -3631,12 +3638,12 @@ def editor_reanalyze_claim_by_slug(slug):
                 framing_data=reanalysis_framing
             )
 
+            # Keep slug locked during normal reanalysis
+            new_slug = old_slug
+            update_fields["URL Slug"] = old_slug
+
             if reanalysis_framing and reanalysis_framing.get("primary_claim"):
-                new_slug = slugify(reanalysis_framing["primary_claim"])
-                update_fields["URL Slug"] = new_slug
                 update_fields["Analyzed Claim"] = reanalysis_framing["primary_claim"]
-            else:
-                new_slug = update_fields.get("URL Slug", old_slug)
 
             update_fields["Stripped Claim"] = primary.get("Stripped Claim", raw_claim_text)
             update_fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
@@ -3658,13 +3665,13 @@ def editor_reanalyze_claim_by_slug(slug):
         if not resp.ok:
             return jsonify({"error": f"Airtable update failed: {resp.text}"}), 500
 
-        slug_changed = new_slug != old_slug
+        slug_changed = False
         return jsonify({
             "ok": True, "record_id": record_id, "mode": mode,
             "reanalyzed_by": editor_username, "last_reanalyzed": now_str,
             "fields_updated": list(update_fields.keys()),
-            "new_slug": new_slug, "slug_changed": slug_changed,
-            "redirect_to": f"/claim/{new_slug}" if slug_changed else None
+            "new_slug": old_slug, "slug_changed": slug_changed,
+            "redirect_to": None
         })
 
     except Exception as e:
