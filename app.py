@@ -2154,25 +2154,46 @@ def find_duplicate_and_similar_claims(claim_text, threshold=0.30, max_similar=4,
                 'invasion': 'strike', 'invaded': 'strike',
                 'shelling': 'strike', 'shelled': 'strike',
                 'missiles': 'strike', 'missile': 'strike',
+                'conducting': 'conducted', 'launched': 'conducted',
                 # Economic harm
                 'destroyed': 'harmed', 'wrecked': 'harmed', 'devastated': 'harmed',
                 'ruined': 'harmed', 'collapsed': 'harmed', 'cratered': 'harmed',
                 # Election fraud synonyms
-                'rigged': 'stolen', 'fraudulent': 'stolen', 'stolen': 'stolen',
+                'rigged': 'stolen', 'fraudulent': 'stolen',
                 # Enforcement
                 'detained': 'arrested', 'deported': 'removed', 'expelled': 'removed',
+                # Actor normalization — resolve common abbreviations to full form
+                # (applied via phrase replacement, not word-level)
             }
 
+            # Phrase-level normalization before word tokenization
+            PHRASE_MAP = {
+                'united states': 'america', 'the us': 'america', 'the u s': 'america',
+                'u.s.': 'america', 'u.s': 'america',
+                'united kingdom': 'britain', 'the uk': 'britain',
+            }
+            # Also normalize bare "us" token → "america" using word boundary
+            import re as _re_sem
+
             def semantic_normalize(text):
-                words = text.split()
+                result = text
+                for phrase, replacement in PHRASE_MAP.items():
+                    result = result.replace(phrase, replacement)
+                # Normalize bare standalone "us" → "america" (word boundary)
+                result = _re_sem.sub(r'\bus\b', 'america', result)
+                words = result.split()
                 return ' '.join(ACTION_MAP.get(w, w) for w in words)
+
+
 
             def core_kw(t):
                 STOP = {'the','a','an','is','are','was','were','have','has','had',
                         'to','of','in','for','on','with','at','by','from','and','but',
                         'or','not','it','its','this','that','they','their','which',
                         'that','been','being','will','would','could','should','does','did'}
-                return {w for w in t.split() if len(w) >= 4 and w not in STOP}
+                # Include short but meaningful tokens (country codes, key verbs)
+                SHORT_KEEP = {'us', 'uk', 'eu', 'un', 'iran', 'iraq', 'war', 'tax', 'gun', 'ban'}
+                return {w for w in t.split() if (len(w) >= 4 or w in SHORT_KEEP) and w not in STOP}
 
             # Apply semantic normalization before keyword extraction
             norm_input_sem = semantic_normalize(canon_input)
@@ -2185,7 +2206,7 @@ def find_duplicate_and_similar_claims(claim_text, threshold=0.30, max_similar=4,
                 smaller = input_core if len(input_core) <= len(existing_core) else existing_core
                 larger = existing_core if len(input_core) <= len(existing_core) else input_core
                 containment_ratio = len(smaller & larger) / len(smaller) if smaller else 0
-                if containment_ratio >= 0.75 and len(smaller) >= 3:
+                if containment_ratio >= 0.75 and len(smaller) >= 2:
                     scored.append({
                         'record_id': rec.get('id'),
                         'title': clean_display_title(f.get('Analyzed Claim') or f.get('Original Quote') or raw),
