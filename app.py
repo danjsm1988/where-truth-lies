@@ -21,6 +21,7 @@ AIRTABLE_BASE_ID = os.getenv("AIRTABLE_BASE_ID")
 AIRTABLE_TABLE_NAME = os.getenv("AIRTABLE_TABLE_NAME", "Claims")
 AIRTABLE_USERS_TABLE_NAME = os.getenv("AIRTABLE_USERS_TABLE_NAME", "Users")
 AIRTABLE_REALITY_TABLE_NAME = os.getenv("AIRTABLE_REALITY_TABLE_NAME", "Reality Anchors")
+AIRTABLE_SETTINGS_TABLE_NAME = os.getenv("AIRTABLE_SETTINGS_TABLE_NAME", "Settings")
 AIRTABLE_DISPUTES_TABLE_NAME = os.getenv("AIRTABLE_DISPUTES_TABLE_NAME", "Disputes")
 
 MAX_PUSHBACKS = {
@@ -1613,6 +1614,29 @@ def logout():
     return redirect("/login")
 
 
+def get_site_settings():
+    """Read site mode from Settings table. Defaults to Live on any failure."""
+    try:
+        resp = requests.get(
+            airtable_url(AIRTABLE_SETTINGS_TABLE_NAME),
+            headers={"Authorization": f"Bearer {AIRTABLE_TOKEN}"},
+            params={"filterByFormula": "{Setting Key}='site_mode'", "maxRecords": 1},
+            timeout=10
+        )
+        resp.raise_for_status()
+        records = resp.json().get("records", [])
+        if records:
+            f = records[0].get("fields", {})
+            return {
+                "site_mode": (f.get("Site Mode") or "Live").strip(),
+                "message_title": (f.get("Message Title") or "").strip(),
+                "message_body": (f.get("Message Body") or "").strip()
+            }
+    except Exception as e:
+        print(f"SETTINGS READ ERROR: {e}", flush=True)
+    return {"site_mode": "Live", "message_title": "", "message_body": ""}
+
+
 @app.route("/")
 def home():
     if not session.get("logged_in"):
@@ -1620,6 +1644,7 @@ def home():
     recent_claims = get_recent_claims(limit=10)
     latest_record = get_latest_claim()
     current_claim = build_claim_context(latest_record) if latest_record else None
+    _s = get_site_settings()
     return render_template(
         "index.html",
         page_mode="claim",
@@ -1631,7 +1656,10 @@ def home():
         selected_topic="",
         user_disputes=[],
         search_query="",
-        search_results=[]
+        search_results=[],
+        site_mode=_s["site_mode"],
+        site_message_title=_s["message_title"],
+        site_message_body=_s["message_body"]
     )
 
 
@@ -1645,6 +1673,7 @@ def archives():
         filtered = {topic: archives_by_topic.get(topic, [])}
     else:
         filtered = archives_by_topic
+    _s = get_site_settings()
     return render_template(
         "index.html",
         page_mode="archives",
@@ -1656,7 +1685,10 @@ def archives():
         selected_topic=topic,
         user_disputes=[],
         search_query="",
-        search_results=[]
+        search_results=[],
+        site_mode=_s["site_mode"],
+        site_message_title=_s["message_title"],
+        site_message_body=_s["message_body"]
     )
 
 
@@ -1675,6 +1707,7 @@ def claim_detail(slug):
             current_claim = build_claim_context(latest_record) if latest_record else None
         else:
             current_claim = build_claim_context(record)
+    _s = get_site_settings()
     return render_template(
         "index.html",
         page_mode="claim",
@@ -1687,13 +1720,17 @@ def claim_detail(slug):
         user_disputes=[],
         search_query="",
         search_results=[],
-        claims_remaining=session.get("claims_remaining", 0)
+        claims_remaining=session.get("claims_remaining", 0),
+        site_mode=_s["site_mode"],
+        site_message_title=_s["message_title"],
+        site_message_body=_s["message_body"]
     )
 def disputes_page():
     if not session.get("logged_in"):
         return redirect("/login")
     username = session.get("username", "")
     user_disputes = get_disputes_for_user(username)
+    _s = get_site_settings()
     return render_template(
         "index.html",
         page_mode="disputes",
@@ -1705,7 +1742,10 @@ def disputes_page():
         selected_topic="",
         user_disputes=user_disputes,
         search_query="",
-        search_results=[]
+        search_results=[],
+        site_mode=_s["site_mode"],
+        site_message_title=_s["message_title"],
+        site_message_body=_s["message_body"]
     )
 
 @app.route("/editor")
@@ -3150,6 +3190,46 @@ def run_reanalysis_ai(claim_text, mode="full"):
 
     primary = claude_json if "error" not in claude_json else openai_json
     return primary, claude_json, openai_json, grok_adjudication
+
+
+@app.route("/editor/update-site-mode", methods=["POST"])
+def editor_update_site_mode():
+    """Update Site Mode in existing Settings record. True superuser only."""
+    if not session.get("logged_in"):
+        return jsonify({"error": "Not logged in"}), 401
+    if not session.get("true_superuser"):
+        return jsonify({"error": "Unauthorized"}), 403
+    data = request.get_json() or {}
+    new_mode = (data.get("site_mode") or "").strip()
+    valid = ["Live", "Construction/ Site Maintenance", "Testing"]
+    if new_mode not in valid:
+        return jsonify({"error": f"Invalid mode. Must be one of: {valid}"}), 400
+    try:
+        params = {"filterByFormula": "{Setting Key}='site_mode'", "maxRecords": 1}
+        resp = requests.get(
+            airtable_url(AIRTABLE_SETTINGS_TABLE_NAME),
+            headers={"Authorization": f"Bearer {AIRTABLE_TOKEN}"},
+            params=params, timeout=10
+        )
+        resp.raise_for_status()
+        records = resp.json().get("records", [])
+        if not records:
+            return jsonify({"error": "Settings record not found"}), 404
+        record_id = records[0]["id"]
+        patch = requests.patch(
+            f"{airtable_url(AIRTABLE_SETTINGS_TABLE_NAME)}/{record_id}",
+            headers={"Authorization": f"Bearer {AIRTABLE_TOKEN}", "Content-Type": "application/json"},
+            json={"fields": {
+                "Site Mode": new_mode,
+                "Updated By": session.get("username", "Editor")
+            }},
+            timeout=10
+        )
+        if not patch.ok:
+            return jsonify({"error": f"Airtable error: {patch.text}"}), 500
+        return jsonify({"ok": True, "site_mode": new_mode}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/editor/claims", methods=["GET"])
