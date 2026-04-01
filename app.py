@@ -99,6 +99,18 @@ If the same behavior by a different president, party, institution, or historical
 Historical precedent is not decoration. It is the test. When a claim characterizes an action as historically unprecedented, constitutionally illegitimate, or beyond legal authority, the analysis must compare that action to documented precedents — including those from administrations of both parties and from historical figures the culture broadly respects. Washington's use of federal troops during the Whiskey Rebellion, Lincoln's suspension of habeas corpus, FDR's internment orders, and comparable actions must be applied as analytical benchmarks when relevant. If the same standard would condemn those figures, the standard itself must be interrogated before it is applied to the current claim.
 Charged terminology — king, dictator, fascist, traitor, authoritarian, communist, or similar — must be tested against the actual historical and legal definition of those terms, not just the underlying concern they express. If the terminology does not hold up to its own definition, that must be stated plainly.
 
+TERMINOLOGY VALIDATION RULE:
+When a claim uses charged or contested terminology — such as monarchy, authoritarian, dictator, fascist, traitor, communist, coup, insurrection, or similar — the analysis must do three things explicitly. First, briefly state what the term actually means in its legal, historical, or political context. Second, test whether the current situation meets that definition by the established standard. Third, state plainly whether the term holds up, partially applies, or does not apply — and why. In Quick View, signal that this test is happening. In Full Excavation, execute it fully.
+
+EXPLICIT CONDITIONS RULE:
+When evaluating any claim about government action, executive authority, or institutional behavior, explicitly identify the conditions present before rendering any judgment about fit or proportionality. State what is actually happening: what level of institutional breakdown exists, whether courts are functioning, whether elections are proceeding, whether legislative oversight is present or absent, and what the comparative urgency level is relative to historical crises. Do not imply conditions — state them.
+
+INLINE PRECEDENT RULE:
+When relevant, name specific historical precedents and briefly state whether current conditions are comparable. Use history as the standard, not decoration. In Quick View, signal the historical standard being applied. In Full Excavation, execute the full comparison.
+
+HOVER TERMS RULE:
+Any technical term, acronym, legal citation, organization name, court case, historical document, or charged political term with a specific legal or historical definition that general readers may not recognize must be included in the Glossary.
+
 Speaker rule:
 If the claim explicitly names a speaker, use that person or entity
 If the claim does not explicitly name a speaker but is strongly associated with a dominant public figure or institution, infer that speaker
@@ -108,7 +120,7 @@ Always return this exact JSON structure:
 
 {
   "Stripped Claim": "Rewrite the claim in plain, accessible language that any ordinary person can understand immediately. Remove emotional rhetoric, dramatic framing, and inflammatory decoration. Do not substitute or sanitize specific terms — if the original claim uses a particular word or phrase, preserve it unless it is purely emotional amplification with no factual content. One sentence only.",
-  "Quick Explanation": "Write exactly four labeled lines. Each line starts with its label followed by a colon. Line 1 — ONE-LINE READ: One sentence with deliberate tension between two truths. Do not summarize. Make the reader feel they almost understand but need to go deeper. Example shape: The claim is grounded in real evidence, but its strongest version goes further than the current record supports. Line 2 — WHAT HOLDS UP: One sentence on what the record actually supports. Line 3 — WHAT IS DISPUTED: One sentence on what remains contested or unsupported. Line 4 — WHERE AGREEMENT EXISTS: One sentence identifying narrow genuine common ground, or state plainly that none exists. No bullet points. No dashes. Plain language only. No preamble before the first label.",
+  "Quick Explanation": "Write exactly four labeled lines. Each line starts with its label followed by a colon. Line 1 — ONE-LINE READ: One sentence that creates friction between what the record shows and what the claim asserts. When the claim uses charged terminology (monarchy, authoritarian, dictator, etc.), signal whether current conditions meet the legal and historical threshold those terms require — not just whether the underlying concern is real. When historical precedent is relevant, briefly signal the standard being applied. The one-liner must feel decisive and create genuine tension — make the reader feel the gap between concern and proof. Line 2 — WHAT HOLDS UP: One sentence anchored to specific documented actions or measurable signals first, then attribute to sources. Lead with the documented fact, not the authority. Line 3 — WHAT IS DISPUTED: One sentence on what remains contested — including whether charged terminology meets its own definitional and historical threshold, and whether current conditions are comparable to those that have historically justified similar expansions of authority. Line 4 — WHERE AGREEMENT EXISTS: One sentence identifying narrow genuine common ground, or state plainly that none exists. No bullet points. No dashes. Plain language only. No preamble before the first label.",
   "Speaker": "Who made the claim, or Unknown if not specified.",
   "Topic": "Exactly one of: Iran War, Energy, Healthcare, Social Security, Medicare, Medicaid, Defense, Military, Elections, Economy, Immigration, Foreign Policy, Crime, Gender Issues, Constitutional Rights, Education, Other",
   "Sub Claims": [
@@ -408,7 +420,7 @@ def build_claim_context(record):
     claim_slug = fields.get("URL Slug", "")
     claim_disputes = get_disputes_for_claim(claim_slug)
     dispute_threads = group_disputes_into_threads(claim_disputes)
-    title = clean_display_title(fields.get("Original Quote") or fields.get("Stripped Claim") or "Untitled Claim")
+    title = clean_display_title(fields.get("Analyzed Claim") or fields.get("Original Quote") or fields.get("Stripped Claim") or "Untitled Claim")
 
     claude_parsed = safe_json_parse(fields.get("Claude Raw JSON", ""))
     openai_parsed = safe_json_parse(fields.get("OpenAI Raw JSON", ""))
@@ -496,6 +508,7 @@ def build_claim_context(record):
     return {
         "record_id": record.get("id"),
         "slug": fields.get("URL Slug", ""),
+        "original_quote": fields.get("Original Quote", ""),
         "title": title,
         "stripped_claim": stripped_claim,
         "quick_explanation": quick_explanation,
@@ -554,7 +567,7 @@ def build_claim_context(record):
     }
 
 
-def extract_primary_record_fields(claim, parsed, mode, username, existing_fields=None):
+def extract_primary_record_fields(claim, parsed, mode, username, existing_fields=None, framing_data=None):
     dates = now_dates()
     existing_fields = existing_fields or {}
     is_full_reexcavate = mode == "full"
@@ -633,6 +646,17 @@ def extract_primary_record_fields(claim, parsed, mode, username, existing_fields
         if sub_claims:
             fields["Sub-Claims"] = " | ".join([sc.get("claim", "") for sc in sub_claims if sc.get("claim")]).strip()
 
+    if framing_data and isinstance(framing_data, dict):
+        if framing_data.get("primary_claim"):
+            fields["Analyzed Claim"] = framing_data["primary_claim"]
+        if framing_data.get("input_type"):
+            fields["Input Type"] = framing_data["input_type"]
+        if framing_data.get("confidence_score") is not None:
+            try:
+                fields["Framing Confidence"] = float(framing_data["confidence_score"])
+            except Exception:
+                pass
+
     return fields
 
 
@@ -651,7 +675,7 @@ def get_recent_claims(limit=10):
         for record in records[:limit]:
             f = record.get("fields", {})
             recent.append({
-    "title": clean_display_title(f.get("Original Quote") or f.get("Stripped Claim") or "Untitled Claim"),
+    "title": clean_display_title(f.get("Analyzed Claim") or f.get("Original Quote") or f.get("Stripped Claim") or "Untitled Claim"),
     "slug": f.get("URL Slug", ""),
     "date": f.get("Date") or f.get("Date Added", ""),
     "verdict": f.get("Overall Verdict", "Unproven"),
@@ -680,7 +704,7 @@ def get_all_claims():
             f = record.get("fields", {})
             claims.append({
                 "record_id": record.get("id"),
-                "title": clean_display_title(f.get("Original Quote") or f.get("Stripped Claim") or "Untitled Claim"),
+                "title": clean_display_title(f.get("Analyzed Claim") or f.get("Original Quote") or f.get("Stripped Claim") or "Untitled Claim"),
                 "slug": f.get("URL Slug", ""),
                 "date": f.get("Date") or f.get("Date Added", ""),
                 "verdict": f.get("Overall Verdict", "Unproven"),
@@ -1492,7 +1516,7 @@ def get_trending():
         for rec in records:
             f = rec.get("fields", {})
             trending.append({
-                "title": clean_display_title(f.get("Original Quote") or f.get("Stripped Claim") or "Untitled"),
+                "title": clean_display_title(f.get("Analyzed Claim") or f.get("Original Quote") or f.get("Stripped Claim") or "Untitled"),
                 "slug": f.get("URL Slug", ""),
                 "verdict": f.get("Overall Verdict", "Unproven"),
                 "view_count": int(f.get("View Count", 0) or 0)
@@ -2038,16 +2062,28 @@ def keyword_overlap_score(norm_a, norm_b):
     return len(a & b) / len(a | b)
 
 
-def find_duplicate_and_similar_claims(claim_text, threshold=0.30, max_similar=4):
-    """Check for exact and similar claims. Returns dict with exact and similar."""
+def find_duplicate_and_similar_claims(claim_text, threshold=0.30, max_similar=4, framing_data=None):
+    """Check for exact and similar claims using canonical form + polarity guard."""
     result = {'exact': None, 'similar': []}
     if not claim_text or not AIRTABLE_TOKEN:
         return result
-    norm_input = normalize_claim_text(claim_text)
+
+    # Use canonical form from framing if available, else normalize raw text
+    if framing_data and framing_data.get('canonical_claim'):
+        compare_text = framing_data['canonical_claim']
+    else:
+        compare_text = claim_text
+
+    input_polarity = (framing_data or {}).get('polarity', '')
+    input_claim_type = (framing_data or {}).get('claim_type', '')
+    input_input_type = (framing_data or {}).get('input_type', '')
+
+    norm_input = normalize_claim_text(compare_text)
+
     try:
         params = {
             'filterByFormula': "OR(NOT({Breakout User Excavated}), {Breakout User Excavated}!='No')",
-            'fields[]': ['Original Quote', 'Stripped Claim', 'URL Slug'],
+            'fields[]': ['Original Quote', 'Stripped Claim', 'Analyzed Claim', 'URL Slug'],
             'maxRecords': 200
         }
         response = requests.get(
@@ -2060,28 +2096,35 @@ def find_duplicate_and_similar_claims(claim_text, threshold=0.30, max_similar=4)
     except Exception as e:
         print(f'DUPLICATE CHECK ERROR: {e}', flush=True)
         return result
+
     scored = []
     for rec in records:
         f = rec.get('fields', {})
-        raw = f.get('Original Quote') or f.get('Stripped Claim') or ''
+        # Use Analyzed Claim for comparison if available, else Original Quote
+        raw = f.get('Analyzed Claim') or f.get('Original Quote') or f.get('Stripped Claim') or ''
         if not raw:
             continue
         norm_existing = normalize_claim_text(raw)
+
+        # Exact match check
         if norm_existing == norm_input:
             result['exact'] = {
                 'record_id': rec.get('id'),
-                'title': clean_display_title(raw),
+                'title': clean_display_title(f.get('Analyzed Claim') or f.get('Original Quote') or raw),
                 'slug': f.get('URL Slug', '')
             }
             return result
+
         score = keyword_overlap_score(norm_input, norm_existing)
         if score >= threshold:
             scored.append({
                 'record_id': rec.get('id'),
-                'title': clean_display_title(raw),
+                'title': clean_display_title(f.get('Analyzed Claim') or f.get('Original Quote') or raw),
                 'slug': f.get('URL Slug', ''),
                 'score': round(score, 3)
             })
+
+    # Sort by score
     scored.sort(key=lambda x: x['score'], reverse=True)
     result['similar'] = scored[:max_similar]
     return result
@@ -2089,15 +2132,142 @@ def find_duplicate_and_similar_claims(claim_text, threshold=0.30, max_similar=4)
 
 @app.route('/check-duplicate', methods=['POST'])
 def check_duplicate():
-    """Pre-creation duplicate/similar check — runs before /analyze."""
+    """Pre-creation duplicate/similar check — runs framing first, then dedup on canonical form."""
     if not session.get('logged_in'):
         return jsonify({'error': 'Not logged in'}), 401
     data = request.get_json() or {}
     claim = (data.get('claim') or '').strip()
     if not claim:
         return jsonify({'exact': None, 'similar': []}), 200
-    result = find_duplicate_and_similar_claims(claim)
+    # Run framing to get canonical form and polarity for smarter dedup
+    framing = frame_claim_input(claim)
+    result = find_duplicate_and_similar_claims(claim, framing_data=framing)
+    # Include framing data so the frontend can use it
+    result['framing'] = framing
     return jsonify(result), 200
+
+
+FRAME_CLAIM_PROMPT = """You are a pre-excavation claim framing engine for Where the Truth Lies.
+
+Your job is to analyze raw user input BEFORE full excavation begins. Understand what the user actually intends to have analyzed — not just what they literally typed.
+
+CRITICAL RULES:
+1. Evaluate claims not writing ability. Slang, ebonics, dyslexic spelling, incomplete sentences, and informal grammar must all be interpreted for intent.
+2. Identify the FOUNDATIONAL PREMISE first — the central animating assertion. Not downstream statements or supporting facts.
+3. Rhetorical slogans and compressed narratives (like "No Kings", "Defund the Police", "Stop the Steal") must be recognized as compressed claims and unpacked to their foundational premise.
+4. Sourced content, press releases, manifestos, and "About" page text must be treated as raw material — extract what the user most likely wants examined.
+5. The system leads. Propose the primary framing. The user may adjust from system-generated options but cannot replace with an unrelated claim.
+
+ACTOR RULES:
+When input uses vague actors — "they", "them", "everyone", "the government" — do NOT convert to named entities or coordinated groups.
+Use neutral grounded phrasing: "government policies", "public health authorities", "federal institutions", "elected officials".
+Never invent specificity that is not in the input.
+
+SCOPE RULES:
+When input uses exaggerated scope — "controlled everything", "destroyed everything" — compress to scope-based language.
+"controlled everything" becomes "extensive control over daily activities".
+"destroyed the economy" becomes "caused significant economic harm".
+Do not expand exaggeration into multi-domain lists.
+
+MULTI-CLAIM RULES:
+When input contains multiple claims across different domains:
+Produce ONE high-level neutral primary claim capturing the overall pattern without tightly binding unrelated domains.
+Push each separate domain to breakout_candidates, not the primary claim.
+Example: "lockdowns destroyed businesses and forced vaccines and now they pretend it never happened" becomes primary: "Government COVID-19 policies included restrictive measures that had significant economic and social consequences." Accountability goes to breakout_candidates.
+
+CLAIM TYPE RULES:
+Preserve claim type — never convert between factual assertion, normative claim, and question.
+If input is a question, the primary_claim must stay framed as an implied premise, not asserted as fact.
+If input implies rather than asserts, signal this in primary_claim phrasing.
+Example: "why is the US bombing Iran?" implies a premise. primary_claim: "The United States is currently conducting military operations against Iran." And set implied_premise: true.
+
+CLAIM TYPE AND POLARITY RULES:
+These are two separate classifications. Both must be returned.
+
+claim_type — what kind of claim this is:
+  factual: an assertion about what is or was true
+  normative: an assertion about what should or should not happen
+  inquiry: a question rather than an assertion
+
+polarity — only applies to factual claims. What direction the factual assertion takes:
+  affirming: asserts something is true or occurred ("lockdowns caused economic damage")
+  rejecting: asserts something is false, unjust, or invalid ("the 2020 election was stolen")
+  neutral: the claim does not clearly affirm or reject (neutral description or mixed)
+
+For normative and inquiry claims, set polarity to "neutral" — polarity does not apply.
+
+HARD DEDUP RULE: Claims with opposing polarity (one affirming, one rejecting the same proposition) must NEVER be treated as duplicates or similar matches, even if their canonical forms overlap.
+Example: "COVID lockdowns were justified" (affirming) vs "COVID lockdowns were unconstitutional" (rejecting) — same topic, opposite polarity, never a dedup match.
+
+Claims of different claim_type must also never be treated as duplicates.
+Example: "The US is bombing Iran" (factual, affirming) vs "Why is the US bombing Iran?" (inquiry) — never a dedup match.
+
+CANONICAL NORMALIZATION:
+After framing, generate a canonical form by:
+1. Stripping intensity modifiers: remove severe, catastrophic, primary, sustained, extreme, massive
+2. Normalizing causality: destroyed/wrecked/caused major damage all become "caused economic harm"
+3. Collapsing time scope unless time is core to claim: "during COVID", "long-term", "beyond restrictions" become neutral baseline
+4. Stripping named actors when the claim works without them for comparison purposes
+The canonical form is used for deduplication only. Never display it.
+
+INPUT TYPES: single_claim, multi_claim, sourced_content, rhetorical_slogan, question, unclear
+CONFIDENCE: 0.85+ auto proceed. 0.60-0.84 inline banner. Under 0.60 full modal.
+
+Return ONLY valid JSON. No markdown. No preamble.
+
+{
+  "input_type": "single_claim",
+  "primary_claim": "The foundational premise. One sentence.",
+  "clarified_text": "Clean readable version preserving meaning.",
+  "alternate_claims": ["Second interpretation", "Third if genuinely distinct"],
+  "breakout_candidates": ["Distinct sub-claim that can stand alone"],
+  "confidence_score": 0.0,
+  "needs_clarification": false,
+  "framing_note": "One sentence explaining the framing choice.",
+  "canonical_claim": "Stripped normalized version for dedup comparison only. No intensity modifiers. Normalized causality. No named actors unless essential.",
+  "claim_type": "factual | normative | inquiry",
+  "polarity": "affirming | rejecting | neutral",
+  "implied_premise": false
+}
+"""
+
+
+def frame_claim_input(raw_input):
+    fallback = {
+        "input_type": "single_claim", "primary_claim": raw_input,
+        "clarified_text": raw_input, "alternate_claims": [],
+        "breakout_candidates": [], "confidence_score": 0.9,
+        "needs_clarification": False, "framing_note": ""
+    }
+    if not raw_input or not anthropic_client:
+        return fallback
+    try:
+        response = anthropic_client.messages.create(
+            model="claude-haiku-4-5-20251001", max_tokens=800, temperature=0,
+            system=FRAME_CLAIM_PROMPT,
+            messages=[{"role": "user", "content": f"Frame this input:\n\n{raw_input}"}]
+        )
+        result = safe_json_parse(response.content[0].text)
+        if not isinstance(result, dict) or "primary_claim" not in result:
+            return fallback
+        score = float(result.get("confidence_score", 0.9))
+        if "needs_clarification" not in result:
+            result["needs_clarification"] = score < 0.60
+        return result
+    except Exception as e:
+        print(f"FRAME CLAIM ERROR: {e}", flush=True)
+        return fallback
+
+
+@app.route("/frame-claim", methods=["POST"])
+def frame_claim():
+    if not session.get("logged_in"):
+        return jsonify({"error": "Not logged in"}), 401
+    data = request.get_json() or {}
+    raw_input = (data.get("claim") or "").strip()
+    if not raw_input:
+        return jsonify({"error": "Claim required"}), 400
+    return jsonify(frame_claim_input(raw_input)), 200
 
 
 @app.route("/analyze", methods=["POST"])
@@ -3034,7 +3204,7 @@ def editor_claims_list():
                 topic_str = str(topics)
             claims.append({
                 "record_id": r.get("id"),
-                "title": clean_display_title(f.get("Original Quote") or f.get("Stripped Claim") or "Untitled"),
+                "title": clean_display_title(f.get("Analyzed Claim") or f.get("Original Quote") or f.get("Stripped Claim") or "Untitled"),
                 "slug": f.get("URL Slug", ""),
                 "verdict": f.get("Overall Verdict", ""),
                 "topic": topic_str,
@@ -3169,9 +3339,17 @@ def editor_reanalyze_claim_by_slug(slug):
         request._cached_json = {"mode": mode, "fields": selective_fields}
 
         claim_fields = records[0].get("fields", {})
-        claim_text = claim_fields.get("Original Quote") or claim_fields.get("Stripped Claim") or ""
-        if not claim_text:
+        raw_claim_text = claim_fields.get("Original Quote") or claim_fields.get("Stripped Claim") or ""
+        if not raw_claim_text:
             return jsonify({"error": "No claim text found"}), 400
+
+        existing_analyzed = (claim_fields.get("Analyzed Claim") or "").strip()
+        if existing_analyzed:
+            claim_text = existing_analyzed
+            reanalysis_framing = None
+        else:
+            reanalysis_framing = frame_claim_input(raw_claim_text)
+            claim_text = reanalysis_framing.get("primary_claim") or raw_claim_text
 
         primary, claude_json, openai_json, grok_adjudication = run_reanalysis_ai(claim_text, mode)
         if "error" in primary:
@@ -3179,17 +3357,25 @@ def editor_reanalyze_claim_by_slug(slug):
 
         editor_username = session.get("username", "Editor")
         now_str = datetime.utcnow().strftime("%Y-%m-%d")
+        old_slug = slug
 
         if mode == "full":
             update_fields = extract_primary_record_fields(
-                claim=claim_text, parsed=primary, mode="full",
-                username=editor_username, existing_fields=claim_fields
+                claim=raw_claim_text, parsed=primary, mode="full",
+                username=editor_username, existing_fields=claim_fields,
+                framing_data=reanalysis_framing
             )
+            if reanalysis_framing and reanalysis_framing.get("primary_claim"):
+                new_slug = slugify(reanalysis_framing["primary_claim"])
+                update_fields["URL Slug"] = new_slug
+            else:
+                new_slug = update_fields.get("URL Slug", old_slug)
             update_fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
             update_fields["OpenAI Raw JSON"] = json.dumps(openai_json, ensure_ascii=False)[:100000]
             if grok_adjudication:
                 update_fields["Grok Raw JSON"] = json.dumps(grok_adjudication, ensure_ascii=False)[:100000]
         else:
+            new_slug = old_slug
             update_fields = {"Last Updated": now_str}
             for field_name in selective_fields:
                 airtable_key = SELECTIVE_FIELD_MAP.get(field_name)
@@ -3203,10 +3389,13 @@ def editor_reanalyze_claim_by_slug(slug):
         if not resp.ok:
             return jsonify({"error": f"Airtable update failed: {resp.text}"}), 500
 
+        slug_changed = new_slug != old_slug
         return jsonify({
             "ok": True, "record_id": record_id, "mode": mode,
             "reanalyzed_by": editor_username, "last_reanalyzed": now_str,
-            "fields_updated": list(update_fields.keys())
+            "fields_updated": list(update_fields.keys()),
+            "new_slug": new_slug, "slug_changed": slug_changed,
+            "redirect_to": f"/claim/{new_slug}" if slug_changed else None
         })
 
     except Exception as e:
@@ -3217,31 +3406,50 @@ def editor_reanalyze_claim_by_slug(slug):
 
 BREAKOUT_DETECTION_SYSTEM = """You are the Breakout Claim detection engine for Where the Truth Lies.
 
-Your job is to read a body of text (a political claim, dispute, or pushback) and identify statements within it that are themselves distinct, standalone, falsifiable claims — separate from the primary claim being excavated.
+Your job is to identify EXCAVATION-WORTHY breakout claims — branches that deserve their own full analysis, separate from the primary claim being examined.
+
+This is a two-step process. Do not skip step one.
+
+STEP ONE — EXTRACTION:
+Identify all distinct, falsifiable assertions in the text. Note each one's actor, domain, and the type of evidence and adjudication it would require.
+
+STEP TWO — COLLAPSING:
+Before creating any breakout claim, apply this rule: when multiple extracted assertions share the same actor, same domain, same underlying accusation, and would require substantially the same evidence and adjudication logic — collapse them into ONE representative breakout claim that captures the pattern.
+
+A representative breakout claim is a single sentence that synthesizes the pattern AND carries the tension of what is being tested. It is NOT a list. It is NOT a header. It stands alone as a testable assertion that signals what the excavation will examine.
+
+Examples of correct collapsing:
+Multiple immigration enforcement assertions (targeting families, detentions without warrants, profiling) → ONE breakout: "The Trump administration is conducting immigration enforcement operations that critics argue violate due process protections — and whether those operations fall within existing legal authority is disputed."
+Multiple election integrity assertions (rigging maps, threatening elections, suppressing voters) → ONE breakout: "The Trump administration is taking actions that critics argue threaten electoral integrity and voter access — and whether those actions cross a constitutional or statutory line remains contested."
+Multiple spending assertions (missile strikes, billionaire giveaways) → ONE breakout: "The administration is pursuing spending and economic decisions that critics argue systematically favor wealthy interests — and whether those decisions represent legitimate policy or improper favoritism is disputed."
+
+Keep separate ONLY when claims would require meaningfully different evidence, different legal standards, or different historical comparisons to adjudicate.
 
 A breakout claim must:
-- Be a distinct, falsifiable statement in its own right
-- Be separable from the main claim being analyzed
-- Warrant its own excavation on merit
+- Be independently analyzable against a factual record without relying on the primary claim
+- Represent a genuinely distinct branch of investigation
+- Carry the tension of what is being tested, not just describe a category
 
 A breakout claim must NOT be:
 - A restatement of the primary claim
 - A general opinion or value judgment without factual content
-- A vague inference
-- Something already fully covered by the primary claim analysis
+- An event description or narrative moment (e.g. "the parade was drowned out") — observations are not claims
+- A description of what happened rather than an assertion about what is true
+- Rhetorical framing without a falsifiable factual core
+- One of several nearly identical assertions that should be collapsed into one
 
-When multiple breakout claims share the same underlying topic or subject, group them together under a group key and group label.
+Before finalizing each breakout claim, ask: would analyzing this separately produce meaningfully different evidence, reasoning, or conclusions than analyzing it as part of the main claim? If no, merge it or exclude it.
+
+Target 3 to 5 strong grouped breakout claims. Only exceed 5 if the text contains genuinely unrelated topics requiring different adjudication paths. Never exceed 7.
 
 Return ONLY valid JSON. No markdown fences. No preamble.
-
-Return this exact structure:
 
 {
   "has_breakouts": true or false,
   "breakout_claims": [
     {
-      "title": "A clear, plain-language title for this breakout claim. One sentence. No hyphens or dashes.",
-      "source_text": "The exact statement from the source text that triggered this breakout.",
+      "title": "One sentence representative claim capturing the pattern and its tension. Plain language. No hyphens or dashes.",
+      "source_text": "The key assertion from the source text that triggered this breakout.",
       "group_key": "snake_case_topic_key",
       "group_label": "Plain Language Topic Label",
       "confidence": 0.85
@@ -3254,9 +3462,7 @@ If no breakout claims are found, return: {"has_breakouts": false, "breakout_clai
 Rules:
 Never use bullet points, dashes, or hyphens in any title field.
 Write titles as plain declarative statements.
-Group related claims under the same group_key and group_label.
 Confidence should be between 0.5 and 1.0. Only include claims above 0.6 confidence.
-Maximum 8 breakout claims per source text.
 """
 
 
@@ -3506,7 +3712,27 @@ def run_breakout_detection_for_claim(claim_record, detection_source_override=Non
     fields = claim_record.get("fields", {})
     record_id = claim_record.get("id")
     slug = fields.get("URL Slug", "")
-    claim_text = fields.get("Original Quote") or fields.get("Stripped Claim") or ""
+    # For breakout detection, use the richest available source text
+    # Original Quote has the full assertions; supplement with analyzed content
+    original_quote = fields.get("Original Quote") or ""
+    stripped_claim = fields.get("Stripped Claim") or ""
+    direct_facts = fields.get("Direct Facts") or ""
+    sub_claims_raw = fields.get("Sub-Claims") or ""
+
+    # Build detection text: original quote is primary (has all assertions)
+    # Fall back to stripped claim + direct facts if no original quote
+    if original_quote and len(original_quote) > 50:
+        claim_text = original_quote
+    elif stripped_claim:
+        # Combine stripped claim with direct facts for richer detection
+        parts = [stripped_claim]
+        if direct_facts:
+            parts.append(direct_facts)
+        if sub_claims_raw:
+            parts.append(sub_claims_raw)
+        claim_text = " ".join(parts)
+    else:
+        claim_text = ""
     parent_identifier = fields.get("Claim Identifier", "")
     root_record_id = record_id  # this claim is its own root for direct children
 
@@ -3595,7 +3821,7 @@ def get_breakout_claims_for_parent(parent_record_id):
             f = r.get("fields", {})
             breakouts.append({
                 "record_id": r.get("id"),
-                "title": clean_display_title(f.get("Stripped Claim") or f.get("Original Quote") or "Untitled"),
+                "title": clean_display_title(f.get("Analyzed Claim") or f.get("Stripped Claim") or f.get("Original Quote") or "Untitled"),
                 "slug": f.get("URL Slug", ""),
                 "claim_identifier": f.get("Claim Identifier", ""),
                 "breakout_status": f.get("Breakout Status", "Pending Excavation"),
