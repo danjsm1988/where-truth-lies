@@ -154,6 +154,7 @@ Always return this exact JSON structure:
     {"term": "A third term", "definition": "Plain language definition."}
   ],
   "Sources": "Primary sources:\\nSource description one: https://url-one.com\\nSource description two: https://url-two.com\\nSource description three: https://url-three.com\\nSource description four: https://url-four.com\\nSource description five: https://url-five.com\\n\\nInclude 6 to 10 real, verifiable URLs from major news outlets, government sites, institutional bodies, or authoritative sources. Format each line exactly as: Label: URL",
+  "Analyzed Claim": "The single foundational legal, constitutional, or political premise underneath this claim. This is NOT a summary of the surface assertions, bullet points, crowd sizes, policy lists, or emotional language in the source. It is the deepest question being raised — the claim that, if true, would actually matter. One sentence only. Example: if the source lists immigration enforcement, healthcare cuts, and crowd sizes, the foundational claim is whether executive conduct has crossed a constitutional or historical threshold that legally defines authoritarianism or monarchy. Return that, not the list. If the source is a multi-topic narrative, find the single premise that all the noise is evidence FOR or AGAINST.",
   "Overall Verdict": "Exactly one of: True, Mostly True, Substantially True, Plausible/Mixed, Contested, Exaggerated, Misleading, Unproven, False",
   "Strip Mode Summary": "This is the full paid analytical paragraph, not the short Quick Explanation. Write this in the spirit of Thomas Paine's Common Sense — plain language, no jargon, no hedging, accessible to anyone regardless of political background or education level. Answer three things clearly: what is actually happening beneath the claim, why it matters in real terms, and what someone should be paying attention to next. This should reflect the full excavation without referencing the layers directly. 3 to 4 sentences. No bullet points. No dashes. Do not be condescending. Do not be sarcastic. Avoid phrases like obviously or clearly. Do not over-explain uncertainty, but do not present future outcomes as guaranteed. Let the tone reflect that situations evolve. Write with calm, grounded clarity."
 }"""
@@ -3621,18 +3622,9 @@ def editor_reanalyze_claim_by_slug(slug):
         if not raw_claim_text:
             return jsonify({"error": "No claim text found"}), 400
 
-        existing_analyzed = (claim_fields.get("Analyzed Claim") or "").strip()
-
-        # Always excavate against Original Quote — full context, factual grounding
-        # Analyzed Claim is passed as structural guide only — never replaces raw input
-        if existing_analyzed:
-            reanalysis_framing = None
-        else:
-            reanalysis_framing = frame_claim_input(raw_claim_text)
-
+        # Always analyze from raw source — no stored Analyzed Claim involved in AI input
         primary, claude_json, openai_json, grok_adjudication = run_reanalysis_ai(
-            raw_claim_text, mode,
-            analyzed_claim=existing_analyzed or (reanalysis_framing.get("primary_claim") if reanalysis_framing else None)
+            raw_claim_text, mode
         )
         if "error" in primary:
             return jsonify({"error": f"AI failed: {primary['error']}"}), 500
@@ -3644,20 +3636,16 @@ def editor_reanalyze_claim_by_slug(slug):
         if mode == "full":
             update_fields = extract_primary_record_fields(
                 claim=raw_claim_text, parsed=primary, mode="full",
-                username=editor_username, existing_fields=claim_fields,
-                framing_data=reanalysis_framing
+                username=editor_username, existing_fields=claim_fields
             )
-            if existing_analyzed:
-                # Display fields locked — never overwritten when Analyzed Claim is set
-                new_slug = old_slug
-                update_fields["URL Slug"] = old_slug
-                update_fields["Analyzed Claim"] = existing_analyzed
-                update_fields["Stripped Claim"] = existing_analyzed
-            elif reanalysis_framing and reanalysis_framing.get("primary_claim"):
-                new_slug = slugify(reanalysis_framing["primary_claim"])
-                update_fields["URL Slug"] = new_slug
-            else:
-                new_slug = update_fields.get("URL Slug", old_slug)
+            # Analyzed Claim comes from the AI's own output — the foundational premise it identified
+            # This is more reliable than frame_claim_input which summarizes surface content
+            ai_analyzed_claim = (primary.get("Analyzed Claim") or "").strip()
+            if ai_analyzed_claim:
+                update_fields["Analyzed Claim"] = ai_analyzed_claim
+            # URL Slug never changes on reanalysis — preserves existing URLs
+            new_slug = old_slug
+            update_fields["URL Slug"] = old_slug
             update_fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
             update_fields["OpenAI Raw JSON"] = json.dumps(openai_json, ensure_ascii=False)[:100000]
             if grok_adjudication:
