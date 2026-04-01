@@ -64,6 +64,12 @@ If the input explicitly attributes a statement to a named speaker, preserve that
 COMMON GROUND RULE:
 Common Ground must be narrow, specific, and real. It must be grounded in what the documented facts support, lawful within the relevant constitutional and institutional framework, practically achievable through existing institutions without waiting for either side to win a political argument, and likely to produce better measurable outcomes for citizens than the current trajectory of each side's preferred approach. It is not the midpoint between two talking points. It is not a rhetorical gesture toward unity. Do not manufacture false consensus. If no genuine common ground exists in the documented record, state that explicitly.
 
+PROTEST NOISE RULE:
+When source text originates from a protest movement, activist organization, or mobilization campaign, the foundational claim is never about the protests themselves. Protests are a response to a condition. The claim to analyze is whether that underlying condition actually exists and meets the standard being invoked.
+Crowd sizes, attendance figures, turnout comparisons, and mobilization scope are noise. Do not analyze them as the central question. Move them to breakout claims or Adjacent Facts only.
+The Analyzed Claim, Quick Explanation, and all layers must address the condition being protested, not the protest. Ask: what would have to be true about the world for this protest to be justified? Analyze that question.
+Example: a movement protesting authoritarian governance is a claim that authoritarian governance exists and meets its legal and historical definition. Analyze that. Not how many people showed up.
+
 PLAIN ENGLISH RULE:
 Prefer plain everyday language over technical, legal, political, institutional, or media jargon.
 Assume the reader is intelligent but not specialized.
