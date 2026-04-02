@@ -3565,6 +3565,31 @@
   color: var(--text-mid);
 }
 
+.m-claim-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.m-view-chip {
+  color: var(--gold);
+  border-color: rgba(201,168,76,.30);
+  background: rgba(201,168,76,.08);
+  font-weight: 700;
+}
+
+.m-entered-by {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  flex: 1 1 auto;
+}
+
 .m-qe-card {
   padding: 16px;
 }
@@ -4623,10 +4648,10 @@ html, body {
 
         <!-- CLAIM PREVIEW STRIP: passive discovery -->
         <div class="m-preview-strip">
-          <div class="m-strip-header">
-            <span>Recent Claims</span>
-            <a class="m-strip-see-all" href="/archives">See all claims →</a>
-          </div>
+        <div class="m-strip-header">
+          <span>Trending Claims</span>
+          <a class="m-strip-see-all" href="/archives">See all claims →</a>
+        </div>
 
           {% if recent_claims %}
             <div class="m-cards-scroll">
@@ -4689,12 +4714,16 @@ html, body {
 </div>
 <button class="m-claim-see-more" id="mClaimSeeMore" onclick="toggleMobileClaimExpand()">See More &#8595;</button>
 
-        {% if true_superuser and current_claim.entered_by %}
-          <div class="m-entered-by" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-            <span>Entered by <strong>{{ current_claim.entered_by }}</strong></span>
-            <button type="button" class="claim-reanalyze-btn" onclick="openReanalyzeModal('{{ current_claim.slug }}')">&#x21BB; Reanalyze</button>
-          </div>
-        {% endif %}
+<div class="m-claim-meta-row">
+  <span class="m-chip m-view-chip">◉ {{ current_claim.view_count or 0 }} Views</span>
+
+  {% if true_superuser and current_claim.entered_by %}
+    <div class="m-entered-by">
+      <span>Entered by <strong>{{ current_claim.entered_by }}</strong></span>
+      <button type="button" class="claim-reanalyze-btn" onclick="openReanalyzeModal('{{ current_claim.slug }}')">&#x21BB; Reanalyze</button>
+    </div>
+  {% endif %}
+</div>
 
 
         <!-- MOBILE CLAIM TABS -->
