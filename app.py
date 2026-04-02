@@ -708,6 +708,56 @@ def get_recent_claims(limit=10):
         print("RECENT CLAIMS ERROR:", str(e), flush=True)
         return []
 
+def get_trending_claims(limit=10):
+    if not AIRTABLE_TOKEN or not AIRTABLE_BASE_ID or not AIRTABLE_TABLE_NAME:
+        return []
+    try:
+        params = {
+            "maxRecords": limit,
+            "filterByFormula": "AND(OR(NOT({Breakout User Excavated}), {Breakout User Excavated}!='No'), {View Count}>0)",
+            "sort[0][field]": "View Count",
+            "sort[0][direction]": "desc",
+            "sort[1][field]": "Date Added",
+            "sort[1][direction]": "desc"
+        }
+        records = airtable_get_all(AIRTABLE_TABLE_NAME, params=params)
+        trending = []
+        for record in records[:limit]:
+            f = record.get("fields", {})
+            trending.append({
+                "title": clean_display_title(
+                    f.get("Analyzed Claim") or f.get("Original Quote") or f.get("Stripped Claim") or "Untitled Claim"
+                ),
+                "slug": f.get("URL Slug", ""),
+                "date": f.get("Date") or f.get("Date Added", ""),
+                "verdict": f.get("Overall Verdict", "Unproven"),
+                "topics": parse_topics(f.get("Topic")),
+                "speaker": f.get("Speaker", "Unknown"),
+                "entered_by": f.get("Entered By", ""),
+                "view_count": int(f.get("View Count", 0) or 0)
+            })
+        return trending
+    except Exception as e:
+        print("TRENDING CLAIMS ERROR:", str(e), flush=True)
+        return []
+
+def get_top_trending_claim():
+    if not AIRTABLE_TOKEN or not AIRTABLE_BASE_ID or not AIRTABLE_TABLE_NAME:
+        return None
+    try:
+        params = {
+            "maxRecords": 1,
+            "filterByFormula": "AND(OR(NOT({Breakout User Excavated}), {Breakout User Excavated}!='No'), {View Count}>0)",
+            "sort[0][field]": "View Count",
+            "sort[0][direction]": "desc",
+            "sort[1][field]": "Date Added",
+            "sort[1][direction]": "desc"
+        }
+        records = airtable_get_all(AIRTABLE_TABLE_NAME, params=params)
+        return records[0] if records else None
+    except Exception as e:
+        print("TOP TRENDING CLAIM ERROR:", str(e), flush=True)
+        return None
 
 def get_all_claims():
     if not AIRTABLE_TOKEN or not AIRTABLE_BASE_ID or not AIRTABLE_TABLE_NAME:
@@ -1660,16 +1710,23 @@ def get_site_settings():
 def home():
     if not session.get("logged_in"):
         return redirect("/login")
-    recent_claims = get_recent_claims(limit=10)
-    latest_record = get_latest_claim()
-    current_claim = build_claim_context(latest_record) if latest_record else None
+    trending_claims = get_trending_claims(limit=10)
+
+    featured_record = get_top_trending_claim()
+
+    # FALLBACK → if no views yet, use latest claim
+    if not featured_record:
+        featured_record = get_latest_claim()
+
+    current_claim = build_claim_context(featured_record) if featured_record else None
     _s = get_site_settings()
     return render_template(
         "index.html",
         page_mode="claim",
         superuser=session.get("superuser", False),
         true_superuser=session.get("true_superuser", False),
-        recent_claims=recent_claims,
+        recent_claims=trending_claims,
+        trending_claims=trending_claims,
         current_claim=current_claim,
         archived_claims_by_topic=get_topic_archives(),
         selected_topic="",
@@ -2234,6 +2291,12 @@ Produce ONE high-level neutral primary claim capturing the overall pattern witho
 Push each separate domain to breakout_candidates, not the primary claim.
 Example: "lockdowns destroyed businesses and forced vaccines and now they pretend it never happened" becomes primary: "Government COVID-19 policies included restrictive measures that had significant economic and social consequences." Accountability goes to breakout_candidates.
 
+HARD PROHIBITION — primary_claim must NEVER contain:
+Denial or minimization language: denied, minimized, pretended, ignored, covered up, avoided, dismissed, downplayed
+Accountability or motive language: officials refuse to acknowledge, now pretend it never happened, avoiding responsibility, are denying
+Narrative response framing: any clause about what actors did or said AFTER the primary policy or event occurred
+When input contains both a policy or action claim AND a denial or accountability claim, stop the primary_claim at the policy and impact layer. The denial or accountability clause belongs in breakout_candidates only, never in primary_claim.
+
 CLAIM TYPE RULES:
 Preserve claim type — never convert between factual assertion, normative claim, and question.
 If input is a question, the primary_claim must stay framed as an implied premise, not asserted as fact.
@@ -2312,6 +2375,57 @@ def frame_claim_input(raw_input):
         score = float(result.get("confidence_score", 0.9))
         if "needs_clarification" not in result:
             result["needs_clarification"] = score < 0.60
+
+        # Post-processing guard: strip accountability or denial clauses from primary_claim
+        # If the model leaks them into primary_claim, move them into breakout_candidates
+        primary = str(result.get("primary_claim", "") or "").strip()
+        accountability_signals = [
+            "denied", "minimized", "pretended", "pretend", "ignored",
+            "covered up", "avoided", "dismissed", "downplayed",
+            "now pretend", "refuse to acknowledge", "never happened",
+            "avoiding responsibility", "officials have minimized",
+            "have downplayed", "are denying", "won't acknowledge"
+        ]
+
+        has_accountability = any(sig in primary.lower() for sig in accountability_signals)
+        has_policy = any(w in primary.lower() for w in [
+            "polic", "lockdown", "mandates", "restrictions", "government",
+            "administration", "officials", "law", "order", "executive"
+        ])
+
+        if has_accountability and has_policy:
+            import re as _re
+
+            cleaned = _re.split(
+                r'\s+and\s+(now|they|officials|those)\s+',
+                primary,
+                flags=_re.IGNORECASE
+            )[0]
+            cleaned = _re.split(
+                r',\s+(while|but|yet)\s+\w+\s+(denied|minimized|pretended|ignored)',
+                cleaned,
+                flags=_re.IGNORECASE
+            )[0]
+            cleaned = cleaned.strip().rstrip(',').strip()
+
+            if cleaned and len(cleaned) > 20 and cleaned != primary:
+                accountability_clause = primary[len(cleaned):].strip()
+                accountability_clause = _re.sub(
+                    r'^(and|but|while|yet)\b',
+                    '',
+                    accountability_clause,
+                    flags=_re.IGNORECASE
+                ).strip()
+                accountability_clause = accountability_clause.lstrip(',').strip()
+                result["primary_claim"] = cleaned
+
+                existing_breakouts = result.get("breakout_candidates", [])
+                if not isinstance(existing_breakouts, list):
+                    existing_breakouts = []
+
+                if accountability_clause:
+                    result["breakout_candidates"] = existing_breakouts + [accountability_clause]
+
         return result
     except Exception as e:
         print(f"FRAME CLAIM ERROR: {e}", flush=True)
