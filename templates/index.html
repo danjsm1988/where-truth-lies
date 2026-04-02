@@ -427,16 +427,6 @@
     }
     .breakout-info-btn:hover .breakout-info-tip { display: block; }
 
-    /* View count badge */
-    .view-count-badge {
-      font-family: 'Libre Baskerville', Georgia, serif;
-      font-size: 9px; letter-spacing: .12em; text-transform: uppercase;
-      color: var(--text-dim); padding: 4px 10px;
-      background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07);
-      border-radius: 999px; display: inline-flex; align-items: center; gap: 5px;
-    }
-    .view-count-badge .vc-num { color: var(--text-light); font-size: 11px; }
-
     /* Trending strip */
     .trending-strip {
       background: rgba(255,255,255,.015); border: 1px solid rgba(255,255,255,.07);
@@ -1216,7 +1206,7 @@
       margin-top: 16px;
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 12px;
       align-items: center;
     }
 
@@ -1234,6 +1224,7 @@
     }
 
     .view-meta-chip {
+      margin-left: auto;
       border-color: rgba(201,168,76,.30);
       color: var(--gold);
       background: rgba(201,168,76,.08);
@@ -5950,10 +5941,6 @@ html, body {
 <button class="claim-see-more" id="claimSeeMore" onclick="toggleClaimExpand()">See More &#8595;</button>
 
 <div class="entered-by-line">
-  <span class="meta-chip view-meta-chip">
-    ◉ {{ current_claim.view_count or 0 }} Views
-  </span>
-
   {% if true_superuser %}
     <span class="entered-label">Entered By</span>
     <span class="entered-value">
@@ -5976,6 +5963,10 @@ html, body {
   {% if true_superuser %}
     <button type="button" class="claim-reanalyze-btn" onclick="openReanalyzeModal('{{ current_claim.slug }}')">↻ Reanalyze</button>
   {% endif %}
+
+  <span class="meta-chip view-meta-chip">
+    ◉ {{ current_claim.view_count or 0 }} Views
+  </span>
 </div>
 </div>
 
