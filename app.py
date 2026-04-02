@@ -24,6 +24,14 @@ AIRTABLE_REALITY_TABLE_NAME = os.getenv("AIRTABLE_REALITY_TABLE_NAME", "Reality 
 AIRTABLE_SETTINGS_TABLE_NAME = os.getenv("AIRTABLE_SETTINGS_TABLE_NAME", "Settings")
 AIRTABLE_DISPUTES_TABLE_NAME = os.getenv("AIRTABLE_DISPUTES_TABLE_NAME", "Disputes")
 
+# ── Analysis Core Version ──────────────────────────────────────────────────────
+# Bump ONLY when FRAME_CLAIM_PROMPT, frame_claim_input(), or foundational verdict
+# logic changes in a way that can legitimately alter Analyzed Claim, Stripped Claim,
+# or core verdict identity.
+# Do NOT bump for: civic layer, scenario map tweaks, hover text, dedup, breakout
+# display, source formatting, editor tools, styling, or feature-only layer additions.
+ANALYSIS_CORE_VERSION = "1.0"
+
 MAX_PUSHBACKS = {
     "standard": 1,
     "limited_superuser": 1,
@@ -155,7 +163,8 @@ Always return this exact JSON structure:
   ],
   "Sources": "Primary sources:\\nSource description one: https://url-one.com\\nSource description two: https://url-two.com\\nSource description three: https://url-three.com\\nSource description four: https://url-four.com\\nSource description five: https://url-five.com\\n\\nInclude 6 to 10 real, verifiable URLs from major news outlets, government sites, institutional bodies, or authoritative sources. Format each line exactly as: Label: URL",
   "Overall Verdict": "Exactly one of: True, Mostly True, Substantially True, Plausible/Mixed, Contested, Exaggerated, Misleading, Unproven, False",
-  "Strip Mode Summary": "This is the full paid analytical paragraph, not the short Quick Explanation. Write this in the spirit of Thomas Paine's Common Sense — plain language, no jargon, no hedging, accessible to anyone regardless of political background or education level. Answer three things clearly: what is actually happening beneath the claim, why it matters in real terms, and what someone should be paying attention to next. This should reflect the full excavation without referencing the layers directly. 3 to 4 sentences. No bullet points. No dashes. Do not be condescending. Do not be sarcastic. Avoid phrases like obviously or clearly. Do not over-explain uncertainty, but do not present future outcomes as guaranteed. Let the tone reflect that situations evolve. Write with calm, grounded clarity."
+  "Strip Mode Summary": "This is the full paid analytical paragraph, not the short Quick Explanation. Write this in the spirit of Thomas Paine's Common Sense — plain language, no jargon, no hedging, accessible to anyone regardless of political background or education level. Answer three things clearly: what is actually happening beneath the claim, why it matters in real terms, and what someone should be paying attention to next. This should reflect the full excavation without referencing the layers directly. 3 to 4 sentences. No bullet points. No dashes. Do not be condescending. Do not be sarcastic. Avoid phrases like obviously or clearly. Do not over-explain uncertainty, but do not present future outcomes as guaranteed. Let the tone reflect that situations evolve. Write with calm, grounded clarity.",
+  "Analyzed Claim Candidate": "Optional. After completing the full analysis, if the excavation reveals that the foundational premise of this claim is more precisely or accurately stated than the original input suggests, provide a single clean sentence here that captures that foundational premise. This is a suggestion only — it is never automatically authoritative. Leave blank if the original framing is already accurate. Do not simply restate the Stripped Claim. This field exists for superuser review and manual override decisions only."
 }"""
 
 
@@ -569,6 +578,13 @@ def build_claim_context(record):
 
 
 def extract_primary_record_fields(claim, parsed, mode, username, existing_fields=None, framing_data=None):
+    """
+    Build the Airtable field dict for a claim record.
+    NOTE: This function does NOT write Analyzed Claim, URL Slug, Title Locked,
+    Slug Locked, Title Source, or Analysis Core Version. Those identity/version
+    fields are managed explicitly by the caller (analyze route or reanalysis routes)
+    to enforce the versioned logic gate architecture.
+    """
     dates = now_dates()
     existing_fields = existing_fields or {}
     is_full_reexcavate = mode == "full"
@@ -592,7 +608,6 @@ def extract_primary_record_fields(claim, parsed, mode, username, existing_fields
         "Published": published_value,
         "Status": "Active",
         "Mode": mode if mode in ["strip", "full"] else "strip",
-        "URL Slug": build_url_slug(parsed, claim),
         "Date": dates["display_date"],
         "Date Added": existing_fields.get("Date Added", dates["short_date"]),
         "Last Updated": dates["short_date"],
@@ -647,9 +662,8 @@ def extract_primary_record_fields(claim, parsed, mode, username, existing_fields
         if sub_claims:
             fields["Sub-Claims"] = " | ".join([sc.get("claim", "") for sc in sub_claims if sc.get("claim")]).strip()
 
+    # Input type and framing confidence from framing layer (non-identity fields only)
     if framing_data and isinstance(framing_data, dict):
-        if framing_data.get("primary_claim"):
-            fields["Analyzed Claim"] = framing_data["primary_claim"]
         if framing_data.get("input_type"):
             fields["Input Type"] = framing_data["input_type"]
         if framing_data.get("confidence_score") is not None:
@@ -657,6 +671,11 @@ def extract_primary_record_fields(claim, parsed, mode, username, existing_fields
                 fields["Framing Confidence"] = float(framing_data["confidence_score"])
             except Exception:
                 pass
+
+    # Store Analyzed Claim Candidate from CLAIMLAB_SYSTEM for superuser review
+    candidate = parsed.get("Analyzed Claim Candidate", "").strip()
+    if candidate:
+        fields["Analyzed Claim Candidate"] = candidate
 
     return fields
 
@@ -2456,13 +2475,50 @@ Return exactly this structure:
             existing_record = get_claim_by_original_quote(claim)
             existing_fields = existing_record.get("fields", {}) if existing_record else {}
 
+            # ── Run framing to get Analyzed Claim and URL Slug ──────────────────
+            # framing_data is the authoritative source for Analyzed Claim identity.
+            # On re-submission of an existing record, preserve the stored identity
+            # fields unless they are empty (first time or were never set).
+            submission_framing = frame_claim_input(claim)
+            primary_claim_title = (submission_framing or {}).get("primary_claim", "").strip()
+
+            existing_analyzed = (existing_fields.get("Analyzed Claim") or "").strip()
+            existing_slug = (existing_fields.get("URL Slug") or "").strip()
+            is_new_record = not existing_record
+
             fields = extract_primary_record_fields(
                 claim=claim,
                 parsed=primary,
                 mode=mode,
                 username=session.get("username", "Unknown"),
-                existing_fields=existing_fields
+                existing_fields=existing_fields,
+                framing_data=submission_framing
             )
+
+            # ── Identity fields: set on new records, preserve on existing ───────
+            if is_new_record:
+                # New submission — write all identity and version fields fresh
+                analyzed_claim = primary_claim_title or claim
+                url_slug = slugify(analyzed_claim)
+                fields["Analyzed Claim"] = analyzed_claim
+                fields["URL Slug"] = url_slug
+                fields["Title Locked"] = False
+                fields["Slug Locked"] = True
+                fields["Title Source"] = "AI Initial"
+                fields["Analysis Core Version"] = ANALYSIS_CORE_VERSION
+            else:
+                # Re-submission of existing record — preserve identity fields
+                fields["Analyzed Claim"] = existing_analyzed or primary_claim_title or claim
+                fields["URL Slug"] = existing_slug or slugify(existing_analyzed or primary_claim_title or claim)
+                # Preserve lock fields if already set; do not overwrite
+                if "Title Locked" not in existing_fields:
+                    fields["Title Locked"] = False
+                if "Slug Locked" not in existing_fields:
+                    fields["Slug Locked"] = True
+                if not existing_fields.get("Title Source"):
+                    fields["Title Source"] = "AI Initial"
+                if not existing_fields.get("Analysis Core Version"):
+                    fields["Analysis Core Version"] = ANALYSIS_CORE_VERSION
 
             fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
             fields["OpenAI Raw JSON"] = json.dumps(openai_json, ensure_ascii=False)[:100000]
@@ -3301,7 +3357,23 @@ def editor_claims_list():
 
 @app.route("/editor/reanalyze-claim/<record_id>", methods=["POST"])
 def editor_reanalyze_claim(record_id):
-    """Reanalyze a single claim. Supports full or selective modes."""
+    """
+    Reanalyze a single claim by record ID.
+
+    Reanalysis modes (passed in JSON body):
+      reanalysis_mode: "feature_refresh" (default) | "core_logic_refresh"
+      force: true  — override Title Locked on core_logic_refresh
+      regenerate_slug: true — also regenerate URL Slug (only on core_logic_refresh,
+                               blocked if Slug Locked unless force=true)
+
+    feature_refresh:  Updates all analysis layers. Never touches Analyzed Claim,
+                      URL Slug, Title Locked, Slug Locked, Title Source, or
+                      Analysis Core Version.
+
+    core_logic_refresh: Runs frame_claim_input() fresh from Original Quote, then
+                        runs full analysis. May update Analyzed Claim and version
+                        fields subject to lock rules.
+    """
     if not session.get("logged_in"):
         return jsonify({"error": "Not logged in"}), 401
     if not session.get("true_superuser"):
@@ -3309,86 +3381,109 @@ def editor_reanalyze_claim(record_id):
 
     try:
         data = request.get_json() or {}
-        mode = data.get("mode", "full")  # "full" or "selective"
-        selective_fields = data.get("fields", [])  # list of field names for selective
+        reanalysis_mode = data.get("reanalysis_mode", "feature_refresh")
+        selective_fields = data.get("fields", [])
+        force = bool(data.get("force", False))
+        regenerate_slug = bool(data.get("regenerate_slug", False))
 
-        # Fetch the claim record
         claim_record = get_claim_by_record_id(record_id)
         if not claim_record:
             return jsonify({"error": "Claim not found"}), 404
 
         claim_fields = claim_record.get("fields", {})
-        claim_text = claim_fields.get("Original Quote") or claim_fields.get("Stripped Claim") or ""
-
-        if not claim_text:
+        raw_claim_text = claim_fields.get("Original Quote") or claim_fields.get("Stripped Claim") or ""
+        if not raw_claim_text:
             return jsonify({"error": "No claim text found on this record"}), 400
 
-        # Run AI
-        primary, claude_json, openai_json, grok_adjudication = run_reanalysis_ai(claim_text, mode)
+        editor_username = session.get("username", "Editor")
+        now_iso = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.000Z")
+        now_date = datetime.utcnow().strftime("%Y-%m-%d")
 
+        # Always run AI against Original Quote — never against Analyzed Claim
+        primary, claude_json, openai_json, grok_adjudication = run_reanalysis_ai(raw_claim_text, "full")
         if "error" in primary:
             return jsonify({"error": f"AI failed: {primary['error']}"}), 500
 
-        editor_username = session.get("username", "Editor")
-        now_str = datetime.utcnow().strftime("%Y-%m-%d")
+        # Build base update — all analysis layers, never identity fields
+        update_fields = extract_primary_record_fields(
+            claim=raw_claim_text,
+            parsed=primary,
+            mode="full",
+            username=editor_username,
+            existing_fields=claim_fields
+        )
+        update_fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
+        update_fields["OpenAI Raw JSON"] = json.dumps(openai_json, ensure_ascii=False)[:100000]
+        if grok_adjudication:
+            update_fields["Grok Raw JSON"] = json.dumps(grok_adjudication, ensure_ascii=False)[:100000]
+        update_fields["Last Reanalyzed"] = now_date
+        update_fields["Reanalyzed By"] = editor_username
 
-        if mode == "full":
-            # Full reanalysis — rebuild all fields
-            update_fields = extract_primary_record_fields(
-                claim=claim_text,
-                parsed=primary,
-                mode="full",
-                username=editor_username,
-                existing_fields=claim_fields
-            )
-            update_fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
-            update_fields["OpenAI Raw JSON"] = json.dumps(openai_json, ensure_ascii=False)[:100000]
-            if grok_adjudication:
-                update_fields["Grok Raw JSON"] = json.dumps(grok_adjudication, ensure_ascii=False)[:100000]
-            update_fields["Last Reanalyzed"] = now_str
-            update_fields["Reanalyzed By"] = editor_username
+        # Remove identity fields that extract_primary_record_fields no longer sets
+        # but may have been set by older code paths — enforce clean separation
+        for protected in ["Analyzed Claim", "URL Slug", "Title Locked", "Slug Locked",
+                          "Title Source", "Analysis Core Version"]:
+            update_fields.pop(protected, None)
 
-        else:
-            # Selective — only write requested fields
-            update_fields = {
-                "Last Reanalyzed": now_str,
-                "Reanalyzed By": editor_username,
-                "Last Updated": now_str
-            }
-            for field_name in selective_fields:
-                airtable_key = SELECTIVE_FIELD_MAP.get(field_name)
-                if not airtable_key:
-                    continue
-                if airtable_key == "Sub-Claims":
-                    sub_claims = primary.get("Sub Claims", [])
-                    if isinstance(sub_claims, list):
-                        update_fields["Sub-Claims"] = " | ".join(
-                            [sc.get("claim", "") for sc in sub_claims if sc.get("claim")]
-                        )
-                        if len(sub_claims) > 0:
-                            update_fields["Sub-Claim 1"] = sub_claims[0].get("claim", "")
-                            if sub_claims[0].get("verdict"):
-                                update_fields["Verdict: Sub-Claim1"] = sub_claims[0]["verdict"]
-                elif primary.get(field_name):
-                    update_fields[airtable_key] = primary[field_name]
-                elif field_name == "Overall Verdict":
-                    v = primary.get("Overall Verdict") or primary.get("Verdict")
-                    if v:
-                        update_fields["Overall Verdict"] = v
+        title_updated = False
+        slug_updated = False
+        warning = None
+
+        if reanalysis_mode == "feature_refresh":
+            # Feature refresh — update Last Feature Refresh, never touch identity
+            update_fields["Last Feature Refresh"] = now_iso
+
+        elif reanalysis_mode == "core_logic_refresh":
+            # Core logic refresh — run framing fresh from Original Quote
+            new_framing = frame_claim_input(raw_claim_text)
+            new_primary_claim = (new_framing or {}).get("primary_claim", "").strip()
+
+            title_locked = bool(claim_fields.get("Title Locked", False))
+            slug_locked = bool(claim_fields.get("Slug Locked", True))
+
+            if new_primary_claim:
+                if not title_locked or force:
+                    update_fields["Analyzed Claim"] = new_primary_claim
+                    update_fields["Analysis Core Version"] = ANALYSIS_CORE_VERSION
+                    update_fields["Last Core Logic Refresh"] = now_iso
+                    update_fields["Title Source"] = "Forced Core Refresh" if (title_locked and force) else "AI Core Refresh"
+                    title_updated = True
+                else:
+                    warning = (
+                        f"Title Locked is set on this record. Analyzed Claim was NOT updated. "
+                        f"Pass force=true to override. New framing candidate: \"{new_primary_claim}\""
+                    )
+
+            # Slug regeneration — separate explicit action, blocked by Slug Locked
+            if regenerate_slug:
+                if slug_locked and not force:
+                    warning = (warning or "") + (
+                        " Slug Locked is set on this record. URL Slug was NOT regenerated. "
+                        "Pass force=true along with regenerate_slug=true to override."
+                    )
+                else:
+                    slug_source = update_fields.get("Analyzed Claim") or new_primary_claim or raw_claim_text
+                    update_fields["URL Slug"] = slugify(slug_source)
+                    slug_updated = True
 
         resp = update_airtable_record(record_id, update_fields)
         if not resp.ok:
             return jsonify({"error": f"Airtable update failed: {resp.text}"}), 500
 
-        return jsonify({
+        result = {
             "ok": True,
             "record_id": record_id,
-            "mode": mode,
+            "reanalysis_mode": reanalysis_mode,
             "fields_updated": list(update_fields.keys()),
             "reanalyzed_by": editor_username,
-            "last_reanalyzed": now_str,
-            "slug": claim_fields.get("URL Slug", "")
-        })
+            "last_reanalyzed": now_date,
+            "title_updated": title_updated,
+            "slug_updated": slug_updated,
+            "slug": update_fields.get("URL Slug", claim_fields.get("URL Slug", ""))
+        }
+        if warning:
+            result["warning"] = warning.strip()
+        return jsonify(result)
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -3396,7 +3491,18 @@ def editor_reanalyze_claim(record_id):
 
 @app.route("/editor/reanalyze-claim-by-slug/<slug>", methods=["POST"])
 def editor_reanalyze_claim_by_slug(slug):
-    """Reanalyze a single claim from its claim detail page (by slug)."""
+    """
+    Reanalyze a single claim from its claim detail page (by slug).
+
+    Identical logic to /editor/reanalyze-claim/<record_id> — resolves the record
+    by slug then applies the same versioned logic gate. Always runs AI against
+    Original Quote, never against Analyzed Claim.
+
+    Reanalysis modes (passed in JSON body):
+      reanalysis_mode: "feature_refresh" (default) | "core_logic_refresh"
+      force: true  — override Title Locked / Slug Locked on core_logic_refresh
+      regenerate_slug: true — also regenerate URL Slug (core_logic_refresh only)
+    """
     if not session.get("logged_in"):
         return jsonify({"error": "Not logged in"}), 401
     if not session.get("true_superuser"):
@@ -3404,10 +3510,11 @@ def editor_reanalyze_claim_by_slug(slug):
 
     try:
         data = request.get_json() or {}
-        mode = data.get("mode", "full")
+        reanalysis_mode = data.get("reanalysis_mode", "feature_refresh")
         selective_fields = data.get("fields", [])
+        force = bool(data.get("force", False))
+        regenerate_slug = bool(data.get("regenerate_slug", False))
 
-        # Find the claim by slug
         safe_slug = escape_airtable_formula_value(slug)
         params = {"filterByFormula": f"{{URL Slug}}='{safe_slug}'", "maxRecords": 1}
         records = airtable_get_all(AIRTABLE_TABLE_NAME, params=params)
@@ -3415,68 +3522,102 @@ def editor_reanalyze_claim_by_slug(slug):
             return jsonify({"error": "Claim not found"}), 404
 
         record_id = records[0].get("id")
-        # Delegate to the record_id route logic
-        request._cached_json = {"mode": mode, "fields": selective_fields}
-
         claim_fields = records[0].get("fields", {})
         raw_claim_text = claim_fields.get("Original Quote") or claim_fields.get("Stripped Claim") or ""
         if not raw_claim_text:
             return jsonify({"error": "No claim text found"}), 400
 
-        existing_analyzed = (claim_fields.get("Analyzed Claim") or "").strip()
-        if existing_analyzed:
-            claim_text = existing_analyzed
-            reanalysis_framing = None
-        else:
-            reanalysis_framing = frame_claim_input(raw_claim_text)
-            claim_text = reanalysis_framing.get("primary_claim") or raw_claim_text
+        editor_username = session.get("username", "Editor")
+        now_iso = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.000Z")
+        now_date = datetime.utcnow().strftime("%Y-%m-%d")
 
-        primary, claude_json, openai_json, grok_adjudication = run_reanalysis_ai(claim_text, mode)
+        # Always run AI against Original Quote — never against Analyzed Claim
+        primary, claude_json, openai_json, grok_adjudication = run_reanalysis_ai(raw_claim_text, "full")
         if "error" in primary:
             return jsonify({"error": f"AI failed: {primary['error']}"}), 500
 
-        editor_username = session.get("username", "Editor")
-        now_str = datetime.utcnow().strftime("%Y-%m-%d")
-        old_slug = slug
-
-        if mode == "full":
-            update_fields = extract_primary_record_fields(
-                claim=raw_claim_text, parsed=primary, mode="full",
-                username=editor_username, existing_fields=claim_fields,
-                framing_data=reanalysis_framing
-            )
-            if reanalysis_framing and reanalysis_framing.get("primary_claim"):
-                new_slug = slugify(reanalysis_framing["primary_claim"])
-                update_fields["URL Slug"] = new_slug
-            else:
-                new_slug = update_fields.get("URL Slug", old_slug)
-            update_fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
-            update_fields["OpenAI Raw JSON"] = json.dumps(openai_json, ensure_ascii=False)[:100000]
-            if grok_adjudication:
-                update_fields["Grok Raw JSON"] = json.dumps(grok_adjudication, ensure_ascii=False)[:100000]
-        else:
-            new_slug = old_slug
-            update_fields = {"Last Updated": now_str}
-            for field_name in selective_fields:
-                airtable_key = SELECTIVE_FIELD_MAP.get(field_name)
-                if airtable_key and primary.get(field_name):
-                    update_fields[airtable_key] = primary[field_name]
-
-        update_fields["Last Reanalyzed"] = now_str
+        # Build base update — all analysis layers, never identity fields
+        update_fields = extract_primary_record_fields(
+            claim=raw_claim_text,
+            parsed=primary,
+            mode="full",
+            username=editor_username,
+            existing_fields=claim_fields
+        )
+        update_fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
+        update_fields["OpenAI Raw JSON"] = json.dumps(openai_json, ensure_ascii=False)[:100000]
+        if grok_adjudication:
+            update_fields["Grok Raw JSON"] = json.dumps(grok_adjudication, ensure_ascii=False)[:100000]
+        update_fields["Last Reanalyzed"] = now_date
         update_fields["Reanalyzed By"] = editor_username
+
+        # Remove any identity fields that may have leaked in
+        for protected in ["Analyzed Claim", "URL Slug", "Title Locked", "Slug Locked",
+                          "Title Source", "Analysis Core Version"]:
+            update_fields.pop(protected, None)
+
+        title_updated = False
+        slug_updated = False
+        old_slug = slug
+        new_slug = old_slug
+        warning = None
+
+        if reanalysis_mode == "feature_refresh":
+            update_fields["Last Feature Refresh"] = now_iso
+
+        elif reanalysis_mode == "core_logic_refresh":
+            new_framing = frame_claim_input(raw_claim_text)
+            new_primary_claim = (new_framing or {}).get("primary_claim", "").strip()
+
+            title_locked = bool(claim_fields.get("Title Locked", False))
+            slug_locked = bool(claim_fields.get("Slug Locked", True))
+
+            if new_primary_claim:
+                if not title_locked or force:
+                    update_fields["Analyzed Claim"] = new_primary_claim
+                    update_fields["Analysis Core Version"] = ANALYSIS_CORE_VERSION
+                    update_fields["Last Core Logic Refresh"] = now_iso
+                    update_fields["Title Source"] = "Forced Core Refresh" if (title_locked and force) else "AI Core Refresh"
+                    title_updated = True
+                else:
+                    warning = (
+                        f"Title Locked is set on this record. Analyzed Claim was NOT updated. "
+                        f"Pass force=true to override. New framing candidate: \"{new_primary_claim}\""
+                    )
+
+            if regenerate_slug:
+                if slug_locked and not force:
+                    warning = (warning or "") + (
+                        " Slug Locked is set on this record. URL Slug was NOT regenerated. "
+                        "Pass force=true along with regenerate_slug=true to override."
+                    )
+                else:
+                    slug_source = update_fields.get("Analyzed Claim") or new_primary_claim or raw_claim_text
+                    new_slug = slugify(slug_source)
+                    update_fields["URL Slug"] = new_slug
+                    slug_updated = True
 
         resp = update_airtable_record(record_id, update_fields)
         if not resp.ok:
             return jsonify({"error": f"Airtable update failed: {resp.text}"}), 500
 
         slug_changed = new_slug != old_slug
-        return jsonify({
-            "ok": True, "record_id": record_id, "mode": mode,
-            "reanalyzed_by": editor_username, "last_reanalyzed": now_str,
+        result = {
+            "ok": True,
+            "record_id": record_id,
+            "reanalysis_mode": reanalysis_mode,
             "fields_updated": list(update_fields.keys()),
-            "new_slug": new_slug, "slug_changed": slug_changed,
+            "reanalyzed_by": editor_username,
+            "last_reanalyzed": now_date,
+            "title_updated": title_updated,
+            "slug_updated": slug_updated,
+            "new_slug": new_slug,
+            "slug_changed": slug_changed,
             "redirect_to": f"/claim/{new_slug}" if slug_changed else None
-        })
+        }
+        if warning:
+            result["warning"] = warning.strip()
+        return jsonify(result)
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
