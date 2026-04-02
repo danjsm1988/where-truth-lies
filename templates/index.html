@@ -504,6 +504,15 @@
       color: var(--text-light);
     }
 
+    .qv-civic-note {
+      margin-top: 8px;
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 10px;
+      letter-spacing: .04em;
+      color: var(--text-dim);
+      font-style: italic;
+    }
+
     .layer-civic-role .layer-block-header,
     .layer-civic-role .layer-block-body { border-left-color: #9f8a58; }
     .layer-civic-role .layer-block-title { color: #d6bf86; }
@@ -514,6 +523,15 @@
       border-radius: 10px;
       padding: 12px 14px;
       margin-bottom: 8px;
+    }
+
+    .m-qv-civic-note {
+      margin-top: 8px;
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 10px;
+      letter-spacing: .04em;
+      color: var(--text-dim);
+      font-style: italic;
     }
 
     .m-layer-civic { border-left: 3px solid #d6bf86; }
@@ -4847,7 +4865,7 @@ html, body {
             <div class="m-qv-cell-text" id="mqvAgreement"></div>
           </div>
         {% if current_claim.civic_role_quick_view %}
-          <div class="m-qv-civic">
+          <div class="m-qv-civic" id="mqvCivicRow">
             <div class="m-qv-cell-label">
               Civic Role
               <span class="civic-info-btn">i
@@ -4855,6 +4873,7 @@ html, body {
               </span>
             </div>
             <div class="m-qv-cell-text">{{ current_claim.civic_role_quick_view }}</div>
+            <div class="m-qv-civic-note">This is a preview from the Full Excavation experience and moves below when Full Excavation is opened.</div>
           </div>
         {% endif %}
           <script>
@@ -6145,17 +6164,18 @@ html, body {
                   <div class="qv-agreement-text" id="qvAgreement"></div>
                 </div>
 
-          {% if current_claim.civic_role_quick_view %}
-            <div class="qv-civic-row">
-              <div class="qv-civic-label">
-                Civic Role
-                <span class="civic-info-btn">i
-                  <span class="civic-info-tip">Civic Role is not a command and not partisan advice. It explains the kind of civic discipline, judgment, and self government this claim tests in a free society.</span>
-                </span>
-              </div>
-              <div class="qv-civic-text">{{ current_claim.civic_role_quick_view }}</div>
-            </div>
-          {% endif %}
+              {% if current_claim.civic_role_quick_view %}
+                <div class="qv-civic-row" id="qvCivicRow">
+                  <div class="qv-civic-label">
+                    Civic Role
+                    <span class="civic-info-btn">i
+                      <span class="civic-info-tip">Civic Role is not a command and not partisan advice. It explains the kind of civic discipline, judgment, and self government this claim tests in a free society.</span>
+                    </span>
+                  </div>
+                  <div class="qv-civic-text">{{ current_claim.civic_role_quick_view }}</div>
+                  <div class="qv-civic-note">This is a preview from the Full Excavation experience and moves below when Full Excavation is opened.</div>
+                </div>
+              {% endif %}
 
                 <p class="qv-dive-prompt">See the full excavation for underlying layers, competing interpretations, and connected breakout claims. <a onclick="switchTab('full')" href="#">Open Full Excavation &#8594;</a></p>
               </div>
@@ -6409,7 +6429,7 @@ html, body {
                         <span class="civic-info-tip">Civic Role is not a command and not partisan advice. It explains the kind of civic discipline, judgment, and self government this claim tests in a free society.</span>
                       </span>
                     </span>
-                    <span class="layer-block-subtitle">What responsible self government requires from citizens here</span>
+                    <span class="layer-block-subtitle">The self government dimension this claim raises for citizens</span>
                   </div>
                   <span class="layer-chevron">▼</span>
                 </div>
@@ -7840,8 +7860,15 @@ console.error('Dispute submission failed:', err);
     function switchMobileClaimView(view, btn) {
       const excavationPanel = document.getElementById('m-claim-excavation-panel');
       const disputesPanel = document.getElementById('m-claim-disputes-panel');
+      const mqvCivicRow = document.getElementById('mqvCivicRow');
+
       if (excavationPanel) excavationPanel.style.display = (view === 'excavation') ? 'block' : 'none';
       if (disputesPanel) disputesPanel.style.display = (view === 'disputes') ? 'block' : 'none';
+
+      if (mqvCivicRow) {
+        mqvCivicRow.style.display = (view === 'excavation') ? '' : 'none';
+      }
+
       document.querySelectorAll('.m-claim-tab-btn').forEach(b => b.classList.remove('active'));
       if (btn) btn.classList.add('active');
     }
@@ -7862,6 +7889,12 @@ console.error('Dispute submission failed:', err);
         if (panel) panel.classList.toggle('hidden', t !== tab);
         if (btn) btn.classList.toggle('active', t === tab);
       });
+
+      var qvCivicRow = document.getElementById('qvCivicRow');
+      if (qvCivicRow) {
+        qvCivicRow.style.display = (tab === 'full') ? 'none' : '';
+      }
+
       if (tab === 'disputes' || tab === 'history') {
         var sub = document.querySelector('.subclaims-list');
         var tgt = document.getElementById('tab-' + tab);
