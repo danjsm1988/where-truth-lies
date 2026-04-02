@@ -1233,6 +1233,13 @@
       font-size: 16px;
     }
 
+    .view-meta-chip {
+      border-color: rgba(201,168,76,.30);
+      color: var(--gold);
+      background: rgba(201,168,76,.08);
+      font-weight: 700;
+    }
+
     .confidence-note,
     .editorial-note,
     .scenario-disclaimer {
@@ -5916,9 +5923,6 @@ html, body {
 {% endif %}
   </div>
 
-  {% if current_claim.view_count is defined and current_claim.view_count > 0 %}
-    <span class="view-count-badge"><span class="vc-num">{{ current_claim.view_count }}</span> views</span>
-  {% endif %}
   <button
     class="dispute-btn"
     type="button"
@@ -5945,25 +5949,34 @@ html, body {
 </div>
 <button class="claim-see-more" id="claimSeeMore" onclick="toggleClaimExpand()">See More &#8595;</button>
 
-{% if true_superuser %}
-  <div class="entered-by-line">
+<div class="entered-by-line">
+  <span class="meta-chip view-meta-chip">
+    ◉ {{ current_claim.view_count or 0 }} Views
+  </span>
+
+  {% if true_superuser %}
     <span class="entered-label">Entered By</span>
     <span class="entered-value">
       {{ current_claim.entered_by or current_claim.created_by or current_claim.username or 'Unknown' }}
     </span>
-    {% if current_claim.entered_at %}
-      <span class="meta-chip">{{ current_claim.entered_at }}</span>
-    {% elif current_claim.date %}
-      <span class="meta-chip">{{ current_claim.date }}</span>
-    {% endif %}
-    {% if current_claim.last_reanalyzed %}
-      <span class="meta-chip" style="border-color:rgba(117,194,141,.3); color:#75c28d;">
-        ↻ {{ current_claim.last_reanalyzed }}{% if current_claim.reanalyzed_by %} by {{ current_claim.reanalyzed_by }}{% endif %}
-      </span>
-    {% endif %}
+  {% endif %}
+
+  {% if current_claim.entered_at %}
+    <span class="meta-chip">{{ current_claim.entered_at }}</span>
+  {% elif current_claim.date %}
+    <span class="meta-chip">{{ current_claim.date }}</span>
+  {% endif %}
+
+  {% if current_claim.last_reanalyzed %}
+    <span class="meta-chip" style="border-color:rgba(117,194,141,.3); color:#75c28d;">
+      ↻ {{ current_claim.last_reanalyzed }}{% if current_claim.reanalyzed_by %} by {{ current_claim.reanalyzed_by }}{% endif %}
+    </span>
+  {% endif %}
+
+  {% if true_superuser %}
     <button type="button" class="claim-reanalyze-btn" onclick="openReanalyzeModal('{{ current_claim.slug }}')">↻ Reanalyze</button>
-  </div>
-{% endif %}
+  {% endif %}
+</div>
 </div>
 
             <div class="confidence-note">

@@ -1553,18 +1553,39 @@ def build_reality_anchor_with_grok(claim):
 
 @app.route("/increment-view/<slug>", methods=["POST"])
 def increment_view(slug):
-    """Increment view count for a claim. Excludes superusers."""
+    """Increment view count once per logged-in user session per claim. Excludes true superusers only."""
     if not session.get("logged_in"):
         return jsonify({"ok": False}), 200
-    if session.get("true_superuser") or session.get("superuser"):
-        return jsonify({"ok": False, "reason": "superuser"}), 200
+
+    if session.get("true_superuser"):
+        return jsonify({"ok": False, "reason": "true_superuser"}), 200
+
     try:
+        if not slug:
+            return jsonify({"ok": False}), 200
+
+        viewed_claims = session.get("viewed_claim_slugs", [])
+        if not isinstance(viewed_claims, list):
+            viewed_claims = []
+
+        if slug in viewed_claims:
+            return jsonify({"ok": False, "reason": "already_counted_this_session"}), 200
+
         record = get_claim_by_slug(slug)
         if not record:
             return jsonify({"ok": False}), 200
+
         current = int(record.get("fields", {}).get("View Count", 0) or 0)
-        update_airtable_record(record["id"], {"View Count": current + 1})
-        return jsonify({"ok": True, "view_count": current + 1}), 200
+        new_count = current + 1
+
+        update_airtable_record(record["id"], {"View Count": new_count})
+
+        viewed_claims.append(slug)
+        session["viewed_claim_slugs"] = viewed_claims
+        session.modified = True
+
+        return jsonify({"ok": True, "view_count": new_count}), 200
+
     except Exception as e:
         print(f"VIEW COUNT ERROR: {e}", flush=True)
         return jsonify({"ok": False}), 200
