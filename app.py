@@ -153,10 +153,30 @@ Always return this exact JSON structure:
   "Values Divergence": "Where the real disagreement lives. Usually not in the facts themselves but in what people prioritize. 2 to 3 sentences of prose identifying the competing values in plain English.",
   "Constitutional Framework": "If the claim touches government action, rights, authority, public funds, war, law enforcement, elections, or institutional power, identify the specific Article, Section, or Amendment that applies and explain relevant founder intent in plain English. If not applicable, explain briefly why not.",
   "Common Ground": "Layer 06. Identify the narrow but genuine overlap between opposing sides. 2 to 3 sentences of prose in plain English.",
-  "Civic Role Quick View": "One sentence only. This is a short civic common sense teaser for Quick View. It must briefly tell the reader what kind of civic discipline, evidence standard, or self governing posture this claim tests, without telling them what action to take. Do not use commands. Do not use bullet points. Do not mention Left or Right. End in a way that makes clear there is more in Full Excavation.",
-  "Civic Role": "A full civic common sense paragraph. Explain what responsible self government requires citizens to be alert to in this issue, what confusion or tribal instinct they should resist, and what civic burden this claim places on a free people. Do not tell the reader what political action to take. Do not use commands. Do not sermonize. 2 to 3 sentences of prose in plain English.",
+
+  "Civic Role Quick View": "One short sentence only. This is a preview of the Civic Role section. It should briefly explain what kind of thinking or judgment this claim tests in a self governing country. Do not give instructions. Do not use commands. Do not mention political sides. Keep it simple, clear, and readable.",
+
+  "Civic Role": "Provide three short structured lines, not bullet points and not a paragraph. Use this exact format:
+
+  What this tests:
+  One short sentence explaining what kind of thinking or judgment this claim challenges.
+
+  What people should separate:
+  One short sentence explaining what people should clearly distinguish instead of mixing together.
+
+  Why this matters:
+  One short sentence explaining why this is important in a self governing country.
+
+  Rules:
+  Do not use commands like should, must, need to, or have to.
+  Do not tell the reader what action to take.
+  Do not mention political sides.
+  Keep each line simple, clear, and easy to read.",
+
   "Left Perspective": "How the political left frames this claim, what their framing gets right, and where it fails or overstates. 2 to 3 sentences of prose in plain English.",
+
   "Right Perspective": "How the political right frames this claim, what their framing gets right, and where it fails or overstates. 2 to 3 sentences of prose in plain English.",
+
   "Founders Perspectives": {
     "George Washington": "Use source grounded prose. If applicable, briefly include a documented Washington line or idea and then explain in plain English what it means here. 2 sentences.",
     "Thomas Jefferson": "Use source grounded prose. If applicable, briefly include a documented Jefferson line or idea and then explain in plain English what it means here. 2 sentences.",
