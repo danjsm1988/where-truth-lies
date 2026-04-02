@@ -72,6 +72,16 @@ If the input explicitly attributes a statement to a named speaker, preserve that
 COMMON GROUND RULE:
 Common Ground must be narrow, specific, and real. It must be grounded in what the documented facts support, lawful within the relevant constitutional and institutional framework, practically achievable through existing institutions without waiting for either side to win a political argument, and likely to produce better measurable outcomes for citizens than the current trajectory of each side's preferred approach. It is not the midpoint between two talking points. It is not a rhetorical gesture toward unity. Do not manufacture false consensus. If no genuine common ground exists in the documented record, state that explicitly.
 
+CIVIC ROLE RULE:
+Civic Role is the citizen posture layer. It explains what responsible self government requires from ordinary citizens when faced with this claim.
+It must never tell the reader what political action to take.
+It must never tell the reader which side to join.
+It must never sound like activism, campaign language, or moral scolding.
+It must not use direct commands like vote, call, support, oppose, organize, protest, demand, or pressure.
+Instead, it should explain what a serious citizen should be attentive to, what confusion or tribal temptation should be resisted, and what civic burden this issue places on a free people.
+It should sound like grounded civic common sense in plain English.
+It should reflect the structure of constitutional self government without quoting founders theatrically or pretending to speak as them.
+
 PLAIN ENGLISH RULE:
 Prefer plain everyday language over technical, legal, political, institutional, or media jargon.
 Assume the reader is intelligent but not specialized.
@@ -143,6 +153,8 @@ Always return this exact JSON structure:
   "Values Divergence": "Where the real disagreement lives. Usually not in the facts themselves but in what people prioritize. 2 to 3 sentences of prose identifying the competing values in plain English.",
   "Constitutional Framework": "If the claim touches government action, rights, authority, public funds, war, law enforcement, elections, or institutional power, identify the specific Article, Section, or Amendment that applies and explain relevant founder intent in plain English. If not applicable, explain briefly why not.",
   "Common Ground": "Layer 06. Identify the narrow but genuine overlap between opposing sides. 2 to 3 sentences of prose in plain English.",
+  "Civic Role Quick View": "One sentence only. This is a short civic common sense teaser for Quick View. It must briefly tell the reader what kind of civic discipline, evidence standard, or self governing posture this claim tests, without telling them what action to take. Do not use commands. Do not use bullet points. Do not mention Left or Right. End in a way that makes clear there is more in Full Excavation.",
+  "Civic Role": "A full civic common sense paragraph. Explain what responsible self government requires citizens to be alert to in this issue, what confusion or tribal instinct they should resist, and what civic burden this claim places on a free people. Do not tell the reader what political action to take. Do not use commands. Do not sermonize. 2 to 3 sentences of prose in plain English.",
   "Left Perspective": "How the political left frames this claim, what their framing gets right, and where it fails or overstates. 2 to 3 sentences of prose in plain English.",
   "Right Perspective": "How the political right frames this claim, what their framing gets right, and where it fails or overstates. 2 to 3 sentences of prose in plain English.",
   "Founders Perspectives": {
@@ -483,6 +495,8 @@ def build_claim_context(record):
     values_divergence = fields.get("Values Divergence", "") or parsed_json.get("Values Divergence", "")
     constitutional_framework = fields.get("Constitutional Framework", "") or parsed_json.get("Constitutional Framework", "")
     common_ground = fields.get("Common Ground", "") or parsed_json.get("Common Ground", "")
+    civic_role_quick_view = fields.get("Civic Role Quick View", "") or parsed_json.get("Civic Role Quick View", "")
+    civic_role = fields.get("Civic Role", "") or parsed_json.get("Civic Role", "")
     left_perspective = fields.get("Left Perspective", "") or parsed_json.get("Left Perspective", "")
     right_perspective = fields.get("Right Perspective", "") or parsed_json.get("Right Perspective", "")
     scenario_map = fields.get("Scenario Map", "") or parsed_json.get("Scenario Map", "")
@@ -506,6 +520,7 @@ def build_claim_context(record):
         "values_divergence": values_divergence,
         "constitutional_framework": constitutional_framework,
         "common_ground": common_ground,
+        "civic_role": civic_role,
         "left_perspective": left_perspective,
         "right_perspective": right_perspective,
         "founders_perspectives": founders_perspectives,
@@ -533,6 +548,8 @@ def build_claim_context(record):
         "values_divergence": values_divergence,
         "constitutional_framework": constitutional_framework,
         "common_ground": common_ground,
+        "civic_role_quick_view": civic_role_quick_view,
+        "civic_role": civic_role,
         "left_perspective": left_perspective,
         "right_perspective": right_perspective,
         "scenario_map": scenario_map,
@@ -623,6 +640,8 @@ def extract_primary_record_fields(claim, parsed, mode, username, existing_fields
         "Values Divergence",
         "Constitutional Framework",
         "Common Ground",
+        "Civic Role Quick View",
+        "Civic Role",
         "Left Perspective",
         "Right Perspective",
         "Scenario Map"
@@ -3336,6 +3355,8 @@ SELECTIVE_FIELD_MAP = {
     "Values Divergence": "Values Divergence",
     "Constitutional Framework": "Constitutional Framework",
     "Common Ground": "Common Ground",
+    "Civic Role Quick View": "Civic Role Quick View",
+    "Civic Role": "Civic Role",
     "Bottom Line": "Strip Mode Summary",
     "Left Perspective": "Left Perspective",
     "Right Perspective": "Right Perspective",

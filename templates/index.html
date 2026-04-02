@@ -427,6 +427,97 @@
     }
     .breakout-info-btn:hover .breakout-info-tip { display: block; }
 
+    .civic-info-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.14);
+      font-size: 9px;
+      color: var(--text-dim);
+      cursor: help;
+      margin-left: 6px;
+      vertical-align: middle;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .civic-info-tip {
+      display: none;
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      width: 270px;
+      background: #0c1e30;
+      border: 1px solid rgba(201,168,76,.22);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-family: 'Crimson Text', Georgia, serif;
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--text-light);
+      box-shadow: 0 12px 32px rgba(0,0,0,.5);
+      z-index: 9000;
+      pointer-events: none;
+      white-space: normal;
+      text-align: left;
+    }
+
+    .civic-info-tip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: rgba(201,168,76,.22);
+    }
+
+    .civic-info-btn:hover .civic-info-tip { display: block; }
+
+    .qv-civic-row {
+      background: rgba(201,168,76,.05);
+      border: 1px solid rgba(201,168,76,.18);
+      border-radius: 12px;
+      padding: 13px 16px;
+      margin-top: 10px;
+    }
+
+    .qv-civic-label {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 6px;
+      opacity: .8;
+    }
+
+    .qv-civic-text {
+      font-family: 'Crimson Text', Georgia, serif;
+      font-size: 16px;
+      line-height: 1.55;
+      color: var(--text-light);
+    }
+
+    .layer-civic-role .layer-block-header,
+    .layer-civic-role .layer-block-body { border-left-color: #9f8a58; }
+    .layer-civic-role .layer-block-title { color: #d6bf86; }
+
+    .m-qv-civic {
+      background: rgba(201,168,76,.05);
+      border: 1px solid rgba(201,168,76,.18);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+    }
+
+    .m-layer-civic { border-left: 3px solid #d6bf86; }
+
     /* Trending strip */
     .trending-strip {
       background: rgba(255,255,255,.015); border: 1px solid rgba(255,255,255,.07);
@@ -4755,6 +4846,17 @@ html, body {
             <div class="m-qv-cell-label">Where Agreement Exists</div>
             <div class="m-qv-cell-text" id="mqvAgreement"></div>
           </div>
+        {% if current_claim.civic_role_quick_view %}
+          <div class="m-qv-civic">
+            <div class="m-qv-cell-label">
+              Civic Role
+              <span class="civic-info-btn">i
+                <span class="civic-info-tip">Civic Role is not a command and not partisan advice. It explains the kind of civic discipline, judgment, and self government this claim tests in a free society.</span>
+              </span>
+            </div>
+            <div class="m-qv-cell-text">{{ current_claim.civic_role_quick_view }}</div>
+          </div>
+        {% endif %}
           <script>
           (function() {
             var raw = {{ current_claim.quick_explanation | tojson }};
@@ -4892,6 +4994,17 @@ html, body {
                   <div class="m-layer-item m-layer-common">
                     <div class="m-layer-label">Layer 06 — Common Ground</div>
                     <div class="m-layer-text">{{ current_claim.common_ground }}</div>
+                  </div>
+                {% endif %}
+                {% if current_claim.civic_role %}
+                  <div class="m-layer-item m-layer-civic">
+                    <div class="m-layer-label">
+                      Civic Role
+                      <span class="civic-info-btn">i
+                        <span class="civic-info-tip">Civic Role is not a command and not partisan advice. It explains the kind of civic discipline, judgment, and self government this claim tests in a free society.</span>
+                      </span>
+                    </div>
+                    <div class="m-layer-text">{{ current_claim.civic_role }}</div>
                   </div>
                 {% endif %}
               </div>
@@ -6031,6 +6144,19 @@ html, body {
                   <div class="qv-agreement-label">Where Agreement Exists</div>
                   <div class="qv-agreement-text" id="qvAgreement"></div>
                 </div>
+
+          {% if current_claim.civic_role_quick_view %}
+            <div class="qv-civic-row">
+              <div class="qv-civic-label">
+                Civic Role
+                <span class="civic-info-btn">i
+                  <span class="civic-info-tip">Civic Role is not a command and not partisan advice. It explains the kind of civic discipline, judgment, and self government this claim tests in a free society.</span>
+                </span>
+              </div>
+              <div class="qv-civic-text">{{ current_claim.civic_role_quick_view }}</div>
+            </div>
+          {% endif %}
+
                 <p class="qv-dive-prompt">See the full excavation for underlying layers, competing interpretations, and connected breakout claims. <a onclick="switchTab('full')" href="#">Open Full Excavation &#8594;</a></p>
               </div>
               <script>
@@ -6259,7 +6385,6 @@ html, body {
                 </div>
               </div>
             {% endif %}
-
             {% if current_claim.common_ground %}
               <div class="layer-block layer-common-ground">
                 <div class="layer-block-header open" onclick="toggleLayer(this)">
@@ -6271,6 +6396,25 @@ html, body {
                 </div>
                 <div class="layer-block-body open">
                   <div class="layer-block-text" id="commonGroundText">{{ current_claim.common_ground }}</div>
+                </div>
+              </div>
+            {% endif %}
+            {% if current_claim.civic_role %}
+              <div class="layer-block layer-civic-role">
+                <div class="layer-block-header open" onclick="toggleLayer(this)">
+                  <div class="layer-block-header-left">
+                    <span class="layer-block-title">
+                      Civic Role
+                      <span class="civic-info-btn">i
+                        <span class="civic-info-tip">Civic Role is not a command and not partisan advice. It explains the kind of civic discipline, judgment, and self government this claim tests in a free society.</span>
+                      </span>
+                    </span>
+                    <span class="layer-block-subtitle">What responsible self government requires from citizens here</span>
+                  </div>
+                  <span class="layer-chevron">▼</span>
+                </div>
+                <div class="layer-block-body open">
+                  <div class="layer-block-text" id="civicRoleText">{{ current_claim.civic_role }}</div>
                 </div>
               </div>
             {% endif %}
