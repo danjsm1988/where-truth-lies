@@ -7007,6 +7007,50 @@ html, body {
           </div>
         </div>
 
+        {% set sidebar_trending = [] %}
+        {% if trending_claims is defined and trending_claims %}
+          {% set sidebar_trending = trending_claims %}
+        {% elif recent_claims is defined and recent_claims %}
+          {% set sidebar_trending = recent_claims %}
+        {% endif %}
+
+        <div class="sidebar-card">
+          <div class="sidebar-title">Trending Claims</div>
+
+          {% if sidebar_trending %}
+            <div class="recent-list">
+              {% for claim in sidebar_trending[:5] %}
+                {% set rv = claim.verdict or claim.overall_verdict or 'Unproven' %}
+                {% set rv_lower = rv|lower %}
+                <article class="recent-item">
+                  <a class="recent-link" href="/claim/{{ claim.slug }}">
+                    <div class="recent-title">{{ claim.title }}</div>
+                  </a>
+                  <div class="recent-meta">
+                    {% if claim.date %}
+                      <span class="recent-date">{{ claim.date }}</span>
+                    {% endif %}
+                    <span class="verdict-pill
+                      {% if rv_lower == 'true' %}v-true
+                      {% elif 'mostly true' in rv_lower %}v-mostly-true
+                      {% elif 'substantially true' in rv_lower %}v-substantially-true
+                      {% elif 'plausible' in rv_lower or 'mixed' in rv_lower %}v-plausible
+                      {% elif rv_lower == 'contested' %}v-contested
+                      {% elif rv_lower == 'exaggerated' %}v-exaggerated
+                      {% elif rv_lower == 'misleading' %}v-misleading
+                      {% elif rv_lower == 'false' %}v-false
+                      {% else %}v-unproven{% endif %}">
+                      {{ rv }}
+                    </span>
+                  </div>
+                </article>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="about-text">No trending claims yet.</div>
+          {% endif %}
+        </div>
+
         <div class="sidebar-card">
           <div class="sidebar-title">About This Platform</div>
           <p class="about-text">
