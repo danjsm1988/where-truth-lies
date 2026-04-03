@@ -5965,12 +5965,13 @@ html, body {
         </div>
 
         <!-- Trending Claims Card -->
+        {% set sidebar_trending = trending_claims if trending_claims is defined and trending_claims else recent_claims %}
         <div class="sidebar-card">
           <div class="sidebar-title">Trending Claims</div>
 
-          {% if trending_claims %}
+          {% if sidebar_trending %}
             <div class="recent-list">
-              {% for claim in trending_claims[:5] %}
+              {% for claim in sidebar_trending[:5] %}
                 {% set rv = claim.verdict or claim.overall_verdict or 'Unproven' %}
                 {% set rv_lower = rv|lower %}
                 <article class="recent-item">
@@ -8965,14 +8966,21 @@ console.error('Dispute submission failed:', err);
   }
 
   function selectFrameAlt(idx) {
-    document.querySelectorAll('.frame-alt-item').forEach(function(el, i) {
-      el.classList.toggle('selected', i === idx);
-    });
-    if (_framingData && _framingData.alternate_claims && _framingData.alternate_claims[idx] !== undefined) {
-      _framingSelectedClaim = _framingData.alternate_claims[idx];
-      document.getElementById('framePrimaryText').textContent = _framingSelectedClaim;
-    }
+  document.querySelectorAll('.frame-alt-item').forEach(function(el, i) {
+    el.classList.toggle('selected', i === idx);
+  });
+
+  if (_framingData && _framingData.alternate_claims && _framingData.alternate_claims[idx] !== undefined) {
+    _framingSelectedClaim = _framingData.alternate_claims[idx];
+    document.getElementById('framePrimaryText').textContent = _framingSelectedClaim;
   }
+
+  // ✅ Enable Proceed button after user makes a selection
+  var proceedBtn = document.querySelector('#frameModal .frame-proceed-btn');
+  if (proceedBtn) {
+    proceedBtn.disabled = false;
+  }
+}
 
   function proceedWithFraming() {
     var context = (document.getElementById('frameContextInput').value || '').trim();
@@ -8986,7 +8994,9 @@ console.error('Dispute submission failed:', err);
   function _buildFrameModal(data) {
     document.getElementById('frameModalNote').textContent = data.framing_note || '';
     document.getElementById('framePrimaryText').textContent = data.primary_claim || _framingOriginalInput;
-    _framingSelectedClaim = data.primary_claim || _framingOriginalInput;
+    _framingSelectedClaim = '';
+    var proceedBtn = document.querySelector('#frameModal .frame-proceed-btn');
+    if (proceedBtn) proceedBtn.disabled = true;
     var altsSection = document.getElementById('frameAltsSection');
     var altList = document.getElementById('frameAltList');
     altList.innerHTML = '';

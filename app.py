@@ -3660,8 +3660,15 @@ def editor_reanalyze_claim(record_id):
         warning = None
 
         if reanalysis_mode == "feature_refresh":
-            # Feature refresh — update Last Feature Refresh, never touch identity
             update_fields["Last Feature Refresh"] = now_iso
+
+            # Preserve top-level framing stability fields during normal refresh
+            # unless they were explicitly targeted via selective reanalysis.
+            if not selective_fields:
+                if claim_fields.get("Stripped Claim"):
+                    update_fields["Stripped Claim"] = claim_fields.get("Stripped Claim", "")
+                if claim_fields.get("Quick Explanation"):
+                    update_fields["Quick Explanation"] = claim_fields.get("Quick Explanation", "")    
 
         elif reanalysis_mode == "core_logic_refresh":
             # Core logic refresh — run framing fresh from Original Quote
@@ -3794,6 +3801,14 @@ def editor_reanalyze_claim_by_slug(slug):
 
         if reanalysis_mode == "feature_refresh":
             update_fields["Last Feature Refresh"] = now_iso
+
+            # Preserve top-level framing stability fields during normal refresh
+            # unless they were explicitly targeted via selective reanalysis.
+            if not selective_fields:
+                if claim_fields.get("Stripped Claim"):
+                    update_fields["Stripped Claim"] = claim_fields.get("Stripped Claim", "")
+                if claim_fields.get("Quick Explanation"):
+                    update_fields["Quick Explanation"] = claim_fields.get("Quick Explanation", "")
 
         elif reanalysis_mode == "core_logic_refresh":
             new_framing = frame_claim_input(raw_claim_text)
