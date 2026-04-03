@@ -49,8 +49,8 @@ You do not fact check. You excavate. Your job is to remove what a claim is NOT s
 Return ONLY valid JSON. No markdown fences. No preamble. No explanation outside the JSON.
 
 CRITICAL FORMATTING RULES that cannot be violated under any circumstance:
-Never use bullet points, dashes, or hyphens in ANY text field
-Write ALL text fields as flowing prose with complete sentences
+Never use bullet points, dashes, or hyphens in narrative prose fields.
+Write narrative prose fields as flowing complete sentences unless a field explicitly requires a structured labeled format.
 Never tell readers what to think
 Apply the same analytical standard regardless of political party or speaker
 Use reportedly or estimated for unconfirmed claims
@@ -1256,6 +1256,12 @@ Constitutional framework:
 Common ground:
 {claim_context.get('common_ground', '')}
 
+Civic role quick view:
+{claim_context.get('civic_role_quick_view', '')}
+
+Civic role:
+{claim_context.get('civic_role', '')}
+
 User dispute sections:
 {json.dumps(dispute_payload.get('sections_disputed', []), ensure_ascii=False)}
 
@@ -1325,6 +1331,12 @@ Constitutional framework:
 
 Common ground:
 {claim_context.get('common_ground', '')}
+
+Civic role quick view:
+{claim_context.get('civic_role_quick_view', '')}
+
+Civic role:
+{claim_context.get('civic_role', '')}
 
 Original disputed sections:
 {json.dumps(fields.get('Sections Disputed', []), ensure_ascii=False)}
@@ -3156,6 +3168,8 @@ AIRTABLE_KEY_MAP = {
     "Values Divergence": "Values Divergence",
     "Constitutional Framework": "Constitutional Framework",
     "Common Ground": "Common Ground",
+    "Civic Role Quick View": "Civic Role Quick View",
+    "Civic Role": "Civic Role",
     "Bottom Line": "Strip Mode Summary",
     "Strip Mode Summary": "Strip Mode Summary",
 }
@@ -3176,15 +3190,17 @@ def generate_update_preview(claim_record, dispute_record):
         return None
 
     current_sections = {
-        "Quick Explanation": claim_fields.get("Quick Explanation", ""),
-        "Overall Verdict": claim_fields.get("Overall Verdict", ""),
-        "Direct Facts": claim_fields.get("Direct Facts", ""),
-        "Adjacent Facts": claim_fields.get("Adjacent Facts", ""),
-        "Root Concern": claim_fields.get("Root Concern", ""),
-        "Values Divergence": claim_fields.get("Values Divergence", ""),
-        "Constitutional Framework": claim_fields.get("Constitutional Framework", ""),
-        "Common Ground": claim_fields.get("Common Ground", ""),
-        "Bottom Line": claim_fields.get("Strip Mode Summary", ""),
+    "Quick Explanation": claim_fields.get("Quick Explanation", ""),
+    "Overall Verdict": claim_fields.get("Overall Verdict", ""),
+    "Direct Facts": claim_fields.get("Direct Facts", ""),
+    "Adjacent Facts": claim_fields.get("Adjacent Facts", ""),
+    "Root Concern": claim_fields.get("Root Concern", ""),
+    "Values Divergence": claim_fields.get("Values Divergence", ""),
+    "Constitutional Framework": claim_fields.get("Constitutional Framework", ""),
+    "Common Ground": claim_fields.get("Common Ground", ""),
+    "Civic Role Quick View": claim_fields.get("Civic Role Quick View", ""),
+    "Civic Role": claim_fields.get("Civic Role", ""),
+    "Bottom Line": claim_fields.get("Strip Mode Summary", ""),
     }
 
     prompt = f"""Claim title: {claim_fields.get('Original Quote') or claim_fields.get('Stripped Claim', '')}
@@ -3580,26 +3596,64 @@ def editor_reanalyze_claim(record_id):
         if "error" in primary:
             return jsonify({"error": f"AI failed: {primary['error']}"}), 500
 
-        # Build base update — all analysis layers, never identity fields
-        update_fields = extract_primary_record_fields(
-            claim=raw_claim_text,
-            parsed=primary,
-            mode="full",
-            username=editor_username,
-            existing_fields=claim_fields
-        )
-        update_fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
-        update_fields["OpenAI Raw JSON"] = json.dumps(openai_json, ensure_ascii=False)[:100000]
-        if grok_adjudication:
-            update_fields["Grok Raw JSON"] = json.dumps(grok_adjudication, ensure_ascii=False)[:100000]
-        update_fields["Last Reanalyzed"] = now_date
-        update_fields["Reanalyzed By"] = editor_username
+        # Build update payload
+        if selective_fields:
+            update_fields = {
+                "Last Reanalyzed": now_date,
+                "Reanalyzed By": editor_username,
+                "Last Feature Refresh": now_iso
+            }
 
-        # Remove identity fields that extract_primary_record_fields no longer sets
-        # but may have been set by older code paths — enforce clean separation
-        for protected in ["Analyzed Claim", "URL Slug", "Title Locked", "Slug Locked",
-                          "Title Source", "Analysis Core Version"]:
-            update_fields.pop(protected, None)
+            for field_name in selective_fields:
+                airtable_key = SELECTIVE_FIELD_MAP.get(field_name)
+                if not airtable_key:
+                    continue
+
+                if airtable_key == "Sub-Claims":
+                    sub_claims = primary.get("Sub Claims", [])
+                    if isinstance(sub_claims, list):
+                        update_fields["Sub-Claims"] = " | ".join(
+                            [sc.get("claim", "") for sc in sub_claims if sc.get("claim")]
+                        )
+                        if len(sub_claims) > 0:
+                            update_fields["Sub-Claim 1"] = sub_claims[0].get("claim", "")
+                            if sub_claims[0].get("verdict"):
+                                update_fields["Verdict: Sub-Claim1"] = sub_claims[0]["verdict"]
+                        if len(sub_claims) > 1:
+                            update_fields["Sub-Claim 2"] = sub_claims[1].get("claim", "")
+                            if sub_claims[1].get("verdict"):
+                                update_fields["Verdict: Sub-Claim 2"] = sub_claims[1]["verdict"]
+                        if len(sub_claims) > 2:
+                            update_fields["Sub-Claim 3"] = sub_claims[2].get("claim", "")
+                            if sub_claims[2].get("verdict"):
+                                update_fields["Verdict: Sub-Claim 3"] = sub_claims[2]["verdict"]
+
+                elif field_name == "Overall Verdict":
+                    v = primary.get("Overall Verdict") or primary.get("Verdict")
+                    if v:
+                        update_fields["Overall Verdict"] = v
+
+                elif primary.get(field_name):
+                    update_fields[airtable_key] = primary[field_name]
+
+        else:
+            update_fields = extract_primary_record_fields(
+                claim=raw_claim_text,
+                parsed=primary,
+                mode="full",
+                username=editor_username,
+                existing_fields=claim_fields
+            )
+            update_fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
+            update_fields["OpenAI Raw JSON"] = json.dumps(openai_json, ensure_ascii=False)[:100000]
+            if grok_adjudication:
+                update_fields["Grok Raw JSON"] = json.dumps(grok_adjudication, ensure_ascii=False)[:100000]
+            update_fields["Last Reanalyzed"] = now_date
+            update_fields["Reanalyzed By"] = editor_username
+
+            for protected in ["Analyzed Claim", "URL Slug", "Title Locked", "Slug Locked",
+                              "Title Source", "Analysis Core Version"]:
+                update_fields.pop(protected, None)
 
         title_updated = False
         slug_updated = False

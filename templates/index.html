@@ -4626,6 +4626,8 @@ html, body {
         <label class="dispute-check"><input type="checkbox" value="Values Divergence"> <span>Values Divergence</span></label>
         <label class="dispute-check"><input type="checkbox" value="Constitutional Framework"> <span>Constitutional Framework</span></label>
         <label class="dispute-check"><input type="checkbox" value="Common Ground"> <span>Common Ground</span></label>
+        <label class="dispute-check"><input type="checkbox" value="Civic Role Quick View"> <span>Civic Role Quick View</span></label>
+        <label class="dispute-check"><input type="checkbox" value="Civic Role"> <span>Civic Role</span></label>
         <label class="dispute-check"><input type="checkbox" value="Left Perspective"> <span>Left Perspective</span></label>
         <label class="dispute-check"><input type="checkbox" value="Right Perspective"> <span>Right Perspective</span></label>
         <label class="dispute-check"><input type="checkbox" value="Founders Perspectives"> <span>Founders Perspectives</span></label>
@@ -5962,12 +5964,13 @@ html, body {
           <div class="trending-list" id="trendingList"></div>
         </div>
 
-        <!-- Recent Claims Card -->
+        <!-- Trending Claims Card -->
         <div class="sidebar-card">
           <div class="sidebar-title">Trending Claims</div>
-          {% if recent_claims %}
+
+          {% if trending_claims %}
             <div class="recent-list">
-              {% for claim in recent_claims[:5] %}
+              {% for claim in trending_claims[:5] %}
                 {% set rv = claim.verdict or claim.overall_verdict or 'Unproven' %}
                 {% set rv_lower = rv|lower %}
                 <article class="recent-item">
@@ -5995,7 +5998,7 @@ html, body {
               {% endfor %}
             </div>
           {% else %}
-            <div class="about-text">No recent claims yet.</div>
+            <div class="about-text">No trending claims yet.</div>
           {% endif %}
         </div>
 
@@ -6994,57 +6997,6 @@ html, body {
               </div>
             {% endif %}
           </div>
-        </div>
-
-        <div class="sidebar-card">
-          <div class="sidebar-title">Recent Claims</div>
-
-          {% if recent_claims %}
-            <div class="recent-list">
-              {% for claim in recent_claims[:10] %}
-                {% set rv = claim.verdict or claim.overall_verdict or 'Unproven' %}
-                {% set rv_lower = rv|lower %}
-                <article class="recent-item">
-                  <a class="recent-link" href="/claim/{{ claim.slug }}">
-                    <div class="recent-title">{{ claim.title }}</div>
-                  </a>
-
-                  <div class="recent-meta">
-                    {% if claim.date %}
-                      <span class="recent-date">{{ claim.date }}</span>
-                    {% endif %}
-
-                    {% if claim.speaker and claim.speaker != 'Unknown' %}
-                      <span class="recent-date">{{ claim.speaker }}</span>
-                    {% endif %}
-
-                    {% if true_superuser %}
-  <span class="recent-date">
-    By {{ claim.entered_by or claim.created_by or claim.username or 'Unknown' }}
-  </span>
-{% endif %}
-
-                    <span class="verdict-pill
-                      {% if rv_lower == 'true' %}v-true
-                      {% elif 'mostly true' in rv_lower %}v-mostly-true
-                      {% elif 'substantially true' in rv_lower %}v-substantially-true
-                      {% elif 'plausible' in rv_lower or 'mixed' in rv_lower %}v-plausible
-                      {% elif rv_lower == 'contested' %}v-contested
-                      {% elif rv_lower == 'exaggerated' %}v-exaggerated
-                      {% elif rv_lower == 'misleading' %}v-misleading
-                      {% elif rv_lower == 'false' %}v-false
-                      {% else %}v-unproven{% endif %}">
-                      {{ rv }}
-                    </span>
-                  </div>
-                </article>
-              {% endfor %}
-            </div>
-          {% else %}
-            <div class="editorial-note" style="margin-bottom:0;">
-              No recent claims yet.
-            </div>
-          {% endif %}
         </div>
 
         <div class="sidebar-card">
@@ -8259,7 +8211,14 @@ console.error('Dispute submission failed:', err);
         var statusEl = document.getElementById('claim-reanalyze-status');
         if (statusEl) statusEl.textContent = 'Running selective reanalysis...';
         try {
-          var res = await fetch('/editor/reanalyze-claim-by-slug/' + _selectiveSingleSlug, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'selective', fields: fields }) });
+        var res = await fetch('/editor/reanalyze-claim-by-slug/' + _selectiveSingleSlug, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reanalysis_mode: 'feature_refresh',
+            fields: fields
+          })
+        });
           var data = await res.json();
           if (res.ok && data.ok) {
             if (statusEl) statusEl.textContent = 'Done. Reloading...';
@@ -8687,6 +8646,8 @@ console.error('Dispute submission failed:', err);
       <label class="selective-check-item"><input type="checkbox" value="Values Divergence"> Values Divergence</label>
       <label class="selective-check-item"><input type="checkbox" value="Constitutional Framework"> Constitutional Framework</label>
       <label class="selective-check-item"><input type="checkbox" value="Common Ground" checked> Common Ground</label>
+      <label class="selective-check-item"><input type="checkbox" value="Civic Role Quick View" checked> Civic Role Quick View</label>
+      <label class="selective-check-item"><input type="checkbox" value="Civic Role" checked> Civic Role</label>
       <label class="selective-check-item"><input type="checkbox" value="Bottom Line" checked> Bottom Line</label>
       <label class="selective-check-item"><input type="checkbox" value="Left Perspective"> Left Perspective</label>
       <label class="selective-check-item"><input type="checkbox" value="Right Perspective"> Right Perspective</label>
