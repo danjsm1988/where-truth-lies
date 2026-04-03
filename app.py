@@ -1825,14 +1825,14 @@ def archives():
     _s = get_site_settings()
     return render_template(
         "index.html",
-        page_mode="claim",
+        page_mode="archives",
         superuser=session.get("superuser", False),
         true_superuser=session.get("true_superuser", False),
         recent_claims=get_recent_claims(limit=10),
         trending_claims=get_trending_claims(limit=10),
-        current_claim=current_claim,
-        archived_claims_by_topic={},
-        selected_topic="",
+        current_claim=None,
+        archived_claims_by_topic=filtered,
+        selected_topic=topic,
         user_disputes=[],
         search_query="",
         search_results=[],
@@ -1885,15 +1885,15 @@ def disputes_page():
     _s = get_site_settings()
     return render_template(
         "index.html",
-        page_mode="claim",
+        page_mode="disputes",
         superuser=session.get("superuser", False),
         true_superuser=session.get("true_superuser", False),
         recent_claims=get_recent_claims(limit=10),
         trending_claims=get_trending_claims(limit=10),
-        current_claim=current_claim,
+        current_claim=None,
         archived_claims_by_topic={},
         selected_topic="",
-        user_disputes=[],
+        user_disputes=user_disputes,
         search_query="",
         search_results=[],
         claims_remaining=session.get("claims_remaining", 0),
@@ -2191,25 +2191,35 @@ def editor_update_resolution_type(record_id):
 def search_page():
     if not session.get("logged_in"):
         return redirect("/login")
+
     query = (request.args.get("q") or "").strip()
     results = []
+
     if query:
         all_claims = get_all_claims()
         query_lower = query.lower()
-        results = [c for c in all_claims if query_lower in (c.get("title") or "").lower() or query_lower in (c.get("stripped_claim") or "").lower() or query_lower in (c.get("speaker") or "").lower()]
+        results = [
+            c for c in all_claims
+            if query_lower in (c.get("title") or "").lower()
+            or query_lower in (c.get("stripped_claim") or "").lower()
+            or query_lower in (c.get("speaker") or "").lower()
+        ]
+
+    _s = get_site_settings()
+
     return render_template(
         "index.html",
-        page_mode="claim",
+        page_mode="search",
         superuser=session.get("superuser", False),
         true_superuser=session.get("true_superuser", False),
         recent_claims=get_recent_claims(limit=10),
         trending_claims=get_trending_claims(limit=10),
-        current_claim=current_claim,
+        current_claim=None,
         archived_claims_by_topic={},
         selected_topic="",
+        search_query=query,
+        search_results=results,
         user_disputes=[],
-        search_query="",
-        search_results=[],
         claims_remaining=session.get("claims_remaining", 0),
         site_mode=_s["site_mode"],
         site_message_title=_s["message_title"],
@@ -2221,14 +2231,17 @@ def search_page():
 def profile_page():
     if not session.get("logged_in"):
         return redirect("/login")
+
+    _s = get_site_settings()
+
     return render_template(
         "index.html",
-        page_mode="claim",
+        page_mode="profile",
         superuser=session.get("superuser", False),
         true_superuser=session.get("true_superuser", False),
-        recent_claims=get_recent_claims(limit=10),
+        recent_claims=get_recent_claims(limit=5),
         trending_claims=get_trending_claims(limit=10),
-        current_claim=current_claim,
+        current_claim=None,
         archived_claims_by_topic={},
         selected_topic="",
         user_disputes=[],
