@@ -1986,32 +1986,46 @@
     }
 
     .excavate-btn {
-      width: 100%;
+      width: min(420px, 100%);
       appearance: none;
       border: none;
       border-radius: 12px;
       background: linear-gradient(180deg, #d8b85a, #c9a84c);
       color: var(--navy);
-      padding: 13px 14px;
+      padding: 14px 20px;
       font-family: 'Libre Baskerville', Georgia, serif;
       font-size: 11px;
       font-weight: 700;
       letter-spacing: .16em;
       text-transform: uppercase;
       cursor: pointer;
-      transition: filter .15s ease, transform .15s ease;
+      transition: filter .15s ease, transform .15s ease, opacity .15s ease;
+      justify-content: center;
     }
 
     .excavate-btn:hover {
-      filter: brightness(1.03);
+      filter: brightness(1.04);
       transform: translateY(-1px);
     }
 
     .excavate-btn:disabled {
       cursor: not-allowed;
-      opacity: .58;
+      opacity: .72;
       transform: none;
-      filter: none;
+    }
+
+    .excavate-btn.is-loading {
+      opacity: .9;
+    }
+
+    @media (max-width: 768px) {
+      .claim-submit-row {
+        justify-content: stretch;
+      }
+
+      .excavate-btn {
+        width: 100%;
+      }
     }
 
     .sidebar-note {
@@ -2522,6 +2536,11 @@
         width: min(var(--content-width), calc(100% - 20px));
       }
 
+      .tab-btn::after,
+      .tab-btn::before {
+        display: none;
+      }
+
       .hero-card,
       .trust-card,
       .main-card,
@@ -2586,7 +2605,7 @@
 
       .mode-cards { grid-template-columns: 1fr; }
 
-      .claim-submit-row { flex-direction: column; align-items: stretch; }
+      .claim-submit-row { flex-direction: column; align-items: stretch; justify-content: stretch; }
 
       .modal-box { padding: 24px 20px 20px; }
 
@@ -2825,8 +2844,10 @@
     .claim-submit-row {
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 14px;
       flex-wrap: wrap;
+      margin-top: 6px;
     }
 
     /* ── TABS ── */
@@ -2858,35 +2879,54 @@
   margin-bottom: -1px;
 }
 
-/* ===== TAB TOOLTIP ===== */
-.tab-btn {
-  position: relative;
-}
+    /* ===== TAB TOOLTIP ===== */
+    .tab-btn {
+      position: relative;
+    }
 
-.tab-btn::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  top: -38px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(10,20,35,0.95);
-  color: var(--text-mid);
-  padding: 6px 10px;
-  font-size: 11px;
-  border-radius: 6px;
-  border: 1px solid rgba(201,168,76,0.2);
-  white-space: normal;
-  max-width: 220px;
-  text-align: center;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
-  z-index: 9999;
-}
+    .tab-btn::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      top: calc(100% + 12px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(10,20,35,0.98);
+      color: var(--cream-soft);
+      padding: 10px 14px;
+      font-size: 12px;
+      line-height: 1.45;
+      border-radius: 10px;
+      border: 1px solid rgba(201,168,76,.24);
+      box-shadow: 0 12px 28px rgba(0,0,0,.45);
+      white-space: normal;
+      min-width: 180px;
+      max-width: 260px;
+      text-align: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .16s ease, transform .16s ease;
+      z-index: 9999;
+    }
 
-.tab-btn:hover::after {
-  opacity: 1;
-}
+    .tab-btn::before {
+      content: '';
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-bottom: 6px solid rgba(201,168,76,.24);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .16s ease, transform .16s ease;
+      z-index: 9999;
+    }
+
+    .tab-btn:hover::after,
+    .tab-btn:hover::before {
+      opacity: 1;
+    }
     .tab-btn:hover { color: var(--cream); }
     .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
     .tab-lock-icon { font-size: 12px; opacity: .6; }
@@ -9354,35 +9394,71 @@ console.error('Dispute submission failed:', err);
     }
   }
 
+  function _setInitialRunButtonLoading(source, isLoading, label) {
+    var btn = source === 'mobile'
+      ? document.getElementById('m-run-btn')
+      : document.getElementById('run-btn');
+
+    if (!btn) return;
+
+    if (isLoading) {
+      if (!btn.dataset.originalText) {
+        btn.dataset.originalText = btn.textContent.trim();
+      }
+      btn.disabled = true;
+      btn.textContent = label || 'Framing Claim...';
+      btn.classList.add('is-loading');
+    } else {
+      btn.disabled = false;
+      btn.textContent = btn.dataset.originalText || 'Excavate This Claim';
+      btn.classList.remove('is-loading');
+    }
+  }
+
   async function checkDuplicateThen(claim, source) {
     _pendingClaim = claim;
     _pendingSource = source;
+    _setInitialRunButtonLoading(source, true, 'Framing Claim...');
+
     try {
       var res = await fetch('/check-duplicate', {
-        method: 'POST', headers: {'Content-Type': 'application/json'},
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({claim: claim})
       });
+
       var data = await res.json();
+      _setInitialRunButtonLoading(source, false);
+
       if (data.exact && data.exact.slug) {
         document.getElementById('dupModalKicker').textContent = 'Claim Already Exists';
         document.getElementById('dupModalTitle').textContent = 'This claim has already been excavated.';
         document.getElementById('dupModalSub').textContent = 'Redirecting you to the existing claim now…';
-        if (data.framing) { window._pendingFramingData = data.framing; }
+
+        if (data.framing) {
+          window._pendingFramingData = data.framing;
+        }
+
         document.getElementById('dupContinueBtn').style.display = 'none';
+
         var list = document.getElementById('dupClaimList');
-        list.innerHTML = '<a class="dup-claim-item" href="/claim/' + data.exact.slug + '">' +
-          '<div class="dup-claim-title">' + escHtml(data.exact.title) + '</div>' +
-          '<div class="dup-claim-hint">Open Existing Claim ↗</div></a>';
+        list.innerHTML =
+          '<a class="dup-claim-item" href="/claim/' + data.exact.slug + '">' +
+            '<div class="dup-claim-title">' + escHtml(data.exact.title) + '</div>' +
+            '<div class="dup-claim-hint">Open Existing Claim ↗</div>' +
+          '</a>';
+
         document.getElementById('dupModal').classList.add('visible');
         setTimeout(function() { window.location = '/claim/' + data.exact.slug; }, 2200);
         return;
       }
+
       if (data.similar && data.similar.length > 0) {
         document.getElementById('dupModalKicker').textContent = 'Similar Claims Found';
         document.getElementById('dupModalTitle').textContent = 'This claim may already exist';
         document.getElementById('dupModalSub').textContent = 'These claims cover similar ground. Open one or continue creating yours.';
         document.getElementById('dupContinueBtn').style.display = '';
-        // Show similarity reason from framing if available
+
         var reasonEl = document.getElementById('dupModalReason');
         if (reasonEl && data.framing && data.framing.framing_note) {
           reasonEl.textContent = 'Matched on: ' + data.framing.framing_note;
@@ -9390,23 +9466,30 @@ console.error('Dispute submission failed:', err);
         } else if (reasonEl) {
           reasonEl.style.display = 'none';
         }
-        // Store framing data for use in analysis if user continues
-        if (data.framing) { window._pendingFramingData = data.framing; }
+
+        if (data.framing) {
+          window._pendingFramingData = data.framing;
+        }
+
         var list = document.getElementById('dupClaimList');
         list.innerHTML = '';
         data.similar.forEach(function(c) {
           var a = document.createElement('a');
           a.className = 'dup-claim-item';
           a.href = '/claim/' + c.slug;
-          a.innerHTML = '<div class="dup-claim-title">' + escHtml(c.title) + '</div>' +
-                        '<div class="dup-claim-hint">View Existing Claim ↗</div>';
+          a.innerHTML =
+            '<div class="dup-claim-title">' + escHtml(c.title) + '</div>' +
+            '<div class="dup-claim-hint">View Existing Claim ↗</div>';
           list.appendChild(a);
         });
+
         document.getElementById('dupModal').classList.add('visible');
         return;
       }
+
       dupContinueAnyway();
     } catch(e) {
+      _setInitialRunButtonLoading(source, false);
       dupContinueAnyway();
     }
   }
