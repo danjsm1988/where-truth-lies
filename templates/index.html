@@ -854,12 +854,31 @@
     }
     .site-mode-control-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .site-mode-select {
-      background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.15);
-      border-radius: 8px; color: var(--cream); padding: 8px 12px;
-      font-family: 'Libre Baskerville', Georgia, serif; font-size: 11px;
-      cursor: pointer; flex: 1; min-width: 200px;
+      background: #102235;
+      border: 1px solid rgba(201,168,76,.28);
+      border-radius: 8px;
+      color: var(--cream);
+      padding: 8px 12px;
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 11px;
+      cursor: pointer;
+      flex: 1;
+      min-width: 200px;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
     }
-    .site-mode-select:focus { outline: none; border-color: rgba(201,168,76,.4); }
+
+    .site-mode-select option {
+      background: #102235;
+      color: var(--cream);
+    }
+
+    .site-mode-select:focus {
+      outline: none;
+      border-color: rgba(201,168,76,.5);
+      box-shadow: 0 0 0 1px rgba(201,168,76,.18);
+    }
     .site-mode-save-btn {
       padding: 8px 20px; border-radius: 999px;
       background: rgba(201,168,76,.15); border: 1px solid rgba(201,168,76,.35);
@@ -873,6 +892,75 @@
       font-family: 'Crimson Text', Georgia, serif; font-size: 13px;
       color: var(--text-mid); font-style: italic; margin-top: 8px; min-height: 18px;
     }
+
+    .site-error-panel {
+      margin-top: 14px;
+      background: rgba(255,255,255,.025);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+
+    .site-error-title {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 10px;
+    }
+
+    .site-error-empty {
+      font-family: 'Crimson Text', Georgia, serif;
+      font-size: 14px;
+      color: var(--text-mid);
+      font-style: italic;
+    }
+
+    .site-error-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .site-error-item {
+      background: rgba(233,123,123,.06);
+      border: 1px solid rgba(233,123,123,.18);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+
+    .site-error-item-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    .site-error-item-label {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: #e97b7b;
+    }
+
+    .site-error-item-time {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 8px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    .site-error-item-body {
+      font-family: 'Crimson Text', Georgia, serif;
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--cream-soft);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }    
 
     /* ── View Count ── */
     .vc-badge {
@@ -5728,6 +5816,12 @@ html, body {
               <button type="button" class="site-mode-save-btn" onclick="saveSiteMode()">Save</button>
             </div>
             <div class="site-mode-status" id="siteModeStatus"></div>
+
+            <div class="site-error-panel" id="siteErrorPanel">
+              <div class="site-error-title">Site Errors</div>
+              <div class="site-error-empty" id="siteErrorEmpty">No recent site errors.</div>
+              <div class="site-error-list" id="siteErrorList"></div>
+            </div>
           </div>
           {% endif %}
 
@@ -7674,6 +7768,15 @@ console.error('Dispute submission failed:', err);
         document.getElementById('airtable-status').textContent = data.airtable?.saved ? 'Airtable: saved' : 'Airtable: failed';
         document.getElementById('airtable-status').className = 'status-pill ' + (data.airtable?.saved ? 'ok' : 'bad');
 
+        if (!data.airtable?.saved) {
+          addSiteError(
+            'Claim Save Failure',
+            typeof data.airtable?.error === 'string'
+              ? data.airtable.error
+              : JSON.stringify(data.airtable?.error || {}, null, 2)
+          );
+        }
+
         const grokRan = !!data.grok_adjudication;
         document.getElementById('grok-status').textContent = grokRan ? 'Grok: grounded' : 'Grok: skipped';
         document.getElementById('grok-status').className = 'status-pill ' + (grokRan ? 'ok' : '');
@@ -7781,7 +7884,19 @@ console.error('Dispute submission failed:', err);
         if (grokEl) { grokEl.textContent = grokRan ? 'Grok: grounded' : 'Grok: skipped'; grokEl.className = 'm-spill' + (grokRan ? ' ok' : ''); }
         if (claudeEl) { claudeEl.textContent = cok ? 'Claude: done' : 'Claude: failed'; claudeEl.className = 'm-spill ' + (cok ? 'ok' : 'bad'); }
         if (openaiEl) { openaiEl.textContent = ook ? 'OpenAI: done' : 'OpenAI: failed'; openaiEl.className = 'm-spill ' + (ook ? 'ok' : 'bad'); }
-        if (airtableEl) { airtableEl.textContent = data.airtable?.saved ? 'Saved' : 'Save failed'; airtableEl.className = 'm-spill ' + (data.airtable?.saved ? 'ok' : 'bad'); }
+        if (airtableEl) {
+          airtableEl.textContent = data.airtable?.saved ? 'Saved' : 'Save failed';
+          airtableEl.className = 'm-spill ' + (data.airtable?.saved ? 'ok' : 'bad');
+        }
+
+        if (!data.airtable?.saved) {
+          addSiteError(
+            'Claim Save Failure',
+            typeof data.airtable?.error === 'string'
+              ? data.airtable.error
+              : JSON.stringify(data.airtable?.error || {}, null, 2)
+          );
+        }
 
         if (data.airtable?.saved && data.airtable?.redirect_to) {
           window.location.href = data.airtable.redirect_to;
@@ -9288,12 +9403,67 @@ console.error('Dispute submission failed:', err);
   });
 
   // ── Site Mode Control ──
+  function getSiteErrors() {
+    try {
+      return JSON.parse(localStorage.getItem('wtl_site_errors') || '[]');
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveSiteErrors(items) {
+    try {
+      localStorage.setItem('wtl_site_errors', JSON.stringify(items.slice(0, 15)));
+    } catch (e) {}
+  }
+
+  function addSiteError(label, message) {
+    var items = getSiteErrors();
+    items.unshift({
+      label: label || 'Site Error',
+      message: String(message || 'Unknown error'),
+      time: new Date().toLocaleString()
+    });
+    saveSiteErrors(items);
+    renderSiteErrors();
+  }
+
+  function renderSiteErrors() {
+    var list = document.getElementById('siteErrorList');
+    var empty = document.getElementById('siteErrorEmpty');
+    if (!list || !empty) return;
+
+    var items = getSiteErrors();
+    list.innerHTML = '';
+
+    if (!items.length) {
+      empty.style.display = '';
+      return;
+    }
+
+    empty.style.display = 'none';
+
+    items.forEach(function(item) {
+      var row = document.createElement('div');
+      row.className = 'site-error-item';
+      row.innerHTML =
+        '<div class="site-error-item-head">' +
+          '<div class="site-error-item-label">' + escHtml(item.label || 'Site Error') + '</div>' +
+          '<div class="site-error-item-time">' + escHtml(item.time || '') + '</div>' +
+        '</div>' +
+        '<div class="site-error-item-body">' + escHtml(item.message || '') + '</div>';
+      list.appendChild(row);
+    });
+  }
+
   function saveSiteMode(selectId, statusId) {
     var sel = document.getElementById(selectId || 'siteModeSelect');
     var statusEl = document.getElementById(statusId || 'siteModeStatus');
     if (!sel) return;
+
     var mode = sel.value;
     if (statusEl) statusEl.textContent = 'Saving…';
+
     fetch('/editor/update-site-mode', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
@@ -9304,13 +9474,20 @@ console.error('Dispute submission failed:', err);
       if (data.ok) {
         if (statusEl) statusEl.textContent = 'Saved. Site mode: ' + data.site_mode;
       } else {
-        if (statusEl) statusEl.textContent = 'Error: ' + (data.error || 'Unknown error');
+        var msg = data.error || 'Unknown error';
+        if (statusEl) statusEl.textContent = 'Error: ' + msg;
+        addSiteError('Site Mode Save', msg);
       }
     })
     .catch(function(e) {
       if (statusEl) statusEl.textContent = 'Request failed.';
+      addSiteError('Site Mode Save', e && e.message ? e.message : 'Request failed');
     });
   }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    renderSiteErrors();
+  });
 
 </script>
 
