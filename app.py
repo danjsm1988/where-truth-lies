@@ -734,14 +734,14 @@ def get_recent_claims(limit=10):
         for record in records[:limit]:
             f = record.get("fields", {})
             recent.append({
-    "title": clean_display_title(f.get("Analyzed Claim") or f.get("Original Quote") or f.get("Stripped Claim") or "Untitled Claim"),
-    "slug": f.get("URL Slug", ""),
-    "date": f.get("Date") or f.get("Date Added", ""),
-    "verdict": f.get("Overall Verdict", "Unproven"),
-    "topics": parse_topics(f.get("Topic")),
-    "speaker": f.get("Speaker", "Unknown"),
-    "entered_by": f.get("Entered By", "")
-})
+                "title": clean_display_title(f.get("Analyzed Claim") or f.get("Original Quote") or f.get("Stripped Claim") or "Untitled Claim"),
+                "slug": f.get("URL Slug", ""),
+                "date": f.get("Date") or f.get("Date Added", ""),
+                "verdict": f.get("Overall Verdict", "Unproven"),
+                "topics": parse_topics(f.get("Topic")),
+                "speaker": f.get("Speaker", "Unknown"),
+                "entered_by": f.get("Entered By", "")
+            })
         return recent
     except Exception as e:
         print("RECENT CLAIMS ERROR:", str(e), flush=True)
@@ -1797,14 +1797,15 @@ def home():
         page_mode="claim",
         superuser=session.get("superuser", False),
         true_superuser=session.get("true_superuser", False),
-        recent_claims=trending_claims,
-        trending_claims=trending_claims,
+        recent_claims=get_recent_claims(limit=10),
+        trending_claims=get_trending_claims(limit=10),
         current_claim=current_claim,
-        archived_claims_by_topic=get_topic_archives(),
+        archived_claims_by_topic={},
         selected_topic="",
         user_disputes=[],
         search_query="",
         search_results=[],
+        claims_remaining=session.get("claims_remaining", 0),
         site_mode=_s["site_mode"],
         site_message_title=_s["message_title"],
         site_message_body=_s["message_body"]
@@ -1824,16 +1825,18 @@ def archives():
     _s = get_site_settings()
     return render_template(
         "index.html",
-        page_mode="archives",
+        page_mode="claim",
         superuser=session.get("superuser", False),
         true_superuser=session.get("true_superuser", False),
         recent_claims=get_recent_claims(limit=10),
-        current_claim=None,
-        archived_claims_by_topic=filtered,
-        selected_topic=topic,
+        trending_claims=get_trending_claims(limit=10),
+        current_claim=current_claim,
+        archived_claims_by_topic={},
+        selected_topic="",
         user_disputes=[],
         search_query="",
         search_results=[],
+        claims_remaining=session.get("claims_remaining", 0),
         site_mode=_s["site_mode"],
         site_message_title=_s["message_title"],
         site_message_body=_s["message_body"]
@@ -1862,6 +1865,7 @@ def claim_detail(slug):
         superuser=session.get("superuser", False),
         true_superuser=session.get("true_superuser", False),
         recent_claims=get_recent_claims(limit=10),
+        trending_claims=get_trending_claims(limit=10),
         current_claim=current_claim,
         archived_claims_by_topic={},
         selected_topic="",
@@ -1881,16 +1885,18 @@ def disputes_page():
     _s = get_site_settings()
     return render_template(
         "index.html",
-        page_mode="disputes",
+        page_mode="claim",
         superuser=session.get("superuser", False),
         true_superuser=session.get("true_superuser", False),
         recent_claims=get_recent_claims(limit=10),
-        current_claim=None,
+        trending_claims=get_trending_claims(limit=10),
+        current_claim=current_claim,
         archived_claims_by_topic={},
         selected_topic="",
-        user_disputes=user_disputes,
+        user_disputes=[],
         search_query="",
         search_results=[],
+        claims_remaining=session.get("claims_remaining", 0),
         site_mode=_s["site_mode"],
         site_message_title=_s["message_title"],
         site_message_body=_s["message_body"]
@@ -2193,16 +2199,21 @@ def search_page():
         results = [c for c in all_claims if query_lower in (c.get("title") or "").lower() or query_lower in (c.get("stripped_claim") or "").lower() or query_lower in (c.get("speaker") or "").lower()]
     return render_template(
         "index.html",
-        page_mode="search",
+        page_mode="claim",
         superuser=session.get("superuser", False),
         true_superuser=session.get("true_superuser", False),
         recent_claims=get_recent_claims(limit=10),
-        current_claim=None,
+        trending_claims=get_trending_claims(limit=10),
+        current_claim=current_claim,
         archived_claims_by_topic={},
         selected_topic="",
-        search_query=query,
-        search_results=results,
-        user_disputes=[]
+        user_disputes=[],
+        search_query="",
+        search_results=[],
+        claims_remaining=session.get("claims_remaining", 0),
+        site_mode=_s["site_mode"],
+        site_message_title=_s["message_title"],
+        site_message_body=_s["message_body"]
     )
 
 
@@ -2212,16 +2223,21 @@ def profile_page():
         return redirect("/login")
     return render_template(
         "index.html",
-        page_mode="profile",
+        page_mode="claim",
         superuser=session.get("superuser", False),
         true_superuser=session.get("true_superuser", False),
-        recent_claims=get_recent_claims(limit=5),
-        current_claim=None,
+        recent_claims=get_recent_claims(limit=10),
+        trending_claims=get_trending_claims(limit=10),
+        current_claim=current_claim,
         archived_claims_by_topic={},
         selected_topic="",
         user_disputes=[],
         search_query="",
-        search_results=[]
+        search_results=[],
+        claims_remaining=session.get("claims_remaining", 0),
+        site_mode=_s["site_mode"],
+        site_message_title=_s["message_title"],
+        site_message_body=_s["message_body"]
     )
 
 

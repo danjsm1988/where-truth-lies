@@ -5965,7 +5965,14 @@ html, body {
         </div>
 
         <!-- Trending Claims Card -->
-        {% set sidebar_trending = trending_claims if trending_claims is defined and trending_claims else recent_claims %}
+        {% set sidebar_trending = [] %}
+
+        {% if trending_claims is defined and trending_claims %}
+        {% set sidebar_trending = trending_claims %}
+        {% elif recent_claims is defined and recent_claims %}
+        {% set sidebar_trending = recent_claims %}
+        {% endif %}
+
         <div class="sidebar-card">
           <div class="sidebar-title">Trending Claims</div>
 
