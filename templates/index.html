@@ -9122,36 +9122,111 @@ console.error('Dispute submission failed:', err);
   var _framingData = null;
   var _framingSelectedClaim = '';
   var _framingOriginalInput = '';
+  var _framingCache = {};
+
+  function _normalizeFrameCacheKey(text) {
+    return (text || '').trim();
+  }
+
+  function _resetFramingSession(options) {
+    options = options || {};
+    var preserveOriginalInput = options.preserveOriginalInput === true;
+    var preserveCache = options.preserveCache !== false;
+
+    _framingData = null;
+    _framingSelectedClaim = '';
+
+    if (!preserveOriginalInput) {
+      _framingOriginalInput = '';
+    }
+
+    if (!preserveCache) {
+      _framingCache = {};
+    }
+
+    var modal = document.getElementById('frameModal');
+    if (modal) modal.classList.remove('visible');
+
+    var note = document.getElementById('frameModalNote');
+    if (note) note.textContent = '';
+
+    var primaryText = document.getElementById('framePrimaryText');
+    if (primaryText) primaryText.textContent = '';
+
+    var altsSection = document.getElementById('frameAltsSection');
+    if (altsSection) altsSection.style.display = 'none';
+
+    var altList = document.getElementById('frameAltList');
+    if (altList) altList.innerHTML = '';
+
+    var contextInput = document.getElementById('frameContextInput');
+    if (contextInput) contextInput.value = '';
+
+    var proceedBtn = document.querySelector('#frameModal .frame-proceed-btn');
+    if (proceedBtn) proceedBtn.disabled = true;
+
+    document.querySelectorAll('.frame-alt-item').forEach(function(el) {
+      el.classList.remove('selected');
+    });
+  }
+
+  function _applyFramingResult(data, claim, source) {
+    _framingData = data || {};
+    _framingOriginalInput = claim;
+    _pendingSource = source;
+
+    var score = parseFloat((_framingData && _framingData.confidence_score) || 0.9);
+    var needsClarification = _framingData && _framingData.needs_clarification === true;
+    var primary = (_framingData && _framingData.primary_claim) || claim;
+
+    _framingSelectedClaim = primary;
+    _pendingClaim = primary;
+
+    if (needsClarification || score < 0.60) {
+      _hideInlineBanner();
+      _buildFrameModal(_framingData);
+      document.getElementById('frameModal').classList.add('visible');
+    } else if (score < 0.85) {
+      _showInlineBanner(_framingData);
+      source === 'mobile' ? _showMobileConfirm(primary) : _showDesktopConfirm(primary);
+    } else {
+      _hideInlineBanner();
+      source === 'mobile' ? _showMobileConfirm(primary) : _showDesktopConfirm(primary);
+    }
+  }
 
   function closeFrameModal() {
-    document.getElementById('frameModal').classList.remove('visible');
+    _resetFramingSession({ preserveOriginalInput: true, preserveCache: true });
   }
 
   function openFrameModalFromInline() {
-    document.getElementById('frameModal').classList.add('visible');
+    if (_framingData) {
+      _buildFrameModal(_framingData);
+      document.getElementById('frameModal').classList.add('visible');
+    }
   }
 
   function selectFrameAlt(idx) {
-  document.querySelectorAll('.frame-alt-item').forEach(function(el, i) {
-    el.classList.toggle('selected', i === idx);
-  });
+    document.querySelectorAll('.frame-alt-item').forEach(function(el, i) {
+      el.classList.toggle('selected', i === idx);
+    });
 
-  if (_framingData && _framingData.alternate_claims && _framingData.alternate_claims[idx] !== undefined) {
-    _framingSelectedClaim = _framingData.alternate_claims[idx];
-    document.getElementById('framePrimaryText').textContent = _framingSelectedClaim;
-  }
+    if (_framingData && _framingData.alternate_claims && _framingData.alternate_claims[idx] !== undefined) {
+      _framingSelectedClaim = _framingData.alternate_claims[idx];
+      document.getElementById('framePrimaryText').textContent = _framingSelectedClaim;
+    }
 
-  // ✅ Enable Proceed button after user makes a selection
-  var proceedBtn = document.querySelector('#frameModal .frame-proceed-btn');
-  if (proceedBtn) {
-    proceedBtn.disabled = false;
+    var proceedBtn = document.querySelector('#frameModal .frame-proceed-btn');
+    if (proceedBtn) {
+      proceedBtn.disabled = false;
+    }
   }
-}
 
   function proceedWithFraming() {
     var context = (document.getElementById('frameContextInput').value || '').trim();
     var claim = _framingSelectedClaim || (_framingData && _framingData.primary_claim) || _framingOriginalInput;
-    closeFrameModal();
+
+    document.getElementById('frameModal').classList.remove('visible');
     _pendingClaim = claim;
     _pendingUserContext = context;
     _pendingSource === 'mobile' ? _showMobileConfirm(claim) : _showDesktopConfirm(claim);
@@ -9160,13 +9235,17 @@ console.error('Dispute submission failed:', err);
   function _buildFrameModal(data) {
     document.getElementById('frameModalNote').textContent = data.framing_note || '';
     document.getElementById('framePrimaryText').textContent = data.primary_claim || _framingOriginalInput;
+
     _framingSelectedClaim = '';
+
     var proceedBtn = document.querySelector('#frameModal .frame-proceed-btn');
-    if (proceedBtn) proceedBtn.disabled = true;
     var altsSection = document.getElementById('frameAltsSection');
     var altList = document.getElementById('frameAltList');
-    altList.innerHTML = '';
     var alts = (data.alternate_claims || []).filter(function(a) { return a && a.trim(); });
+
+    altList.innerHTML = '';
+    document.getElementById('frameContextInput').value = '';
+
     if (alts.length > 0) {
       altsSection.style.display = '';
       alts.forEach(function(alt, idx) {
@@ -9177,10 +9256,12 @@ console.error('Dispute submission failed:', err);
         btn.innerHTML = '<div class="frame-alt-radio"></div><div class="frame-alt-text">' + escHtml(alt) + '</div>';
         altList.appendChild(btn);
       });
+      if (proceedBtn) proceedBtn.disabled = true;
     } else {
       altsSection.style.display = 'none';
+      _framingSelectedClaim = data.primary_claim || _framingOriginalInput;
+      if (proceedBtn) proceedBtn.disabled = false;
     }
-    document.getElementById('frameContextInput').value = '';
   }
 
   function _showInlineBanner(data) {
@@ -9198,32 +9279,30 @@ console.error('Dispute submission failed:', err);
   }
 
   async function frameAndProceed(claim, source) {
+    claim = (claim || '').trim();
     _framingOriginalInput = claim;
     _pendingSource = source;
+
+    var cacheKey = _normalizeFrameCacheKey(claim);
+
+    if (_framingCache[cacheKey]) {
+      _applyFramingResult(_framingCache[cacheKey], claim, source);
+      return;
+    }
+
     try {
       var res = await fetch('/frame-claim', {
-        method: 'POST', headers: {'Content-Type': 'application/json'},
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({claim: claim})
       });
+
       var data = await res.json();
-      _framingData = data;
-      var score = parseFloat(data.confidence_score || 0.9);
-      var needsClarification = data.needs_clarification === true;
-      var primary = data.primary_claim || claim;
-      _framingSelectedClaim = primary;
-      if (needsClarification || score < 0.60) {
-        _buildFrameModal(data);
-        document.getElementById('frameModal').classList.add('visible');
-      } else if (score < 0.85) {
-        _pendingClaim = primary;
-        _showInlineBanner(data);
-        source === 'mobile' ? _showMobileConfirm(primary) : _showDesktopConfirm(primary);
-      } else {
-        _hideInlineBanner();
-        _pendingClaim = primary;
-        source === 'mobile' ? _showMobileConfirm(primary) : _showDesktopConfirm(primary);
-      }
-    } catch(e) {
+      _framingCache[cacheKey] = data;
+      _applyFramingResult(data, claim, source);
+    } catch (e) {
+      _framingData = null;
+      _framingSelectedClaim = '';
       _pendingClaim = claim;
       _hideInlineBanner();
       source === 'mobile' ? _showMobileConfirm(claim) : _showDesktopConfirm(claim);
