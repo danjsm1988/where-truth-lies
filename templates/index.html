@@ -8482,31 +8482,72 @@ console.error('Dispute submission failed:', err);
 
     async function runSelectiveReanalysis() {
       var fields = Array.from(document.querySelectorAll('#selectiveModal input[type="checkbox"]:checked')).map(function(cb) { return cb.value; });
-      if (!fields.length) { document.getElementById('selective-status').textContent = 'Select at least one field.'; return; }
+      if (!fields.length) {
+        document.getElementById('selective-status').textContent = 'Select at least one field.';
+        return;
+      }
+
       closeSelectiveModal();
+
       if (_selectiveMode === 'bulk-mobile') {
         await mBulkReanalyze('selective', fields);
         return;
       }
+
       if (_selectiveMode === 'single' && _selectiveSingleSlug) {
         var statusEl = document.getElementById('claim-reanalyze-status');
-        if (statusEl) statusEl.textContent = 'Running selective reanalysis...';
+        var modalEl = document.getElementById('claimReanalyzeModal');
+
+        if (modalEl) {
+          modalEl.classList.add('visible');
+          modalEl.querySelectorAll('button').forEach(function(b) { b.disabled = true; });
+        }
+
+        _startReanalyzeCycle(statusEl);
+
         try {
-        var res = await fetch('/editor/reanalyze-claim-by-slug/' + _selectiveSingleSlug, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            reanalysis_mode: 'feature_refresh',
-            fields: fields
-          })
-        });
+          var res = await fetch('/editor/reanalyze-claim-by-slug/' + _selectiveSingleSlug, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              reanalysis_mode: 'feature_refresh',
+              fields: fields
+            })
+          });
+
           var data = await res.json();
+          _stopReanalyzeCycle();
+
           if (res.ok && data.ok) {
-            if (statusEl) statusEl.textContent = 'Done. Reloading...';
-            setTimeout(function() { window.location.reload(); }, 1500);
-          } else { if (statusEl) statusEl.textContent = 'Error: ' + (data.error || 'Failed'); }
-        } catch(err) { if (statusEl) statusEl.textContent = 'Error: ' + err.message; }
-      } else { await bulkReanalyze('selective', fields); }
+            if (statusEl) {
+              statusEl.textContent = 'Done. Updated: ' + fields.join(', ') + '. Reloading...';
+            }
+            setTimeout(function() {
+              closeClaimReanalyzeModal();
+              window.location.reload();
+            }, 1800);
+          } else {
+            if (statusEl) {
+              statusEl.textContent = 'Error: ' + (data.error || 'Failed');
+            }
+            if (modalEl) {
+              modalEl.querySelectorAll('button').forEach(function(b) { b.disabled = false; });
+            }
+          }
+        } catch(err) {
+          _stopReanalyzeCycle();
+          if (statusEl) {
+            statusEl.textContent = 'Error: ' + err.message;
+          }
+          if (modalEl) {
+            modalEl.querySelectorAll('button').forEach(function(b) { b.disabled = false; });
+          }
+        }
+
+        return;
+      }
+
+      await bulkReanalyze('selective', fields);
     }
 
     // Claim page reanalyze modal
