@@ -3445,6 +3445,7 @@ SELECTIVE_FIELD_MAP = {
     "Bottom Line": "Strip Mode Summary",
     "Left Perspective": "Left Perspective",
     "Right Perspective": "Right Perspective",
+    "Scenario Map": "Scenario Map",
     "Sub Claims": "Sub-Claims",
 }
 
