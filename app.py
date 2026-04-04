@@ -3450,10 +3450,39 @@ SELECTIVE_FIELD_MAP = {
 }
 
 
-def run_reanalysis_ai(claim_text, mode="full"):
+def run_reanalysis_ai(claim_text, mode="full", canonical_anchor=None):
     """Run the AI excavation pipeline on an existing claim text. Returns merged parsed JSON."""
     reality_anchor, grok_adjudication = build_reality_anchor_with_grok(claim_text)
-    prompt_text = f"{reality_anchor}\n\nNow analyze this claim:\n\"{claim_text}\"".strip()
+
+    canonical_block = ""
+    if canonical_anchor and isinstance(canonical_anchor, dict):
+        anchored_title = (canonical_anchor.get("analyzed_claim") or "").strip()
+        anchored_stripped = (canonical_anchor.get("stripped_claim") or "").strip()
+        anchored_quick = (canonical_anchor.get("quick_explanation") or "").strip()
+
+        canonical_parts = []
+        if anchored_title:
+            canonical_parts.append(f"Accepted analyzed claim: {anchored_title}")
+        if anchored_stripped:
+            canonical_parts.append(f"Accepted stripped claim: {anchored_stripped}")
+        if anchored_quick:
+            canonical_parts.append(f"Accepted quick explanation: {anchored_quick}")
+
+        if canonical_parts:
+            canonical_block = (
+                "CANONICAL CLAIM IDENTITY FOR FEATURE REFRESH:\n"
+                + "\n".join(canonical_parts)
+                + "\n\n"
+                + "Treat the accepted claim identity above as fixed for this refresh. "
+                + "Do not materially reframe, narrow, broaden, or replace it. "
+                + "Refresh supporting layers around that accepted claim identity.\n\n"
+            )
+
+    prompt_text = (
+        f"{reality_anchor}\n\n"
+        f"{canonical_block}"
+        f"Now analyze this claim:\n\"{claim_text}\""
+    ).strip()
 
     claude_json = {}
     openai_json = {}
@@ -3641,10 +3670,45 @@ def editor_reanalyze_claim(record_id):
         now_iso = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.000Z")
         now_date = datetime.utcnow().strftime("%Y-%m-%d")
 
-        # Always run AI against Original Quote — never against Analyzed Claim
-        primary, claude_json, openai_json, grok_adjudication = run_reanalysis_ai(raw_claim_text, "full")
+        canonical_anchor = None
+        if reanalysis_mode == "feature_refresh":
+            canonical_anchor = {
+                "analyzed_claim": claim_fields.get("Analyzed Claim", ""),
+                "stripped_claim": claim_fields.get("Stripped Claim", ""),
+                "quick_explanation": claim_fields.get("Quick Explanation", "")
+            }
+
+        # Feature refresh uses canonical accepted framing.
+        # Core logic refresh reruns without the canonical anchor.
+        primary, claude_json, openai_json, grok_adjudication = run_reanalysis_ai(
+            raw_claim_text,
+            "full",
+            canonical_anchor=canonical_anchor
+        )
         if "error" in primary:
             return jsonify({"error": f"AI failed: {primary['error']}"}), 500
+
+        # Feature refresh must NOT silently reframe the claim.
+        # Preserve locked top-level framing fields in both visible outputs and raw JSON.
+        preserve_stripped = (reanalysis_mode == "feature_refresh")
+        preserve_quick = (reanalysis_mode == "feature_refresh")
+
+        existing_stripped = (claim_fields.get("Stripped Claim") or "").strip()
+        existing_quick = (claim_fields.get("Quick Explanation") or "").strip()
+
+        if preserve_stripped and existing_stripped:
+            primary["Stripped Claim"] = existing_stripped
+            if isinstance(claude_json, dict):
+                claude_json["Stripped Claim"] = existing_stripped
+            if isinstance(openai_json, dict):
+                openai_json["Stripped Claim"] = existing_stripped
+
+        if preserve_quick and existing_quick:
+            primary["Quick Explanation"] = existing_quick
+            if isinstance(claude_json, dict):
+                claude_json["Quick Explanation"] = existing_quick
+            if isinstance(openai_json, dict):
+                openai_json["Quick Explanation"] = existing_quick
 
         # Build update payload
         if selective_fields:
@@ -3818,8 +3882,21 @@ def editor_reanalyze_claim_by_slug(slug):
         now_iso = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.000Z")
         now_date = datetime.utcnow().strftime("%Y-%m-%d")
 
-        # Always run AI against Original Quote — never against Analyzed Claim
-        primary, claude_json, openai_json, grok_adjudication = run_reanalysis_ai(raw_claim_text, "full")
+        canonical_anchor = None
+        if reanalysis_mode == "feature_refresh":
+            canonical_anchor = {
+                "analyzed_claim": claim_fields.get("Analyzed Claim", ""),
+                "stripped_claim": claim_fields.get("Stripped Claim", ""),
+                "quick_explanation": claim_fields.get("Quick Explanation", "")
+            }
+
+        # Feature refresh uses canonical accepted framing.
+        # Core logic refresh reruns without the canonical anchor.
+        primary, claude_json, openai_json, grok_adjudication = run_reanalysis_ai(
+            raw_claim_text,
+            "full",
+            canonical_anchor=canonical_anchor
+        )
         if "error" in primary:
             return jsonify({"error": f"AI failed: {primary['error']}"}), 500
 
