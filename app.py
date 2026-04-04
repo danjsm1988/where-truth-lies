@@ -1,6 +1,7 @@
 import os
 import json
 import re
+import hashlib
 import unicodedata
 import threading
 from datetime import datetime
@@ -225,6 +226,48 @@ def safe_json_parse(text):
                 pass
         return {"raw": text}
 
+def normalize_claim_text(text):
+    if not text:
+        return ""
+
+    text = text.strip()
+
+    # Normalize quotes
+    text = text.replace('“', '"').replace('”', '"')
+
+    # Collapse whitespace
+    text = re.sub(r'\s+', ' ', text)
+
+    # Remove repeated punctuation
+    text = re.sub(r'([!?.,])\1+', r'\1', text)
+
+    return text.strip()
+
+
+def compute_framing_hash(framing_obj):
+    canonical_str = json.dumps(framing_obj, sort_keys=True)
+    return hashlib.sha256(canonical_str.encode()).hexdigest()
+
+
+def detect_input_type(text):
+    if len(text) > 500:
+        return "long_form"
+    if "?" in text:
+        return "question"
+    return "statement"
+
+
+def detect_claim_type(claim):
+    if not claim:
+        return "unknown"
+    c = claim.lower()
+    if any(k in c for k in ["constitutional", "rights", "government", "authority"]):
+        return "civic"
+    return "general"
+
+
+def extract_root_concern(claim):
+    return claim or ""
 
 def extract_verdict_from_parsed(parsed):
     if not isinstance(parsed, dict):
@@ -2526,7 +2569,19 @@ def frame_claim_input(raw_input):
 
                 if accountability_clause:
                     result["breakout_candidates"] = existing_breakouts + [accountability_clause]
+        primary_claim = str(result.get("primary_claim", "") or "").strip()
+        breakout_candidates = result.get("breakout_candidates", [])
 
+        framing_obj = {
+            "input_type": detect_input_type(raw_input),
+            "claim_type": detect_claim_type(primary_claim),
+            "primary_claim": primary_claim,
+            "supporting_claims": breakout_candidates if isinstance(breakout_candidates, list) else [],
+            "foundational_concern": extract_root_concern(primary_claim),
+            "framing_version": "1.0"
+        }
+
+        result["framing_obj"] = framing_obj
         return result
     except Exception as e:
         print(f"FRAME CLAIM ERROR: {e}", flush=True)
@@ -3785,33 +3840,53 @@ def editor_reanalyze_claim(record_id):
                     update_fields["Quick Explanation"] = claim_fields.get("Quick Explanation", "")    
 
         elif reanalysis_mode == "core_logic_refresh":
-            # Core logic refresh — run framing fresh from Original Quote
-            new_framing = frame_claim_input(raw_claim_text)
+
+            normalized_input = normalize_claim_text(raw_claim_text)
+
+            new_framing = frame_claim_input(normalized_input)
             new_primary_claim = (new_framing or {}).get("primary_claim", "").strip()
+            framing_obj = (new_framing or {}).get("framing_obj", {})
+
+            new_hash = compute_framing_hash(framing_obj)
+            old_hash = claim_fields.get("Canonical Framing Hash")
+
+            # Always store framing object
+            update_fields["Canonical Framing JSON"] = json.dumps(framing_obj, ensure_ascii=False)[:100000]
+            update_fields["Framing Version"] = "1.0"
 
             title_locked = bool(claim_fields.get("Title Locked", False))
             slug_locked = bool(claim_fields.get("Slug Locked", True))
 
-            if new_primary_claim:
-                if not title_locked or force:
-                    update_fields["Analyzed Claim"] = new_primary_claim
-                    update_fields["Analysis Core Version"] = ANALYSIS_CORE_VERSION
+            if not old_hash:
+                # First run → establish canonical baseline
+                update_fields["Canonical Framing Hash"] = new_hash
+
+                if new_primary_claim:
+                    if not title_locked or force:
+                        update_fields["Analyzed Claim"] = new_primary_claim
+                        update_fields["Analysis Core Version"] = ANALYSIS_CORE_VERSION
+                        update_fields["Last Core Logic Refresh"] = now_iso
+                        update_fields["Title Source"] = "AI Core Refresh"
+                        title_updated = True
+                    else:
+                        warning = "Title locked. Cannot set initial canonical claim."
+
+            else:
+                if new_hash == old_hash:
+                    # Stable → no drift
                     update_fields["Last Core Logic Refresh"] = now_iso
-                    update_fields["Title Source"] = "Forced Core Refresh" if (title_locked and force) else "AI Core Refresh"
-                    title_updated = True
+
                 else:
+                    # Drift detected → DO NOT overwrite
+                    update_fields["Pending Framing Candidate"] = new_primary_claim
                     warning = (
-                        f"Title Locked is set on this record. Analyzed Claim was NOT updated. "
-                        f"Pass force=true to override. New framing candidate: \"{new_primary_claim}\""
+                        "Framing drift detected. New candidate stored instead of overwriting canonical claim."
                     )
 
-            # Slug regeneration — separate explicit action, blocked by Slug Locked
+            # Slug regeneration (only if allowed)
             if regenerate_slug:
                 if slug_locked and not force:
-                    warning = (warning or "") + (
-                        " Slug Locked is set on this record. URL Slug was NOT regenerated. "
-                        "Pass force=true along with regenerate_slug=true to override."
-                    )
+                    warning = (warning or "") + " Slug locked."
                 else:
                     slug_source = update_fields.get("Analyzed Claim") or new_primary_claim or raw_claim_text
                     update_fields["URL Slug"] = slugify(slug_source)
@@ -3900,25 +3975,88 @@ def editor_reanalyze_claim_by_slug(slug):
         if "error" in primary:
             return jsonify({"error": f"AI failed: {primary['error']}"}), 500
 
-        # Build base update — all analysis layers, never identity fields
-        update_fields = extract_primary_record_fields(
-            claim=raw_claim_text,
-            parsed=primary,
-            mode="full",
-            username=editor_username,
-            existing_fields=claim_fields
-        )
-        update_fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
-        update_fields["OpenAI Raw JSON"] = json.dumps(openai_json, ensure_ascii=False)[:100000]
-        if grok_adjudication:
-            update_fields["Grok Raw JSON"] = json.dumps(grok_adjudication, ensure_ascii=False)[:100000]
-        update_fields["Last Reanalyzed"] = now_date
-        update_fields["Reanalyzed By"] = editor_username
+        # Feature refresh must NOT silently reframe the claim.
+        # Preserve locked top-level framing fields in both visible outputs and raw JSON.
+        preserve_stripped = (reanalysis_mode == "feature_refresh")
+        preserve_quick = (reanalysis_mode == "feature_refresh")
 
-        # Remove any identity fields that may have leaked in
-        for protected in ["Analyzed Claim", "URL Slug", "Title Locked", "Slug Locked",
-                          "Title Source", "Analysis Core Version"]:
-            update_fields.pop(protected, None)
+        existing_stripped = (claim_fields.get("Stripped Claim") or "").strip()
+        existing_quick = (claim_fields.get("Quick Explanation") or "").strip()
+
+        if preserve_stripped and existing_stripped:
+            primary["Stripped Claim"] = existing_stripped
+            if isinstance(claude_json, dict):
+                claude_json["Stripped Claim"] = existing_stripped
+            if isinstance(openai_json, dict):
+                openai_json["Stripped Claim"] = existing_stripped
+
+        if preserve_quick and existing_quick:
+            primary["Quick Explanation"] = existing_quick
+            if isinstance(claude_json, dict):
+                claude_json["Quick Explanation"] = existing_quick
+            if isinstance(openai_json, dict):
+                openai_json["Quick Explanation"] = existing_quick
+
+        # Build update payload
+        if selective_fields:
+            update_fields = {
+                "Last Reanalyzed": now_date,
+                "Reanalyzed By": editor_username,
+                "Last Feature Refresh": now_iso
+            }
+
+            for field_name in selective_fields:
+                airtable_key = SELECTIVE_FIELD_MAP.get(field_name)
+                if not airtable_key:
+                    continue
+
+                if field_name == "Sub Claims":
+                    sub_claims = primary.get("Sub Claims", [])
+                    if isinstance(sub_claims, list):
+                        update_fields["Sub-Claims"] = " | ".join(
+                            [sc.get("claim", "") for sc in sub_claims if sc.get("claim")]
+                        )
+                        if len(sub_claims) > 0:
+                            update_fields["Sub-Claim 1"] = sub_claims[0].get("claim", "")
+                            if sub_claims[0].get("verdict"):
+                                update_fields["Verdict: Sub-Claim1"] = sub_claims[0]["verdict"]
+                        if len(sub_claims) > 1:
+                            update_fields["Sub-Claim 2"] = sub_claims[1].get("claim", "")
+                            if sub_claims[1].get("verdict"):
+                                update_fields["Verdict: Sub-Claim 2"] = sub_claims[1]["verdict"]
+                        if len(sub_claims) > 2:
+                            update_fields["Sub-Claim 3"] = sub_claims[2].get("claim", "")
+                            if sub_claims[2].get("verdict"):
+                                update_fields["Verdict: Sub-Claim 3"] = sub_claims[2]["verdict"]
+
+                elif field_name == "Overall Verdict":
+                    v = primary.get("Overall Verdict") or primary.get("Verdict")
+                    if v:
+                        update_fields["Overall Verdict"] = v
+
+                elif primary.get(field_name):
+                    update_fields[airtable_key] = primary[field_name]
+
+        else:
+            update_fields = extract_primary_record_fields(
+                claim=raw_claim_text,
+                parsed=primary,
+                mode="full",
+                username=editor_username,
+                existing_fields=claim_fields
+            )
+        if not selective_fields:
+            update_fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
+            update_fields["OpenAI Raw JSON"] = json.dumps(openai_json, ensure_ascii=False)[:100000]
+            if grok_adjudication:
+                update_fields["Grok Raw JSON"] = json.dumps(grok_adjudication, ensure_ascii=False)[:100000]
+            update_fields["Last Reanalyzed"] = now_date
+            update_fields["Reanalyzed By"] = editor_username
+
+            # Remove any identity fields that may have leaked in
+            for protected in ["Analyzed Claim", "URL Slug", "Title Locked", "Slug Locked",
+                              "Title Source", "Analysis Core Version"]:
+                update_fields.pop(protected, None)
 
         title_updated = False
         slug_updated = False
@@ -3938,31 +4076,52 @@ def editor_reanalyze_claim_by_slug(slug):
                     update_fields["Quick Explanation"] = claim_fields.get("Quick Explanation", "")
 
         elif reanalysis_mode == "core_logic_refresh":
-            new_framing = frame_claim_input(raw_claim_text)
+
+            normalized_input = normalize_claim_text(raw_claim_text)
+
+            new_framing = frame_claim_input(normalized_input)
             new_primary_claim = (new_framing or {}).get("primary_claim", "").strip()
+            framing_obj = (new_framing or {}).get("framing_obj", {})
+
+            new_hash = compute_framing_hash(framing_obj)
+            old_hash = claim_fields.get("Canonical Framing Hash")
+
+            # Always store framing object
+            update_fields["Canonical Framing JSON"] = json.dumps(framing_obj, ensure_ascii=False)[:100000]
+            update_fields["Framing Version"] = "1.0"
 
             title_locked = bool(claim_fields.get("Title Locked", False))
             slug_locked = bool(claim_fields.get("Slug Locked", True))
 
-            if new_primary_claim:
-                if not title_locked or force:
-                    update_fields["Analyzed Claim"] = new_primary_claim
-                    update_fields["Analysis Core Version"] = ANALYSIS_CORE_VERSION
+            if not old_hash:
+                # First run → establish canonical baseline
+                update_fields["Canonical Framing Hash"] = new_hash
+
+                if new_primary_claim:
+                    if not title_locked or force:
+                        update_fields["Analyzed Claim"] = new_primary_claim
+                        update_fields["Analysis Core Version"] = ANALYSIS_CORE_VERSION
+                        update_fields["Last Core Logic Refresh"] = now_iso
+                        update_fields["Title Source"] = "AI Core Refresh"
+                        title_updated = True
+                    else:
+                        warning = "Title locked. Cannot set initial canonical claim."
+
+            else:
+                if new_hash == old_hash:
+                    # Stable → no drift
                     update_fields["Last Core Logic Refresh"] = now_iso
-                    update_fields["Title Source"] = "Forced Core Refresh" if (title_locked and force) else "AI Core Refresh"
-                    title_updated = True
+
                 else:
+                    # Drift detected → DO NOT overwrite
+                    update_fields["Pending Framing Candidate"] = new_primary_claim
                     warning = (
-                        f"Title Locked is set on this record. Analyzed Claim was NOT updated. "
-                        f"Pass force=true to override. New framing candidate: \"{new_primary_claim}\""
+                        "Framing drift detected. New candidate stored instead of overwriting canonical claim."
                     )
 
             if regenerate_slug:
                 if slug_locked and not force:
-                    warning = (warning or "") + (
-                        " Slug Locked is set on this record. URL Slug was NOT regenerated. "
-                        "Pass force=true along with regenerate_slug=true to override."
-                    )
+                    warning = (warning or "") + " Slug locked."
                 else:
                     slug_source = update_fields.get("Analyzed Claim") or new_primary_claim or raw_claim_text
                     new_slug = slugify(slug_source)
