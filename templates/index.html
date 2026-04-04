@@ -5193,7 +5193,12 @@ html, body {
                 {% endif %}
                 {% if current_claim.scenario_map %}
                   <div style="margin-top:12px;">
-                    <div class="m-layer-label" style="color:var(--purple); font-family:'Libre Baskerville',serif; font-size:9px; letter-spacing:.14em; text-transform:uppercase; margin-bottom:10px;">Scenario Map</div>
+                    <div class="m-layer-label" style="color:var(--purple); font-family:'Libre Baskerville',serif; font-size:9px; letter-spacing:.14em; text-transform:uppercase; margin-bottom:10px;">
+                      Possible Outcomes
+                      <span class="civic-info-btn">i
+                        <span class="civic-info-tip">How to read this: Most Supported Outcome is the path best grounded in current facts. Alternative Outcomes are less likely but still plausible if conditions shift. Preferred Outcome is the best realistic direction if institutions or incentives improve. These are plausible trajectories, not predictions.</span>
+                      </span>
+                    </div>
                     <div id="mScenarioContainer"></div>
                   </div>
                 {% endif %}
@@ -6680,7 +6685,12 @@ html, body {
                 <div class="ornamental-line"></div>
               </div>
 
-              <div class="section-title">Scenario Map — Plausible Trajectories</div>
+              <div class="section-title">
+                Possible Outcomes (Based on Current Evidence)
+                <span class="civic-info-btn">i
+                  <span class="civic-info-tip">How to read this: Most Supported Outcome is the path best grounded in current facts. Alternative Outcomes are less likely but still plausible if conditions shift. Preferred Outcome is the best realistic direction if institutions or incentives improve. These are plausible trajectories, not predictions.</span>
+                </span>
+              </div>
               <div class="scenario-disclaimer">
                 These are plausible trajectories only. Not predictions. Only actions and time determine the actual path.
               </div>
@@ -7631,8 +7641,75 @@ console.error('Dispute submission failed:', err);
       const container = document.getElementById('scenarioMapContainer');
       if (!container || !raw) return;
 
-      const scenarioRegex = /SCENARIO\s+([A-E])\s*[—-]+\s*([^:]+):\s*Confidence:\s*([\w\/]+)\.([\s\S]*?)(?=SCENARIO\s+[A-E]|NOTE:|$)/gi;
       const noteRegex = /NOTE:([\s\S]*)$/i;
+      const noteM = noteRegex.exec(raw);
+      const note = noteM ? noteM[1].trim() : '';
+      const body = raw.replace(noteRegex, '').trim();
+
+      const rankedPatterns = [
+        { key: 'most_supported', label: 'Most Supported Outcome', regex: /MOST SUPPORTED OUTCOME:\s*([^\.\n]+)\.([\s\S]*?)(?=ALTERNATIVE OUTCOME 2:|ALTERNATIVE OUTCOME 3:|PREFERRED OUTCOME:|CONFIDENCE NOTE:|$)/i },
+        { key: 'alternative_2', label: 'Alternative Outcome 2', regex: /ALTERNATIVE OUTCOME 2:\s*([^\.\n]+)\.([\s\S]*?)(?=ALTERNATIVE OUTCOME 3:|PREFERRED OUTCOME:|CONFIDENCE NOTE:|$)/i },
+        { key: 'alternative_3', label: 'Alternative Outcome 3', regex: /ALTERNATIVE OUTCOME 3:\s*([^\.\n]+)\.([\s\S]*?)(?=PREFERRED OUTCOME:|CONFIDENCE NOTE:|$)/i },
+        { key: 'preferred', label: 'Preferred Outcome', regex: /PREFERRED OUTCOME:\s*([^\.\n]+)\.([\s\S]*?)(?=CONFIDENCE NOTE:|$)/i }
+      ];
+
+      const ranked = [];
+      rankedPatterns.forEach(p => {
+        const m = body.match(p.regex);
+        if (m) {
+          ranked.push({
+            key: p.key,
+            label: p.label,
+            title: m[1].trim(),
+            text: m[2].trim()
+          });
+        }
+      });
+
+      const confidenceMatch = body.match(/CONFIDENCE NOTE:\s*([\s\S]*?)$/i);
+      const confidenceNote = confidenceMatch ? confidenceMatch[1].trim() : '';
+
+      if (ranked.length) {
+        let html = '';
+
+        ranked.forEach(item => {
+          const badgeClass =
+            item.key === 'most_supported' ? 'conf-documented' :
+            item.key === 'preferred' ? 'conf-mixed' :
+            'conf-speculative';
+
+          html += `
+            <div class="scenario-item">
+              <div class="scenario-header">
+                <span class="scenario-letter">${esc(item.label)}</span>
+                <span class="scenario-name">${esc(item.title)}</span>
+                <span class="confidence-badge ${badgeClass}">${item.key === 'most_supported' ? 'Best Supported' : item.key === 'preferred' ? 'Best Case' : 'Less Likely'}</span>
+              </div>
+              <div class="scenario-text">${esc(item.text)}</div>
+            </div>
+          `;
+        });
+
+        if (confidenceNote) {
+          html += `
+            <div class="scenario-item">
+              <div class="scenario-header">
+                <span class="scenario-letter">Confidence Note</span>
+              </div>
+              <div class="scenario-text">${esc(confidenceNote)}</div>
+            </div>
+          `;
+        }
+
+        if (note) {
+          html += `<div class="scenario-disclaimer" style="margin-top:12px;">${esc(note)}</div>`;
+        }
+
+        container.innerHTML = html;
+        return;
+      }
+
+      const scenarioRegex = /SCENARIO\s+([A-E])\s*[—-]+\s*([^:]+):\s*Confidence:\s*([\w\/]+)\.([\s\S]*?)(?=SCENARIO\s+[A-E]|NOTE:|$)/gi;
       const scenarios = [];
       let m;
 
@@ -7646,9 +7723,6 @@ console.error('Dispute submission failed:', err);
         const text = rest.replace(/Analyst Divergence:\s*[A-Za-z0-9 _-]+\.?/i, '').trim();
         scenarios.push({ letter, name, conf, text, divergence });
       }
-
-      const noteM = noteRegex.exec(raw);
-      const note = noteM ? noteM[1].trim() : '';
 
       if (!scenarios.length) {
         container.innerHTML = `<div class="layer-block-text">${esc(raw)}</div>`;
