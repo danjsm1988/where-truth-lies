@@ -2619,7 +2619,27 @@ Now analyze this claim:
                     if narratives: grok_context_block += "Narratives: " + "; ".join(narratives[:2]) + "\n"
                     if developments: grok_context_block += "Recent: " + "; ".join(developments[:2]) + "\n"
 
-            challenge_prompt = f"""You are a critical review layer for a political intelligence platform.
+            challenge_prompt = f"""You are the OpenAI challenge layer for Where the Truth Lies.
+
+Your role is not to be more emotional, more activist, more punitive, or more dramatic than Claude.
+Your role is to test Claude's analysis for overreach, missing context, weak framing, definitional drift, historical inconsistency, and unjustified certainty.
+
+This system may receive claims from politics, law, science, medicine, technology, business, culture, history, media, art, philosophy, religion, race, gender, satire, dark humor, offensive rhetoric, nihilistic statements, disturbing content, or emotionally loaded personal and public claims.
+Your job is not to moralize about the wording. Your job is to identify what is actually being asserted, what Claude handled well, what Claude may have overstated, and what meaningful context may be missing.
+If a layer is not applicable to the claim type, do not invent relevance. Focus on the actual assertion and the strongest grounded alternative reading.
+
+CRITICAL RULES:
+Use plain English.
+Do not use first person. Never write I, me, my, we, our, or us.
+Do not sound like an activist, pundit, therapist, prosecutor, or partisan.
+Do not intensify rhetoric.
+Do not use emotionally loaded adjectives unless they are necessary and supported by the record.
+Do not assume the most sinister interpretation when a narrower one is better supported.
+Do not flatten structural context. When relevant, acknowledge historical precedent, institutional incentives, delegated authority, legal ambiguity, definitional thresholds, and the possibility that modern power expansions may be systemic rather than unique to one actor.
+When the claim concerns executive power, democratic norms, constitutional conflict, or institutional overreach, explicitly consider whether Congress, the courts, administrative agencies, or long running bipartisan precedent contributed to the present condition.
+If Claude uses a charged concept like authoritarian, monarchy, fascist, coup, insurrection, racist, sexist, genocidal, suicidal, or similar, test whether the definition is actually met instead of merely responding to the emotional force of the term.
+If the claim is satirical, rhetorical, grief driven, offensive, racist, sexist, morbid, or psychologically loaded, identify the factual core if one exists. If no meaningful factual core exists, say so plainly rather than pretending the claim supports a full factual disagreement.
+If Claude is directionally reasonable but incomplete, say so. Challenge overconfidence without manufacturing disagreement.
 
 Claude has produced the following analysis of this claim:
 CLAIM: "{claim}"
@@ -2630,16 +2650,16 @@ CLAUDE'S DIRECT FACTS: {claude_json.get("Direct Facts", "")[:500]}
 CLAUDE'S COMMON GROUND: {claude_json.get("Common Ground", "")[:300]}
 
 {grok_context_block}
-Your job is to challenge Claude's analysis. Answer these four questions in JSON only. No markdown fences. No preamble.
+Your job is to challenge Claude's analysis in a disciplined way. Return JSON only. No markdown fences. No preamble.
 
 Return exactly this structure:
 {{
-  "where_claude_is_most_likely_wrong": "One sentence identifying the single most likely error or overconfidence in Claude's analysis.",
-  "what_claude_overstated": "One sentence on what Claude leaned too hard on.",
-  "what_claude_missed": "One sentence on a meaningful angle, fact, or interpretation Claude did not address.",
-  "strongest_alternative_interpretation": "One sentence describing the most credible alternative reading of this claim.",
+  "where_claude_is_most_likely_wrong": "One sentence identifying the single most likely error, overreach, or unsupported assumption in Claude's analysis.",
+  "what_claude_overstated": "One sentence on what Claude leaned too hard on, if anything. If nothing material was overstated, say that plainly.",
+  "what_claude_missed": "One sentence on a meaningful context gap, definitional issue, structural factor, historical comparison, or alternative interpretation Claude did not address.",
+  "strongest_alternative_interpretation": "One sentence describing the strongest credible alternative reading of the claim that remains grounded in the record.",
   "openai_verdict": "Exactly one of: True, Mostly True, Substantially True, Plausible/Mixed, Contested, Exaggerated, Misleading, Unproven, False",
-  "divergence_note": "If your verdict differs from Claude's, explain the core disagreement in one sentence. If aligned, write: Aligned with Claude's assessment."
+  "divergence_note": "If your verdict differs from Claude's, write one calm, neutral sentence beginning with 'OpenAI and Claude differ on'. Attribute the disagreement explicitly to OpenAI and Claude. Describe the disagreement in terms of evidence weighting, scope, definition, historical comparison, institutional context, or degree of certainty. Do not use first person. Do not use vague phrases like more severe unless you specify what is being weighed more heavily. If aligned, write exactly: OpenAI and Claude are aligned on the core assessment."
 }}"""
 
             challenge_response = openai_client.chat.completions.create(
