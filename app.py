@@ -791,6 +791,7 @@ def normalize_topic(raw_topic):
 
     text = str(raw_topic).strip().lower()
 
+    # Healthcare first (safe, specific)
     if "medicaid" in text:
         return "Medicaid"
     if "medicare" in text:
@@ -800,46 +801,57 @@ def normalize_topic(raw_topic):
     if "health" in text:
         return "Healthcare"
 
+    # Energy
     if any(k in text for k in ["energy", "fossil", "renewable", "climate", "oil", "gas", "electric grid"]):
         return "Energy"
 
+    # Foreign policy / war
     if "iran" in text:
         return "Iran War"
     if any(k in text for k in ["foreign policy", "foreign", "diplomacy", "international", "treaty"]):
         return "Foreign Policy"
 
+    # Crime
     if any(k in text for k in ["crime", "criminal", "murder", "shoot", "assass", "policing", "law enforcement"]):
         return "Crime"
 
-    if any(k in text for k in ["election", "vote", "ballot", "save act", "voting", "campaign", "electoral"]):
+    # 🔥 CRITICAL: Constitutional BEFORE Elections
+    if any(k in text for k in [
+        "constitution", "constitutional", "amendment", "rights", "civil liberties",
+        "court", "judicial", "executive", "executive power",
+        "congress", "legislative", "separation of powers",
+        "due process", "free speech",
+        "authoritarian", "monarchy", "king", "dictator",
+        "government power", "government authority", "federal power",
+        "state power", "institutional checks"
+    ]):
+        return "Constitutional Rights"
+
+    # Elections AFTER constitutional
+    if any(k in text for k in ["election", "vote", "ballot", "voting", "campaign", "electoral"]):
         return "Elections"
 
-    if any(k in text for k in ["econom", "job", "inflation", "paycheck", "tax", "wage", "recession", "trade", "tariff", "debt", "spending", "budget"]):
+    # Economy
+    if any(k in text for k in ["econom", "job", "inflation", "tax", "wage", "recession", "trade", "tariff", "debt", "spending"]):
         return "Economy"
 
+    # Immigration
     if any(k in text for k in ["immigr", "border", "asylum", "migrant", "deport"]):
         return "Immigration"
 
-    if any(k in text for k in ["defense", "defence", "pentagon", "arms procurement"]):
+    # Defense / Military
+    if any(k in text for k in ["defense", "pentagon"]):
         return "Defense"
-
-    if any(k in text for k in ["military", "war", "troops", "armed forces", "combat"]):
+    if any(k in text for k in ["military", "war", "troops", "armed forces"]):
         return "Military"
 
-    if any(k in text for k in ["school", "educat", "teach", "curriculum", "student", "university"]):
+    # Education
+    if any(k in text for k in ["school", "educat", "student", "university"]):
         return "Education"
 
-    if any(k in text for k in ["gender", "trans", "lgbtq", "pronouns", "sex based", "title ix"]):
+    # Gender
+    if any(k in text for k in ["gender", "trans", "lgbtq", "pronouns"]):
         return "Gender Issues"
-
-    if any(k in text for k in [
-        "constitution", "constitutional", "amendment", "rights", "civil liberties",
-        "civil liberty", "court", "judicial", "executive", "executive power",
-        "congress", "legislative", "separation of powers", "due process",
-        "free speech", "first amendment", "second amendment", "fourth amendment",
-        "government power", "government authority", "federal power", "state power"
-    ]):
-        return "Constitutional Rights"
 
     return "Other"
 
