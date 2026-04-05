@@ -440,16 +440,10 @@ def build_civic_role_contract(parsed, existing_fields=None):
     """
     Authoritative Civic Role contract.
     Falls back to existing stored fields when the fresh parsed payload is incomplete.
-    Also derives the quick-view civic line from the full civic role if needed.
+    Also derives structured civic fields from the full civic role text when needed.
     """
     parsed = parsed or {}
     existing_fields = existing_fields or {}
-
-    civic_role_quick_view = _clean_line_text(
-        parsed.get("Civic Role Quick View")
-        or existing_fields.get("Civic Role Quick View")
-        or ""
-    )
 
     civic_role_full = (
         parsed.get("Civic Role")
@@ -461,18 +455,30 @@ def build_civic_role_contract(parsed, existing_fields=None):
 
     if not civic_parts["what_this_tests"]:
         civic_parts["what_this_tests"] = _clean_line_text(
-            existing_fields.get("Civic What This Tests") or ""
+            parsed.get("Civic What This Tests")
+            or existing_fields.get("Civic What This Tests")
+            or ""
         )
 
     if not civic_parts["what_people_should_separate"]:
         civic_parts["what_people_should_separate"] = _clean_line_text(
-            existing_fields.get("Civic What People Should Separate") or ""
+            parsed.get("Civic What People Should Separate")
+            or existing_fields.get("Civic What People Should Separate")
+            or ""
         )
 
     if not civic_parts["why_this_matters"]:
         civic_parts["why_this_matters"] = _clean_line_text(
-            existing_fields.get("Civic Why This Matters") or ""
+            parsed.get("Civic Why This Matters")
+            or existing_fields.get("Civic Why This Matters")
+            or ""
         )
+
+    civic_role_quick_view = _clean_line_text(
+        parsed.get("Civic Role Quick View")
+        or existing_fields.get("Civic Role Quick View")
+        or ""
+    )
 
     if not civic_role_quick_view:
         fallback_source = (
@@ -486,9 +492,29 @@ def build_civic_role_contract(parsed, existing_fields=None):
             if civic_role_quick_view and not civic_role_quick_view.endswith("."):
                 civic_role_quick_view += "."
 
+    rebuilt_civic_role = civic_role_full
+    if not rebuilt_civic_role and (
+        civic_parts["what_this_tests"]
+        or civic_parts["what_people_should_separate"]
+        or civic_parts["why_this_matters"]
+    ):
+        rebuilt_lines = []
+        if civic_parts["what_this_tests"]:
+            rebuilt_lines.append("What this tests:")
+            rebuilt_lines.append(civic_parts["what_this_tests"])
+            rebuilt_lines.append("")
+        if civic_parts["what_people_should_separate"]:
+            rebuilt_lines.append("What people should separate:")
+            rebuilt_lines.append(civic_parts["what_people_should_separate"])
+            rebuilt_lines.append("")
+        if civic_parts["why_this_matters"]:
+            rebuilt_lines.append("Why this matters:")
+            rebuilt_lines.append(civic_parts["why_this_matters"])
+        rebuilt_civic_role = "\n".join(rebuilt_lines).strip()
+
     return {
         "civic_role_quick_view": civic_role_quick_view,
-        "civic_role": civic_role_full,
+        "civic_role": rebuilt_civic_role,
         "civic_what_this_tests": civic_parts["what_this_tests"],
         "civic_what_people_should_separate": civic_parts["what_people_should_separate"],
         "civic_why_this_matters": civic_parts["why_this_matters"]
