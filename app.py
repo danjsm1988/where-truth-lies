@@ -367,35 +367,55 @@ def parse_civic_role_lines(text):
     return result
 
 
-def build_quick_view_contract(parsed):
+def build_quick_view_contract(parsed, existing_fields=None):
     """
     Authoritative Quick View contract.
     Build once at save/reanalysis time and persist atomic fields.
+    Falls back to existing stored fields when the fresh parsed payload is incomplete.
     """
     parsed = parsed or {}
+    existing_fields = existing_fields or {}
 
-    quick_blob = (parsed.get("Quick Explanation") or "").strip()
+    quick_blob = _clean_line_text(parsed.get("Quick Explanation") or existing_fields.get("Quick Explanation") or "")
     quick_parts = parse_quick_explanation_lines(quick_blob)
 
     if not quick_parts["one_line_read"]:
-        quick_parts["one_line_read"] = _clean_line_text(parsed.get("Stripped Claim") or "")
+        quick_parts["one_line_read"] = _clean_line_text(
+            parsed.get("Stripped Claim")
+            or existing_fields.get("Stripped Claim")
+            or ""
+        )
 
     if not quick_parts["what_holds_up"]:
-        direct = _clean_line_text(parsed.get("Direct Facts") or "")
+        direct = _clean_line_text(
+            parsed.get("Direct Facts")
+            or existing_fields.get("Direct Facts")
+            or ""
+        )
         if direct:
             quick_parts["what_holds_up"] = direct.split(". ")[0].strip()
             if quick_parts["what_holds_up"] and not quick_parts["what_holds_up"].endswith("."):
                 quick_parts["what_holds_up"] += "."
 
     if not quick_parts["what_is_disputed"]:
-        disputed = _clean_line_text(parsed.get("Adjacent Facts") or parsed.get("Root Concern") or "")
+        disputed = _clean_line_text(
+            parsed.get("Adjacent Facts")
+            or existing_fields.get("Adjacent Facts")
+            or parsed.get("Root Concern")
+            or existing_fields.get("Root Concern")
+            or ""
+        )
         if disputed:
             quick_parts["what_is_disputed"] = disputed.split(". ")[0].strip()
             if quick_parts["what_is_disputed"] and not quick_parts["what_is_disputed"].endswith("."):
                 quick_parts["what_is_disputed"] += "."
 
     if not quick_parts["where_agreement_exists"]:
-        agreement = _clean_line_text(parsed.get("Common Ground") or "")
+        agreement = _clean_line_text(
+            parsed.get("Common Ground")
+            or existing_fields.get("Common Ground")
+            or ""
+        )
         if agreement:
             quick_parts["where_agreement_exists"] = agreement.split(". ")[0].strip()
             if quick_parts["where_agreement_exists"] and not quick_parts["where_agreement_exists"].endswith("."):
@@ -1040,7 +1060,7 @@ def extract_primary_record_fields(claim, parsed, mode, username, existing_fields
 
     entered_by = existing_fields.get("Entered By") or username or "Unknown"
 
-    quick_view_contract = build_quick_view_contract(parsed)
+    quick_view_contract = build_quick_view_contract(parsed, existing_fields=existing_fields)
     civic_role_contract = build_civic_role_contract(parsed)
 
     fields = {
