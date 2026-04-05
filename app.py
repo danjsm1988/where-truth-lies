@@ -31,7 +31,7 @@ AIRTABLE_DISPUTES_TABLE_NAME = os.getenv("AIRTABLE_DISPUTES_TABLE_NAME", "Disput
 # or core verdict identity.
 # Do NOT bump for: civic layer, scenario map tweaks, hover text, dedup, breakout
 # display, source formatting, editor tools, styling, or feature-only layer additions.
-ANALYSIS_CORE_VERSION = "1.0"
+ANALYSIS_CORE_VERSION = "1.1"
 
 MAX_PUSHBACKS = {
     "standard": 1,
@@ -185,7 +185,7 @@ Always return this exact JSON structure:
 
 {
   "Stripped Claim": "Rewrite the claim in plain, accessible language that any ordinary person can understand immediately. Remove emotional rhetoric, dramatic framing, and inflammatory decoration. Do not substitute or sanitize specific terms — if the original claim uses a particular word or phrase, preserve it unless it is purely emotional amplification with no factual content. One sentence only.",
-  "Quick Explanation": "Write exactly four labeled lines. Each line starts with its label followed by a colon. Line 1 — ONE-LINE READ: One sentence that creates friction between what the record shows and what the claim asserts. When the claim uses charged terminology (monarchy, authoritarian, dictator, etc.), signal whether current conditions meet the legal and historical threshold those terms require — not just whether the underlying concern is real. When historical precedent is relevant, briefly signal the standard being applied. The one-liner must feel decisive and create genuine tension — make the reader feel the gap between concern and proof. Line 2 — WHAT HOLDS UP: One sentence anchored to specific documented actions or measurable signals first, then attribute to sources. Lead with the documented fact, not the authority. Line 3 — WHAT IS DISPUTED: One sentence on what remains contested — including whether charged terminology meets its own definitional and historical threshold, and whether current conditions are comparable to those that have historically justified similar expansions of authority. Line 4 — WHERE AGREEMENT EXISTS: One sentence identifying narrow genuine common ground, or state plainly that none exists. No bullet points. No dashes. Plain language only. No preamble before the first label.",
+  "Quick Explanation": "Write exactly four labeled lines. Each line starts with its label followed by a colon. Line 1 — ONE-LINE READ: One sentence that creates friction between what the record shows and what the claim asserts. When the claim uses charged terminology like monarchy, authoritarian, dictator, king, fascist, coup, or similar, explicitly signal whether current conditions meet the legal and historical threshold for that term. When historical precedent is relevant, briefly signal the standard being applied. Line 2 — WHAT HOLDS UP: One sentence leading with the core documented government action, institutional condition, or constitutional reality that most directly bears on the claim. For civic or constitutional claims, prioritize executive actions, court constraints, congressional behavior, elections, enforcement, and historical comparisons before any public reaction, protest description, turnout, slogan, or movement detail. Line 3 — WHAT IS DISPUTED: One sentence on what remains contested, including whether the charged term meets its real definitional threshold and whether the current conditions are historically comparable to stronger or weaker precedents. Line 4 — WHERE AGREEMENT EXISTS: One sentence identifying narrow genuine common ground, or state plainly that none exists. No bullet points. No dashes. Plain language only. No preamble before the first label.",
   "Speaker": "Who made the claim, or Unknown if not specified.",
   "Topic": "Exactly one of: Iran War, Energy, Healthcare, Social Security, Medicare, Medicaid, Defense, Military, Elections, Economy, Immigration, Foreign Policy, Crime, Gender Issues, Constitutional Rights, Education, Other",
   "Sub Claims": [
@@ -193,10 +193,10 @@ Always return this exact JSON structure:
     {"claim": "Second distinct falsifiable claim", "verdict": "Contested"},
     {"claim": "Third distinct falsifiable claim if present", "verdict": "Unproven"}
   ],
-  "Direct Facts": "What the documented record actually shows. 3 to 4 sentences of prose in plain English.",
-  "Adjacent Facts": "What the claim omits or ignores on BOTH sides equally. 2 to 3 sentences of prose in plain English.",
-  "Root Concern": "The legitimate underlying concern that exists even beneath a false or misleading claim. 1 to 2 sentences of prose in plain English.",
-  "Values Divergence": "Where the real disagreement lives. Usually not in the facts themselves but in what people prioritize. 2 to 3 sentences of prose identifying the competing values in plain English.",
+  "Direct Facts": "What the documented record actually shows. 3 to 4 sentences of prose in plain English. For civic, constitutional, or executive power claims, lead with the underlying government action, institutional condition, legal constraint, court activity, congressional role, enforcement reality, and historical comparison. Do not lead with protest size, crowd behavior, slogans, or movement messaging unless the claim is specifically about those.",
+  "Adjacent Facts": "What the claim omits or ignores on BOTH sides equally. 2 to 3 sentences of prose in plain English. For civic or constitutional claims, surface omitted institutional context, historical precedent, delegated authority, court involvement, congressional passivity, and definitional thresholds before discussing movement reaction or public rhetoric.",
+  "Root Concern": "The legitimate underlying concern that exists even beneath a false or misleading claim. 1 to 2 sentences of prose in plain English. For civic or constitutional claims, identify the deeper concern in terms of power, institutional failure, rights, accountability, delegated authority, or civic thresholds, not the surrounding protest language or emotional framing.",
+  "Values Divergence": "Where the real disagreement lives. Usually not in the facts themselves but in what people prioritize. 2 to 3 sentences of prose identifying the competing values in plain English. For civic claims, this often includes liberty versus order, restraint versus urgency, branch independence versus executive efficiency, and public distrust versus institutional continuity.",
   "Constitutional Framework": "If the claim touches government action, rights, authority, public funds, war, law enforcement, elections, or institutional power, identify the specific Article, Section, or Amendment that applies and explain relevant founder intent in plain English. If not applicable, explain briefly why not.",
   "Common Ground": "Layer 06. Identify the narrow but genuine overlap between opposing sides. 2 to 3 sentences of prose in plain English.",
 
@@ -305,14 +305,54 @@ def detect_input_type(text):
 def detect_claim_type(claim):
     if not claim:
         return "unknown"
+
     c = claim.lower()
-    if any(k in c for k in ["constitutional", "rights", "government", "authority"]):
+
+    civic_terms = [
+        "constitutional", "constitution", "rights", "government", "authority",
+        "executive", "president", "congress", "court", "judicial", "legislative",
+        "monarch", "monarchy", "authoritarian", "dictator", "election", "due process",
+        "powers", "amendment", "federal", "state", "institution", "institutional"
+    ]
+
+    economic_terms = [
+        "tax", "inflation", "economy", "economic", "wages", "jobs", "price", "cost of living"
+    ]
+
+    scientific_terms = [
+        "science", "medical", "disease", "virus", "study", "evidence", "research", "clinical"
+    ]
+
+    historical_terms = [
+        "history", "historical", "founders", "founder", "precedent", "war", "civil war"
+    ]
+
+    if any(k in c for k in civic_terms):
         return "civic"
+    if any(k in c for k in economic_terms):
+        return "economic"
+    if any(k in c for k in scientific_terms):
+        return "scientific"
+    if any(k in c for k in historical_terms):
+        return "historical"
+
     return "general"
 
 
 def extract_root_concern(claim):
-    return claim or ""
+    text = (claim or "").strip()
+    lowered = text.lower()
+
+    if any(k in lowered for k in ["monarch", "monarchy", "authoritarian", "dictator", "king"]):
+        return "Whether executive power is being exercised beyond constitutional limits and whether institutional checks are still holding."
+
+    if any(k in lowered for k in ["tax", "wealth", "rich", "billionaire", "economy"]):
+        return "Whether public burdens and public benefits are being distributed fairly and whether institutions are serving the public rather than entrenched interests."
+
+    if any(k in lowered for k in ["court", "rights", "amendment", "government", "authority", "executive", "congress"]):
+        return "Whether constitutional structure, institutional accountability, and protected rights are being maintained in practice."
+
+    return text
 
 def extract_verdict_from_parsed(parsed):
     if not isinstance(parsed, dict):
@@ -2342,10 +2382,10 @@ def profile_page():
     )
 
 
-def normalize_claim_text(text):
-    """Normalize claim for comparison: lowercase, strip punctuation, collapse whitespace."""
+def normalize_claim_text_for_dedup(text):
+    """Normalize claim for duplicate comparison only."""
     import re as _re
-    text = text.lower().strip()
+    text = (text or "").lower().strip()
     text = _re.sub(r'[^\w\s]', ' ', text)
     text = _re.sub(r'\s+', ' ', text).strip()
     return text
@@ -2383,7 +2423,7 @@ def find_duplicate_and_similar_claims(claim_text, threshold=0.30, max_similar=4,
     input_claim_type = (framing_data or {}).get('claim_type', '')
     input_input_type = (framing_data or {}).get('input_type', '')
 
-    norm_input = normalize_claim_text(compare_text)
+    norm_input = normalize_claim_text_for_dedup(compare_text)
 
     try:
         params = {
@@ -2409,7 +2449,7 @@ def find_duplicate_and_similar_claims(claim_text, threshold=0.30, max_similar=4,
         raw = f.get('Analyzed Claim') or f.get('Original Quote') or f.get('Stripped Claim') or ''
         if not raw:
             continue
-        norm_existing = normalize_claim_text(raw)
+        norm_existing = normalize_claim_text_for_dedup(raw)
 
         # Exact match check
         if norm_existing == norm_input:
@@ -2462,6 +2502,25 @@ CRITICAL RULES:
 3. Rhetorical slogans and compressed narratives (like "No Kings", "Defund the Police", "Stop the Steal") must be recognized as compressed claims and unpacked to their foundational premise.
 4. Sourced content, press releases, manifestos, and "About" page text must be treated as raw material — extract what the user most likely wants examined.
 5. The system leads. Propose the primary framing. The user may adjust from system-generated options but cannot replace with an unrelated claim.
+
+CIVIC MANIFESTO AND ABOUT PAGE RULES:
+When the input is a movement page, manifesto, protest page, about page, open letter, grievance list, or long political narrative, do NOT frame the primary claim around turnout, slogans, emotional force, or supporter energy.
+Extract the underlying assertion about government behavior, institutional conduct, constitutional limits, public harm, or civic justification.
+If the text contains both a structural accusation and descriptive movement language, the structural accusation wins.
+Examples:
+A protest page describing a president as king like is not primarily a claim about protests. It is primarily a claim that the president is exercising power in a way comparable to monarchical or authoritarian rule.
+A tax the rich style narrative is not primarily a claim about wealthy people existing. It is primarily a claim about fairness, burden sharing, institutional capture, or state allocation of resources.
+A movement page can mention turnout, momentum, and reaction, but those belong in breakout_candidates or supporting context, never as the primary claim unless the actual dispute is about turnout itself.
+
+PRIMARY CLAIM PRIORITY RULE:
+When multiple layers are present, rank them in this order:
+1. The structural accusation or central premise
+2. The constitutional, institutional, civic, legal, or economic concern beneath it
+3. The public reaction or justification argument
+4. The supporting examples, numbers, slogans, and event descriptions
+
+The primary_claim must come from level 1, and if needed level 2.
+It must never come from level 3 or 4 unless the user is explicitly asking about those.
 
 ACTOR RULES:
 When input uses vague actors — "they", "them", "everyone", "the government" — do NOT convert to named entities or coordinated groups.
@@ -2545,10 +2604,18 @@ Return ONLY valid JSON. No markdown. No preamble.
 
 def frame_claim_input(raw_input):
     fallback = {
-        "input_type": "single_claim", "primary_claim": raw_input,
-        "clarified_text": raw_input, "alternate_claims": [],
-        "breakout_candidates": [], "confidence_score": 0.9,
-        "needs_clarification": False, "framing_note": ""
+        "input_type": "single_claim",
+        "primary_claim": raw_input,
+        "clarified_text": raw_input,
+        "alternate_claims": [],
+        "breakout_candidates": [],
+        "confidence_score": 0.9,
+        "needs_clarification": False,
+        "framing_note": "",
+        "canonical_claim": raw_input,
+        "claim_type": "general",
+        "polarity": "neutral",
+        "implied_premise": False
     }
     if not raw_input or not anthropic_client:
         return fallback
@@ -2616,14 +2683,28 @@ def frame_claim_input(raw_input):
                     result["breakout_candidates"] = existing_breakouts + [accountability_clause]
         primary_claim = str(result.get("primary_claim", "") or "").strip()
         breakout_candidates = result.get("breakout_candidates", [])
+        clarified_text = str(result.get("clarified_text", "") or "").strip()
+        canonical_claim = str(result.get("canonical_claim", "") or "").strip()
+        input_type = str(result.get("input_type", "") or "").strip() or detect_input_type(raw_input)
+        claim_type = str(result.get("claim_type", "") or "").strip() or detect_claim_type(primary_claim)
+        polarity = str(result.get("polarity", "") or "").strip() or "neutral"
+        implied_premise = bool(result.get("implied_premise", False))
+        confidence_score = float(result.get("confidence_score", 0.9) or 0.9)
+        framing_note = str(result.get("framing_note", "") or "").strip()
 
         framing_obj = {
-            "input_type": detect_input_type(raw_input),
-            "claim_type": detect_claim_type(primary_claim),
+            "input_type": input_type,
+            "claim_type": claim_type,
+            "polarity": polarity,
             "primary_claim": primary_claim,
+            "clarified_text": clarified_text,
+            "canonical_claim": canonical_claim or primary_claim,
             "supporting_claims": breakout_candidates if isinstance(breakout_candidates, list) else [],
             "foundational_concern": extract_root_concern(primary_claim),
-            "framing_version": "1.0"
+            "implied_premise": implied_premise,
+            "confidence_score": confidence_score,
+            "framing_note": framing_note,
+            "framing_version": "1.1"
         }
 
         result["framing_obj"] = framing_obj
