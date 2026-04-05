@@ -31,7 +31,7 @@ AIRTABLE_DISPUTES_TABLE_NAME = os.getenv("AIRTABLE_DISPUTES_TABLE_NAME", "Disput
 # or core verdict identity.
 # Do NOT bump for: civic layer, scenario map tweaks, hover text, dedup, breakout
 # display, source formatting, editor tools, styling, or feature-only layer additions.
-ANALYSIS_CORE_VERSION = "1.1"
+ANALYSIS_CORE_VERSION = "1.2"
 
 MAX_PUSHBACKS = {
     "standard": 1,
@@ -185,7 +185,7 @@ Always return this exact JSON structure:
 
 {
   "Stripped Claim": "Rewrite the claim in plain, accessible language that any ordinary person can understand immediately. Remove emotional rhetoric, dramatic framing, and inflammatory decoration. Do not substitute or sanitize specific terms — if the original claim uses a particular word or phrase, preserve it unless it is purely emotional amplification with no factual content. One sentence only.",
-  "Quick Explanation": "Write exactly four labeled lines. Each line starts with its label followed by a colon. Line 1 — ONE-LINE READ: One sentence that creates friction between what the record shows and what the claim asserts. When the claim uses charged terminology like monarchy, authoritarian, dictator, king, fascist, coup, or similar, explicitly signal whether current conditions meet the legal and historical threshold for that term. When historical precedent is relevant, briefly signal the standard being applied. Line 2 — WHAT HOLDS UP: One sentence leading with the core documented government action, institutional condition, or constitutional reality that most directly bears on the claim. For civic or constitutional claims, prioritize executive actions, court constraints, congressional behavior, elections, enforcement, and historical comparisons before any public reaction, protest description, turnout, slogan, or movement detail. Line 3 — WHAT IS DISPUTED: One sentence on what remains contested, including whether the charged term meets its real definitional threshold and whether the current conditions are historically comparable to stronger or weaker precedents. Line 4 — WHERE AGREEMENT EXISTS: One sentence identifying narrow genuine common ground, or state plainly that none exists. No bullet points. No dashes. Plain language only. No preamble before the first label.",
+  "Quick Explanation": "Write exactly four labeled lines. Each line starts with its label followed by a colon. Line 1 — ONE-LINE READ: One sentence that creates friction between what the record shows and what the claim asserts. When the claim uses charged terminology like monarchy, authoritarian, dictator, king, fascist, coup, or similar, explicitly signal whether current conditions meet the legal and historical threshold for that term. When historical precedent is relevant, briefly signal the standard being applied. Line 2 — WHAT HOLDS UP: One sentence leading with the core institutional or constitutional condition that most directly bears on the claim. For civic or constitutional claims, prefer structural language over person-centered language. Prioritize courts, elections, congressional oversight, legal thresholds, enforcement limits, and historical comparison. Do not center this line on the named political figure unless the identity of that figure is itself the institutional fact being tested. Line 3 — WHAT IS DISPUTED: One sentence on what remains contested, including whether the charged term meets its real definitional threshold and whether the current conditions are historically comparable to stronger or weaker precedents. Line 4 — WHERE AGREEMENT EXISTS: One sentence identifying narrow genuine common ground. For civic or constitutional claims, write this at the level of shared institutional interest, constitutional limits, lawful accountability, or functioning checks. Do not paraphrase one side's narrative and do not restate the named actor's behavior. State plainly if no genuine common ground exists. No bullet points. No dashes. Plain language only. No preamble before the first label.",
   "Speaker": "Who made the claim, or Unknown if not specified.",
   "Topic": "Exactly one of: Iran War, Energy, Healthcare, Social Security, Medicare, Medicaid, Defense, Military, Elections, Economy, Immigration, Foreign Policy, Crime, Gender Issues, Constitutional Rights, Education, Other",
   "Sub Claims": [
@@ -200,20 +200,23 @@ Always return this exact JSON structure:
   "Constitutional Framework": "If the claim touches government action, rights, authority, public funds, war, law enforcement, elections, or institutional power, identify the specific Article, Section, or Amendment that applies and explain relevant founder intent in plain English. If not applicable, explain briefly why not.",
   "Common Ground": "Layer 06. Identify the narrow but genuine overlap between opposing sides. 2 to 3 sentences of prose in plain English.",
 
-  "Civic Role Quick View": "One short sentence only. This is a preview of the Civic Role section. It should briefly explain what kind of thinking or judgment this claim tests in a self governing country. Do not give instructions. Do not use commands. Do not mention political sides. Keep it simple, clear, and readable.",
+  "Civic Role Quick View": "One short sentence only. This is a preview of the Civic Role section. It should explain what kind of civic judgment this claim tests in a self governing country. Keep it structural and citizen-facing, not person-facing. Do not repeat the named actor unless absolutely necessary. Do not give instructions. Do not use commands. Do not mention political sides. Keep it simple, clear, and readable.",
 
   "Civic Role": "Provide three short structured lines, not bullet points and not a paragraph. Use this exact format:
 
   What this tests:
-  One short sentence explaining what kind of thinking or judgment this claim challenges.
+  One short sentence explaining what kind of civic judgment, threshold recognition, or institutional reasoning this claim challenges.
 
   What people should separate:
-  One short sentence explaining what people should clearly distinguish instead of mixing together.
+  One short sentence explaining what categories, thresholds, or constitutional distinctions need to be kept separate instead of blurred together.
 
   Why this matters:
-  One short sentence explaining why this is important in a self governing country.
+  One short sentence explaining why that distinction matters in a self governing country.
 
   Rules:
+  Keep this section abstract, structural, and citizen-facing.
+  Do not recycle direct factual narration from Direct Facts, Adjacent Facts, or Common Ground.
+  Do not center the named political figure unless absolutely necessary.
   Do not use commands like should, must, need to, or have to.
   Do not tell the reader what action to take.
   Do not mention political sides.
@@ -297,6 +300,73 @@ def _clean_line_text(value):
     return re.sub(r"\s+", " ", str(value or "").strip())
 
 
+def build_civic_structural_fallbacks(parsed, existing_fields=None):
+    """
+    Build stripped, structural fallback language for civic / constitutional claims.
+    These fallbacks are intentionally institution-centered, not person-centered.
+    """
+    parsed = parsed or {}
+    existing_fields = existing_fields or {}
+
+    combined = " ".join([
+        _clean_line_text(parsed.get("Stripped Claim") or existing_fields.get("Stripped Claim") or ""),
+        _clean_line_text(parsed.get("Direct Facts") or existing_fields.get("Direct Facts") or ""),
+        _clean_line_text(parsed.get("Adjacent Facts") or existing_fields.get("Adjacent Facts") or ""),
+        _clean_line_text(parsed.get("Root Concern") or existing_fields.get("Root Concern") or ""),
+        _clean_line_text(parsed.get("Values Divergence") or existing_fields.get("Values Divergence") or ""),
+        _clean_line_text(parsed.get("Constitutional Framework") or existing_fields.get("Constitutional Framework") or ""),
+        _clean_line_text(parsed.get("Common Ground") or existing_fields.get("Common Ground") or "")
+    ]).lower()
+
+    civic_like = any(k in combined for k in [
+        "executive", "president", "constitutional", "constitution", "court",
+        "congress", "authoritarian", "monarchy", "king", "dictator",
+        "institution", "institutional", "election", "judicial", "legislative"
+    ])
+
+    if not civic_like:
+        return {
+            "what_holds_up": "",
+            "where_agreement_exists": "",
+            "civic_quick": "",
+            "civic_tests": "",
+            "civic_separate": "",
+            "civic_matters": ""
+        }
+
+    holds_up = "Institutional checks remain part of the picture, including courts, elections, and the formal constitutional structure."
+    agreement = "There is still a shared interest in keeping executive power bounded by enforceable constitutional limits."
+    civic_quick = "This tests whether people can judge power through institutions and thresholds instead of rhetoric and tribal reaction."
+    civic_tests = "This tests whether power is being judged by constitutional conditions and working checks rather than by emotionally loaded labels alone."
+    civic_separate = "Aggressive executive action, institutional stress, and actual authoritarian rule are not the same thing and need to be kept distinct."
+    civic_matters = "A self governing country depends on citizens recognizing the difference between hardball politics, structural strain, and genuine constitutional breakdown."
+
+    if any(k in combined for k in [
+        "courts are functioning", "court review", "blocked", "reviewed executive",
+        "judicial review", "court constraints", "court activity"
+    ]):
+        holds_up = "Courts are still functioning and reviewing executive action, which means formal constitutional checks are still operating."
+
+    if any(k in combined for k in [
+        "election", "elections are proceeding", "ballot", "voting", "electoral"
+    ]):
+        holds_up = "Elections are still functioning alongside the constitutional process, which matters when judging claims of monarchical or authoritarian rule."
+
+    if any(k in combined for k in [
+        "congress", "legislative", "oversight", "checks and balances"
+    ]):
+        agreement = "There is still a shared interest in having executive power constrained by functioning courts, Congress, and enforceable constitutional limits."
+
+    return {
+        "what_holds_up": holds_up,
+        "where_agreement_exists": agreement,
+        "civic_quick": civic_quick,
+        "civic_tests": civic_tests,
+        "civic_separate": civic_separate,
+        "civic_matters": civic_matters
+    }
+
+
 def parse_quick_explanation_lines(text):
     """
     Parse the Quick Explanation blob into atomic fields.
@@ -366,12 +436,15 @@ def build_quick_view_contract(parsed, existing_fields=None):
     Authoritative Quick View contract.
     Build once at save/reanalysis time and persist atomic fields.
     Falls back to existing stored fields when the fresh parsed payload is incomplete.
+    Uses structural civic fallbacks for civic / constitutional claims so stripped
+    layers do not collapse back into person-centered prose.
     """
     parsed = parsed or {}
     existing_fields = existing_fields or {}
 
     quick_blob = _clean_line_text(parsed.get("Quick Explanation") or existing_fields.get("Quick Explanation") or "")
     quick_parts = parse_quick_explanation_lines(quick_blob)
+    civic_fallbacks = build_civic_structural_fallbacks(parsed, existing_fields=existing_fields)
 
     if not quick_parts["one_line_read"]:
         quick_parts["one_line_read"] = _clean_line_text(
@@ -381,15 +454,18 @@ def build_quick_view_contract(parsed, existing_fields=None):
         )
 
     if not quick_parts["what_holds_up"]:
-        direct = _clean_line_text(
-            parsed.get("Direct Facts")
-            or existing_fields.get("Direct Facts")
-            or ""
-        )
-        if direct:
-            quick_parts["what_holds_up"] = direct.split(". ")[0].strip()
-            if quick_parts["what_holds_up"] and not quick_parts["what_holds_up"].endswith("."):
-                quick_parts["what_holds_up"] += "."
+        if civic_fallbacks["what_holds_up"]:
+            quick_parts["what_holds_up"] = civic_fallbacks["what_holds_up"]
+        else:
+            direct = _clean_line_text(
+                parsed.get("Direct Facts")
+                or existing_fields.get("Direct Facts")
+                or ""
+            )
+            if direct:
+                quick_parts["what_holds_up"] = direct.split(". ")[0].strip()
+                if quick_parts["what_holds_up"] and not quick_parts["what_holds_up"].endswith("."):
+                    quick_parts["what_holds_up"] += "."
 
     if not quick_parts["what_is_disputed"]:
         disputed = _clean_line_text(
@@ -405,15 +481,18 @@ def build_quick_view_contract(parsed, existing_fields=None):
                 quick_parts["what_is_disputed"] += "."
 
     if not quick_parts["where_agreement_exists"]:
-        agreement = _clean_line_text(
-            parsed.get("Common Ground")
-            or existing_fields.get("Common Ground")
-            or ""
-        )
-        if agreement:
-            quick_parts["where_agreement_exists"] = agreement.split(". ")[0].strip()
-            if quick_parts["where_agreement_exists"] and not quick_parts["where_agreement_exists"].endswith("."):
-                quick_parts["where_agreement_exists"] += "."
+        if civic_fallbacks["where_agreement_exists"]:
+            quick_parts["where_agreement_exists"] = civic_fallbacks["where_agreement_exists"]
+        else:
+            agreement = _clean_line_text(
+                parsed.get("Common Ground")
+                or existing_fields.get("Common Ground")
+                or ""
+            )
+            if agreement:
+                quick_parts["where_agreement_exists"] = agreement.split(". ")[0].strip()
+                if quick_parts["where_agreement_exists"] and not quick_parts["where_agreement_exists"].endswith("."):
+                    quick_parts["where_agreement_exists"] += "."
 
     quick_blob_rebuilt = "\n".join([
         f"ONE-LINE READ: {quick_parts['one_line_read']}".strip(),
@@ -435,11 +514,12 @@ def build_civic_role_contract(parsed, existing_fields=None):
     """
     Authoritative Civic Role contract.
     Falls back to existing stored fields when the fresh parsed payload is incomplete.
-    Also derives structured civic fields from the full civic role text when needed.
-    If the AI omitted civic fields entirely, derive them from other populated layers.
+    Uses structural civic fallbacks for civic / constitutional claims so the
+    civic layer stays abstract and citizen-facing rather than person-centered.
     """
     parsed = parsed or {}
     existing_fields = existing_fields or {}
+    civic_fallbacks = build_civic_structural_fallbacks(parsed, existing_fields=existing_fields)
 
     civic_role_full = (
         parsed.get("Civic Role")
@@ -453,6 +533,7 @@ def build_civic_role_contract(parsed, existing_fields=None):
         civic_parts["what_this_tests"] = _clean_line_text(
             parsed.get("Civic What This Tests")
             or existing_fields.get("Civic What This Tests")
+            or civic_fallbacks["civic_tests"]
             or ""
         )
 
@@ -460,6 +541,7 @@ def build_civic_role_contract(parsed, existing_fields=None):
         civic_parts["what_people_should_separate"] = _clean_line_text(
             parsed.get("Civic What People Should Separate")
             or existing_fields.get("Civic What People Should Separate")
+            or civic_fallbacks["civic_separate"]
             or ""
         )
 
@@ -467,52 +549,14 @@ def build_civic_role_contract(parsed, existing_fields=None):
         civic_parts["why_this_matters"] = _clean_line_text(
             parsed.get("Civic Why This Matters")
             or existing_fields.get("Civic Why This Matters")
+            or civic_fallbacks["civic_matters"]
             or ""
         )
-
-    # Hard fallback when the AI omitted Civic Role entirely
-    if not civic_parts["what_this_tests"]:
-        fallback = _clean_line_text(
-            parsed.get("Root Concern")
-            or existing_fields.get("Root Concern")
-            or parsed.get("Values Divergence")
-            or existing_fields.get("Values Divergence")
-            or ""
-        )
-        if fallback:
-            civic_parts["what_this_tests"] = fallback.split(". ")[0].strip()
-            if civic_parts["what_this_tests"] and not civic_parts["what_this_tests"].endswith("."):
-                civic_parts["what_this_tests"] += "."
-
-    if not civic_parts["what_people_should_separate"]:
-        fallback = _clean_line_text(
-            parsed.get("Direct Facts")
-            or existing_fields.get("Direct Facts")
-            or parsed.get("Adjacent Facts")
-            or existing_fields.get("Adjacent Facts")
-            or ""
-        )
-        if fallback:
-            civic_parts["what_people_should_separate"] = fallback.split(". ")[0].strip()
-            if civic_parts["what_people_should_separate"] and not civic_parts["what_people_should_separate"].endswith("."):
-                civic_parts["what_people_should_separate"] += "."
-
-    if not civic_parts["why_this_matters"]:
-        fallback = _clean_line_text(
-            parsed.get("Common Ground")
-            or existing_fields.get("Common Ground")
-            or parsed.get("Constitutional Framework")
-            or existing_fields.get("Constitutional Framework")
-            or ""
-        )
-        if fallback:
-            civic_parts["why_this_matters"] = fallback.split(". ")[0].strip()
-            if civic_parts["why_this_matters"] and not civic_parts["why_this_matters"].endswith("."):
-                civic_parts["why_this_matters"] += "."
 
     civic_role_quick_view = _clean_line_text(
         parsed.get("Civic Role Quick View")
         or existing_fields.get("Civic Role Quick View")
+        or civic_fallbacks["civic_quick"]
         or ""
     )
 
@@ -833,6 +877,8 @@ def repair_quick_explanation(quick_explanation, parsed_json):
     """
     Ensure Quick Explanation always contains the four labeled lines
     required by the UI contract.
+    Prefer already-structured content. Do not rebuild person-centered fallback
+    prose from older analysis layers.
     """
     text = (quick_explanation or "").strip()
 
@@ -843,50 +889,16 @@ def repair_quick_explanation(quick_explanation, parsed_json):
         "WHERE AGREEMENT EXISTS:"
     ]
 
-    # If the saved text already contains all required labels, keep it.
     if text and all(label in text for label in labels):
         return text
 
-    # Try raw JSON first.
     raw_quick = (parsed_json.get("Quick Explanation") or "").strip()
-    if raw_quick and all(label in raw_quick for label in labels):
-        return raw_quick
+    parsed_parts = parse_quick_explanation_lines(raw_quick or text)
 
-    # Rebuild from available structured fields if needed.
-    one_line_read = ""
-    if raw_quick:
-        for line in raw_quick.splitlines():
-            line = line.strip()
-            if line.startswith("ONE-LINE READ:"):
-                one_line_read = line[len("ONE-LINE READ:"):].strip()
-                break
-
-    if not one_line_read:
-        one_line_read = (parsed_json.get("Stripped Claim") or "The claim needs more complete analysis.").strip()
-
-    what_holds_up = (parsed_json.get("Direct Facts") or "").strip()
-    if what_holds_up:
-        what_holds_up = what_holds_up.split(". ")[0].strip()
-        if not what_holds_up.endswith("."):
-            what_holds_up += "."
-    else:
-        what_holds_up = "The saved analysis does not currently preserve the strongest documented point."
-
-    what_is_disputed = (parsed_json.get("Adjacent Facts") or parsed_json.get("Root Concern") or "").strip()
-    if what_is_disputed:
-        what_is_disputed = what_is_disputed.split(". ")[0].strip()
-        if not what_is_disputed.endswith("."):
-            what_is_disputed += "."
-    else:
-        what_is_disputed = "The main area of dispute was not preserved in the saved Quick View."
-
-    where_agreement_exists = (parsed_json.get("Common Ground") or "").strip()
-    if where_agreement_exists:
-        where_agreement_exists = where_agreement_exists.split(". ")[0].strip()
-        if not where_agreement_exists.endswith("."):
-            where_agreement_exists += "."
-    else:
-        where_agreement_exists = "No clear common ground was preserved in the saved Quick View."
+    one_line_read = parsed_parts.get("one_line_read", "").strip() or (parsed_json.get("Stripped Claim") or "The claim needs more complete analysis.").strip()
+    what_holds_up = parsed_parts.get("what_holds_up", "").strip() or "The strongest institutional condition was not preserved in the saved Quick View."
+    what_is_disputed = parsed_parts.get("what_is_disputed", "").strip() or "The main disputed threshold was not preserved in the saved Quick View."
+    where_agreement_exists = parsed_parts.get("where_agreement_exists", "").strip() or "No clear common ground was preserved in the saved Quick View."
 
     return "\n".join([
         f"ONE-LINE READ: {one_line_read}",

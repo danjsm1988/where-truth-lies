@@ -517,6 +517,33 @@
     .layer-civic-role .layer-block-body { border-left-color: #9f8a58; }
     .layer-civic-role .layer-block-title { color: #d6bf86; }
 
+    .layer-civic-role-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .layer-civic-role-item {
+      background: rgba(255,255,255,.022);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 16px 18px;
+    }
+
+    .layer-civic-role-item-label {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 10px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+
+    .layer-civic-role-item-text {
+      font-size: 17px;
+      line-height: 1.68;
+      color: var(--cream-soft);
+    }
+
     .m-qv-civic {
       background: rgba(201,168,76,.05);
       border: 1px solid rgba(201,168,76,.18);
@@ -6537,7 +6564,7 @@ html, body {
                 </div>
               </div>
             {% endif %}
-{% if current_claim.civic_role or current_claim.civic_what_this_tests or current_claim.civic_what_people_should_separate or current_claim.civic_why_this_matters %}
+            {% if current_claim.civic_role or current_claim.civic_what_this_tests or current_claim.civic_what_people_should_separate or current_claim.civic_why_this_matters %}
               <div class="layer-block layer-civic-role">
                 <div class="layer-block-header open" onclick="toggleLayer(this)">
                   <div class="layer-block-header-left">
@@ -6553,15 +6580,26 @@ html, body {
                 </div>
                 <div class="layer-block-body open">
                   {% if current_claim.civic_what_this_tests or current_claim.civic_what_people_should_separate or current_claim.civic_why_this_matters %}
-                    <div class="layer-block-text" id="civicRoleText">
+                    <div class="layer-civic-role-grid" id="civicRoleText">
                       {% if current_claim.civic_what_this_tests %}
-                        <strong>What this tests:</strong> {{ current_claim.civic_what_this_tests }}{% if current_claim.civic_what_people_should_separate or current_claim.civic_why_this_matters %}<br><br>{% endif %}
+                        <div class="layer-civic-role-item">
+                          <div class="layer-civic-role-item-label">What this tests</div>
+                          <div class="layer-civic-role-item-text">{{ current_claim.civic_what_this_tests }}</div>
+                        </div>
                       {% endif %}
+
                       {% if current_claim.civic_what_people_should_separate %}
-                        <strong>What people should separate:</strong> {{ current_claim.civic_what_people_should_separate }}{% if current_claim.civic_why_this_matters %}<br><br>{% endif %}
+                        <div class="layer-civic-role-item">
+                          <div class="layer-civic-role-item-label">What people should separate</div>
+                          <div class="layer-civic-role-item-text">{{ current_claim.civic_what_people_should_separate }}</div>
+                        </div>
                       {% endif %}
+
                       {% if current_claim.civic_why_this_matters %}
-                        <strong>Why this matters:</strong> {{ current_claim.civic_why_this_matters }}
+                        <div class="layer-civic-role-item">
+                          <div class="layer-civic-role-item-label">Why this matters</div>
+                          <div class="layer-civic-role-item-text">{{ current_claim.civic_why_this_matters }}</div>
+                        </div>
                       {% endif %}
                     </div>
                   {% else %}
