@@ -333,6 +333,8 @@ def parse_quick_explanation_lines(text):
 def parse_civic_role_lines(text):
     """
     Parse Civic Role into atomic fields so render does not depend on one blob.
+    Works for both true multi-line output and bad one-line output where
+    all labels were returned in a single string.
     """
     result = {
         "what_this_tests": "",
@@ -343,25 +345,18 @@ def parse_civic_role_lines(text):
     if not text:
         return result
 
-    lines = [line.strip() for line in str(text).splitlines() if line.strip()]
-    current_key = None
+    raw = str(text).strip()
 
-    key_map = {
-        "What this tests:": "what_this_tests",
-        "What people should separate:": "what_people_should_separate",
-        "Why this matters:": "why_this_matters"
+    patterns = {
+        "what_this_tests": r"What this tests:\s*(.*?)(?=\s*What people should separate:|\s*Why this matters:|$)",
+        "what_people_should_separate": r"What people should separate:\s*(.*?)(?=\s*What this tests:|\s*Why this matters:|$)",
+        "why_this_matters": r"Why this matters:\s*(.*?)(?=\s*What this tests:|\s*What people should separate:|$)"
     }
 
-    for line in lines:
-        if line in key_map:
-            current_key = key_map[line]
-            continue
-
-        if current_key:
-            if result[current_key]:
-                result[current_key] += " " + _clean_line_text(line)
-            else:
-                result[current_key] = _clean_line_text(line)
+    for key, pattern in patterns.items():
+        match = re.search(pattern, raw, flags=re.IGNORECASE | re.DOTALL)
+        if match:
+            result[key] = _clean_line_text(match.group(1))
 
     return result
 
@@ -441,6 +436,7 @@ def build_civic_role_contract(parsed, existing_fields=None):
     Authoritative Civic Role contract.
     Falls back to existing stored fields when the fresh parsed payload is incomplete.
     Also derives structured civic fields from the full civic role text when needed.
+    If the AI omitted civic fields entirely, derive them from other populated layers.
     """
     parsed = parsed or {}
     existing_fields = existing_fields or {}
@@ -473,6 +469,46 @@ def build_civic_role_contract(parsed, existing_fields=None):
             or existing_fields.get("Civic Why This Matters")
             or ""
         )
+
+    # Hard fallback when the AI omitted Civic Role entirely
+    if not civic_parts["what_this_tests"]:
+        fallback = _clean_line_text(
+            parsed.get("Root Concern")
+            or existing_fields.get("Root Concern")
+            or parsed.get("Values Divergence")
+            or existing_fields.get("Values Divergence")
+            or ""
+        )
+        if fallback:
+            civic_parts["what_this_tests"] = fallback.split(". ")[0].strip()
+            if civic_parts["what_this_tests"] and not civic_parts["what_this_tests"].endswith("."):
+                civic_parts["what_this_tests"] += "."
+
+    if not civic_parts["what_people_should_separate"]:
+        fallback = _clean_line_text(
+            parsed.get("Direct Facts")
+            or existing_fields.get("Direct Facts")
+            or parsed.get("Adjacent Facts")
+            or existing_fields.get("Adjacent Facts")
+            or ""
+        )
+        if fallback:
+            civic_parts["what_people_should_separate"] = fallback.split(". ")[0].strip()
+            if civic_parts["what_people_should_separate"] and not civic_parts["what_people_should_separate"].endswith("."):
+                civic_parts["what_people_should_separate"] += "."
+
+    if not civic_parts["why_this_matters"]:
+        fallback = _clean_line_text(
+            parsed.get("Common Ground")
+            or existing_fields.get("Common Ground")
+            or parsed.get("Constitutional Framework")
+            or existing_fields.get("Constitutional Framework")
+            or ""
+        )
+        if fallback:
+            civic_parts["why_this_matters"] = fallback.split(". ")[0].strip()
+            if civic_parts["why_this_matters"] and not civic_parts["why_this_matters"].endswith("."):
+                civic_parts["why_this_matters"] += "."
 
     civic_role_quick_view = _clean_line_text(
         parsed.get("Civic Role Quick View")
