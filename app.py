@@ -537,82 +537,81 @@ def parse_glossary(raw):
     except Exception:
         return []
 
-
 def try_parse_raw_json(fields):
-        # Claude remains the source of truth for structure.
-            for raw_field in ["Claude Raw JSON", "OpenAI Raw JSON"]:
-                    raw = fields.get(raw_field)
-                            if raw:
-                                        parsed = safe_json_parse(raw)
-                                                    if isinstance(parsed, dict) and parsed and "raw" not in parsed:
-                                                                    return parsed
-                                                                        return {}
+    # Claude remains the source of truth for structure.
+    for raw_field in ["Claude Raw JSON", "OpenAI Raw JSON"]:
+        raw = fields.get(raw_field)
+        if raw:
+            parsed = safe_json_parse(raw)
+            if isinstance(parsed, dict) and parsed and "raw" not in parsed:
+                return parsed
+    return {}
 
 def repair_quick_explanation(quick_explanation, parsed_json):
-        """
-            Ensure Quick Explanation always contains the four labeled lines
-                required by the UI contract.
-                    """
-                        text = (quick_explanation or "").strip()
+    """
+    Ensure Quick Explanation always contains the four labeled lines
+    required by the UI contract.
+    """
+    text = (quick_explanation or "").strip()
 
-                            labels = [
-                                    "ONE-LINE READ:",
-                                            "WHAT HOLDS UP:",
-                                                    "WHAT IS DISPUTED:",
-                                                            "WHERE AGREEMENT EXISTS:"
-                                                                ]
+    labels = [
+        "ONE-LINE READ:",
+        "WHAT HOLDS UP:",
+        "WHAT IS DISPUTED:",
+        "WHERE AGREEMENT EXISTS:"
+    ]
 
-                                                                    # If the saved text already contains all required labels, keep it.
-                                                                        if text and all(label in text for label in labels):
-                                                                                return text
+    # If the saved text already contains all required labels, keep it.
+    if text and all(label in text for label in labels):
+        return text
 
-                                                                                    # Try raw JSON first.
-                                                                                        raw_quick = (parsed_json.get("Quick Explanation") or "").strip()
-                                                                                            if raw_quick and all(label in raw_quick for label in labels):
-                                                                                                    return raw_quick
+    # Try raw JSON first.
+    raw_quick = (parsed_json.get("Quick Explanation") or "").strip()
+    if raw_quick and all(label in raw_quick for label in labels):
+        return raw_quick
 
-                                                                                                        # Rebuild from available structured fields if needed.
-                                                                                                            one_line_read = ""
-                                                                                                                if raw_quick:
-                                                                                                                        for line in raw_quick.splitlines():
-                                                                                                                                    line = line.strip()
-                                                                                                                                                if line.startswith("ONE-LINE READ:"):
-                                                                                                                                                                one_line_read = line[len("ONE-LINE READ:"):].strip()
-                                                                                                                                                                                break
+    # Rebuild from available structured fields if needed.
+    one_line_read = ""
+    if raw_quick:
+        for line in raw_quick.splitlines():
+            line = line.strip()
+            if line.startswith("ONE-LINE READ:"):
+                one_line_read = line[len("ONE-LINE READ:"):].strip()
+                break
 
-                                                                                                                                                                                    if not one_line_read:
-                                                                                                                                                                                            one_line_read = (parsed_json.get("Stripped Claim") or "The claim needs more complete analysis.").strip()
+    if not one_line_read:
+        one_line_read = (parsed_json.get("Stripped Claim") or "The claim needs more complete analysis.").strip()
 
-                                                                                                                                                                                                what_holds_up = (parsed_json.get("Direct Facts") or "").strip()
-                                                                                                                                                                                                    if what_holds_up:
-                                                                                                                                                                                                            what_holds_up = what_holds_up.split(". ")[0].strip()
-                                                                                                                                                                                                                    if not what_holds_up.endswith("."):
-                                                                                                                                                                                                                                what_holds_up += "."
-                                                                                                                                                                                                                                    else:
-                                                                                                                                                                                                                                            what_holds_up = "The saved analysis does not currently preserve the strongest documented point."
+    what_holds_up = (parsed_json.get("Direct Facts") or "").strip()
+    if what_holds_up:
+        what_holds_up = what_holds_up.split(". ")[0].strip()
+        if not what_holds_up.endswith("."):
+            what_holds_up += "."
+    else:
+        what_holds_up = "The saved analysis does not currently preserve the strongest documented point."
 
-                                                                                                                                                                                                                                                what_is_disputed = (parsed_json.get("Adjacent Facts") or parsed_json.get("Root Concern") or "").strip()
-                                                                                                                                                                                                                                                    if what_is_disputed:
-                                                                                                                                                                                                                                                            what_is_disputed = what_is_disputed.split(". ")[0].strip()
-                                                                                                                                                                                                                                                                    if not what_is_disputed.endswith("."):
-                                                                                                                                                                                                                                                                                what_is_disputed += "."
-                                                                                                                                                                                                                                                                                    else:
-                                                                                                                                                                                                                                                                                            what_is_disputed = "The main area of dispute was not preserved in the saved Quick View."
+    what_is_disputed = (parsed_json.get("Adjacent Facts") or parsed_json.get("Root Concern") or "").strip()
+    if what_is_disputed:
+        what_is_disputed = what_is_disputed.split(". ")[0].strip()
+        if not what_is_disputed.endswith("."):
+            what_is_disputed += "."
+    else:
+        what_is_disputed = "The main area of dispute was not preserved in the saved Quick View."
 
-                                                                                                                                                                                                                                                                                                where_agreement_exists = (parsed_json.get("Common Ground") or "").strip()
-                                                                                                                                                                                                                                                                                                    if where_agreement_exists:
-                                                                                                                                                                                                                                                                                                            where_agreement_exists = where_agreement_exists.split(". ")[0].strip()
-                                                                                                                                                                                                                                                                                                                    if not where_agreement_exists.endswith("."):
-                                                                                                                                                                                                                                                                                                                                where_agreement_exists += "."
-                                                                                                                                                                                                                                                                                                                                    else:
-                                                                                                                                                                                                                                                                                                                                            where_agreement_exists = "No clear common ground was preserved in the saved Quick View."
+    where_agreement_exists = (parsed_json.get("Common Ground") or "").strip()
+    if where_agreement_exists:
+        where_agreement_exists = where_agreement_exists.split(". ")[0].strip()
+        if not where_agreement_exists.endswith("."):
+            where_agreement_exists += "."
+    else:
+        where_agreement_exists = "No clear common ground was preserved in the saved Quick View."
 
-                                                                                                                                                                                                                                                                                                                                                return "\n".join([
-                                                                                                                                                                                                                                                                                                                                                        f"ONE-LINE READ: {one_line_read}",
-                                                                                                                                                                                                                                                                                                                                                                f"WHAT HOLDS UP: {what_holds_up}",
-                                                                                                                                                                                                                                                                                                                                                                        f"WHAT IS DISPUTED: {what_is_disputed}",
-                                                                                                                                                                                                                                                                                                                                                                                f"WHERE AGREEMENT EXISTS: {where_agreement_exists}"
-                                                                                                                                                                                                                                                                                                                                                                                    ])
+    return "\n".join([
+        f"ONE-LINE READ: {one_line_read}",
+        f"WHAT HOLDS UP: {what_holds_up}",
+        f"WHAT IS DISPUTED: {what_is_disputed}",
+        f"WHERE AGREEMENT EXISTS: {where_agreement_exists}"
+    ])
 
 def build_subclaims(fields, parsed_json):
     subclaims = []
@@ -3002,11 +3001,11 @@ Return exactly this structure:
                     fields["Title Source"] = "AI Initial"
                 if not existing_fields.get("Analysis Core Version"):
                     fields["Analysis Core Version"] = ANALYSIS_CORE_VERSION
-            # Protect Quick View structure before save
-            parsed_for_repair = claude_json if isinstance(claude_json, dict) and claude_json else {}
-            fields["Quick Explanation"] = repair_quick_explanation(
-                fields.get("Quick Explanation", "") or parsed_for_repair.get("Quick Explanation", ""),
-                    parsed_for_repair
+                # Protect Quick View structure before save
+                    parsed_for_repair = claude_json if isinstance(claude_json, dict) and claude_json else {}
+                    fields["Quick Explanation"] = repair_quick_explanation(
+                        fields.get("Quick Explanation", "") or parsed_for_repair.get("Quick Explanation", ""),
+                        parsed_for_repair
                     )
             fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
             fields["OpenAI Raw JSON"] = json.dumps(openai_json, ensure_ascii=False)[:100000]
