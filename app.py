@@ -3872,7 +3872,7 @@ def editor_reanalyze_claim(record_id):
         # Feature refresh must NOT silently reframe the claim.
         # Preserve locked top-level framing fields in both visible outputs and raw JSON.
         preserve_stripped = (reanalysis_mode == "feature_refresh")
-        preserve_quick = (reanalysis_mode == "feature_refresh")
+        preserve_quick = False
 
         existing_stripped = (claim_fields.get("Stripped Claim") or "").strip()
         existing_quick = (claim_fields.get("Quick Explanation") or "").strip()
@@ -3961,9 +3961,7 @@ def editor_reanalyze_claim(record_id):
             # unless they were explicitly targeted via selective reanalysis.
             if not selective_fields:
                 if claim_fields.get("Stripped Claim"):
-                    update_fields["Stripped Claim"] = claim_fields.get("Stripped Claim", "")
-                if claim_fields.get("Quick Explanation"):
-                    update_fields["Quick Explanation"] = claim_fields.get("Quick Explanation", "")    
+                    update_fields["Stripped Claim"] = claim_fields.get("Stripped Claim", "")    
 
         elif reanalysis_mode == "core_logic_refresh":
 
@@ -4104,7 +4102,7 @@ def editor_reanalyze_claim_by_slug(slug):
         # Feature refresh must NOT silently reframe the claim.
         # Preserve locked top-level framing fields in both visible outputs and raw JSON.
         preserve_stripped = (reanalysis_mode == "feature_refresh")
-        preserve_quick = (reanalysis_mode == "feature_refresh")
+        preserve_quick = False
 
         existing_stripped = (claim_fields.get("Stripped Claim") or "").strip()
         existing_quick = (claim_fields.get("Quick Explanation") or "").strip()
@@ -4115,13 +4113,6 @@ def editor_reanalyze_claim_by_slug(slug):
                 claude_json["Stripped Claim"] = existing_stripped
             if isinstance(openai_json, dict):
                 openai_json["Stripped Claim"] = existing_stripped
-
-        if preserve_quick and existing_quick:
-            primary["Quick Explanation"] = existing_quick
-            if isinstance(claude_json, dict):
-                claude_json["Quick Explanation"] = existing_quick
-            if isinstance(openai_json, dict):
-                openai_json["Quick Explanation"] = existing_quick
 
         # Build update payload
         if selective_fields:
@@ -4198,9 +4189,6 @@ def editor_reanalyze_claim_by_slug(slug):
             if not selective_fields:
                 if claim_fields.get("Stripped Claim"):
                     update_fields["Stripped Claim"] = claim_fields.get("Stripped Claim", "")
-                if claim_fields.get("Quick Explanation"):
-                    update_fields["Quick Explanation"] = claim_fields.get("Quick Explanation", "")
-
         elif reanalysis_mode == "core_logic_refresh":
 
             normalized_input = normalize_claim_text(raw_claim_text)
