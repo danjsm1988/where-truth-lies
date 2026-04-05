@@ -686,6 +686,174 @@ def build_civic_role_contract(parsed, existing_fields=None):
         "civic_why_this_matters": civic_parts["why_this_matters"]
     }
 
+def enforce_domain_aware_output_contract(parsed, quick_view_contract, civic_role_contract, framing_data=None, existing_fields=None):
+    """
+    Final guardrail before save.
+    Catch domain-mismatched Quick View / Civic Role outputs and replace them with
+    safer domain-appropriate language before anything is written to Airtable.
+    """
+    parsed = parsed or {}
+    existing_fields = existing_fields or {}
+    framing_data = framing_data or {}
+    quick_view_contract = dict(quick_view_contract or {})
+    civic_role_contract = dict(civic_role_contract or {})
+
+    topic = normalize_topic(
+        framing_data.get("topic")
+        or framing_data.get("primary_claim")
+        or parsed.get("Topic")
+        or parsed.get("Stripped Claim")
+        or existing_fields.get("Stripped Claim")
+        or ""
+    )
+
+    combined = " ".join([
+        _clean_line_text(framing_data.get("primary_claim") or ""),
+        _clean_line_text(parsed.get("Stripped Claim") or existing_fields.get("Stripped Claim") or ""),
+        _clean_line_text(parsed.get("Direct Facts") or existing_fields.get("Direct Facts") or ""),
+        _clean_line_text(parsed.get("Adjacent Facts") or existing_fields.get("Adjacent Facts") or ""),
+        _clean_line_text(parsed.get("Root Concern") or existing_fields.get("Root Concern") or ""),
+        _clean_line_text(parsed.get("Common Ground") or existing_fields.get("Common Ground") or "")
+    ]).lower()
+
+    protest_terms = [
+        "protest", "protests", "protester", "protesters", "crowd", "crowds",
+        "turnout", "march", "marches", "rally", "rallies", "movement", "slogan", "chant"
+    ]
+    civic_terms = [
+        "court", "courts", "election", "elections", "congress", "constitutional",
+        "constitution", "executive", "judicial", "legislative", "institution", "institutional"
+    ]
+    secrecy_terms = [
+        "hidden", "secret", "secrecy", "classified", "withheld", "concealed",
+        "suppressed", "disclosure", "evidence", "proof", "ufo", "uap",
+        "extraterrestrial", "alien", "non-human", "whistleblower"
+    ]
+    science_terms = [
+        "evidence", "data", "study", "studies", "research", "scientific",
+        "consensus", "trial", "biology", "medical", "physics", "vaccine", "virus"
+    ]
+    economic_terms = [
+        "economy", "economic", "inflation", "jobs", "wages", "prices",
+        "growth", "spending", "debt", "deficit", "tax", "tariff", "business"
+    ]
+
+    def _text_has_any(text, terms):
+        text = _clean_line_text(text).lower()
+        return any(term in text for term in terms)
+
+    def _first_sentence(text):
+        text = _clean_line_text(text)
+        if not text:
+            return ""
+        first = text.split(". ")[0].strip()
+        if first and not first.endswith("."):
+            first += "."
+        return first
+
+    # Current saved contract text
+    q_holds = quick_view_contract.get("quick_what_holds_up", "")
+    q_disputed = quick_view_contract.get("quick_what_is_disputed", "")
+    q_agreement = quick_view_contract.get("quick_where_agreement_exists", "")
+    c_quick = civic_role_contract.get("civic_role_quick_view", "")
+    c_tests = civic_role_contract.get("civic_what_this_tests", "")
+    c_sep = civic_role_contract.get("civic_what_people_should_separate", "")
+    c_matters = civic_role_contract.get("civic_why_this_matters", "")
+
+    # ── Constitutional Rights: kill protest-surface drift ─────────────────────
+    if topic == "Constitutional Rights":
+        if _text_has_any(q_holds, protest_terms):
+            q_holds = "What holds up most is whether courts, Congress, elections, and enforceable constitutional limits are still functioning as checks on power."
+        if _text_has_any(q_agreement, protest_terms):
+            q_agreement = "There is at least a shared interest in keeping power bounded by law rather than by personality, outrage, or escalation."
+        if _text_has_any(c_quick, protest_terms):
+            c_quick = "This tests whether people can judge power by constitutional thresholds instead of by slogans, anger, or spectacle."
+        if _text_has_any(c_tests, protest_terms):
+            c_tests = "This tests whether institutional breakdown is being distinguished from normal political hardball and from rhetoric alone."
+        if _text_has_any(c_sep, protest_terms):
+            c_sep = "Public anger, aggressive executive behavior, and actual constitutional breakdown are not the same thing."
+        if _text_has_any(c_matters, protest_terms):
+            c_matters = "A self governing country depends on citizens recognizing when a legal threshold has truly been crossed and when it has not."
+
+    # ── Secrecy / evidence: kill generic civic fallback drift ─────────────────
+    secrecy_like = topic == "Space & Science" and _text_has_any(combined, secrecy_terms)
+    secrecy_like = secrecy_like or _text_has_any(combined, secrecy_terms)
+
+    if secrecy_like:
+        if _text_has_any(q_holds, civic_terms) and not _text_has_any(q_holds, secrecy_terms):
+            q_holds = "What holds up most is that the claim turns on what evidence exists, how credible it is, and who actually has access to it."
+        if _text_has_any(q_agreement, civic_terms) and not _text_has_any(q_agreement, secrecy_terms):
+            q_agreement = "There is at least a shared interest in separating verified evidence, classified secrecy, rumor, and speculation."
+        if _text_has_any(c_quick, civic_terms):
+            c_quick = "This tests whether people can separate secrecy claims, evidence standards, and speculation instead of collapsing them into one story."
+        if _text_has_any(c_tests, civic_terms):
+            c_tests = "This tests whether a claim about hidden information is being judged by proof, sourcing, and access rather than by assumption."
+        if _text_has_any(c_sep, civic_terms):
+            c_sep = "Government secrecy, incomplete disclosure, and proof of the full underlying claim are not the same thing."
+        if _text_has_any(c_matters, civic_terms):
+            c_matters = "A serious public needs to know the difference between something being hidden, something being suggested, and something being demonstrated."
+
+    # ── Public Health / scientific: kill civic drift ──────────────────────────
+    if topic in ["Public Health", "Healthcare", "Space & Science"]:
+        if _text_has_any(q_holds, civic_terms) and not _text_has_any(q_holds, science_terms):
+            q_holds = "What holds up most is whatever can actually be shown through evidence, data quality, scientific standards, and real world outcomes."
+        if _text_has_any(q_agreement, civic_terms) and not _text_has_any(q_agreement, science_terms):
+            q_agreement = "There is at least a shared interest in using credible evidence, transparent standards, and measurable outcomes rather than tribal interpretation."
+        if _text_has_any(c_quick, civic_terms):
+            c_quick = "This tests whether people can weigh evidence quality, uncertainty, and tradeoffs instead of treating every claim like a political loyalty test."
+        if _text_has_any(c_tests, civic_terms):
+            c_tests = "This tests whether confidence is being tied to evidence strength rather than to fear, identity, or repetition."
+        if _text_has_any(c_sep, civic_terms):
+            c_sep = "Early signals, partial evidence, expert judgment, and settled proof are not the same thing."
+        if _text_has_any(c_matters, civic_terms):
+            c_matters = "Public trust gets weaker when uncertainty, evidence, and certainty are blurred together."
+
+    # ── Economy: kill generic civic drift ──────────────────────────────────────
+    if topic == "Economy":
+        if _text_has_any(q_holds, civic_terms) and not _text_has_any(q_holds, economic_terms):
+            q_holds = "What holds up most is whatever measurable economic effect can actually be shown in prices, jobs, wages, business conditions, or household strain."
+        if _text_has_any(q_agreement, civic_terms) and not _text_has_any(q_agreement, economic_terms):
+            q_agreement = "There is at least a shared interest in judging economic claims by measurable outcomes rather than by partisan branding."
+        if _text_has_any(c_quick, civic_terms):
+            c_quick = "This tests whether people can judge economic claims through real tradeoffs and measurable outcomes instead of tribal narrative."
+        if _text_has_any(c_tests, civic_terms):
+            c_tests = "This tests whether a claim about economic harm or benefit is being tied to actual outcomes rather than to slogans."
+        if _text_has_any(c_sep, civic_terms):
+            c_sep = "Intent, messaging, and real world economic effects are not the same thing."
+        if _text_has_any(c_matters, civic_terms):
+            c_matters = "A public that cannot separate economic rhetoric from measurable impact becomes easy to manipulate."
+
+    # Rebuild Quick Explanation blob after domain corrections
+    one_line = quick_view_contract.get("quick_one_line_read", "")
+    quick_view_contract["quick_what_holds_up"] = _first_sentence(q_holds)
+    quick_view_contract["quick_what_is_disputed"] = _first_sentence(q_disputed)
+    quick_view_contract["quick_where_agreement_exists"] = _first_sentence(q_agreement)
+    quick_view_contract["quick_explanation"] = "\n".join([
+        f"ONE-LINE READ: {one_line}".strip(),
+        f"WHAT HOLDS UP: {quick_view_contract['quick_what_holds_up']}".strip(),
+        f"WHAT IS DISPUTED: {quick_view_contract['quick_what_is_disputed']}".strip(),
+        f"WHERE AGREEMENT EXISTS: {quick_view_contract['quick_where_agreement_exists']}".strip()
+    ])
+
+    # Rebuild civic role contract after domain corrections
+    civic_role_contract["civic_role_quick_view"] = _first_sentence(c_quick)
+    civic_role_contract["civic_what_this_tests"] = _first_sentence(c_tests)
+    civic_role_contract["civic_what_people_should_separate"] = _first_sentence(c_sep)
+    civic_role_contract["civic_why_this_matters"] = _first_sentence(c_matters)
+
+    civic_role_contract["civic_role"] = "\n".join([
+        "What this tests:",
+        civic_role_contract["civic_what_this_tests"],
+        "",
+        "What people should separate:",
+        civic_role_contract["civic_what_people_should_separate"],
+        "",
+        "Why this matters:",
+        civic_role_contract["civic_why_this_matters"]
+    ]).strip()
+
+    return quick_view_contract, civic_role_contract    
+
 def detect_input_type(text):
     if len(text) > 500:
         return "long_form"
@@ -808,45 +976,66 @@ def normalize_topic(raw_topic):
 
     text = str(raw_topic).strip().lower()
 
-    # Healthcare first (safe, specific)
+    # Specific healthcare programs first
     if "medicaid" in text:
         return "Medicaid"
     if "medicare" in text:
         return "Medicare"
     if "social security" in text:
         return "Social Security"
-    if "health" in text:
+
+    # Public Health before Healthcare
+    if any(k in text for k in [
+        "public health", "cdc", "pandemic", "epidemic", "outbreak",
+        "virus", "vaccine", "vaccination", "quarantine", "mask mandate",
+        "mandate", "lockdown", "infectious disease"
+    ]):
+        return "Public Health"
+
+    if any(k in text for k in [
+        "health", "healthcare", "hospital", "insurance", "doctor",
+        "treatment", "patient", "medical care"
+    ]):
         return "Healthcare"
 
     # Energy
     if any(k in text for k in ["energy", "fossil", "renewable", "climate", "oil", "gas", "electric grid"]):
         return "Energy"
 
-    # Foreign policy / war
+    # Iran before broader foreign policy / military
     if "iran" in text:
         return "Iran War"
-    if any(k in text for k in ["foreign policy", "foreign", "diplomacy", "international", "treaty"]):
+
+    # Foreign Policy
+    if any(k in text for k in ["foreign policy", "foreign", "diplomacy", "international", "treaty", "alliance", "nato", "united nations", "u.n."]):
         return "Foreign Policy"
 
     # Crime
     if any(k in text for k in ["crime", "criminal", "murder", "shoot", "assass", "policing", "law enforcement"]):
         return "Crime"
 
-    # 🔥 CRITICAL: Constitutional BEFORE Elections
+    # Constitutional Rights BEFORE Elections and Political Performance
     if any(k in text for k in [
         "constitution", "constitutional", "amendment", "rights", "civil liberties",
         "court", "judicial", "executive", "executive power",
         "congress", "legislative", "separation of powers",
-        "due process", "free speech",
+        "due process", "free speech", "second amendment", "first amendment",
         "authoritarian", "monarchy", "king", "dictator",
         "government power", "government authority", "federal power",
-        "state power", "institutional checks"
+        "state power", "institutional checks", "checks and balances"
     ]):
         return "Constitutional Rights"
 
-    # Elections AFTER constitutional
+    # Elections
     if any(k in text for k in ["election", "vote", "ballot", "voting", "campaign", "electoral"]):
         return "Elections"
+
+    # Political Performance
+    if any(k in text for k in [
+        "approval rating", "approval", "favorability", "polling",
+        "poll numbers", "job performance", "performance in office"
+    ]):
+        return "Political Performance"
 
     # Economy
     if any(k in text for k in ["econom", "job", "inflation", "tax", "wage", "recession", "trade", "tariff", "debt", "spending"]):
@@ -861,6 +1050,27 @@ def normalize_topic(raw_topic):
         return "Defense"
     if any(k in text for k in ["military", "war", "troops", "armed forces"]):
         return "Military"
+
+    # Artificial Intelligence before general Technology
+    if any(k in text for k in [
+        "artificial intelligence", " ai ", "chatgpt", "llm", "large language model",
+        "machine learning", "generative ai", "openai", "anthropic"
+    ]):
+        return "Artificial Intelligence"
+
+    # Technology
+    if any(k in text for k in [
+        "technology", "software", "hardware", "cyber", "cybersecurity",
+        "internet", "social media", "platform", "semiconductor", "chip", "chips"
+    ]):
+        return "Technology"
+
+    # Space & Science
+    if any(k in text for k in [
+        "space", "nasa", "astronomy", "astrophysics", "physics",
+        "scientific", "science", "research", "ufo", "uap", "extraterrestrial"
+    ]):
+        return "Space & Science"
 
     # Education
     if any(k in text for k in ["school", "educat", "student", "university"]):
@@ -1308,9 +1518,6 @@ def extract_primary_record_fields(claim, parsed, mode, username, existing_fields
 
     entered_by = existing_fields.get("Entered By") or username or "Unknown"
 
-    quick_view_contract = build_quick_view_contract(parsed, existing_fields=existing_fields)
-    civic_role_contract = build_civic_role_contract(parsed, existing_fields=existing_fields)
-
     framing_data = framing_data or {}
     framing_topic = normalize_topic(
         framing_data.get("topic")
@@ -1324,6 +1531,22 @@ def extract_primary_record_fields(claim, parsed, mode, username, existing_fields
         or detect_claim_type(framing_data.get("primary_claim") or parsed.get("Stripped Claim") or claim)
     ).strip() or "general"
     framing_polarity = str(framing_data.get("polarity") or "neutral").strip() or "neutral"
+
+    quick_view_contract = build_quick_view_contract(parsed, existing_fields=existing_fields)
+    civic_role_contract = build_civic_role_contract(parsed, existing_fields=existing_fields)
+
+    quick_view_contract, civic_role_contract = enforce_domain_aware_output_contract(
+        parsed=parsed,
+        quick_view_contract=quick_view_contract,
+        civic_role_contract=civic_role_contract,
+        framing_data={
+            **framing_data,
+            "topic": framing_topic,
+            "claim_type": framing_claim_type,
+            "polarity": framing_polarity
+        },
+        existing_fields=existing_fields
+    )
 
     fields = {
         "Original Quote": claim,
@@ -3189,7 +3412,7 @@ under 0.60 full modal
 
 TOPIC RULE:
 Return exactly one of:
-Iran War, Energy, Healthcare, Social Security, Medicare, Medicaid, Defense, Military, Elections, Economy, Immigration, Foreign Policy, Crime, Gender Issues, Constitutional Rights, Education, Other
+Iran War, Energy, Healthcare, Social Security, Medicare, Medicaid, Defense, Military, Elections, Economy, Immigration, Foreign Policy, Crime, Gender Issues, Education, Other, Political Performance, Space & Science, Artificial Intelligence, Constitutional Rights, Public Health, Technology
 
 Return ONLY valid JSON. No markdown. No preamble.
 
@@ -3205,7 +3428,7 @@ Return ONLY valid JSON. No markdown. No preamble.
   "canonical_claim": "Stripped normalized version for dedup comparison only. No intensity modifiers. Normalized causality. No named actors unless essential.",
   "claim_type": "factual | normative | inquiry",
   "polarity": "affirming | rejecting | neutral",
-  "topic": "Exactly one of: Iran War, Energy, Healthcare, Social Security, Medicare, Medicaid, Defense, Military, Elections, Economy, Immigration, Foreign Policy, Crime, Gender Issues, Constitutional Rights, Education, Other",
+  "topic": "Exactly one of: Iran War, Energy, Healthcare, Social Security, Medicare, Medicaid, Defense, Military, Elections, Economy, Immigration, Foreign Policy, Crime, Gender Issues, Education, Other, Political Performance, Space & Science, Artificial Intelligence, Constitutional Rights, Public Health, Technology",
   "implied_premise": false
 }
 """
