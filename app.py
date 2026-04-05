@@ -3379,6 +3379,11 @@ When secrecy and civic both appear, secrecy wins if the real question is whether
 When civic and protest language both appear, civic wins if the real question is whether the threshold for monarchy, dictatorship, authoritarianism, or constitutional breakdown is met.
 When accountability language trails a policy claim, keep the policy result as primary and move the accountability language to breakout_candidates.
 
+BREAKOUT SUPPRESSION RULE:
+Breakout candidates must include only distinct propositions that materially affect truth evaluation, causal interpretation, or institutional meaning.
+Protest size, rally size, crowd estimates, movement energy, slogan repetition, chant language, branding language, and emotional amplification are not breakout candidates unless the user is explicitly asking about those as factual claims.
+If removing that language does not change the underlying truth question, treat it as noise and exclude it from both primary_claim and breakout_candidates.
+
 DEDUP COMPATIBILITY RULES:
 The canonical claim is for dedup only.
 It must strip emotional intensity and normalize wording while preserving the actual proposition.
@@ -3395,7 +3400,8 @@ After framing, generate a canonical form by:
 2. normalizing causality language
 3. collapsing incidental time scope unless time is central
 4. stripping named actors when the proposition still works without them
-5. stripping protest, slogan, or reaction language when that is not the underlying proposition
+5. stripping protest, rally, crowd, slogan, chant, branding, and reaction language when that is not the underlying proposition
+6. excluding turnout or movement-size language unless turnout itself is the factual dispute
 
 INPUT TYPES:
 single_claim
