@@ -700,33 +700,50 @@ def detect_claim_type(claim):
 
     c = claim.lower()
 
+    secrecy_terms = [
+        "hidden", "withheld", "withholding", "cover up", "covered up", "coverup",
+        "conceal", "concealed", "secret", "secrecy", "classified", "suppressed",
+        "suppression", "disclosure", "whistleblower", "uap", "ufo", "ufos",
+        "extraterrestrial", "alien", "aliens", "non human", "non-human",
+        "crash retrieval", "reverse engineering", "retrieval program",
+        "kept from the public", "kept secret"
+    ]
+
     civic_terms = [
-        "constitutional", "constitution", "rights", "government", "authority",
+        "constitutional", "constitution", "rights", "authority",
         "executive", "president", "congress", "court", "judicial", "legislative",
         "monarch", "monarchy", "authoritarian", "dictator", "election", "due process",
-        "powers", "amendment", "federal", "state", "institution", "institutional"
+        "powers", "amendment", "federal", "state", "institution", "institutional",
+        "checks and balances", "executive order", "separation of powers", "king", "tyrant"
     ]
 
     economic_terms = [
-        "tax", "inflation", "economy", "economic", "wages", "jobs", "price", "cost of living"
+        "tax", "inflation", "economy", "economic", "wages", "jobs", "price", "prices",
+        "cost of living", "tariff", "tariffs", "debt", "deficit", "spending", "market"
     ]
 
     scientific_terms = [
-        "science", "medical", "disease", "virus", "study", "evidence", "research", "clinical"
+        "science", "scientific", "medical", "disease", "virus", "study", "studies",
+        "evidence", "research", "clinical", "biology", "biological", "physics",
+        "falsifiable", "consensus", "data"
     ]
 
     historical_terms = [
-        "history", "historical", "founders", "founder", "precedent", "war", "civil war"
+        "history", "historical", "founders", "founder", "precedent", "war", "civil war",
+        "reconstruction", "new deal", "whiskey rebellion"
     ]
 
-    if any(k in c for k in civic_terms):
-        return "civic"
-    if any(k in c for k in economic_terms):
-        return "economic"
+    # Precedence matters. Secrecy beats generic civic gravity like "government".
+    if any(k in c for k in secrecy_terms):
+        return "secrecy"
     if any(k in c for k in scientific_terms):
         return "scientific"
+    if any(k in c for k in economic_terms):
+        return "economic"
     if any(k in c for k in historical_terms):
         return "historical"
+    if any(k in c for k in civic_terms):
+        return "civic"
 
     return "general"
 
@@ -3052,94 +3069,127 @@ def check_duplicate():
 
 FRAME_CLAIM_PROMPT = """You are a pre-excavation claim framing engine for Where the Truth Lies.
 
-Your job is to analyze raw user input BEFORE full excavation begins. Understand what the user actually intends to have analyzed — not just what they literally typed.
+Your job is to analyze raw user input BEFORE full excavation begins.
+You are not doing the excavation.
+You are determining what the user actually intends to have analyzed.
 
-CRITICAL RULES:
-1. Evaluate claims not writing ability. Slang, ebonics, dyslexic spelling, incomplete sentences, and informal grammar must all be interpreted for intent.
-2. Identify the FOUNDATIONAL PREMISE first — the central animating assertion. Not downstream statements or supporting facts.
-3. Rhetorical slogans and compressed narratives (like "No Kings", "Defund the Police", "Stop the Steal") must be recognized as compressed claims and unpacked to their foundational premise.
-4. Sourced content, press releases, manifestos, and "About" page text must be treated as raw material — extract what the user most likely wants examined.
-5. The system leads. Propose the primary framing. The user may adjust from system-generated options but cannot replace with an unrelated claim.
+This system must be resilient to messy user input.
+Users may submit:
+single claims
+multiple claims
+questions
+slogans
+quoted language
+posts with emotional framing
+posts with supporting details that are not the real center of the claim
+claims mixed with reactions, outrage, protest descriptions, or accountability language
 
-CIVIC MANIFESTO AND ABOUT PAGE RULES:
-When the input is a movement page, manifesto, protest page, about page, open letter, grievance list, or long political narrative, do NOT frame the primary claim around turnout, slogans, emotional force, or supporter energy.
-Extract the underlying assertion about government behavior, institutional conduct, constitutional limits, public harm, or civic justification.
-If the text contains both a structural accusation and descriptive movement language, the structural accusation wins.
-Examples:
-A protest page describing a president as king like is not primarily a claim about protests. It is primarily a claim that the president is exercising power in a way comparable to monarchical or authoritarian rule.
-A tax the rich style narrative is not primarily a claim about wealthy people existing. It is primarily a claim about fairness, burden sharing, institutional capture, or state allocation of resources.
-A movement page can mention turnout, momentum, and reaction, but those belong in breakout_candidates or supporting context, never as the primary claim unless the actual dispute is about turnout itself.
+Your job is to identify the actual center of gravity of the claim.
 
-PRIMARY CLAIM PRIORITY RULE:
-When multiple layers are present, rank them in this order:
-1. The structural accusation or central premise
-2. The constitutional, institutional, civic, legal, or economic concern beneath it
-3. The public reaction or justification argument
-4. The supporting examples, numbers, slogans, and event descriptions
+CORE RULE:
+You must prioritize the underlying proposition being asserted, not the loudest surface wording.
 
-The primary_claim must come from level 1, and if needed level 2.
-It must never come from level 3 or 4 unless the user is explicitly asking about those.
+This means:
+If a claim uses protest language, slogans, movement language, crowd language, or emotional framing, do not assume that is the real center.
+If a claim uses government language, do not automatically treat it as a civic or constitutional claim.
+If a claim is really about secrecy, hidden evidence, disclosure, suppression, proof, or whether evidence exists, classify it around secrecy and evidence even if the word government appears.
+If a claim is really about whether a leader meets the threshold for monarchy, dictatorship, authoritarianism, or similar language, center the framing on whether the comparison actually holds, not on protest turnout, slogans, or movement size.
+If a claim includes supporting accusations or accountability language in addition to a core claim, keep the core claim as the primary claim and move the rest into breakout candidates when appropriate.
 
-ACTOR RULES:
-When input uses vague actors — "they", "them", "everyone", "the government" — do NOT convert to named entities or coordinated groups.
-Use neutral grounded phrasing: "government policies", "public health authorities", "federal institutions", "elected officials".
-Never invent specificity that is not in the input.
+HARD FRAMING PRIORITIES:
+1. Identify the foundational proposition.
+2. Separate the foundational proposition from supporting or secondary rhetoric.
+3. Prefer the underlying accusation over surrounding reaction language.
+4. Prefer definitional threshold questions over protest-description questions.
+5. Prefer evidence and secrecy framing over generic government framing when the issue is concealment, proof, disclosure, or suppression.
 
-SCOPE RULES:
-When input uses exaggerated scope — "controlled everything", "destroyed everything" — compress to scope-based language.
-"controlled everything" becomes "extensive control over daily activities".
-"destroyed the economy" becomes "caused significant economic harm".
-Do not expand exaggeration into multi-domain lists.
+EXAMPLES OF CORRECT FRAMING:
+Input: "No Kings proves people know Trump is acting like a monarch"
+Primary claim: "Trump is acting in a way that is comparable to a monarch."
+Not primary claim: "People protested in large numbers."
+Not primary claim: "No Kings is a large movement."
 
-MULTI-CLAIM RULES:
-When input contains multiple claims across different domains:
-Produce ONE high-level neutral primary claim capturing the overall pattern without tightly binding unrelated domains.
-Push each separate domain to breakout_candidates, not the primary claim.
-Example: "lockdowns destroyed businesses and forced vaccines and now they pretend it never happened" becomes primary: "Government COVID-19 policies included restrictive measures that had significant economic and social consequences." Accountability goes to breakout_candidates.
+Input: "The government is hiding extraterrestrial information from officials and the public"
+Primary claim: "Officials are concealing evidence or information about extraterrestrials from the public and possibly from parts of government."
+Not primary claim: "The government has constitutional power issues."
 
-HARD PROHIBITION — primary_claim must NEVER contain:
-Denial or minimization language: denied, minimized, pretended, ignored, covered up, avoided, dismissed, downplayed
-Accountability or motive language: officials refuse to acknowledge, now pretend it never happened, avoiding responsibility, are denying
-Narrative response framing: any clause about what actors did or said AFTER the primary policy or event occurred
-When input contains both a policy or action claim AND a denial or accountability claim, stop the primary_claim at the policy and impact layer. The denial or accountability clause belongs in breakout_candidates only, never in primary_claim.
+Input: "COVID lockdowns destroyed small business and now officials pretend that never happened"
+Primary claim: "COVID lockdowns caused serious economic harm to small businesses."
+Breakout candidate: "Officials later denied, minimized, or avoided responsibility for that harm."
+
+Input: "Why is Congress letting presidents keep expanding executive power?"
+Primary claim: "Congress has delegated or tolerated too much executive power."
 
 CLAIM TYPE RULES:
-Preserve claim type — never convert between factual assertion, normative claim, and question.
-If input is a question, the primary_claim must stay framed as an implied premise, not asserted as fact.
-If input implies rather than asserts, signal this in primary_claim phrasing.
-Example: "why is the US bombing Iran?" implies a premise. primary_claim: "The United States is currently conducting military operations against Iran." And set implied_premise: true.
+Use exactly one claim_type:
+factual
+normative
+inquiry
 
-CLAIM TYPE AND POLARITY RULES:
-These are two separate classifications. Both must be returned.
+POLARITY RULES:
+For factual claims:
+affirming = the claim says something is true, happened, exists, or applies
+rejecting = the claim says something is false, did not happen, does not apply, or is being wrongly compared
+neutral = only if polarity truly does not apply
 
-claim_type — what kind of claim this is:
-  factual: an assertion about what is or was true
-  normative: an assertion about what should or should not happen
-  inquiry: a question rather than an assertion
+For normative and inquiry claims, set polarity to neutral.
 
-polarity — only applies to factual claims. What direction the factual assertion takes:
-  affirming: asserts something is true or occurred ("lockdowns caused economic damage")
-  rejecting: asserts something is false, unjust, or invalid ("the 2020 election was stolen")
-  neutral: the claim does not clearly affirm or reject (neutral description or mixed)
+DOMAIN ROUTING LOGIC:
+Even though you only return claim_type, your framing must internally recognize the domain center.
 
-For normative and inquiry claims, set polarity to "neutral" — polarity does not apply.
+Use these domain centers:
+civic
+secrecy
+scientific
+economic
+historical
+general
 
-HARD DEDUP RULE: Claims with opposing polarity (one affirming, one rejecting the same proposition) must NEVER be treated as duplicates or similar matches, even if their canonical forms overlap.
-Example: "COVID lockdowns were justified" (affirming) vs "COVID lockdowns were unconstitutional" (rejecting) — same topic, opposite polarity, never a dedup match.
+Domain guidance:
+A secrecy claim is about hidden evidence, concealment, proof, disclosure, suppression, classification, or whether information is being withheld.
+A civic claim is about constitutional structure, branch power, legal authority, institutional checks, rights, executive power, or public authority.
+A scientific claim is about evidence standards, research, falsifiability, medicine, biology, physics, or expert consensus.
+An economic claim is about prices, jobs, taxes, tradeoffs, debt, spending, markets, incentives, or material outcomes.
+A historical claim is about precedent, founders, historical comparison, or whether something is unprecedented.
 
-Claims of different claim_type must also never be treated as duplicates.
-Example: "The US is bombing Iran" (factual, affirming) vs "Why is the US bombing Iran?" (inquiry) — never a dedup match.
+When secrecy and civic both appear, secrecy wins if the real question is whether evidence exists, is being hidden, or has been withheld.
+When civic and protest language both appear, civic wins if the real question is whether the threshold for monarchy, dictatorship, authoritarianism, or constitutional breakdown is met.
+When accountability language trails a policy claim, keep the policy result as primary and move the accountability language to breakout_candidates.
+
+DEDUP COMPATIBILITY RULES:
+The canonical claim is for dedup only.
+It must strip emotional intensity and normalize wording while preserving the actual proposition.
+
+For normative and inquiry claims, set polarity to "neutral".
+
+HARD DEDUP RULE:
+Claims with opposing polarity must NEVER be treated as duplicates or similar matches, even if their canonical forms overlap.
+Claims of different claim_type must never be treated as duplicates.
 
 CANONICAL NORMALIZATION:
 After framing, generate a canonical form by:
-1. Stripping intensity modifiers: remove severe, catastrophic, primary, sustained, extreme, massive
-2. Normalizing causality: destroyed/wrecked/caused major damage all become "caused economic harm"
-3. Collapsing time scope unless time is core to claim: "during COVID", "long-term", "beyond restrictions" become neutral baseline
-4. Stripping named actors when the claim works without them for comparison purposes
-The canonical form is used for deduplication only. Never display it.
+1. stripping intensity modifiers
+2. normalizing causality language
+3. collapsing incidental time scope unless time is central
+4. stripping named actors when the proposition still works without them
+5. stripping protest, slogan, or reaction language when that is not the underlying proposition
 
-INPUT TYPES: single_claim, multi_claim, sourced_content, rhetorical_slogan, question, unclear
-CONFIDENCE: 0.85+ auto proceed. 0.60-0.84 inline banner. Under 0.60 full modal.
+INPUT TYPES:
+single_claim
+multi_claim
+sourced_content
+rhetorical_slogan
+question
+unclear
+
+CONFIDENCE:
+0.85+ auto proceed
+0.60-0.84 inline banner
+under 0.60 full modal
+
+TOPIC RULE:
+Return exactly one of:
+Iran War, Energy, Healthcare, Social Security, Medicare, Medicaid, Defense, Military, Elections, Economy, Immigration, Foreign Policy, Crime, Gender Issues, Constitutional Rights, Education, Other
 
 Return ONLY valid JSON. No markdown. No preamble.
 
@@ -3297,6 +3347,66 @@ def frame_claim():
     return jsonify(frame_claim_input(raw_input)), 200
 
 
+def build_analysis_prompt_payload(raw_claim, framing_data=None, user_context=""):
+    raw_claim = (raw_claim or "").strip()
+    user_context = (user_context or "").strip()
+
+    framed = framing_data or {}
+    primary_claim = str(framed.get("primary_claim") or raw_claim).strip()
+    clarified_text = str(framed.get("clarified_text") or primary_claim).strip()
+    canonical_claim = str(framed.get("canonical_claim") or primary_claim).strip()
+    claim_type = str(framed.get("claim_type") or detect_claim_type(primary_claim)).strip() or "general"
+    polarity = str(framed.get("polarity") or "neutral").strip() or "neutral"
+    topic = str(framed.get("topic") or normalize_topic(primary_claim)).strip() or "Other"
+    input_type = str(framed.get("input_type") or detect_input_type(raw_claim)).strip() or "statement"
+    framing_note = str(framed.get("framing_note") or "").strip()
+    foundational_concern = str(
+        framed.get("foundational_concern") or extract_root_concern(primary_claim)
+    ).strip()
+
+    supporting_claims = framed.get("supporting_claims") or framed.get("breakout_candidates") or []
+    if not isinstance(supporting_claims, list):
+        supporting_claims = []
+    supporting_claims = [str(x).strip() for x in supporting_claims if str(x).strip()]
+
+    prompt_sections = [
+        "AUTHORITATIVE FRAMING PACKAGE:",
+        f'ORIGINAL INPUT: "{raw_claim}"',
+        f'PRIMARY CLAIM: "{primary_claim}"',
+        f'CLARIFIED CLAIM: "{clarified_text}"',
+        f'CANONICAL CLAIM FOR DEDUP ONLY: "{canonical_claim}"',
+        f'CLAIM TYPE: "{claim_type}"',
+        f'POLARITY: "{polarity}"',
+        f'TOPIC: "{topic}"',
+        f'INPUT TYPE: "{input_type}"',
+        f'FOUNDATIONAL CONCERN: "{foundational_concern}"'
+    ]
+
+    if framing_note:
+        prompt_sections.append(f'FRAMING NOTE: "{framing_note}"')
+
+    if supporting_claims:
+        prompt_sections.append("SUPPORTING OR BREAKOUT CLAIMS:")
+        for item in supporting_claims:
+            prompt_sections.append(f"- {item}")
+
+    if user_context:
+        prompt_sections.append(f'ADDITIONAL USER CONTEXT: "{user_context}"')
+
+    prompt_sections.extend([
+        "",
+        "ANALYSIS INSTRUCTION:",
+        "Treat the PRIMARY CLAIM as the center of gravity for the excavation.",
+        "Do not let protest language, slogans, crowd descriptions, emotional framing, or generic government wording displace the framed center.",
+        "If the claim is fundamentally about secrecy, hidden evidence, disclosure, suppression, or proof, do not drift into generic civic or constitutional framing unless the evidence question itself requires it.",
+        "If the claim is fundamentally about whether charged civic language like monarch, dictator, or authoritarian actually applies, do not drift into protest description or movement narrative.",
+        "",
+        f'Now analyze this claim: "{primary_claim}"'
+    ])
+
+    return "\\n".join(prompt_sections).strip()
+
+
 @app.route("/analyze", methods=["POST"])
 def analyze():
     if not session.get("logged_in"):
@@ -3324,16 +3434,50 @@ def analyze():
     data = request.get_json() or {}
     claim = (data.get("claim") or "").strip()
     mode = data.get("mode", "strip")
+    user_context = (data.get("user_context") or "").strip()
+    incoming_framing = data.get("framing_data") or {}
 
     if not claim:
         return jsonify({"error": "Claim is required"}), 400
 
-    reality_anchor, grok_adjudication = build_reality_anchor_with_grok(claim)
+    if not isinstance(incoming_framing, dict) or not incoming_framing.get("primary_claim"):
+        incoming_framing = frame_claim_input(claim)
+
+    framing_obj = incoming_framing.get("framing_obj") if isinstance(incoming_framing, dict) else None
+
+    if isinstance(framing_obj, dict) and framing_obj.get("primary_claim"):
+        authoritative_framing = dict(framing_obj)
+    else:
+        authoritative_framing = {
+            "input_type": incoming_framing.get("input_type") if isinstance(incoming_framing, dict) else detect_input_type(claim),
+            "claim_type": incoming_framing.get("claim_type") if isinstance(incoming_framing, dict) else detect_claim_type(claim),
+            "polarity": incoming_framing.get("polarity") if isinstance(incoming_framing, dict) else "neutral",
+            "topic": incoming_framing.get("topic") if isinstance(incoming_framing, dict) else normalize_topic(claim),
+            "primary_claim": incoming_framing.get("primary_claim") if isinstance(incoming_framing, dict) else claim,
+            "clarified_text": incoming_framing.get("clarified_text") if isinstance(incoming_framing, dict) else claim,
+            "canonical_claim": incoming_framing.get("canonical_claim") if isinstance(incoming_framing, dict) else claim,
+            "supporting_claims": incoming_framing.get("breakout_candidates", []) if isinstance(incoming_framing, dict) else [],
+            "foundational_concern": extract_root_concern(
+                incoming_framing.get("primary_claim") if isinstance(incoming_framing, dict) and incoming_framing.get("primary_claim") else claim
+            ),
+            "implied_premise": bool(incoming_framing.get("implied_premise", False)) if isinstance(incoming_framing, dict) else False,
+            "confidence_score": float(incoming_framing.get("confidence_score", 0.9)) if isinstance(incoming_framing, dict) else 0.9,
+            "framing_note": incoming_framing.get("framing_note", "") if isinstance(incoming_framing, dict) else "",
+            "framing_version": "1.3"
+        }
+
+    primary_claim = str(authoritative_framing.get("primary_claim") or claim).strip()
+
+    reality_anchor, grok_adjudication = build_reality_anchor_with_grok(primary_claim)
+
     prompt_text = f"""
 {reality_anchor}
 
-Now analyze this claim:
-"{claim}"
+{build_analysis_prompt_payload(
+    raw_claim=claim,
+    framing_data=authoritative_framing,
+    user_context=user_context
+)}
 """.strip()
 
     claude_json = {}
@@ -3367,10 +3511,14 @@ Now analyze this claim:
                 developments = grok_adjudication.get("recent_developments") or []
                 if confirmed or contested or narratives or developments:
                     grok_context_block = "LIVE GROK CONTEXT:\n"
-                    if confirmed: grok_context_block += "Confirmed: " + "; ".join(confirmed[:3]) + "\n"
-                    if contested: grok_context_block += "Contested: " + "; ".join(contested[:3]) + "\n"
-                    if narratives: grok_context_block += "Narratives: " + "; ".join(narratives[:2]) + "\n"
-                    if developments: grok_context_block += "Recent: " + "; ".join(developments[:2]) + "\n"
+                    if confirmed:
+                        grok_context_block += "Confirmed: " + "; ".join(confirmed[:3]) + "\n"
+                    if contested:
+                        grok_context_block += "Contested: " + "; ".join(contested[:3]) + "\n"
+                    if narratives:
+                        grok_context_block += "Narratives: " + "; ".join(narratives[:2]) + "\n"
+                    if developments:
+                        grok_context_block += "Recent: " + "; ".join(developments[:2]) + "\n"
 
             challenge_prompt = f"""You are the OpenAI challenge layer for Where the Truth Lies.
 
@@ -3394,8 +3542,18 @@ If Claude uses a charged concept like authoritarian, monarchy, fascist, coup, in
 If the claim is satirical, rhetorical, grief driven, offensive, racist, sexist, morbid, or psychologically loaded, identify the factual core if one exists. If no meaningful factual core exists, say so plainly rather than pretending the claim supports a full factual disagreement.
 If Claude is directionally reasonable but incomplete, say so. Challenge overconfidence without manufacturing disagreement.
 
+AUTHORITATIVE FRAMING:
+ORIGINAL INPUT: "{claim}"
+PRIMARY CLAIM: "{authoritative_framing.get('primary_claim', '')}"
+CLARIFIED CLAIM: "{authoritative_framing.get('clarified_text', '')}"
+CANONICAL CLAIM: "{authoritative_framing.get('canonical_claim', '')}"
+CLAIM TYPE: "{authoritative_framing.get('claim_type', '')}"
+POLARITY: "{authoritative_framing.get('polarity', '')}"
+TOPIC: "{authoritative_framing.get('topic', '')}"
+FRAMING NOTE: "{authoritative_framing.get('framing_note', '')}"
+
 Claude has produced the following analysis of this claim:
-CLAIM: "{claim}"
+CLAIM: "{primary_claim}"
 
 CLAUDE'S VERDICT: {claude_json.get("Overall Verdict", "Unknown")}
 CLAUDE'S ONE-LINE READ: {claude_json.get("Quick Explanation", "")[:500]}
@@ -3422,12 +3580,12 @@ Return exactly this structure:
                 temperature=0
             )
             openai_challenge = safe_json_parse(challenge_response.choices[0].message.content)
-            openai_json = openai_challenge  # store challenge as openai_json for compatibility
+            openai_json = openai_challenge
+
         elif not openai_client:
             openai_json = {"error": "OpenAI not configured"}
             openai_challenge = {}
         else:
-            # Claude failed — run OpenAI as primary instead
             try:
                 openai_response = openai_client.chat.completions.create(
                     model="gpt-4o-mini",
@@ -3447,12 +3605,10 @@ Return exactly this structure:
         openai_json = {"error": str(e)}
         openai_challenge = {}
 
-    # ── Reconciliation Layer ──
     claude_v = (claude_json.get("Overall Verdict") or "").strip()
     openai_v = (openai_challenge.get("openai_verdict") or "").strip()
     models_diverged_now = bool(claude_v and openai_v and claude_v.lower() != openai_v.lower())
     divergence_note = openai_challenge.get("divergence_note", "")
-    where_wrong = openai_challenge.get("where_claude_is_most_likely_wrong", "")
 
     airtable_result = {}
     try:
@@ -3463,12 +3619,7 @@ Return exactly this structure:
             existing_record = get_claim_by_original_quote(claim)
             existing_fields = existing_record.get("fields", {}) if existing_record else {}
 
-            # ── Run framing to get Analyzed Claim and URL Slug ──────────────────
-            # framing_data is the authoritative source for Analyzed Claim identity.
-            # On re-submission of an existing record, preserve the stored identity
-            # fields unless they are empty (first time or were never set).
-            submission_framing = frame_claim_input(claim)
-            primary_claim_title = (submission_framing or {}).get("primary_claim", "").strip()
+            primary_claim_title = (authoritative_framing or {}).get("primary_claim", "").strip()
 
             existing_analyzed = (existing_fields.get("Analyzed Claim") or "").strip()
             existing_slug = (existing_fields.get("URL Slug") or "").strip()
@@ -3480,12 +3631,10 @@ Return exactly this structure:
                 mode=mode,
                 username=session.get("username", "Unknown"),
                 existing_fields=existing_fields,
-                framing_data=submission_framing
+                framing_data=authoritative_framing
             )
 
-            # ── Identity fields: set on new records, preserve on existing ───────
             if is_new_record:
-                # New submission — write all identity and version fields fresh
                 analyzed_claim = primary_claim_title or claim
                 url_slug = slugify(analyzed_claim)
                 fields["Analyzed Claim"] = analyzed_claim
@@ -3495,10 +3644,8 @@ Return exactly this structure:
                 fields["Title Source"] = "AI Initial"
                 fields["Analysis Core Version"] = ANALYSIS_CORE_VERSION
             else:
-                # Re-submission of existing record — preserve identity fields
                 fields["Analyzed Claim"] = existing_analyzed or primary_claim_title or claim
                 fields["URL Slug"] = existing_slug or slugify(existing_analyzed or primary_claim_title or claim)
-                # Preserve lock fields if already set; do not overwrite
                 if "Title Locked" not in existing_fields:
                     fields["Title Locked"] = False
                 if "Slug Locked" not in existing_fields:
@@ -3507,12 +3654,13 @@ Return exactly this structure:
                     fields["Title Source"] = "AI Initial"
                 if not existing_fields.get("Analysis Core Version"):
                     fields["Analysis Core Version"] = ANALYSIS_CORE_VERSION
-                # Protect Quick View structure before save
-                    parsed_for_repair = claude_json if isinstance(claude_json, dict) and claude_json else {}
-                    fields["Quick Explanation"] = repair_quick_explanation(
-                        fields.get("Quick Explanation", "") or parsed_for_repair.get("Quick Explanation", ""),
-                        parsed_for_repair
-                    )
+
+                parsed_for_repair = claude_json if isinstance(claude_json, dict) and claude_json else {}
+                fields["Quick Explanation"] = repair_quick_explanation(
+                    fields.get("Quick Explanation", "") or parsed_for_repair.get("Quick Explanation", ""),
+                    parsed_for_repair
+                )
+
             fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
             fields["OpenAI Raw JSON"] = json.dumps(openai_json, ensure_ascii=False)[:100000]
             if openai_challenge:
@@ -3565,7 +3713,6 @@ Return exactly this structure:
                 if update_resp.status_code == 200:
                     session["claims_remaining"] = new_count
 
-            # Auto-run breakout detection on successful save
             if airtable_result.get("saved"):
                 try:
                     saved_record_id = airtable_result.get("record_id")
@@ -3591,7 +3738,8 @@ Return exactly this structure:
         "superuser": session.get("superuser", False),
         "claims_remaining": session.get("claims_remaining"),
         "reality_anchor_used": bool(reality_anchor),
-        "grok_adjudication": grok_adjudication
+        "grok_adjudication": grok_adjudication,
+        "framing": authoritative_framing
     })
 
 @app.route("/submit_dispute", methods=["POST"])
