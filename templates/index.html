@@ -544,6 +544,70 @@
       color: var(--cream-soft);
     }
 
+    .reanalyze-option-title-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .reanalyze-info-btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 50%;
+      font-size: 11px;
+      line-height: 1;
+      color: var(--text-mid);
+      cursor: help;
+      flex: 0 0 auto;
+    }
+
+    .reanalyze-info-tip {
+      display: none;
+      position: absolute;
+      left: 24px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 260px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #13253a;
+      border: 1px solid rgba(255,255,255,.10);
+      color: var(--cream-soft);
+      font-size: 12px;
+      line-height: 1.45;
+      letter-spacing: 0;
+      text-transform: none;
+      font-weight: 400;
+      font-style: normal;
+      white-space: normal;
+      z-index: 30;
+      box-shadow: 0 10px 28px rgba(0,0,0,.28);
+    }
+
+    .reanalyze-info-btn:hover .reanalyze-info-tip,
+    .reanalyze-info-btn:focus-within .reanalyze-info-tip {
+      display: block;
+    }
+
+    .reanalyze-warning-badge {
+      display: inline-block;
+      margin-bottom: 8px;
+      padding: 5px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(201, 73, 73, .45);
+      background: rgba(201, 73, 73, .12);
+      color: #ffb3b3;
+      font-size: 10px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
     .m-qv-civic {
       background: rgba(201,168,76,.05);
       border: 1px solid rgba(201,168,76,.18);
@@ -8570,84 +8634,124 @@ console.error('Dispute submission failed:', err);
       await bulkReanalyze('selective', fields);
     }
 
-    // Claim page reanalyze modal
-    var _claimReanalyzeSlug = '';
+// Claim page reanalyze modal
+var _claimReanalyzeSlug = '';
 
-    function openReanalyzeModal(slug) {
-      _claimReanalyzeSlug = slug;
-      document.getElementById('claim-reanalyze-slug-display').textContent = 'Claim: ' + slug;
-      document.getElementById('claim-reanalyze-status').textContent = '';
-      document.getElementById('claimReanalyzeModal').classList.add('visible');
-    }
+function openReanalyzeModal(slug) {
+  _claimReanalyzeSlug = slug;
+  document.getElementById('claim-reanalyze-slug-display').textContent = 'Claim: ' + slug;
+  document.getElementById('claim-reanalyze-status').textContent = '';
+  document.getElementById('claimReanalyzeModal').classList.add('visible');
+}
 
-    function closeClaimReanalyzeModal() { document.getElementById('claimReanalyzeModal').classList.remove('visible'); _claimReanalyzeSlug = ''; }
+function closeClaimReanalyzeModal() {
+  document.getElementById('claimReanalyzeModal').classList.remove('visible');
+  _claimReanalyzeSlug = '';
+}
 
-    var _reanalyzeMessages = [
-      'Locking claim record...',
-      'Consulting Grok live layer for real-time grounding...',
-      'Grok searching live web and X sources...',
-      'Anchoring facts against known reality...',
-      'Sending to Claude for deep excavation...',
-      'Claude parsing direct facts and adjacent facts...',
-      'Claude mapping root concern and values divergence...',
-      'Claude drafting constitutional framework layer...',
-      'Sending to OpenAI for challenge review...',
-      'OpenAI identifying where Claude may be wrong...',
-      'Comparing Claude and OpenAI analyses...',
-      'Writing excavation to Airtable...',
-      'Running breakout detection...',
-      'Finalizing. Almost done...'
-    ];
-    var _reanalyzeInterval = null;
+var _reanalyzeMessages = [
+  'Locking claim record...',
+  'Consulting Grok live layer for real-time grounding...',
+  'Grok searching live web and X sources...',
+  'Anchoring facts against known reality...',
+  'Sending to Claude for deep excavation...',
+  'Claude parsing direct facts and adjacent facts...',
+  'Claude mapping root concern and values divergence...',
+  'Claude drafting constitutional framework layer...',
+  'Sending to OpenAI for challenge review...',
+  'OpenAI identifying where Claude may be wrong...',
+  'Comparing Claude and OpenAI analyses...',
+  'Writing excavation to Airtable...',
+  'Running breakout detection...',
+  'Finalizing. Almost done...'
+];
+var _reanalyzeInterval = null;
 
-    function _startReanalyzeCycle(el) {
-      var idx = 0;
-      el.textContent = _reanalyzeMessages[0];
-      _reanalyzeInterval = setInterval(function() {
-        idx = (idx + 1) % _reanalyzeMessages.length;
-        el.textContent = _reanalyzeMessages[idx];
-      }, 4000);
-    }
+function _startReanalyzeCycle(el) {
+  var idx = 0;
+  el.textContent = _reanalyzeMessages[0];
+  _reanalyzeInterval = setInterval(function() {
+    idx = (idx + 1) % _reanalyzeMessages.length;
+    el.textContent = _reanalyzeMessages[idx];
+  }, 4000);
+}
 
-    function _stopReanalyzeCycle() {
-      if (_reanalyzeInterval) { clearInterval(_reanalyzeInterval); _reanalyzeInterval = null; }
-    }
+function _stopReanalyzeCycle() {
+  if (_reanalyzeInterval) {
+    clearInterval(_reanalyzeInterval);
+    _reanalyzeInterval = null;
+  }
+}
 
-    async function runClaimReanalyze(mode) {
-      if (!_claimReanalyzeSlug) return;
-      var statusEl = document.getElementById('claim-reanalyze-status');
-      document.getElementById('claimReanalyzeModal').querySelectorAll('button').forEach(function(b) { b.disabled = true; });
-      _startReanalyzeCycle(statusEl);
-      try {
-        var res = await fetch('/editor/reanalyze-claim-by-slug/' + _claimReanalyzeSlug, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: mode }) });
-        var data = await res.json();
-        _stopReanalyzeCycle();
-        if (res.ok && data.ok) {
-          if (data.slug_changed && data.redirect_to) {
-            statusEl.textContent = 'Done. Claim refocused — redirecting...';
-            setTimeout(function() { closeClaimReanalyzeModal(); window.location = data.redirect_to; }, 2000);
-          } else {
-            statusEl.textContent = 'Done by ' + data.reanalyzed_by + ' on ' + data.last_reanalyzed + '. Reloading...';
-            setTimeout(function() { closeClaimReanalyzeModal(); window.location.reload(); }, 2000);
-          }
+async function runClaimReanalyze(reanalysisMode) {
+  if (!_claimReanalyzeSlug) return;
+
+  var modalEl = document.getElementById('claimReanalyzeModal');
+  var statusEl = document.getElementById('claim-reanalyze-status');
+
+  if (modalEl) {
+    modalEl.querySelectorAll('button').forEach(function(b) { b.disabled = true; });
+  }
+
+  _startReanalyzeCycle(statusEl);
+
+  try {
+    var res = await fetch('/editor/reanalyze-claim-by-slug/' + _claimReanalyzeSlug, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        reanalysis_mode: reanalysisMode
+      })
+    });
+
+    var data = await res.json();
+    _stopReanalyzeCycle();
+
+    if (res.ok && data.ok) {
+      if (reanalysisMode === 'core_logic_refresh') {
+        if (data.slug_changed && data.redirect_to) {
+          statusEl.textContent = 'Done. Core logic refresh refocused the claim — redirecting...';
+          setTimeout(function() {
+            closeClaimReanalyzeModal();
+            window.location = data.redirect_to;
+          }, 2000);
         } else {
-          statusEl.textContent = 'Error: ' + (data.error || 'Failed');
-          document.getElementById('claimReanalyzeModal').querySelectorAll('button').forEach(function(b) { b.disabled = false; });
+          statusEl.textContent = 'Done. Core logic refresh completed. Reloading...';
+          setTimeout(function() {
+            closeClaimReanalyzeModal();
+            window.location.reload();
+          }, 2000);
         }
-      } catch(err) {
-        _stopReanalyzeCycle();
-        statusEl.textContent = 'Error: ' + err.message;
-        document.getElementById('claimReanalyzeModal').querySelectorAll('button').forEach(function(b) { b.disabled = false; });
+      } else {
+        statusEl.textContent = 'Done. Feature refresh completed. Reloading...';
+        setTimeout(function() {
+          closeClaimReanalyzeModal();
+          window.location.reload();
+        }, 2000);
+      }
+    } else {
+      statusEl.textContent = 'Error: ' + (data.error || 'Failed');
+      if (modalEl) {
+        modalEl.querySelectorAll('button').forEach(function(b) { b.disabled = false; });
       }
     }
-
-    function openSelectiveFromClaim() {
-      _selectiveMode = 'single'; _selectiveSingleSlug = _claimReanalyzeSlug;
-      document.getElementById('selective-target-info').textContent = 'Claim: ' + _claimReanalyzeSlug;
-      document.getElementById('selective-status').textContent = '';
-      closeClaimReanalyzeModal();
-      document.getElementById('selectiveModal').classList.add('visible');
+  } catch(err) {
+    _stopReanalyzeCycle();
+    statusEl.textContent = 'Error: ' + err.message;
+    if (modalEl) {
+      modalEl.querySelectorAll('button').forEach(function(b) { b.disabled = false; });
     }
+  }
+}
+
+function openSelectiveFromClaim() {
+  _selectiveMode = 'single';
+  _selectiveSingleSlug = _claimReanalyzeSlug;
+  document.getElementById('selective-target-info').textContent = 'Claim: ' + _claimReanalyzeSlug;
+  document.getElementById('selective-status').textContent = '';
+  closeClaimReanalyzeModal();
+  document.getElementById('selectiveModal').classList.add('visible');
+}
 
     // Mobile editor tabs
     function setMobileEditorTab(tab, btn) {
@@ -9006,19 +9110,47 @@ console.error('Dispute submission failed:', err);
 
 <!-- CLAIM REANALYZE MODAL -->
 <div class="update-preview-overlay" id="claimReanalyzeModal">
-  <div class="update-preview-box" style="max-width:520px;">
+  <div class="update-preview-box" style="max-width:560px;">
     <div class="modal-kicker">Reanalyze Claim</div>
-    <div class="update-preview-title" style="font-size:22px; margin-bottom:8px;">How do you want to reanalyze?</div>
+    <div class="update-preview-title" style="font-size:22px; margin-bottom:8px;">Choose reanalysis type</div>
     <div style="font-size:14px; color:var(--gold); margin-bottom:20px;" id="claim-reanalyze-slug-display"></div>
-    <div style="display:grid; gap:10px; margin-bottom:20px;">
-      <button type="button" class="gold-btn" style="text-align:left; padding:16px 18px; border-radius:12px; display:block; width:100%;" onclick="runClaimReanalyze('full')">
-        <div style="font-size:13px; margin-bottom:4px;">Full Reanalysis</div>
-        <div style="font-size:12px; opacity:.7; font-weight:normal;">Rewrites all 6 layers, verdict, and every field.</div>
+
+    <div style="display:grid; gap:12px; margin-bottom:20px;">
+      <button type="button" class="gold-btn" style="text-align:left; padding:16px 18px; border-radius:12px; display:block; width:100%;" onclick="runClaimReanalyze('feature_refresh')">
+        <div class="reanalyze-option-title-row" style="font-size:13px; margin-bottom:4px;">
+          <span>Feature Refresh — Full</span>
+          <span class="reanalyze-info-btn" tabindex="0">
+            i
+            <span class="reanalyze-info-tip">Refreshes all analysis layers using the current claim identity as the anchor. Use this when the claim itself is still right, but the excavation quality needs improvement.</span>
+          </span>
+        </div>
+        <div style="font-size:12px; opacity:.7; font-weight:normal;">Refreshes every analysis layer while keeping the current claim identity, topic, claim type, and polarity locked.</div>
       </button>
+
+      <button type="button" class="editor-reanalyze-btn" style="text-align:left; padding:16px 18px; border-radius:12px; display:block; width:100%; font-size:13px;" onclick="runClaimReanalyze('core_logic_refresh')">
+        <div class="reanalyze-warning-badge">Warning — can change claim identity</div>
+        <div class="reanalyze-option-title-row" style="font-size:13px; margin-bottom:4px;">
+          <span>Core Logic Refresh</span>
+          <span class="reanalyze-info-btn" tabindex="0">
+            i
+            <span class="reanalyze-info-tip">Re-runs framing and analysis from the original quote. Use this only when the current claim center may be wrong, too narrow, too broad, or structurally misframed.</span>
+          </span>
+        </div>
+        <div style="font-size:12px; opacity:.7; font-weight:normal;">Re-runs framing and analysis. Use this when the claim center itself may be wrong and needs controlled reframing.</div>
+      </button>
+
       <button type="button" class="editor-reanalyze-btn" style="text-align:left; padding:16px 18px; border-radius:12px; display:block; width:100%; font-size:13px;" onclick="openSelectiveFromClaim()">
-        Selective — choose which fields to update
+        <div class="reanalyze-option-title-row" style="font-size:13px; margin-bottom:4px;">
+          <span>Feature Refresh — Selective</span>
+          <span class="reanalyze-info-btn" tabindex="0">
+            i
+            <span class="reanalyze-info-tip">Lets you refresh only specific layers while keeping the current claim identity and classification locked. Best for targeted cleanup.</span>
+          </span>
+        </div>
+        <div style="font-size:12px; opacity:.7; font-weight:normal;">Choose specific layers to refresh without touching claim identity.</div>
       </button>
     </div>
+
     <button type="button" class="modal-btn-secondary" onclick="closeClaimReanalyzeModal()">Cancel</button>
     <div id="claim-reanalyze-status" style="margin-top:12px; font-size:13px; color:var(--text-mid); font-style:italic;"></div>
   </div>
