@@ -4766,8 +4766,11 @@ def editor_reanalyze_claim_by_slug(slug):
 
         else:
             refresh_framing_data = {}
+
             if reanalysis_mode == "core_logic_refresh":
-                refresh_framing_data = framing_obj or {}
+                normalized_input = normalize_claim_text(raw_claim_text)
+                fresh_framing = frame_claim_input(normalized_input)
+                refresh_framing_data = (fresh_framing or {}).get("framing_obj", {})
             else:
                 refresh_framing_data = {
                     "topic": claim_fields.get("Topic", ["Other"])[0] if isinstance(claim_fields.get("Topic"), list) and claim_fields.get("Topic") else claim_fields.get("Topic", "Other"),
