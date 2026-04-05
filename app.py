@@ -1294,6 +1294,20 @@ def extract_primary_record_fields(claim, parsed, mode, username, existing_fields
     quick_view_contract = build_quick_view_contract(parsed, existing_fields=existing_fields)
     civic_role_contract = build_civic_role_contract(parsed, existing_fields=existing_fields)
 
+    framing_data = framing_data or {}
+    framing_topic = normalize_topic(
+        framing_data.get("topic")
+        or framing_data.get("primary_claim")
+        or parsed.get("Topic")
+        or parsed.get("Stripped Claim")
+        or claim
+    )
+    framing_claim_type = str(
+        framing_data.get("claim_type")
+        or detect_claim_type(framing_data.get("primary_claim") or parsed.get("Stripped Claim") or claim)
+    ).strip() or "general"
+    framing_polarity = str(framing_data.get("polarity") or "neutral").strip() or "neutral"
+
     fields = {
         "Original Quote": claim,
         "Stripped Claim": parsed.get("Stripped Claim", claim),
@@ -1303,7 +1317,9 @@ def extract_primary_record_fields(claim, parsed, mode, username, existing_fields
         "Quick What Is Disputed": quick_view_contract["quick_what_is_disputed"],
         "Quick Where Agreement Exists": quick_view_contract["quick_where_agreement_exists"],
         "Speaker": parsed.get("Speaker") or "Unknown",
-        "Topic": [normalize_topic(parsed.get("Topic"))],
+        "Topic": [framing_topic],
+        "Claim Type": framing_claim_type,
+        "Claim Polarity": framing_polarity,
         "Human Reviewed": human_reviewed_value,
         "Published": published_value,
         "Status": "Active",
@@ -3139,6 +3155,7 @@ Return ONLY valid JSON. No markdown. No preamble.
   "canonical_claim": "Stripped normalized version for dedup comparison only. No intensity modifiers. Normalized causality. No named actors unless essential.",
   "claim_type": "factual | normative | inquiry",
   "polarity": "affirming | rejecting | neutral",
+  "topic": "Exactly one of: Iran War, Energy, Healthcare, Social Security, Medicare, Medicaid, Defense, Military, Elections, Economy, Immigration, Foreign Policy, Crime, Gender Issues, Constitutional Rights, Education, Other",
   "implied_premise": false
 }
 """
@@ -3157,19 +3174,26 @@ def frame_claim_input(raw_input):
         "canonical_claim": raw_input,
         "claim_type": "general",
         "polarity": "neutral",
+        "topic": "Other",
         "implied_premise": False
     }
+
     if not raw_input or not anthropic_client:
         return fallback
+
     try:
         response = anthropic_client.messages.create(
-            model="claude-haiku-4-5-20251001", max_tokens=800, temperature=0,
+            model="claude-haiku-4-5-20251001",
+            max_tokens=800,
+            temperature=0,
             system=FRAME_CLAIM_PROMPT,
             messages=[{"role": "user", "content": f"Frame this input:\n\n{raw_input}"}]
         )
+
         result = safe_json_parse(response.content[0].text)
         if not isinstance(result, dict) or "primary_claim" not in result:
             return fallback
+
         score = float(result.get("confidence_score", 0.9))
         if "needs_clarification" not in result:
             result["needs_clarification"] = score < 0.60
@@ -3223,6 +3247,7 @@ def frame_claim_input(raw_input):
 
                 if accountability_clause:
                     result["breakout_candidates"] = existing_breakouts + [accountability_clause]
+
         primary_claim = str(result.get("primary_claim", "") or "").strip()
         breakout_candidates = result.get("breakout_candidates", [])
         clarified_text = str(result.get("clarified_text", "") or "").strip()
@@ -3230,6 +3255,8 @@ def frame_claim_input(raw_input):
         input_type = str(result.get("input_type", "") or "").strip() or detect_input_type(raw_input)
         claim_type = str(result.get("claim_type", "") or "").strip() or detect_claim_type(primary_claim)
         polarity = str(result.get("polarity", "") or "").strip() or "neutral"
+        framed_topic_raw = str(result.get("topic", "") or "").strip()
+        topic = normalize_topic(framed_topic_raw or primary_claim)
         implied_premise = bool(result.get("implied_premise", False))
         confidence_score = float(result.get("confidence_score", 0.9) or 0.9)
         framing_note = str(result.get("framing_note", "") or "").strip()
@@ -3238,6 +3265,7 @@ def frame_claim_input(raw_input):
             "input_type": input_type,
             "claim_type": claim_type,
             "polarity": polarity,
+            "topic": topic,
             "primary_claim": primary_claim,
             "clarified_text": clarified_text,
             "canonical_claim": canonical_claim or primary_claim,
@@ -3246,11 +3274,13 @@ def frame_claim_input(raw_input):
             "implied_premise": implied_premise,
             "confidence_score": confidence_score,
             "framing_note": framing_note,
-            "framing_version": "1.1"
+            "framing_version": "1.2"
         }
 
+        result["topic"] = topic
         result["framing_obj"] = framing_obj
         return result
+
     except Exception as e:
         print(f"FRAME CLAIM ERROR: {e}", flush=True)
         return fallback
