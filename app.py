@@ -4929,7 +4929,7 @@ def editor_reanalyze_claim(record_id):
 
             # Always store framing object
             update_fields["Canonical Framing JSON"] = json.dumps(framing_obj, ensure_ascii=False)[:100000]
-            update_fields["Framing Version"] = "1.0"
+            update_fields["Framing Version"] = "1.2"
 
             title_locked = bool(claim_fields.get("Title Locked", False))
             slug_locked = bool(claim_fields.get("Slug Locked", True))
@@ -5170,7 +5170,7 @@ def editor_reanalyze_claim_by_slug(slug):
 
             # Always store framing object
             update_fields["Canonical Framing JSON"] = json.dumps(framing_obj, ensure_ascii=False)[:100000]
-            update_fields["Framing Version"] = "1.0"
+            update_fields["Framing Version"] = "1.2"
 
             title_locked = bool(claim_fields.get("Title Locked", False))
             slug_locked = bool(claim_fields.get("Slug Locked", True))
