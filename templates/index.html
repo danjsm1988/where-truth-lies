@@ -4974,58 +4974,51 @@ html, body {
         <!-- EXCAVATION PANEL -->
         <div id="m-claim-excavation-panel" class="m-claim-panel">
         <!-- Quick View (structured hook) -->
-        {% if current_claim.quick_explanation %}
+        {% if current_claim.quick_one_line_read or current_claim.quick_explanation %}
           {% if current_claim.models_diverged and current_claim.divergence_note %}
             <div class="divergence-banner" style="margin-bottom:10px;">
               <div class="divergence-banner-label">&#9670; Model Divergence</div>
               <div class="divergence-banner-text" style="font-size:13px;">{{ current_claim.divergence_note }}</div>
             </div>
           {% endif %}
-          <div class="m-qv-one-liner" id="mqvOneLiner"></div>
-          <div id="mqvHoldsUpCell" class="m-qv-cell" style="display:none;">
-            <div class="m-qv-cell-label">What Holds Up</div>
-            <div class="m-qv-cell-text" id="mqvHoldsUp"></div>
+
+          <div class="m-qv-one-liner">
+            {{ current_claim.quick_one_line_read or current_claim.quick_explanation }}
           </div>
-          <div id="mqvDisputedCell" class="m-qv-cell" style="display:none;">
-            <div class="m-qv-cell-label">What Is Disputed</div>
-            <div class="m-qv-cell-text" id="mqvDisputed"></div>
-          </div>
-          <div id="mqvAgreementRow" class="m-qv-agreement" style="display:none;">
-            <div class="m-qv-cell-label">Where Agreement Exists</div>
-            <div class="m-qv-cell-text" id="mqvAgreement"></div>
-          </div>
-        {% if current_claim.civic_role_quick_view %}
-          <div class="m-qv-civic" id="mqvCivicRow">
-            <div class="m-qv-cell-label">
-              Civic Role
-              <span class="civic-info-btn">i
-                <span class="civic-info-tip">Civic Role is not a command and not partisan advice. It explains the kind of civic discipline, judgment, and self government this claim tests in a free society.</span>
-              </span>
+
+          {% if current_claim.quick_what_holds_up %}
+            <div class="m-qv-cell">
+              <div class="m-qv-cell-label">What Holds Up</div>
+              <div class="m-qv-cell-text">{{ current_claim.quick_what_holds_up }}</div>
             </div>
-            <div class="m-qv-cell-text">{{ current_claim.civic_role_quick_view }}</div>
-            <div class="m-qv-civic-note">This is a preview from the Full Excavation paid experience and moves below when Full Excavation is opened.</div>
-          </div>
-        {% endif %}
-          <script>
-          (function() {
-            var raw = {{ current_claim.quick_explanation | tojson }};
-            function extract(text, label) {
-              var idx = text.indexOf(label);
-              if (idx === -1) return '';
-              var after = text.slice(idx + label.length).trim();
-              var next = after.search(/ONE-LINE READ:|WHAT HOLDS UP:|WHAT IS DISPUTED:|WHERE AGREEMENT EXISTS:/);
-              return next === -1 ? after.trim() : after.slice(0, next).trim();
-            }
-            var oneLiner = extract(raw, 'ONE-LINE READ:');
-            var holdsUp = extract(raw, 'WHAT HOLDS UP:');
-            var disputed = extract(raw, 'WHAT IS DISPUTED:');
-            var agreement = extract(raw, 'WHERE AGREEMENT EXISTS:');
-            document.getElementById('mqvOneLiner').textContent = oneLiner || raw;
-            if (holdsUp) { document.getElementById('mqvHoldsUp').textContent = holdsUp; document.getElementById('mqvHoldsUpCell').style.display = ''; }
-            if (disputed) { document.getElementById('mqvDisputed').textContent = disputed; document.getElementById('mqvDisputedCell').style.display = ''; }
-            if (agreement) { document.getElementById('mqvAgreement').textContent = agreement; document.getElementById('mqvAgreementRow').style.display = ''; }
-          })();
-          </script>
+          {% endif %}
+
+          {% if current_claim.quick_what_is_disputed %}
+            <div class="m-qv-cell">
+              <div class="m-qv-cell-label">What Is Disputed</div>
+              <div class="m-qv-cell-text">{{ current_claim.quick_what_is_disputed }}</div>
+            </div>
+          {% endif %}
+
+          {% if current_claim.quick_where_agreement_exists %}
+            <div class="m-qv-agreement">
+              <div class="m-qv-cell-label">Where Agreement Exists</div>
+              <div class="m-qv-cell-text">{{ current_claim.quick_where_agreement_exists }}</div>
+            </div>
+          {% endif %}
+
+          {% if current_claim.civic_role_quick_view %}
+            <div class="m-qv-civic">
+              <div class="m-qv-cell-label">
+                Civic Role
+                <span class="civic-info-btn">i
+                  <span class="civic-info-tip">Civic Role is not a command and not partisan advice. It explains the kind of civic discipline, judgment, and self government this claim tests in a free society.</span>
+                </span>
+              </div>
+              <div class="m-qv-cell-text">{{ current_claim.civic_role_quick_view }}</div>
+              <div class="m-qv-civic-note">This is a preview from the Full Excavation paid experience and moves below when Full Excavation is opened.</div>
+            </div>
+          {% endif %}
         {% endif %}
 
         <!-- Verdict -->
@@ -6285,11 +6278,7 @@ html, body {
               This analysis separates documented facts from interpretation wherever that distinction matters. The trust foundation comes first: recent factual contradictions are unacceptable. Where high-risk claims require stronger grounding, reality anchors are intended to prevent confident drift from known reality.
             </div>
 
-            {% if current_claim.quick_explanation %}
-              {# Parse structured Quick Explanation — done in JS to handle single-line output #}
-              {% set qe_raw = current_claim.quick_explanation %}
-
-              {# Divergence banner #}
+{% if current_claim.quick_one_line_read or current_claim.quick_explanation %}
               {% if current_claim.models_diverged and current_claim.divergence_note %}
                 <div class="divergence-banner">
                   <div class="divergence-banner-label">&#9670; Model Divergence Detected</div>
@@ -6297,71 +6286,50 @@ html, body {
                 </div>
               {% endif %}
 
-              <div class="qv-block" id="qvBlock">
-                <div class="qv-one-liner" id="qvOneLiner"></div>
-                <div class="qv-grid" id="qvGrid" style="display:none;">
-                  <div class="qv-cell" id="qvHoldsUpCell" style="display:none;">
-                    <div class="qv-cell-label">What Holds Up</div>
-                    <div class="qv-cell-text" id="qvHoldsUp"></div>
-                  </div>
-                  <div class="qv-cell" id="qvDisputedCell" style="display:none;">
-                    <div class="qv-cell-label">What Is Disputed</div>
-                    <div class="qv-cell-text" id="qvDisputed"></div>
-                  </div>
-                </div>
-                <div class="qv-agreement-row" id="qvAgreementRow" style="display:none;">
-                  <div class="qv-agreement-label">Where Agreement Exists</div>
-                  <div class="qv-agreement-text" id="qvAgreement"></div>
+              <div class="qv-block">
+                <div class="qv-one-liner">
+                  {{ current_claim.quick_one_line_read or current_claim.quick_explanation }}
                 </div>
 
-              {% if current_claim.civic_role_quick_view %}
-                <div class="qv-civic-row" id="qvCivicRow">
-                  <div class="qv-civic-label">
-                    Civic Role
-                    <span class="civic-info-btn">i
-                      <span class="civic-info-tip">Civic Role is not a command and not partisan advice. It explains the kind of civic discipline, judgment, and self government this claim tests in a free society.</span>
-                    </span>
+                {% if current_claim.quick_what_holds_up or current_claim.quick_what_is_disputed %}
+                  <div class="qv-grid">
+                    {% if current_claim.quick_what_holds_up %}
+                      <div class="qv-cell">
+                        <div class="qv-cell-label">What Holds Up</div>
+                        <div class="qv-cell-text">{{ current_claim.quick_what_holds_up }}</div>
+                      </div>
+                    {% endif %}
+                    {% if current_claim.quick_what_is_disputed %}
+                      <div class="qv-cell">
+                        <div class="qv-cell-label">What Is Disputed</div>
+                        <div class="qv-cell-text">{{ current_claim.quick_what_is_disputed }}</div>
+                      </div>
+                    {% endif %}
                   </div>
-                  <div class="qv-civic-text">{{ current_claim.civic_role_quick_view }}</div>
-                  <div class="qv-civic-note">This is a preview from the Full Excavation paid experience and moves below when Full Excavation is opened.</div>
-                </div>
-              {% endif %}
+                {% endif %}
+
+                {% if current_claim.quick_where_agreement_exists %}
+                  <div class="qv-agreement-row">
+                    <div class="qv-agreement-label">Where Agreement Exists</div>
+                    <div class="qv-agreement-text">{{ current_claim.quick_where_agreement_exists }}</div>
+                  </div>
+                {% endif %}
+
+                {% if current_claim.civic_role_quick_view %}
+                  <div class="qv-civic-row">
+                    <div class="qv-civic-label">
+                      Civic Role
+                      <span class="civic-info-btn">i
+                        <span class="civic-info-tip">Civic Role is not a command and not partisan advice. It explains the kind of civic discipline, judgment, and self government this claim tests in a free society.</span>
+                      </span>
+                    </div>
+                    <div class="qv-civic-text">{{ current_claim.civic_role_quick_view }}</div>
+                    <div class="qv-civic-note">This is a preview from the Full Excavation paid experience and moves below when Full Excavation is opened.</div>
+                  </div>
+                {% endif %}
 
                 <p class="qv-dive-prompt">See the full excavation for underlying layers, competing interpretations, and connected breakout claims. <a onclick="switchTab('full')" href="#">Open Full Excavation &#8594;</a></p>
               </div>
-              <script>
-              (function() {
-                var raw = {{ current_claim.quick_explanation | tojson }};
-                function extract(text, label) {
-                  var idx = text.indexOf(label);
-                  if (idx === -1) return '';
-                  var after = text.slice(idx + label.length).trim();
-                  // Stop at next label
-                  var next = after.search(/ONE-LINE READ:|WHAT HOLDS UP:|WHAT IS DISPUTED:|WHERE AGREEMENT EXISTS:/);
-                  return next === -1 ? after.trim() : after.slice(0, next).trim();
-                }
-                var oneLiner = extract(raw, 'ONE-LINE READ:');
-                var holdsUp = extract(raw, 'WHAT HOLDS UP:');
-                var disputed = extract(raw, 'WHAT IS DISPUTED:');
-                var agreement = extract(raw, 'WHERE AGREEMENT EXISTS:');
-                var hasStructure = !!oneLiner;
-                document.getElementById('qvOneLiner').textContent = hasStructure ? oneLiner : raw;
-                if (holdsUp) {
-                  document.getElementById('qvHoldsUp').textContent = holdsUp;
-                  document.getElementById('qvHoldsUpCell').style.display = '';
-                  document.getElementById('qvGrid').style.display = '';
-                }
-                if (disputed) {
-                  document.getElementById('qvDisputed').textContent = disputed;
-                  document.getElementById('qvDisputedCell').style.display = '';
-                  document.getElementById('qvGrid').style.display = '';
-                }
-                if (agreement) {
-                  document.getElementById('qvAgreement').textContent = agreement;
-                  document.getElementById('qvAgreementRow').style.display = '';
-                }
-              })();
-              </script>
             {% endif %}
 
             {% set verdict = current_claim.overall_verdict or 'Unproven' %}
@@ -6569,7 +6537,7 @@ html, body {
                 </div>
               </div>
             {% endif %}
-            {% if current_claim.civic_role %}
+{% if current_claim.civic_role or current_claim.civic_what_this_tests or current_claim.civic_what_people_should_separate or current_claim.civic_why_this_matters %}
               <div class="layer-block layer-civic-role">
                 <div class="layer-block-header open" onclick="toggleLayer(this)">
                   <div class="layer-block-header-left">
@@ -6584,7 +6552,21 @@ html, body {
                   <span class="layer-chevron">▼</span>
                 </div>
                 <div class="layer-block-body open">
-                  <div class="layer-block-text" id="civicRoleText">{{ current_claim.civic_role }}</div>
+                  {% if current_claim.civic_what_this_tests or current_claim.civic_what_people_should_separate or current_claim.civic_why_this_matters %}
+                    <div class="layer-block-text" id="civicRoleText">
+                      {% if current_claim.civic_what_this_tests %}
+                        <strong>What this tests:</strong> {{ current_claim.civic_what_this_tests }}{% if current_claim.civic_what_people_should_separate or current_claim.civic_why_this_matters %}<br><br>{% endif %}
+                      {% endif %}
+                      {% if current_claim.civic_what_people_should_separate %}
+                        <strong>What people should separate:</strong> {{ current_claim.civic_what_people_should_separate }}{% if current_claim.civic_why_this_matters %}<br><br>{% endif %}
+                      {% endif %}
+                      {% if current_claim.civic_why_this_matters %}
+                        <strong>Why this matters:</strong> {{ current_claim.civic_why_this_matters }}
+                      {% endif %}
+                    </div>
+                  {% else %}
+                    <div class="layer-block-text" id="civicRoleText">{{ current_claim.civic_role }}</div>
+                  {% endif %}
                 </div>
               </div>
             {% endif %}

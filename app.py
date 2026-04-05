@@ -293,6 +293,147 @@ def compute_framing_hash(framing_obj):
     canonical_str = json.dumps(framing_obj, sort_keys=True)
     return hashlib.sha256(canonical_str.encode()).hexdigest()
 
+def _clean_line_text(value):
+    return re.sub(r"\s+", " ", str(value or "").strip())
+
+
+def parse_quick_explanation_lines(text):
+    """
+    Parse the legacy four-line Quick Explanation blob into atomic fields.
+    Returns normalized keys even if some lines are missing.
+    """
+    result = {
+        "one_line_read": "",
+        "what_holds_up": "",
+        "what_is_disputed": "",
+        "where_agreement_exists": ""
+    }
+
+    if not text:
+        return result
+
+    label_map = {
+        "ONE-LINE READ:": "one_line_read",
+        "WHAT HOLDS UP:": "what_holds_up",
+        "WHAT IS DISPUTED:": "what_is_disputed",
+        "WHERE AGREEMENT EXISTS:": "where_agreement_exists"
+    }
+
+    for raw_line in str(text).splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        for label, key in label_map.items():
+            if line.startswith(label):
+                result[key] = _clean_line_text(line[len(label):])
+                break
+
+    return result
+
+
+def parse_civic_role_lines(text):
+    """
+    Parse Civic Role into atomic fields so render does not depend on one blob.
+    """
+    result = {
+        "what_this_tests": "",
+        "what_people_should_separate": "",
+        "why_this_matters": ""
+    }
+
+    if not text:
+        return result
+
+    lines = [line.strip() for line in str(text).splitlines() if line.strip()]
+    current_key = None
+
+    key_map = {
+        "What this tests:": "what_this_tests",
+        "What people should separate:": "what_people_should_separate",
+        "Why this matters:": "why_this_matters"
+    }
+
+    for line in lines:
+        if line in key_map:
+            current_key = key_map[line]
+            continue
+
+        if current_key:
+            if result[current_key]:
+                result[current_key] += " " + _clean_line_text(line)
+            else:
+                result[current_key] = _clean_line_text(line)
+
+    return result
+
+
+def build_quick_view_contract(parsed):
+    """
+    Authoritative Quick View contract.
+    Build once at save/reanalysis time and persist atomic fields.
+    """
+    parsed = parsed or {}
+
+    quick_blob = (parsed.get("Quick Explanation") or "").strip()
+    quick_parts = parse_quick_explanation_lines(quick_blob)
+
+    if not quick_parts["one_line_read"]:
+        quick_parts["one_line_read"] = _clean_line_text(parsed.get("Stripped Claim") or "")
+
+    if not quick_parts["what_holds_up"]:
+        direct = _clean_line_text(parsed.get("Direct Facts") or "")
+        if direct:
+            quick_parts["what_holds_up"] = direct.split(". ")[0].strip()
+            if quick_parts["what_holds_up"] and not quick_parts["what_holds_up"].endswith("."):
+                quick_parts["what_holds_up"] += "."
+
+    if not quick_parts["what_is_disputed"]:
+        disputed = _clean_line_text(parsed.get("Adjacent Facts") or parsed.get("Root Concern") or "")
+        if disputed:
+            quick_parts["what_is_disputed"] = disputed.split(". ")[0].strip()
+            if quick_parts["what_is_disputed"] and not quick_parts["what_is_disputed"].endswith("."):
+                quick_parts["what_is_disputed"] += "."
+
+    if not quick_parts["where_agreement_exists"]:
+        agreement = _clean_line_text(parsed.get("Common Ground") or "")
+        if agreement:
+            quick_parts["where_agreement_exists"] = agreement.split(". ")[0].strip()
+            if quick_parts["where_agreement_exists"] and not quick_parts["where_agreement_exists"].endswith("."):
+                quick_parts["where_agreement_exists"] += "."
+
+    quick_blob_rebuilt = "\n".join([
+        f"ONE-LINE READ: {quick_parts['one_line_read']}".strip(),
+        f"WHAT HOLDS UP: {quick_parts['what_holds_up']}".strip(),
+        f"WHAT IS DISPUTED: {quick_parts['what_is_disputed']}".strip(),
+        f"WHERE AGREEMENT EXISTS: {quick_parts['where_agreement_exists']}".strip()
+    ])
+
+    return {
+        "quick_explanation": quick_blob_rebuilt,
+        "quick_one_line_read": quick_parts["one_line_read"],
+        "quick_what_holds_up": quick_parts["what_holds_up"],
+        "quick_what_is_disputed": quick_parts["what_is_disputed"],
+        "quick_where_agreement_exists": quick_parts["where_agreement_exists"]
+    }
+
+
+def build_civic_role_contract(parsed):
+    """
+    Authoritative Civic Role contract.
+    """
+    parsed = parsed or {}
+
+    civic_role_quick_view = _clean_line_text(parsed.get("Civic Role Quick View") or "")
+    civic_role_full = (parsed.get("Civic Role") or "").strip()
+    civic_parts = parse_civic_role_lines(civic_role_full)
+
+    return {
+        "civic_role_quick_view": civic_role_quick_view,
+        "civic_role": civic_role_full,
+        "civic_what_this_tests": civic_parts["what_this_tests"],
+        "civic_what_people_should_separate": civic_parts["what_people_should_separate"],
+        "civic_why_this_matters": civic_parts["why_this_matters"]
+    }
 
 def detect_input_type(text):
     if len(text) > 500:
@@ -698,7 +839,39 @@ def build_claim_context(record):
     parsed_json = try_parse_raw_json(fields)
 
     quick_explanation_raw = fields.get("Quick Explanation", "") or parsed_json.get("Quick Explanation", "")
-    quick_explanation = repair_quick_explanation(quick_explanation_raw, parsed_json)
+    quick_explanation = quick_explanation_raw
+
+    if not quick_explanation.strip():
+        # fallback only for legacy records
+        quick_explanation = repair_quick_explanation(quick_explanation_raw, parsed_json)
+
+    quick_one_line_read = (fields.get("Quick One-Line Read") or "").strip()
+    quick_what_holds_up = (fields.get("Quick What Holds Up") or "").strip()
+    quick_what_is_disputed = (fields.get("Quick What Is Disputed") or "").strip()
+    quick_where_agreement_exists = (fields.get("Quick Where Agreement Exists") or "").strip()
+
+    missing_quick_fields = not all([
+        quick_one_line_read,
+        quick_what_holds_up,
+        quick_what_is_disputed,
+        quick_where_agreement_exists
+    ])
+
+    if missing_quick_fields:
+        legacy_quick_parts = parse_quick_explanation_lines(quick_explanation)
+
+        if not quick_one_line_read:
+            quick_one_line_read = legacy_quick_parts.get("one_line_read", "")
+
+        if not quick_what_holds_up:
+            quick_what_holds_up = legacy_quick_parts.get("what_holds_up", "")
+
+        if not quick_what_is_disputed:
+            quick_what_is_disputed = legacy_quick_parts.get("what_is_disputed", "")
+
+        if not quick_where_agreement_exists:
+            quick_where_agreement_exists = legacy_quick_parts.get("where_agreement_exists", "")
+
     stripped_claim = fields.get("Stripped Claim", "") or parsed_json.get("Stripped Claim", "")
     overall_verdict = fields.get("Overall Verdict", "Unproven") or parsed_json.get("Overall Verdict", "Unproven")
     subclaims = build_subclaims(fields, parsed_json)
@@ -709,8 +882,31 @@ def build_claim_context(record):
     values_divergence = fields.get("Values Divergence", "") or parsed_json.get("Values Divergence", "")
     constitutional_framework = fields.get("Constitutional Framework", "") or parsed_json.get("Constitutional Framework", "")
     common_ground = fields.get("Common Ground", "") or parsed_json.get("Common Ground", "")
-    civic_role_quick_view = fields.get("Civic Role Quick View", "") or parsed_json.get("Civic Role Quick View", "")
-    civic_role = fields.get("Civic Role", "") or parsed_json.get("Civic Role", "")
+
+    civic_role_quick_view = (fields.get("Civic Role Quick View") or parsed_json.get("Civic Role Quick View", "") or "").strip()
+    civic_role = (fields.get("Civic Role") or parsed_json.get("Civic Role", "") or "").strip()
+    civic_what_this_tests = (fields.get("Civic What This Tests") or "").strip()
+    civic_what_people_should_separate = (fields.get("Civic What People Should Separate") or "").strip()
+    civic_why_this_matters = (fields.get("Civic Why This Matters") or "").strip()
+
+    missing_civic_fields = not all([
+        civic_what_this_tests,
+        civic_what_people_should_separate,
+        civic_why_this_matters
+    ])
+
+    if missing_civic_fields:
+        legacy_civic_parts = parse_civic_role_lines(civic_role)
+
+        if not civic_what_this_tests:
+            civic_what_this_tests = legacy_civic_parts.get("what_this_tests", "")
+
+        if not civic_what_people_should_separate:
+            civic_what_people_should_separate = legacy_civic_parts.get("what_people_should_separate", "")
+
+        if not civic_why_this_matters:
+            civic_why_this_matters = legacy_civic_parts.get("why_this_matters", "")
+
     left_perspective = fields.get("Left Perspective", "") or parsed_json.get("Left Perspective", "")
     right_perspective = fields.get("Right Perspective", "") or parsed_json.get("Right Perspective", "")
     scenario_map = fields.get("Scenario Map", "") or parsed_json.get("Scenario Map", "")
@@ -723,6 +919,10 @@ def build_claim_context(record):
         "stripped_claim": stripped_claim,
         "overall_verdict": overall_verdict,
         "quick_explanation": quick_explanation,
+        "one_line_read": quick_one_line_read,
+        "what_holds_up": quick_what_holds_up,
+        "what_is_disputed": quick_what_is_disputed,
+        "where_agreement_exists": quick_where_agreement_exists,
         "subclaims": subclaims
     }
 
@@ -735,6 +935,9 @@ def build_claim_context(record):
         "constitutional_framework": constitutional_framework,
         "common_ground": common_ground,
         "civic_role": civic_role,
+        "civic_what_this_tests": civic_what_this_tests,
+        "civic_what_people_should_separate": civic_what_people_should_separate,
+        "civic_why_this_matters": civic_why_this_matters,
         "left_perspective": left_perspective,
         "right_perspective": right_perspective,
         "founders_perspectives": founders_perspectives,
@@ -764,6 +967,13 @@ def build_claim_context(record):
         "common_ground": common_ground,
         "civic_role_quick_view": civic_role_quick_view,
         "civic_role": civic_role,
+        "quick_one_line_read": quick_one_line_read,
+        "quick_what_holds_up": quick_what_holds_up,
+        "quick_what_is_disputed": quick_what_is_disputed,
+        "quick_where_agreement_exists": quick_where_agreement_exists,
+        "civic_what_this_tests": civic_what_this_tests,
+        "civic_what_people_should_separate": civic_what_people_should_separate,
+        "civic_why_this_matters": civic_why_this_matters,        
         "left_perspective": left_perspective,
         "right_perspective": right_perspective,
         "scenario_map": scenario_map,
@@ -818,6 +1028,7 @@ def extract_primary_record_fields(claim, parsed, mode, username, existing_fields
     """
     dates = now_dates()
     existing_fields = existing_fields or {}
+    parsed = parsed or {}
     is_full_reexcavate = mode == "full"
 
     if existing_fields and not is_full_reexcavate:
@@ -829,10 +1040,17 @@ def extract_primary_record_fields(claim, parsed, mode, username, existing_fields
 
     entered_by = existing_fields.get("Entered By") or username or "Unknown"
 
+    quick_view_contract = build_quick_view_contract(parsed)
+    civic_role_contract = build_civic_role_contract(parsed)
+
     fields = {
         "Original Quote": claim,
         "Stripped Claim": parsed.get("Stripped Claim", claim),
-        "Quick Explanation": repair_quick_explanation(parsed.get("Quick Explanation", ""), parsed),
+        "Quick Explanation": quick_view_contract["quick_explanation"],
+        "Quick One-Line Read": quick_view_contract["quick_one_line_read"],
+        "Quick What Holds Up": quick_view_contract["quick_what_holds_up"],
+        "Quick What Is Disputed": quick_view_contract["quick_what_is_disputed"],
+        "Quick Where Agreement Exists": quick_view_contract["quick_where_agreement_exists"],
         "Speaker": parsed.get("Speaker") or "Unknown",
         "Topic": [normalize_topic(parsed.get("Topic"))],
         "Human Reviewed": human_reviewed_value,
@@ -843,7 +1061,12 @@ def extract_primary_record_fields(claim, parsed, mode, username, existing_fields
         "Date Added": existing_fields.get("Date Added", dates["short_date"]),
         "Last Updated": dates["short_date"],
         "Last Reanalyzed": dates["short_date"],
-        "Entered By": entered_by
+        "Entered By": entered_by,
+        "Civic Role Quick View": civic_role_contract["civic_role_quick_view"],
+        "Civic Role": civic_role_contract["civic_role"],
+        "Civic What This Tests": civic_role_contract["civic_what_this_tests"],
+        "Civic What People Should Separate": civic_role_contract["civic_what_people_should_separate"],
+        "Civic Why This Matters": civic_role_contract["civic_why_this_matters"]
     }
 
     for field in [
@@ -854,8 +1077,6 @@ def extract_primary_record_fields(claim, parsed, mode, username, existing_fields
         "Values Divergence",
         "Constitutional Framework",
         "Common Ground",
-        "Civic Role Quick View",
-        "Civic Role",
         "Left Perspective",
         "Right Perspective",
         "Scenario Map"
@@ -884,29 +1105,33 @@ def extract_primary_record_fields(claim, parsed, mode, username, existing_fields
             fields["Sub-Claim 1"] = sub_claims[0]["claim"]
             if sub_claims[0].get("verdict"):
                 fields["Verdict: Sub-Claim1"] = sub_claims[0]["verdict"]
+
         if len(sub_claims) > 1 and sub_claims[1].get("claim"):
             fields["Sub-Claim 2"] = sub_claims[1]["claim"]
             if sub_claims[1].get("verdict"):
                 fields["Verdict: Sub-Claim 2"] = sub_claims[1]["verdict"]
+
         if len(sub_claims) > 2 and sub_claims[2].get("claim"):
             fields["Sub-Claim 3"] = sub_claims[2]["claim"]
             if sub_claims[2].get("verdict"):
                 fields["Verdict: Sub-Claim 3"] = sub_claims[2]["verdict"]
-        if sub_claims:
-            fields["Sub-Claims"] = " | ".join([sc.get("claim", "") for sc in sub_claims if sc.get("claim")]).strip()
 
-    # Input type and framing confidence from framing layer (non-identity fields only)
+        if sub_claims:
+            fields["Sub-Claims"] = " | ".join(
+                [sc.get("claim", "") for sc in sub_claims if sc.get("claim")]
+            ).strip()
+
     if framing_data and isinstance(framing_data, dict):
         if framing_data.get("input_type"):
             fields["Input Type"] = framing_data["input_type"]
+
         if framing_data.get("confidence_score") is not None:
             try:
                 fields["Framing Confidence"] = float(framing_data["confidence_score"])
             except Exception:
                 pass
 
-    # Store Analyzed Claim Candidate from CLAIMLAB_SYSTEM for superuser review
-    candidate = parsed.get("Analyzed Claim Candidate", "").strip()
+    candidate = (parsed.get("Analyzed Claim Candidate") or "").strip()
     if candidate:
         fields["Analyzed Claim Candidate"] = candidate
 
