@@ -539,12 +539,11 @@ def parse_glossary(raw):
 
 
 def try_parse_raw_json(fields):
-    for key in ["Claude Raw JSON", "OpenAI Raw JSON"]:
-        raw = fields.get(key)
-        if raw:
-            parsed = safe_json_parse(raw)
-            if isinstance(parsed, dict) and parsed and "raw" not in parsed:
-                return parsed
+    raw = fields.get("Claude Raw JSON")
+    if raw:
+        parsed = safe_json_parse(raw)
+        if isinstance(parsed, dict) and parsed and "raw" not in parsed:
+            return parsed
     return {}
 
 
@@ -3682,14 +3681,38 @@ def run_reanalysis_ai(claim_text, mode="full", canonical_anchor=None):
         claude_json = {"error": str(e)}
 
     try:
-        if openai_client:
+        if openai_client and "error" not in claude_json:
+            challenge_prompt = f"""
+You are reviewing an AI-generated claim analysis.
+
+Your job is NOT to rewrite the analysis.
+
+Your job is to:
+- identify if the analysis overstates conclusions
+- identify if it misses key counterpoints
+- identify if it misinterprets the claim
+
+Return ONLY JSON:
+
+{{
+  "agreement": "agree" or "partial" or "disagree",
+  "issues": ["short list of issues if any"],
+  "notes": "brief explanation"
+}}
+
+CLAIM:
+{claim_text}
+
+ANALYSIS:
+{json.dumps(claude_json, ensure_ascii=False)}
+"""
             resp = openai_client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
-                    {"role": "system", "content": CLAIMLAB_SYSTEM},
-                    {"role": "user", "content": prompt_text}
+                    {"role": "system", "content": "You are a strict analytical reviewer."},
+                    {"role": "user", "content": challenge_prompt}
                 ],
-                max_tokens=4000,
+                max_tokens=800,
                 temperature=0
             )
             openai_json = safe_json_parse(resp.choices[0].message.content)
@@ -3884,12 +3907,6 @@ def editor_reanalyze_claim(record_id):
             if isinstance(openai_json, dict):
                 openai_json["Stripped Claim"] = existing_stripped
 
-        if preserve_quick and existing_quick:
-            primary["Quick Explanation"] = existing_quick
-            if isinstance(claude_json, dict):
-                claude_json["Quick Explanation"] = existing_quick
-            if isinstance(openai_json, dict):
-                openai_json["Quick Explanation"] = existing_quick
 
         # Build update payload
         if selective_fields:
