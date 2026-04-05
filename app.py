@@ -299,8 +299,9 @@ def _clean_line_text(value):
 
 def parse_quick_explanation_lines(text):
     """
-    Parse the legacy four-line Quick Explanation blob into atomic fields.
-    Returns normalized keys even if some lines are missing.
+    Parse the Quick Explanation blob into atomic fields.
+    Works for both true multi-line output and bad one-line output where
+    all labels were returned in a single string.
     """
     result = {
         "one_line_read": "",
@@ -312,21 +313,19 @@ def parse_quick_explanation_lines(text):
     if not text:
         return result
 
-    label_map = {
-        "ONE-LINE READ:": "one_line_read",
-        "WHAT HOLDS UP:": "what_holds_up",
-        "WHAT IS DISPUTED:": "what_is_disputed",
-        "WHERE AGREEMENT EXISTS:": "where_agreement_exists"
+    raw = str(text).strip()
+
+    patterns = {
+        "one_line_read": r"ONE-LINE READ:\s*(.*?)(?=\s*WHAT HOLDS UP:|\s*WHAT IS DISPUTED:|\s*WHERE AGREEMENT EXISTS:|$)",
+        "what_holds_up": r"WHAT HOLDS UP:\s*(.*?)(?=\s*ONE-LINE READ:|\s*WHAT IS DISPUTED:|\s*WHERE AGREEMENT EXISTS:|$)",
+        "what_is_disputed": r"WHAT IS DISPUTED:\s*(.*?)(?=\s*ONE-LINE READ:|\s*WHAT HOLDS UP:|\s*WHERE AGREEMENT EXISTS:|$)",
+        "where_agreement_exists": r"WHERE AGREEMENT EXISTS:\s*(.*?)(?=\s*ONE-LINE READ:|\s*WHAT HOLDS UP:|\s*WHAT IS DISPUTED:|$)"
     }
 
-    for raw_line in str(text).splitlines():
-        line = raw_line.strip()
-        if not line:
-            continue
-        for label, key in label_map.items():
-            if line.startswith(label):
-                result[key] = _clean_line_text(line[len(label):])
-                break
+    for key, pattern in patterns.items():
+        match = re.search(pattern, raw, flags=re.IGNORECASE | re.DOTALL)
+        if match:
+            result[key] = _clean_line_text(match.group(1))
 
     return result
 
@@ -437,15 +436,55 @@ def build_quick_view_contract(parsed, existing_fields=None):
     }
 
 
-def build_civic_role_contract(parsed):
+def build_civic_role_contract(parsed, existing_fields=None):
     """
     Authoritative Civic Role contract.
+    Falls back to existing stored fields when the fresh parsed payload is incomplete.
+    Also derives the quick-view civic line from the full civic role if needed.
     """
     parsed = parsed or {}
+    existing_fields = existing_fields or {}
 
-    civic_role_quick_view = _clean_line_text(parsed.get("Civic Role Quick View") or "")
-    civic_role_full = (parsed.get("Civic Role") or "").strip()
+    civic_role_quick_view = _clean_line_text(
+        parsed.get("Civic Role Quick View")
+        or existing_fields.get("Civic Role Quick View")
+        or ""
+    )
+
+    civic_role_full = (
+        parsed.get("Civic Role")
+        or existing_fields.get("Civic Role")
+        or ""
+    ).strip()
+
     civic_parts = parse_civic_role_lines(civic_role_full)
+
+    if not civic_parts["what_this_tests"]:
+        civic_parts["what_this_tests"] = _clean_line_text(
+            existing_fields.get("Civic What This Tests") or ""
+        )
+
+    if not civic_parts["what_people_should_separate"]:
+        civic_parts["what_people_should_separate"] = _clean_line_text(
+            existing_fields.get("Civic What People Should Separate") or ""
+        )
+
+    if not civic_parts["why_this_matters"]:
+        civic_parts["why_this_matters"] = _clean_line_text(
+            existing_fields.get("Civic Why This Matters") or ""
+        )
+
+    if not civic_role_quick_view:
+        fallback_source = (
+            civic_parts["what_this_tests"]
+            or civic_parts["what_people_should_separate"]
+            or civic_parts["why_this_matters"]
+            or _clean_line_text(civic_role_full)
+        )
+        if fallback_source:
+            civic_role_quick_view = fallback_source.split(". ")[0].strip()
+            if civic_role_quick_view and not civic_role_quick_view.endswith("."):
+                civic_role_quick_view += "."
 
     return {
         "civic_role_quick_view": civic_role_quick_view,
@@ -557,7 +596,9 @@ def detect_attribution_metadata(original_quote, speaker):
 def normalize_topic(raw_topic):
     if not raw_topic:
         return "Other"
-    text = str(raw_topic).lower()
+
+    text = str(raw_topic).strip().lower()
+
     if "medicaid" in text:
         return "Medicaid"
     if "medicare" in text:
@@ -566,30 +607,48 @@ def normalize_topic(raw_topic):
         return "Social Security"
     if "health" in text:
         return "Healthcare"
-    if "energy" in text or "fossil" in text or "renewable" in text or "climate" in text:
+
+    if any(k in text for k in ["energy", "fossil", "renewable", "climate", "oil", "gas", "electric grid"]):
         return "Energy"
+
     if "iran" in text:
         return "Iran War"
-    if "foreign policy" in text or "foreign" in text:
+    if any(k in text for k in ["foreign policy", "foreign", "diplomacy", "international", "treaty"]):
         return "Foreign Policy"
-    if "crime" in text or "criminal" in text or "murder" in text or "shoot" in text or "assass" in text:
+
+    if any(k in text for k in ["crime", "criminal", "murder", "shoot", "assass", "policing", "law enforcement"]):
         return "Crime"
-    if "election" in text or "vote" in text or "ballot" in text or "save act" in text:
+
+    if any(k in text for k in ["election", "vote", "ballot", "save act", "voting", "campaign", "electoral"]):
         return "Elections"
-    if "econom" in text or "job" in text or "inflation" in text or "paycheck" in text or "tax" in text or "wage" in text:
+
+    if any(k in text for k in ["econom", "job", "inflation", "paycheck", "tax", "wage", "recession", "trade", "tariff", "debt", "spending", "budget"]):
         return "Economy"
-    if "immigr" in text or "border" in text:
+
+    if any(k in text for k in ["immigr", "border", "asylum", "migrant", "deport"]):
         return "Immigration"
-    if "defense" in text:
+
+    if any(k in text for k in ["defense", "defence", "pentagon", "arms procurement"]):
         return "Defense"
-    if "military" in text or "war" in text:
+
+    if any(k in text for k in ["military", "war", "troops", "armed forces", "combat"]):
         return "Military"
-    if "school" in text or "educat" in text or "teach" in text or "curriculum" in text:
+
+    if any(k in text for k in ["school", "educat", "teach", "curriculum", "student", "university"]):
         return "Education"
-    if "gender" in text or "trans" in text or "lgbtq" in text or "pronouns" in text:
+
+    if any(k in text for k in ["gender", "trans", "lgbtq", "pronouns", "sex based", "title ix"]):
         return "Gender Issues"
-    if "constitution" in text or "amendment" in text or "rights" in text or "court" in text:
+
+    if any(k in text for k in [
+        "constitution", "constitutional", "amendment", "rights", "civil liberties",
+        "civil liberty", "court", "judicial", "executive", "executive power",
+        "congress", "legislative", "separation of powers", "due process",
+        "free speech", "first amendment", "second amendment", "fourth amendment",
+        "government power", "government authority", "federal power", "state power"
+    ]):
         return "Constitutional Rights"
+
     return "Other"
 
 
@@ -1061,7 +1120,7 @@ def extract_primary_record_fields(claim, parsed, mode, username, existing_fields
     entered_by = existing_fields.get("Entered By") or username or "Unknown"
 
     quick_view_contract = build_quick_view_contract(parsed, existing_fields=existing_fields)
-    civic_role_contract = build_civic_role_contract(parsed)
+    civic_role_contract = build_civic_role_contract(parsed, existing_fields=existing_fields)
 
     fields = {
         "Original Quote": claim,
