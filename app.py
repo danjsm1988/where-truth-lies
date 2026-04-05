@@ -4527,12 +4527,24 @@ def editor_reanalyze_claim(record_id):
                     update_fields[airtable_key] = primary[field_name]
 
         else:
+            refresh_framing_data = {}
+            if reanalysis_mode == "core_logic_refresh":
+                refresh_framing_data = framing_obj or {}
+            else:
+                refresh_framing_data = {
+                    "topic": claim_fields.get("Topic", ["Other"])[0] if isinstance(claim_fields.get("Topic"), list) and claim_fields.get("Topic") else claim_fields.get("Topic", "Other"),
+                    "claim_type": claim_fields.get("Claim Type", ""),
+                    "polarity": claim_fields.get("Claim Polarity", ""),
+                    "primary_claim": claim_fields.get("Analyzed Claim") or claim_fields.get("Stripped Claim") or raw_claim_text
+                }
+
             update_fields = extract_primary_record_fields(
                 claim=raw_claim_text,
                 parsed=primary,
                 mode="full",
                 username=editor_username,
-                existing_fields=claim_fields
+                existing_fields=claim_fields,
+                framing_data=refresh_framing_data
             )
             update_fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
             update_fields["OpenAI Raw JSON"] = json.dumps(openai_json, ensure_ascii=False)[:100000]
@@ -4750,12 +4762,24 @@ def editor_reanalyze_claim_by_slug(slug):
                     update_fields[airtable_key] = primary[field_name]
 
         else:
+            refresh_framing_data = {}
+            if reanalysis_mode == "core_logic_refresh":
+                refresh_framing_data = framing_obj or {}
+            else:
+                refresh_framing_data = {
+                    "topic": claim_fields.get("Topic", ["Other"])[0] if isinstance(claim_fields.get("Topic"), list) and claim_fields.get("Topic") else claim_fields.get("Topic", "Other"),
+                    "claim_type": claim_fields.get("Claim Type", ""),
+                    "polarity": claim_fields.get("Claim Polarity", ""),
+                    "primary_claim": claim_fields.get("Analyzed Claim") or claim_fields.get("Stripped Claim") or raw_claim_text
+                }
+
             update_fields = extract_primary_record_fields(
                 claim=raw_claim_text,
                 parsed=primary,
                 mode="full",
                 username=editor_username,
-                existing_fields=claim_fields
+                existing_fields=claim_fields,
+                framing_data=refresh_framing_data
             )
         if not selective_fields:
             update_fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
