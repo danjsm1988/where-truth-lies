@@ -35,7 +35,7 @@ ANALYSIS_CORE_VERSION = "1.2"
 
 MAX_PUSHBACKS = {
     "standard": 1,
-    "limited_superuser": 1,
+    "limited_superuser": 3,
     "superuser": 999,
 }
 
@@ -367,6 +367,69 @@ def build_civic_structural_fallbacks(parsed, existing_fields=None):
     }
 
 
+def enforce_structural_civic_output(parsed, quick_parts, civic_parts, civic_role_quick_view, existing_fields=None):
+    """
+    If this is a civic / constitutional claim and the populated fields are still
+    too actor-centered, overwrite them with structural language.
+    """
+    parsed = parsed or {}
+    existing_fields = existing_fields or {}
+    quick_parts = dict(quick_parts or {})
+    civic_parts = dict(civic_parts or {})
+
+    combined = " ".join([
+        _clean_line_text(parsed.get("Stripped Claim") or existing_fields.get("Stripped Claim") or ""),
+        _clean_line_text(parsed.get("Direct Facts") or existing_fields.get("Direct Facts") or ""),
+        _clean_line_text(parsed.get("Adjacent Facts") or existing_fields.get("Adjacent Facts") or ""),
+        _clean_line_text(parsed.get("Root Concern") or existing_fields.get("Root Concern") or ""),
+        _clean_line_text(parsed.get("Values Divergence") or existing_fields.get("Values Divergence") or ""),
+        _clean_line_text(parsed.get("Constitutional Framework") or existing_fields.get("Constitutional Framework") or ""),
+        _clean_line_text(parsed.get("Common Ground") or existing_fields.get("Common Ground") or "")
+    ]).lower()
+
+    civic_like = any(k in combined for k in [
+        "executive", "president", "constitutional", "constitution", "court",
+        "congress", "authoritarian", "monarchy", "king", "dictator",
+        "institution", "institutional", "election", "judicial", "legislative"
+    ])
+
+    if not civic_like:
+        return quick_parts, civic_parts, civic_role_quick_view
+
+    civic_fallbacks = build_civic_structural_fallbacks(parsed, existing_fields=existing_fields)
+
+    actor_terms = [
+        "trump", "biden", "harris", "obama", "president trump", "president biden",
+        "donald trump", "joe biden", "kamala harris"
+    ]
+
+    def _too_actor_centered(text):
+        text = _clean_line_text(text).lower()
+        if not text:
+            return False
+        return any(term in text for term in actor_terms)
+
+    if _too_actor_centered(quick_parts.get("what_holds_up", "")) and civic_fallbacks["what_holds_up"]:
+        quick_parts["what_holds_up"] = civic_fallbacks["what_holds_up"]
+
+    if _too_actor_centered(quick_parts.get("where_agreement_exists", "")) and civic_fallbacks["where_agreement_exists"]:
+        quick_parts["where_agreement_exists"] = civic_fallbacks["where_agreement_exists"]
+
+    if _too_actor_centered(civic_role_quick_view) and civic_fallbacks["civic_quick"]:
+        civic_role_quick_view = civic_fallbacks["civic_quick"]
+
+    if _too_actor_centered(civic_parts.get("what_this_tests", "")) and civic_fallbacks["civic_tests"]:
+        civic_parts["what_this_tests"] = civic_fallbacks["civic_tests"]
+
+    if _too_actor_centered(civic_parts.get("what_people_should_separate", "")) and civic_fallbacks["civic_separate"]:
+        civic_parts["what_people_should_separate"] = civic_fallbacks["civic_separate"]
+
+    if _too_actor_centered(civic_parts.get("why_this_matters", "")) and civic_fallbacks["civic_matters"]:
+        civic_parts["why_this_matters"] = civic_fallbacks["civic_matters"]
+
+    return quick_parts, civic_parts, civic_role_quick_view
+
+
 def parse_quick_explanation_lines(text):
     """
     Parse the Quick Explanation blob into atomic fields.
@@ -445,6 +508,14 @@ def build_quick_view_contract(parsed, existing_fields=None):
     quick_blob = _clean_line_text(parsed.get("Quick Explanation") or existing_fields.get("Quick Explanation") or "")
     quick_parts = parse_quick_explanation_lines(quick_blob)
     civic_fallbacks = build_civic_structural_fallbacks(parsed, existing_fields=existing_fields)
+
+    quick_parts, _, _ = enforce_structural_civic_output(
+        parsed,
+        quick_parts,
+        {},
+        "",
+        existing_fields=existing_fields
+    )
 
     if not quick_parts["one_line_read"]:
         quick_parts["one_line_read"] = _clean_line_text(
@@ -529,6 +600,18 @@ def build_civic_role_contract(parsed, existing_fields=None):
 
     civic_parts = parse_civic_role_lines(civic_role_full)
 
+    _, civic_parts, civic_role_quick_view_override = enforce_structural_civic_output(
+        parsed,
+        {},
+        civic_parts,
+        _clean_line_text(
+            parsed.get("Civic Role Quick View")
+            or existing_fields.get("Civic Role Quick View")
+            or ""
+        ),
+        existing_fields=existing_fields
+    )
+
     if not civic_parts["what_this_tests"]:
         civic_parts["what_this_tests"] = _clean_line_text(
             parsed.get("Civic What This Tests")
@@ -553,11 +636,14 @@ def build_civic_role_contract(parsed, existing_fields=None):
             or ""
         )
 
-    civic_role_quick_view = _clean_line_text(
-        parsed.get("Civic Role Quick View")
-        or existing_fields.get("Civic Role Quick View")
-        or civic_fallbacks["civic_quick"]
-        or ""
+    civic_role_quick_view = (
+        civic_role_quick_view_override
+        or _clean_line_text(
+            parsed.get("Civic Role Quick View")
+            or existing_fields.get("Civic Role Quick View")
+            or civic_fallbacks["civic_quick"]
+            or ""
+        )
     )
 
     if not civic_role_quick_view:
