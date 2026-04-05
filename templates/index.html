@@ -5110,17 +5110,17 @@ html, body {
           {% endif %}
 
           {% if current_claim.civic_role_quick_view %}
-            <div class="m-qv-civic">
-              <div class="m-qv-cell-label">
-                Civic Role
-                <span class="civic-info-btn">i
-                  <span class="civic-info-tip">Civic Role is not a command and not partisan advice. It explains the kind of civic discipline, judgment, and self government this claim tests in a free society.</span>
-                </span>
-              </div>
-              <div class="m-qv-cell-text">{{ current_claim.civic_role_quick_view }}</div>
-              <div class="m-qv-civic-note">This is a preview from the Full Excavation paid experience and moves below when Full Excavation is opened.</div>
-            </div>
-          {% endif %}
+  <div class="m-qv-civic" id="mqvCivicRow">
+    <div class="m-qv-cell-label">
+      Civic Role
+      <span class="civic-info-btn">i
+        <span class="civic-info-tip">Civic Role is not a command and not partisan advice. It explains the kind of civic discipline, judgment, and self government this claim tests in a free society.</span>
+      </span>
+    </div>
+    <div class="m-qv-cell-text">{{ current_claim.civic_role_quick_view }}</div>
+    <div class="m-qv-civic-note">This is a preview from the Full Excavation paid experience and moves below when Full Excavation is opened.</div>
+  </div>
+{% endif %}
         {% endif %}
 
         <!-- Verdict -->
@@ -6418,17 +6418,17 @@ html, body {
                 {% endif %}
 
                 {% if current_claim.civic_role_quick_view %}
-                  <div class="qv-civic-row">
-                    <div class="qv-civic-label">
-                      Civic Role
-                      <span class="civic-info-btn">i
-                        <span class="civic-info-tip">Civic Role is not a command and not partisan advice. It explains the kind of civic discipline, judgment, and self government this claim tests in a free society.</span>
-                      </span>
-                    </div>
-                    <div class="qv-civic-text">{{ current_claim.civic_role_quick_view }}</div>
-                    <div class="qv-civic-note">This is a preview from the Full Excavation paid experience and moves below when Full Excavation is opened.</div>
-                  </div>
-                {% endif %}
+  <div class="qv-civic-row" id="qvCivicRow">
+    <div class="qv-civic-label">
+      Civic Role
+      <span class="civic-info-btn">i
+        <span class="civic-info-tip">Civic Role is not a command and not partisan advice. It explains the kind of civic discipline, judgment, and self government this claim tests in a free society.</span>
+      </span>
+    </div>
+    <div class="qv-civic-text">{{ current_claim.civic_role_quick_view }}</div>
+    <div class="qv-civic-note">This is a preview from the Full Excavation paid experience and moves below when Full Excavation is opened.</div>
+  </div>
+{% endif %}
 
                 <p class="qv-dive-prompt">See the full excavation for underlying layers, competing interpretations, and connected breakout claims. <a onclick="switchTab('full')" href="#">Open Full Excavation &#8594;</a></p>
               </div>
