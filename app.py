@@ -4526,40 +4526,6 @@ def editor_reanalyze_claim(record_id):
                 elif primary.get(field_name):
                     update_fields[airtable_key] = primary[field_name]
 
-        else:
-            refresh_framing_data = {}
-
-            if reanalysis_mode == "core_logic_refresh":
-                normalized_input = normalize_claim_text(raw_claim_text)
-                fresh_framing = frame_claim_input(normalized_input)
-                refresh_framing_data = (fresh_framing or {}).get("framing_obj", {})
-            else:
-                refresh_framing_data = {
-                    "topic": claim_fields.get("Topic", ["Other"])[0] if isinstance(claim_fields.get("Topic"), list) and claim_fields.get("Topic") else claim_fields.get("Topic", "Other"),
-                    "claim_type": claim_fields.get("Claim Type", ""),
-                    "polarity": claim_fields.get("Claim Polarity", ""),
-                    "primary_claim": claim_fields.get("Analyzed Claim") or claim_fields.get("Stripped Claim") or raw_claim_text
-                }
-
-            update_fields = extract_primary_record_fields(
-                claim=raw_claim_text,
-                parsed=primary,
-                mode="full",
-                username=editor_username,
-                existing_fields=claim_fields,
-                framing_data=refresh_framing_data
-            )
-            update_fields["Claude Raw JSON"] = json.dumps(claude_json, ensure_ascii=False)[:100000]
-            update_fields["OpenAI Raw JSON"] = json.dumps(openai_json, ensure_ascii=False)[:100000]
-            if grok_adjudication:
-                update_fields["Grok Raw JSON"] = json.dumps(grok_adjudication, ensure_ascii=False)[:100000]
-            update_fields["Last Reanalyzed"] = now_date
-            update_fields["Reanalyzed By"] = editor_username
-
-            for protected in ["Analyzed Claim", "URL Slug", "Title Locked", "Slug Locked",
-                              "Title Source", "Analysis Core Version"]:
-                update_fields.pop(protected, None)
-
         title_updated = False
         slug_updated = False
         warning = None
