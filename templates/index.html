@@ -8715,7 +8715,26 @@ async function runClaimReanalyze(reanalysisMode) {
       })
     });
 
-    var data = await res.json();
+    var contentType = res.headers.get('content-type') || '';
+    var data;
+
+    if (contentType.indexOf('application/json') !== -1) {
+      data = await res.json();
+    } else {
+      var rawText = await res.text();
+      _stopReanalyzeCycle();
+
+      if (statusEl) {
+        statusEl.textContent = 'Server returned non-JSON response. Check backend error. First 300 chars: ' + rawText.slice(0, 300);
+      }
+
+      if (modalEl) {
+        modalEl.querySelectorAll('button').forEach(function(b) { b.disabled = false; });
+      }
+
+      return;
+    }
+
     _stopReanalyzeCycle();
 
     if (res.ok && data.ok) {
@@ -8748,7 +8767,9 @@ async function runClaimReanalyze(reanalysisMode) {
     }
   } catch(err) {
     _stopReanalyzeCycle();
-    statusEl.textContent = 'Error: ' + err.message;
+    if (statusEl) {
+      statusEl.textContent = 'Error: ' + err.message;
+    }
     if (modalEl) {
       modalEl.querySelectorAll('button').forEach(function(b) { b.disabled = false; });
     }
