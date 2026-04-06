@@ -4889,7 +4889,7 @@ html, body {
     </div>
   </div>
 
- <!-- DISPUTE RESULT MODAL -->
+  <!-- DISPUTE RESULT MODAL -->
   <div class="modal-overlay" id="disputeResultModal">
     <div class="modal-box">
       <div class="modal-kicker">Dispute Status</div>
@@ -5542,7 +5542,7 @@ html, body {
 
       
 
-           {% if page_mode == "editor" %}
+      {% if page_mode == "editor" %}
       <div class="m-editor-queue" id="mEditor">
         {% if true_superuser %}
         <div class="site-mode-control" style="margin-bottom:16px;">
@@ -5730,7 +5730,7 @@ html, body {
 
   <div class="desktop-shell">
   <div class="page-shell">
-   <header class="masthead">
+  <header class="masthead">
   <div class="masthead-inner">
     <a class="brand-wrap" href="/" aria-label="Where the Truth Lies home">
       <div class="seal-small" aria-hidden="true">
@@ -7544,8 +7544,8 @@ async function submitPushback() {
     });
 
     document.getElementById('disputeResultModal').addEventListener('click', function(e) {
-     if (e.target === this) closeDisputeResultModal();
-   });
+      if (e.target === this) closeDisputeResultModal();
+    });
 
     async function submitDispute() {
       const checked = Array.from(
