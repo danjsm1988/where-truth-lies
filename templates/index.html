@@ -7736,16 +7736,46 @@ console.error('Dispute submission failed:', err);
       const container = document.getElementById('scenarioMapContainer');
       if (!container || !raw) return;
 
-      const noteRegex = /NOTE:([\s\S]*)$/i;
-      const noteM = noteRegex.exec(raw);
-      const note = noteM ? noteM[1].trim() : '';
-      const body = raw.replace(noteRegex, '').trim();
+      const disclaimerRegex = /(?:^|\n)\s*NOTE:\s*([\s\S]*?)$/i;
+      const disclaimerMatch = disclaimerRegex.exec(raw);
+      const note = disclaimerMatch ? disclaimerMatch[1].trim() : '';
+      const body = disclaimerMatch ? raw.slice(0, disclaimerMatch.index).trim() : raw.trim();
+
+      const confidenceBoundary = '(?:CONFIDENCE NOTE:|CONFIDENCE:|CONFIDENCE\\b|$)';
 
       const rankedPatterns = [
-        { key: 'most_supported', label: 'Most Supported Outcome', regex: /MOST SUPPORTED OUTCOME:\s*([^\.\n]+)\.([\s\S]*?)(?=ALTERNATIVE OUTCOME 2:|ALTERNATIVE OUTCOME 3:|PREFERRED OUTCOME:|CONFIDENCE NOTE:|$)/i },
-        { key: 'alternative_2', label: 'Alternative Outcome 2', regex: /ALTERNATIVE OUTCOME 2:\s*([^\.\n]+)\.([\s\S]*?)(?=ALTERNATIVE OUTCOME 3:|PREFERRED OUTCOME:|CONFIDENCE NOTE:|$)/i },
-        { key: 'alternative_3', label: 'Alternative Outcome 3', regex: /ALTERNATIVE OUTCOME 3:\s*([^\.\n]+)\.([\s\S]*?)(?=PREFERRED OUTCOME:|CONFIDENCE NOTE:|$)/i },
-        { key: 'preferred', label: 'Preferred Outcome', regex: /PREFERRED OUTCOME:\s*([^\.\n]+)\.([\s\S]*?)(?=CONFIDENCE NOTE:|$)/i }
+        {
+          key: 'most_supported',
+          label: 'Most Supported Outcome',
+          regex: new RegExp(
+            'MOST SUPPORTED OUTCOME:\\s*([^\\.\\n]+)\\.([\\s\\S]*?)(?=ALTERNATIVE OUTCOME 2:|ALTERNATIVE OUTCOME 3:|PREFERRED OUTCOME:|' + confidenceBoundary + ')',
+            'i'
+          )
+        },
+        {
+          key: 'alternative_2',
+          label: 'Alternative Outcome 2',
+          regex: new RegExp(
+            'ALTERNATIVE OUTCOME 2:\\s*([^\\.\\n]+)\\.([\\s\\S]*?)(?=ALTERNATIVE OUTCOME 3:|PREFERRED OUTCOME:|' + confidenceBoundary + ')',
+            'i'
+          )
+        },
+        {
+          key: 'alternative_3',
+          label: 'Alternative Outcome 3',
+          regex: new RegExp(
+            'ALTERNATIVE OUTCOME 3:\\s*([^\\.\\n]+)\\.([\\s\\S]*?)(?=PREFERRED OUTCOME:|' + confidenceBoundary + ')',
+            'i'
+          )
+        },
+        {
+          key: 'preferred',
+          label: 'Preferred Outcome',
+          regex: new RegExp(
+            'PREFERRED OUTCOME:\\s*([^\\.\\n]+)\\.([\\s\\S]*?)(?=' + confidenceBoundary + ')',
+            'i'
+          )
+        }
       ];
 
       const ranked = [];
@@ -7756,12 +7786,12 @@ console.error('Dispute submission failed:', err);
             key: p.key,
             label: p.label,
             title: m[1].trim(),
-            text: m[2].trim()
+            text: m[2].replace(/\bCONFIDENCE\b\s*:?\s*$/i, '').trim()
           });
         }
       });
 
-      const confidenceMatch = body.match(/CONFIDENCE NOTE:\s*([\s\S]*?)$/i);
+      const confidenceMatch = body.match(/(?:CONFIDENCE NOTE:|CONFIDENCE:|CONFIDENCE\b)\s*([\s\S]*?)$/i);
       const confidenceNote = confidenceMatch ? confidenceMatch[1].trim() : '';
 
       if (ranked.length) {
@@ -7804,7 +7834,7 @@ console.error('Dispute submission failed:', err);
         return;
       }
 
-      const scenarioRegex = /SCENARIO\s+([A-E])\s*[—-]+\s*([^:]+):\s*Confidence:\s*([\w\/]+)\.([\s\S]*?)(?=SCENARIO\s+[A-E]|NOTE:|$)/gi;
+      const scenarioRegex = /SCENARIO\s+([A-E])\s*[—-]+\s*([^:]+):\s*Confidence:\s*([\w\/]+)\.([\s\S]*?)(?=SCENARIO\s+[A-E]|(?:^|\n)\s*NOTE:|$)/gi;
       const scenarios = [];
       let m;
 
