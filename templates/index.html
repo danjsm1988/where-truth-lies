@@ -4350,6 +4350,81 @@ html, body {
     .editor-snapshot-field { font-family:'Libre Baskerville',Georgia,serif; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-mid); }
     .editor-snapshot-qe { font-size:14px; line-height:1.6; color:var(--text-light); font-style:italic; }
     .editor-note-green { border-left-color:rgba(117,194,141,.5)!important; background:rgba(117,194,141,.04)!important; }
+
+    /* AI section-level approval bar */
+    .ai-approval-bar {
+      background: rgba(117,194,141,.06);
+      border: 1px solid rgba(117,194,141,.22);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+    }
+    .ai-approval-label {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 10px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: #75c28d;
+      margin-bottom: 10px;
+    }
+    .ai-approval-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .ai-approve-all-btn {
+      appearance: none;
+      background: rgba(117,194,141,.14);
+      border: 1px solid rgba(117,194,141,.4);
+      border-radius: 7px;
+      color: #75c28d;
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 10px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: 7px 14px;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .ai-approve-all-btn:hover { background: rgba(117,194,141,.26); }
+    .ai-select-sections-btn {
+      appearance: none;
+      background: rgba(201,168,76,.09);
+      border: 1px solid rgba(201,168,76,.32);
+      border-radius: 7px;
+      color: var(--gold);
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 10px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: 7px 14px;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .ai-select-sections-btn:hover { background: rgba(201,168,76,.18); }
+    .ai-reject-btn {
+      appearance: none;
+      background: transparent;
+      border: 1px solid rgba(200,80,80,.3);
+      border-radius: 7px;
+      color: #c47c7c;
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 10px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: 7px 14px;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .ai-reject-btn:hover { background: rgba(200,80,80,.1); }
+    .ai-approval-status {
+      font-size: 12px;
+      color: var(--text-mid);
+      font-style: italic;
+      margin-top: 8px;
+      min-height: 16px;
+    }
     .editor-manual-rec { width:100%; min-height:80px; resize:vertical; background:rgba(255,255,255,.035); border:1px solid rgba(255,255,255,.11); border-radius:10px; color:var(--cream); font-family:'Crimson Text',Georgia,serif; font-size:15px; line-height:1.55; padding:10px 12px; outline:none; transition:border-color .18s ease; margin-bottom:8px; display:block; }
     .editor-manual-rec:focus { border-color:rgba(201,168,76,.48); }
     .editor-save-rec-btn { appearance:none; border:1px solid rgba(201,168,76,.35); background:rgba(201,168,76,.08); color:var(--gold); font-family:'Libre Baskerville',Georgia,serif; font-size:10px; letter-spacing:.12em; text-transform:uppercase; padding:8px 14px; border-radius:8px; cursor:pointer; transition:all .15s ease; }
@@ -4739,6 +4814,316 @@ html, body {
       line-height: 1.6;
     }
 
+    /* ── Admin Workspace Styles ─────────────────────────────────── */
+    .admin-page-grid {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 24px;
+      align-items: start;
+      max-width: var(--content-width);
+      margin: 0 auto;
+      padding: 24px 16px;
+    }
+    @media (max-width: 1024px) {
+      .admin-page-grid { grid-template-columns: 1fr; }
+    }
+
+    .admin-nav-tabs {
+      display: flex;
+      gap: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+      border-bottom: 1px solid rgba(201,168,76,.14);
+      margin-bottom: 22px;
+    }
+    .admin-nav-tabs::-webkit-scrollbar { display: none; }
+    .admin-tab-btn {
+      appearance: none;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-mid);
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 10px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: 10px 16px 10px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: color .15s, border-color .15s;
+    }
+    .admin-tab-btn:hover { color: var(--text-light); }
+    .admin-tab-btn.active {
+      color: var(--gold);
+      border-bottom-color: var(--gold);
+    }
+    .admin-tab-btn.owner-tab { color: #c47c7c; }
+    .admin-tab-btn.owner-tab.active { color: #e07070; border-bottom-color: #e07070; }
+
+    .admin-section { display: none; }
+    .admin-section.active { display: block; }
+
+    .admin-section-header {
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(201,168,76,.12);
+    }
+    .admin-section-title {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 13px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 4px;
+    }
+    .admin-section-sub {
+      font-family: 'Crimson Text', Georgia, serif;
+      font-size: 14px;
+      color: var(--text-mid);
+      font-style: italic;
+    }
+
+    /* User Management table */
+    .admin-user-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .admin-user-table th {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--text-mid);
+      text-align: left;
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+    }
+    .admin-user-row td {
+      padding: 10px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.04);
+      vertical-align: middle;
+    }
+    .admin-user-row:hover td { background: rgba(255,255,255,.02); }
+    .admin-user-name {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 12px;
+      color: var(--cream);
+    }
+    .admin-inline-select,
+    .admin-inline-input {
+      appearance: none;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(201,168,76,.2);
+      border-radius: 6px;
+      color: var(--cream);
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 11px;
+      padding: 5px 8px;
+      cursor: pointer;
+      transition: border-color .15s;
+    }
+    .admin-inline-select:hover,
+    .admin-inline-input:hover { border-color: rgba(201,168,76,.45); }
+    .admin-inline-input { width: 70px; }
+    .admin-save-row-btn {
+      appearance: none;
+      background: rgba(201,168,76,.09);
+      border: 1px solid rgba(201,168,76,.28);
+      border-radius: 6px;
+      color: var(--gold);
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: 5px 10px;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .admin-save-row-btn:hover { background: rgba(201,168,76,.18); }
+    .admin-row-status {
+      font-size: 11px;
+      color: var(--text-mid);
+      font-style: italic;
+      min-width: 50px;
+    }
+    .admin-active-toggle {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+    .admin-user-search {
+      appearance: none;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(201,168,76,.2);
+      border-radius: 8px;
+      color: var(--cream);
+      font-family: 'Crimson Text', Georgia, serif;
+      font-size: 14px;
+      padding: 8px 12px;
+      width: 260px;
+      margin-bottom: 14px;
+      outline: none;
+      transition: border-color .15s;
+    }
+    .admin-user-search:focus { border-color: rgba(201,168,76,.5); }
+
+    /* Owner Controls visual separation */
+    .owner-controls-zone {
+      border: 1px solid rgba(200,80,80,.25);
+      border-radius: 12px;
+      padding: 18px 20px;
+      background: rgba(200,80,80,.04);
+    }
+    .owner-controls-warning {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: #c47c7c;
+      border: 1px solid rgba(200,80,80,.3);
+      border-radius: 6px;
+      padding: 6px 12px;
+      display: inline-block;
+      margin-bottom: 16px;
+    }
+
+    /* System/Debug readout */
+    .admin-debug-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+      font-size: 13px;
+    }
+    .admin-debug-label {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 10px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--text-mid);
+    }
+    .admin-debug-value {
+      font-family: 'Crimson Text', Georgia, serif;
+      font-size: 14px;
+      color: var(--text-light);
+    }
+
+    /* Breakout review card in editor queue */
+    .breakout-review-card {
+      background: rgba(255,255,255,.025);
+      border: 1px solid rgba(201,168,76,.14);
+      border-left: 3px solid rgba(100,160,210,.4);
+      border-radius: 0 12px 12px 0;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+    }
+    .breakout-review-title {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 13px;
+      color: var(--cream);
+      margin-bottom: 6px;
+    }
+    .breakout-review-meta {
+      font-size: 12px;
+      color: var(--text-mid);
+      margin-bottom: 6px;
+    }
+    .breakout-needs-review-badge {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 9px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: #8cb6c9;
+      background: rgba(90,143,160,.12);
+      border: 1px solid rgba(90,143,160,.28);
+      border-radius: 999px;
+      padding: 3px 8px;
+    }
+
+    /* Resolved history row */
+    .resolved-history-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+    }
+    .resolved-history-title {
+      font-family: 'Crimson Text', Georgia, serif;
+      font-size: 15px;
+      color: var(--text-light);
+      flex: 1;
+    }
+    .resolved-history-meta {
+      font-size: 11px;
+      color: var(--text-mid);
+      white-space: nowrap;
+    }
+
+    /* Mobile Admin Hub */
+    .m-admin-hub { display: grid; gap: 14px; }
+    .m-admin-card {
+      background: linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.018));
+      border: 1px solid rgba(201,168,76,.16);
+      border-radius: 16px;
+      padding: 18px 18px;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+    .m-admin-card:hover { border-color: rgba(201,168,76,.35); background: rgba(255,255,255,.04); }
+    .m-admin-card-icon {
+      font-size: 20px;
+      margin-bottom: 8px;
+      opacity: .75;
+    }
+    .m-admin-card-title {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 12px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 4px;
+    }
+    .m-admin-card-desc {
+      font-family: 'Crimson Text', Georgia, serif;
+      font-size: 13px;
+      color: var(--text-mid);
+    }
+    .m-admin-card.owner-card {
+      border-color: rgba(200,80,80,.22);
+      background: rgba(200,80,80,.04);
+    }
+    .m-admin-card.owner-card .m-admin-card-title { color: #c47c7c; }
+
+    .m-admin-section { display: none; }
+    .m-admin-section.active { display: block; }
+    .m-admin-section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(201,168,76,.14);
+    }
+    .m-admin-back-btn {
+      appearance: none;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 6px;
+      color: var(--text-mid);
+      font-size: 14px;
+      padding: 4px 8px;
+      cursor: pointer;
+    }
+    .m-admin-section-title {
+      font-family: 'Libre Baskerville', Georgia, serif;
+      font-size: 11px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
 
 </style>
 </head>
@@ -4889,7 +5274,7 @@ html, body {
     </div>
   </div>
 
-  <!-- DISPUTE RESULT MODAL -->
+ <!-- DISPUTE RESULT MODAL -->
   <div class="modal-overlay" id="disputeResultModal">
     <div class="modal-box">
       <div class="modal-kicker">Dispute Status</div>
@@ -5542,7 +5927,7 @@ html, body {
 
       
 
-      {% if page_mode == "editor" %}
+           {% if page_mode == "editor" %}
       <div class="m-editor-queue" id="mEditor">
         {% if true_superuser %}
         <div class="site-mode-control" style="margin-bottom:16px;">
@@ -5550,8 +5935,9 @@ html, body {
           <div class="site-mode-control-row">
             <select class="site-mode-select" id="siteModeSelectMobile">
               <option value="Live" {% if site_mode is defined and site_mode == "Live" %}selected{% endif %}>Live</option>
-              <option value="Construction/ Site Maintenance" {% if site_mode is defined and site_mode == "Construction/ Site Maintenance" %}selected{% endif %}>Construction / Maintenance</option>
+              <option value="Construction" {% if site_mode is defined and site_mode == "Construction" %}selected{% endif %}>Construction</option>
               <option value="Testing" {% if site_mode is defined and site_mode == "Testing" %}selected{% endif %}>Testing</option>
+              <option value="Maintenance" {% if site_mode is defined and site_mode == "Maintenance" %}selected{% endif %}>Maintenance</option>
             </select>
             <button type="button" class="site-mode-save-btn" onclick="saveSiteMode('siteModeSelectMobile','siteModeStatusMobile')">Save</button>
           </div>
@@ -5602,6 +5988,18 @@ html, body {
               {% if item.ai_response %}<div class="m-editor-ai-block"><div class="m-editor-ai-label">AI Response</div><div class="m-editor-ai-text">{{ item.ai_response }}</div></div>{% endif %}
               {% if item.ai_recommended_changes %}
                 <div class="m-editor-ai-block" style="border-left-color:rgba(117,194,141,.4);"><div class="m-editor-ai-label" style="color:#75c28d;">AI Recommended Changes</div><div class="m-editor-ai-text">{{ item.ai_recommended_changes }}</div></div>
+                <div class="ai-approval-bar" id="m-ai-approval-{{ item.record_id }}">
+                  <div class="ai-approval-label">&#10003; Apply AI Recommendation</div>
+                  <div class="ai-approval-actions" style="flex-direction:column;">
+                    <button type="button" class="ai-approve-all-btn" style="width:100%;"
+                      onclick="editorApproveAll('{{ item.record_id }}', this)">Approve All</button>
+                    <button type="button" class="ai-select-sections-btn" style="width:100%;"
+                      onclick="editorSelectSections('{{ item.record_id }}', this)">Select Sections</button>
+                    <button type="button" class="ai-reject-btn" style="width:100%;"
+                      onclick="editorRejectRecommendation('{{ item.record_id }}', this)">Reject</button>
+                  </div>
+                  <div class="ai-approval-status" id="m-ai-approval-status-{{ item.record_id }}"></div>
+                </div>
               {% else %}
                 <div>
                   <label class="editor-control-label" style="display:block; margin-bottom:4px;">Write recommendation:</label>
@@ -5658,9 +6056,28 @@ html, body {
                 <label class="editor-control-label" style="display:block; margin-bottom:5px;">Topic</label>
                 <select class="editor-select" id="m-cm-filter-topic" style="width:100%;">
                   <option value="">All Topics</option>
-                  <option>Economy</option><option>Immigration</option><option>Elections</option>
-                  <option>Foreign Policy</option><option>Healthcare</option><option>Crime</option>
-                  <option>Environment</option><option>Education</option>
+                  <option>Public Health</option>
+                  <option>Healthcare</option>
+                  <option>Social Security</option>
+                  <option>Medicare</option>
+                  <option>Medicaid</option>
+                  <option>Energy</option>
+                  <option>Iran War</option>
+                  <option>Foreign Policy</option>
+                  <option>Crime</option>
+                  <option>Constitutional Rights</option>
+                  <option>Elections</option>
+                  <option>Political Performance</option>
+                  <option>Economy</option>
+                  <option>Immigration</option>
+                  <option>Defense</option>
+                  <option>Military</option>
+                  <option>Artificial Intelligence</option>
+                  <option>Technology</option>
+                  <option>Space & Science</option>
+                  <option>Education</option>
+                  <option>Gender Issues</option>
+                  <option>Other</option>
                 </select>
               </div>
               <div>
@@ -5712,6 +6129,244 @@ html, body {
       </div>
       {% endif %}
 
+      {% if page_mode == "admin" %}
+      <div class="m-admin-hub" id="mAdminHub">
+        <div class="m-editor-header">
+          <div class="m-editor-title">Admin</div>
+          <div class="m-editor-sub">Operational controls and system management.</div>
+        </div>
+
+        <!-- Hub card grid — shown when no section is active -->
+        <div id="mAdminCards">
+          <div class="m-admin-card" onclick="mAdminNav('mAdminUsers')">
+            <div class="m-admin-card-icon">◉</div>
+            <div class="m-admin-card-title">User Management</div>
+            <div class="m-admin-card-desc">View, activate, and edit user roles and claim quotas.</div>
+          </div>
+          <div class="m-admin-card" onclick="mAdminNav('mAdminSite')">
+            <div class="m-admin-card-icon">&#9632;</div>
+            <div class="m-admin-card-title">Site Controls</div>
+            <div class="m-admin-card-desc">Set site mode and manage public-facing status.</div>
+          </div>
+          <div class="m-admin-card" onclick="mAdminNav('mAdminErrors')">
+            <div class="m-admin-card-icon">&#9888;</div>
+            <div class="m-admin-card-title">Error Console</div>
+            <div class="m-admin-card-desc">Review and clear logged client-side errors.</div>
+          </div>
+          <div class="m-admin-card" onclick="mAdminNav('mAdminClaims')">
+            <div class="m-admin-card-icon">&#8801;</div>
+            <div class="m-admin-card-title">Claim Management</div>
+            <div class="m-admin-card-desc">Search, filter, and bulk reanalyze claims.</div>
+          </div>
+          <div class="m-admin-card" onclick="mAdminNav('mAdminDebug')">
+            <div class="m-admin-card-icon">&#9881;</div>
+            <div class="m-admin-card-title">System / Debug</div>
+            <div class="m-admin-card-desc">Platform version, site mode, session state.</div>
+          </div>
+          <div class="m-admin-card owner-card" onclick="mAdminNav('mAdminOwner')">
+            <div class="m-admin-card-icon">&#9738;</div>
+            <div class="m-admin-card-title">Owner Controls</div>
+            <div class="m-admin-card-desc">High-sensitivity tools. Not for routine use.</div>
+          </div>
+        </div>
+
+        <!-- User Management section -->
+        <div id="mAdminUsers" class="m-admin-section">
+          <div class="m-admin-section-header">
+            <button type="button" class="m-admin-back-btn" onclick="mAdminBack()">&#8592;</button>
+            <span class="m-admin-section-title">User Management</span>
+          </div>
+          <input type="text" class="admin-user-search" style="width:100%; box-sizing:border-box;" placeholder="Search by username…" oninput="adminFilterUsers(this.value)">
+          <div id="mAdminUserList" style="display:grid; gap:10px;">
+            {% if admin_users %}
+              {% for u in admin_users %}
+              <div style="background:rgba(255,255,255,.025); border:1px solid rgba(201,168,76,.14); border-radius:12px; padding:14px;" data-username="{{ u.username | lower }}">
+                <div class="admin-user-name" style="margin-bottom:10px; font-size:13px;">{{ u.username }}</div>
+                <div style="display:grid; gap:8px;">
+                  <div>
+                    <label class="editor-control-label" style="display:block; margin-bottom:4px;">Role</label>
+                    <select class="editor-select" id="m-role-{{ u.record_id }}" style="width:100%;">
+                      <option value="superuser" {% if u.role == 'superuser' %}selected{% endif %}>superuser</option>
+                      <option value="limited_superuser" {% if u.role == 'limited_superuser' %}selected{% endif %}>limited_superuser</option>
+                      <option value="standard" {% if u.role == 'standard' %}selected{% endif %}>standard</option>
+                    </select>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <label class="editor-control-label">Active</label>
+                    <input type="checkbox" style="width:18px; height:18px; cursor:pointer;" id="m-active-{{ u.record_id }}" {% if u.active %}checked{% endif %}>
+                  </div>
+                  <div>
+                    <label class="editor-control-label" style="display:block; margin-bottom:4px;">Claims Remaining</label>
+                    <input type="number" class="editor-select" style="width:100%; color:var(--cream);" id="m-claims-{{ u.record_id }}" value="{{ u.claims_remaining }}" min="0">
+                  </div>
+                  <button type="button" class="m-run-btn" onclick="mAdminSaveUser('{{ u.record_id }}', this)">Save User</button>
+                  <span id="m-userstatus-{{ u.record_id }}" style="font-size:12px; color:var(--text-mid); font-style:italic; min-height:16px; display:block;"></span>
+                </div>
+              </div>
+              {% endfor %}
+            {% else %}
+              <div style="color:var(--text-mid); font-style:italic; font-size:14px; padding:16px 0;">No users found.</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Site Controls section -->
+        <div id="mAdminSite" class="m-admin-section">
+          <div class="m-admin-section-header">
+            <button type="button" class="m-admin-back-btn" onclick="mAdminBack()">&#8592;</button>
+            <span class="m-admin-section-title">Site Controls</span>
+          </div>
+          <div class="site-mode-control">
+            <div class="site-mode-control-label">&#9632; Site Mode</div>
+            <div class="site-mode-control-row">
+              <select class="site-mode-select" id="mAdminSiteModeSelect" style="flex:1;">
+                <option value="Live" {% if site_mode is defined and site_mode == "Live" %}selected{% endif %}>Live</option>
+                <option value="Construction" {% if site_mode is defined and site_mode == "Construction" %}selected{% endif %}>Construction</option>
+                <option value="Testing" {% if site_mode is defined and site_mode == "Testing" %}selected{% endif %}>Testing</option>
+                <option value="Maintenance" {% if site_mode is defined and site_mode == "Maintenance" %}selected{% endif %}>Maintenance</option>
+              </select>
+              <button type="button" class="site-mode-save-btn" onclick="saveSiteMode('mAdminSiteModeSelect','mAdminSiteModeStatus')">Save</button>
+            </div>
+            <div class="site-mode-status" id="mAdminSiteModeStatus"></div>
+          </div>
+        </div>
+
+        <!-- Error Console section -->
+        <div id="mAdminErrors" class="m-admin-section">
+          <div class="m-admin-section-header">
+            <button type="button" class="m-admin-back-btn" onclick="mAdminBack()">&#8592;</button>
+            <span class="m-admin-section-title">Error Console</span>
+          </div>
+          <div style="display:grid; gap:8px; margin-bottom:14px;">
+            <select class="editor-select" id="mAdminErrorStatusFilter" onchange="adminLoadErrors()" style="width:100%;">
+              <option value="Open">Open Errors</option>
+              <option value="Resolved">Resolved</option>
+              <option value="All">All</option>
+            </select>
+            <button type="button" class="m-run-btn" onclick="adminLoadErrors()">&#8635; Refresh</button>
+            <button type="button" class="m-run-btn" onclick="adminMarkSelectedResolved()">Mark Selected Resolved</button>
+          </div>
+          <div id="mAdminErrorLoading" style="display:none; text-align:center; padding:16px; color:var(--text-mid); font-style:italic; font-size:14px;">Loading…</div>
+          <div id="mAdminErrorEmpty" class="site-error-empty" style="display:none;">No errors found.</div>
+          <div id="mAdminErrorList" style="display:grid; gap:8px;"></div>
+          <div id="mAdminErrorStatus" style="font-size:12px; color:var(--text-mid); font-style:italic; margin-top:8px; min-height:16px;"></div>
+        </div>
+
+        <!-- Claim Management section -->
+        <div id="mAdminClaims" class="m-admin-section">
+          <div class="m-admin-section-header">
+            <button type="button" class="m-admin-back-btn" onclick="mAdminBack()">&#8592;</button>
+            <span class="m-admin-section-title">Claim Management</span>
+          </div>
+          <div style="display:grid; gap:10px; margin-bottom:14px;">
+            <div>
+              <label class="editor-control-label" style="display:block; margin-bottom:5px;">Topic</label>
+              <select class="editor-select" id="madmin-cm-topic" style="width:100%;">
+                  <option value="">All Topics</option>
+                  <option>Public Health</option>
+                  <option>Healthcare</option>
+                  <option>Social Security</option>
+                  <option>Medicare</option>
+                  <option>Medicaid</option>
+                  <option>Energy</option>
+                  <option>Iran War</option>
+                  <option>Foreign Policy</option>
+                  <option>Crime</option>
+                  <option>Constitutional Rights</option>
+                  <option>Elections</option>
+                  <option>Political Performance</option>
+                  <option>Economy</option>
+                  <option>Immigration</option>
+                  <option>Defense</option>
+                  <option>Military</option>
+                  <option>Artificial Intelligence</option>
+                  <option>Technology</option>
+                  <option>Space & Science</option>
+                  <option>Education</option>
+                  <option>Gender Issues</option>
+                  <option>Other</option>
+                </select>
+            </div>
+            <div>
+              <label class="editor-control-label" style="display:block; margin-bottom:5px;">Verdict</label>
+              <select class="editor-select" id="madmin-cm-verdict" style="width:100%;">
+                <option value="">All Verdicts</option>
+                <option>True</option><option>Mostly True</option><option>Substantially True</option>
+                <option>Plausible/Mixed</option><option>Contested</option><option>Exaggerated</option>
+                <option>Misleading</option><option>Unproven</option><option>False</option>
+              </select>
+            </div>
+            <button type="button" class="m-run-btn" onclick="mAdminLoadClaims()">Load Claims</button>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <input type="checkbox" id="madmin-select-all" onchange="mAdminCmToggleAll(this)" style="width:18px; height:18px;">
+              <label for="madmin-select-all" class="editor-control-label">Select All</label>
+              <span id="madmin-cm-count" style="font-size:11px; color:var(--text-mid); font-style:italic;"></span>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button type="button" class="editor-save-rec-btn" onclick="mAdminBulkReanalyze('feature_refresh')">Feature</button>
+              <button type="button" class="editor-reanalyze-btn" onclick="mAdminBulkReanalyze('core_logic_refresh')">Core</button>
+            </div>
+          </div>
+          <div id="madmin-cm-list">
+            <div style="text-align:center; padding:20px; color:var(--text-mid); font-style:italic; font-size:14px;">Tap Load Claims to begin.</div>
+          </div>
+          <div id="madmin-cm-progress" style="display:none; margin-top:14px;">
+            <div class="editor-note-block">
+              <div id="madmin-cm-progress-text" style="font-size:14px; color:var(--gold); margin-bottom:8px;"></div>
+              <div style="background:rgba(255,255,255,.06); border-radius:4px; height:6px; overflow:hidden;">
+                <div id="madmin-cm-progress-bar" style="height:100%; background:var(--gold); transition:width .3s ease; width:0%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- System/Debug section -->
+        <div id="mAdminDebug" class="m-admin-section">
+          <div class="m-admin-section-header">
+            <button type="button" class="m-admin-back-btn" onclick="mAdminBack()">&#8592;</button>
+            <span class="m-admin-section-title">System / Debug</span>
+          </div>
+          <div style="display:grid; gap:2px;">
+            <div class="admin-debug-row"><span class="admin-debug-label">Core Version</span><span class="admin-debug-value">{{ analysis_core_version if analysis_core_version is defined else '—' }}</span></div>
+            <div class="admin-debug-row"><span class="admin-debug-label">Site Mode</span><span class="admin-debug-value">{{ site_mode if site_mode is defined else 'Live' }}</span></div>
+            <div class="admin-debug-row"><span class="admin-debug-label">Session User</span><span class="admin-debug-value">{{ session.get('username', '—') if session is defined else '—' }}</span></div>
+            <div class="admin-debug-row"><span class="admin-debug-label">Errors Logged</span><span class="admin-debug-value" id="mDebugErrorCount">—</span></div>
+          </div>
+        </div>
+
+        <!-- Owner Controls section -->
+        <div id="mAdminOwner" class="m-admin-section">
+          <div class="m-admin-section-header">
+            <button type="button" class="m-admin-back-btn" onclick="mAdminBack()">&#8592;</button>
+            <span class="m-admin-section-title" style="color:#c47c7c;">Owner Controls</span>
+          </div>
+          <div class="owner-controls-zone">
+            <div class="owner-controls-warning">&#9888; Owner-Level — Proceed with care</div>
+            <div style="display:grid; gap:12px;">
+              <div>
+                <label class="editor-control-label" style="display:block; margin-bottom:6px;">Site Mode Override</label>
+                <select class="editor-select" id="mOwnerSiteModeSelect" style="width:100%;">
+                  <option value="Live" {% if site_mode is defined and site_mode == "Live" %}selected{% endif %}>Live</option>
+                  <option value="Construction" {% if site_mode is defined and site_mode == "Construction" %}selected{% endif %}>Construction</option>
+                  <option value="Testing" {% if site_mode is defined and site_mode == "Testing" %}selected{% endif %}>Testing</option>
+                  <option value="Maintenance" {% if site_mode is defined and site_mode == "Maintenance" %}selected{% endif %}>Maintenance</option>
+                </select>
+                <button type="button" class="m-run-btn" style="margin-top:8px;" onclick="saveSiteMode('mOwnerSiteModeSelect','mOwnerSiteModeStatus')">Force Save</button>
+                <div class="site-mode-status" id="mOwnerSiteModeStatus"></div>
+              </div>
+              <div>
+                <label class="editor-control-label" style="display:block; margin-bottom:6px;">Error Log</label>
+                <button type="button" class="m-run-btn" style="background:transparent; border-color:rgba(200,80,80,.3); color:#c47c7c;" onclick="adminClearAllErrors()">Clear All Errors</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      {% endif %}
+
 
 
     </div><!-- end m-content -->
@@ -5722,7 +6377,7 @@ html, body {
       <a class="m-nav-link {% if page_mode == 'search' %}active{% endif %}" href="/search"><span class="m-nav-icon">▤</span><span>Claims</span></a>
       <a class="m-nav-link {% if page_mode == 'disputes' %}active{% endif %}" href="/disputes"><span class="m-nav-icon">✦</span><span>Disputes</span></a>
       <a class="m-nav-link {% if page_mode == 'profile' %}active{% endif %}" href="/profile"><span class="m-nav-icon">◉</span><span>Profile</span></a>
-      {% if true_superuser %}<a class="m-nav-link {% if page_mode == 'editor' %}active{% endif %}" href="/editor"><span class="m-nav-icon">✎</span><span>Editor</span></a>{% endif %}
+      {% if true_superuser %}<a class="m-nav-link {% if page_mode == 'editor' or page_mode == 'admin' %}active{% endif %}" href="/editor"><span class="m-nav-icon">✎</span><span>Editor</span></a>{% endif %}
     </nav>
 
   </div><!-- end mobile-shell -->
@@ -5730,7 +6385,7 @@ html, body {
 
   <div class="desktop-shell">
   <div class="page-shell">
-  <header class="masthead">
+   <header class="masthead">
   <div class="masthead-inner">
     <a class="brand-wrap" href="/" aria-label="Where the Truth Lies home">
       <div class="seal-small" aria-hidden="true">
@@ -5753,6 +6408,7 @@ html, body {
 
       {% if true_superuser %}
         <a href="/editor">Editor Queue</a>
+        <a href="/admin">Admin</a>
         <span class="super-badge">Super User</span>
       {% elif superuser %}
         <span class="super-badge">Full Access</span>
@@ -5777,6 +6433,7 @@ html, body {
           <a href="/archives">Claims Archive</a>
           <a href="#methodology-section">Methodology</a>
           {% if true_superuser %}<a href="/editor">Editor Queue</a>{% endif %}
+          {% if true_superuser %}<a href="/admin">Admin</a>{% endif %}
           <div class="menu-div"></div>
           <a href="/profile">Profile</a>
           <a href="/disputes">My Disputes</a>
@@ -5811,7 +6468,7 @@ html, body {
   </div>
 </header>
 
-    {% if page_mode != "editor" %}
+    {% if page_mode != "editor" and page_mode != "admin" %}
     <section class="hero-band">
       <div class="hero-inner">
         <div class="hero-card">
@@ -5872,7 +6529,7 @@ html, body {
     {% endif %}
 
     <!-- MAIN CLAIM ENTRY MODULE -->
-    {% if page_mode != "editor" %}
+    {% if page_mode != "editor" and page_mode != "admin" %}
     <section class="claim-entry-band" id="claim-entry-module">
       <div class="claim-entry-inner">
         <div class="claim-entry-card">
@@ -5950,8 +6607,9 @@ html, body {
             <div class="site-mode-control-row">
               <select class="site-mode-select" id="siteModeSelect">
                 <option value="Live" {% if site_mode is defined and site_mode == "Live" %}selected{% endif %}>Live</option>
-                <option value="Construction/ Site Maintenance" {% if site_mode is defined and site_mode == "Construction/ Site Maintenance" %}selected{% endif %}>Construction / Site Maintenance</option>
+                <option value="Construction" {% if site_mode is defined and site_mode == "Construction" %}selected{% endif %}>Construction</option>
                 <option value="Testing" {% if site_mode is defined and site_mode == "Testing" %}selected{% endif %}>Testing</option>
+                <option value="Maintenance" {% if site_mode is defined and site_mode == "Maintenance" %}selected{% endif %}>Maintenance</option>
               </select>
               <button type="button" class="site-mode-save-btn" onclick="saveSiteMode()">Save</button>
             </div>
@@ -5974,16 +6632,22 @@ html, body {
 
           <div class="excavation-tabs editor-tabs" style="margin-bottom:20px;">
             <button type="button" class="tab-btn active" id="editor-tab-escalated" onclick="setEditorTab('Escalated to Human', this)">
-              Escalated to Human
+              Escalated
             </button>
             <button type="button" class="tab-btn" id="editor-tab-ai" onclick="setEditorTab('AI Recommended Update', this)">
-              AI Recommended Updates
-            </button>
-            <button type="button" class="tab-btn" id="editor-tab-potential" onclick="setEditorTab('Potential Dispute / Pushback Issue', this)">
-              Potential Issues
+              AI Recommended
             </button>
             <button type="button" class="tab-btn" id="editor-tab-current" onclick="setEditorTab('Current Dispute', this)">
               Current Disputes
+            </button>
+            <button type="button" class="tab-btn" id="editor-tab-potential" onclick="setEditorTab('Potential Dispute / Pushback Issue', this)">
+              Pushback Issues
+            </button>
+            <button type="button" class="tab-btn" id="editor-tab-breakout" onclick="setEditorTab('__breakout__', this)">
+              Breakout Review
+            </button>
+            <button type="button" class="tab-btn" id="editor-tab-resolved" onclick="setEditorTab('__resolved__', this)">
+              Resolved History
             </button>
           <button type="button" class="tab-btn editor-tab-cm" id="editor-tab-claims" onclick="setEditorTab('__claims__', this)">
             Claim Management
@@ -6036,6 +6700,25 @@ html, body {
                     {% if item.ai_recommended_changes %}
                       <div class="editor-note-block editor-note-green" style="margin-bottom:10px;">
                         <strong>AI Recommended Changes:</strong><br>{{ item.ai_recommended_changes }}
+                      </div>
+                      <!-- Section-level AI approval controls — visible on AI Recommended Update cards -->
+                      <div class="ai-approval-bar" id="ai-approval-{{ item.record_id }}">
+                        <div class="ai-approval-label">&#10003; Apply AI Recommendation</div>
+                        <div class="ai-approval-actions">
+                          <button type="button" class="ai-approve-all-btn"
+                            onclick="editorApproveAll('{{ item.record_id }}', this)">
+                            Approve All
+                          </button>
+                          <button type="button" class="ai-select-sections-btn"
+                            onclick="editorSelectSections('{{ item.record_id }}', this)">
+                            Select Sections
+                          </button>
+                          <button type="button" class="ai-reject-btn"
+                            onclick="editorRejectRecommendation('{{ item.record_id }}', this)">
+                            Reject
+                          </button>
+                        </div>
+                        <div class="ai-approval-status" id="ai-approval-status-{{ item.record_id }}"></div>
                       </div>
                     {% else %}
                       <div style="margin-bottom:10px;">
@@ -6100,6 +6783,27 @@ html, body {
               </div>
             {% endif %}
           </div>
+
+          <!-- BREAKOUT REVIEW PANEL -->
+          <div id="breakout-review-panel" style="display:none; padding-top:4px;">
+            <div class="admin-section-header">
+              <div class="admin-section-title">Breakout Review</div>
+              <div class="admin-section-sub">Breakout claims pending excavation or flagged for editorial review.</div>
+            </div>
+            <div id="breakout-review-loading" style="text-align:center; padding:28px 0; color:var(--text-mid); font-style:italic; font-size:15px;">Loading breakout review queue…</div>
+            <div id="breakout-review-list" style="display:none;"></div>
+          </div>
+
+          <!-- RESOLVED HISTORY PANEL -->
+          <div id="resolved-history-panel" style="display:none; padding-top:4px;">
+            <div class="admin-section-header">
+              <div class="admin-section-title">Resolved History</div>
+              <div class="admin-section-sub">Recently resolved and closed queue items.</div>
+            </div>
+            <div id="resolved-history-loading" style="text-align:center; padding:28px 0; color:var(--text-mid); font-style:italic; font-size:15px;">Loading resolved history…</div>
+            <div id="resolved-history-list" style="display:none;"></div>
+          </div>
+
           <div id="claim-management-panel" style="display:none; padding-top:16px;">
             <div style="margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid rgba(201,168,76,.14);">
               <div class="section-kicker">Claim Management</div>
@@ -6108,11 +6812,30 @@ html, body {
                 <div class="editor-control-group">
                   <label class="editor-control-label">Topic</label>
                   <select class="editor-select" id="cm-filter-topic">
-                    <option value="">All Topics</option>
-                    <option>Economy</option><option>Immigration</option><option>Elections</option>
-                    <option>Foreign Policy</option><option>Healthcare</option><option>Crime</option>
-                    <option>Environment</option><option>Education</option>
-                  </select>
+                  <option value="">All Topics</option>
+                  <option>Public Health</option>
+                  <option>Healthcare</option>
+                  <option>Social Security</option>
+                  <option>Medicare</option>
+                  <option>Medicaid</option>
+                  <option>Energy</option>
+                  <option>Iran War</option>
+                  <option>Foreign Policy</option>
+                  <option>Crime</option>
+                  <option>Constitutional Rights</option>
+                  <option>Elections</option>
+                  <option>Political Performance</option>
+                  <option>Economy</option>
+                  <option>Immigration</option>
+                  <option>Defense</option>
+                  <option>Military</option>
+                  <option>Artificial Intelligence</option>
+                  <option>Technology</option>
+                  <option>Space & Science</option>
+                  <option>Education</option>
+                  <option>Gender Issues</option>
+                  <option>Other</option>
+                </select>
                 </div>
                 <div class="editor-control-group">
                   <label class="editor-control-label">Verdict</label>
@@ -6248,7 +6971,279 @@ html, body {
     </div>
     {% endif %}
 
-    {% if page_mode != "editor" %}
+    {% if page_mode == "admin" %}
+    <div class="admin-page-grid">
+      <div>
+        <article class="main-card">
+
+          <!-- Admin nav tabs -->
+          <div class="admin-nav-tabs" id="adminNavTabs">
+            <button type="button" class="admin-tab-btn active" onclick="setAdminTab('admin-users', this)">User Management</button>
+            <button type="button" class="admin-tab-btn" onclick="setAdminTab('admin-site', this)">Site Controls</button>
+            <button type="button" class="admin-tab-btn" onclick="setAdminTab('admin-errors', this)">Error Console</button>
+            <button type="button" class="admin-tab-btn" onclick="setAdminTab('admin-claims', this)">Claim Management</button>
+            <button type="button" class="admin-tab-btn" onclick="setAdminTab('admin-debug', this)">System / Debug</button>
+            <button type="button" class="admin-tab-btn owner-tab" onclick="setAdminTab('admin-owner', this)">Owner Controls</button>
+          </div>
+
+          <!-- A. User Management -->
+          <div id="admin-users" class="admin-section active">
+            <div class="admin-section-header">
+              <div class="admin-section-title">User Management</div>
+              <div class="admin-section-sub">All registered users. Edit role, status, and claim quota inline.</div>
+            </div>
+            <input type="text" class="admin-user-search" id="adminUserSearch" placeholder="Search by username…" oninput="adminFilterUsers(this.value)">
+            <div style="overflow-x:auto;">
+              <table class="admin-user-table" id="adminUserTable">
+                <thead>
+                  <tr>
+                    <th>Username</th>
+                    <th>Role</th>
+                    <th>Active</th>
+                    <th>Claims Left</th>
+                    <th></th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="adminUserTableBody">
+                  {% if admin_users %}
+                    {% for u in admin_users %}
+                    <tr class="admin-user-row" data-username="{{ u.username | lower }}" data-record-id="{{ u.record_id }}">
+                      <td><span class="admin-user-name">{{ u.username }}</span></td>
+                      <td>
+                        <select class="admin-inline-select" id="role-{{ u.record_id }}">
+                          <option value="superuser" {% if u.role == 'superuser' %}selected{% endif %}>superuser</option>
+                          <option value="limited_superuser" {% if u.role == 'limited_superuser' %}selected{% endif %}>limited_superuser</option>
+                          <option value="standard" {% if u.role == 'standard' %}selected{% endif %}>standard</option>
+                        </select>
+                      </td>
+                      <td>
+                        <input type="checkbox" class="admin-active-toggle" id="active-{{ u.record_id }}" {% if u.active %}checked{% endif %}>
+                      </td>
+                      <td>
+                        <input type="number" class="admin-inline-input" id="claims-{{ u.record_id }}" value="{{ u.claims_remaining }}" min="0">
+                      </td>
+                      <td>
+                        <button type="button" class="admin-save-row-btn" onclick="adminSaveUser('{{ u.record_id }}', this)">Save</button>
+                      </td>
+                      <td>
+                        <span class="admin-row-status" id="userstatus-{{ u.record_id }}"></span>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  {% else %}
+                    <tr><td colspan="6" style="padding:20px; color:var(--text-mid); font-style:italic; font-size:14px;">No users found.</td></tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- B. Site Controls -->
+          <div id="admin-site" class="admin-section">
+            <div class="admin-section-header">
+              <div class="admin-section-title">Site Controls</div>
+              <div class="admin-section-sub">Control site mode and public-facing status messaging.</div>
+            </div>
+            <div class="site-mode-control">
+              <div class="site-mode-control-label">&#9632; Site Mode</div>
+              <div class="site-mode-control-row">
+                <select class="site-mode-select" id="adminSiteModeSelect">
+                  <option value="Live" {% if site_mode is defined and site_mode == "Live" %}selected{% endif %}>Live</option>
+                  <option value="Construction" {% if site_mode is defined and site_mode == "Construction" %}selected{% endif %}>Construction</option>
+                  <option value="Testing" {% if site_mode is defined and site_mode == "Testing" %}selected{% endif %}>Testing</option>
+                  <option value="Maintenance" {% if site_mode is defined and site_mode == "Maintenance" %}selected{% endif %}>Maintenance</option>
+                </select>
+                <button type="button" class="site-mode-save-btn" onclick="saveSiteMode('adminSiteModeSelect','adminSiteModeStatus')">Save</button>
+              </div>
+              <div class="site-mode-status" id="adminSiteModeStatus"></div>
+            </div>
+          </div>
+
+          <!-- C. Error Console -->
+          <div id="admin-errors" class="admin-section">
+            <div class="admin-section-header">
+              <div class="admin-section-title">Error Console</div>
+              <div class="admin-section-sub">System errors logged to Airtable. Default view shows Open errors.</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap;">
+              <select class="admin-inline-select" id="adminErrorStatusFilter" onchange="adminLoadErrors()">
+                <option value="Open">Open</option>
+                <option value="Resolved">Resolved</option>
+                <option value="All">All</option>
+              </select>
+              <button type="button" class="admin-save-row-btn" onclick="adminLoadErrors()">&#8635; Refresh</button>
+              <span style="width:1px; height:16px; background:rgba(255,255,255,.08); display:inline-block;"></span>
+              <button type="button" class="admin-save-row-btn" onclick="adminSelectAllErrors(true)">Select All</button>
+              <button type="button" class="admin-save-row-btn" onclick="adminSelectAllErrors(false)">Deselect All</button>
+              <button type="button" class="admin-save-row-btn" onclick="adminMarkSelectedResolved()">Mark Resolved</button>
+              <button type="button" class="admin-save-row-btn" style="color:#8cb6c9; border-color:rgba(90,143,160,.3);" onclick="adminMarkSelectedIgnored()">Ignore Selected</button>
+            </div>
+            <div id="adminErrorLoading" style="display:none; text-align:center; padding:20px; color:var(--text-mid); font-style:italic; font-size:14px;">Loading errors…</div>
+            <div id="adminErrorEmpty" class="site-error-empty" style="display:none;">No errors found.</div>
+            <div id="adminErrorList" style="display:grid; gap:10px;"></div>
+            <div id="adminErrorStatus" style="font-size:12px; color:var(--text-mid); font-style:italic; margin-top:10px; min-height:16px;"></div>
+          </div>
+
+          <!-- D. Claim Management -->
+          <div id="admin-claims" class="admin-section">
+            <div class="admin-section-header">
+              <div class="admin-section-title">Claim Management</div>
+              <div class="admin-section-sub">Search, filter, and bulk-reanalyze claims.</div>
+            </div>
+            <div class="cm-filter-row">
+              <div class="editor-control-group">
+                <label class="editor-control-label">Topic</label>
+                <select class="editor-select" id="admin-cm-filter-topic">
+                  <option value="">All Topics</option>
+                  <option>Public Health</option>
+                  <option>Healthcare</option>
+                  <option>Social Security</option>
+                  <option>Medicare</option>
+                  <option>Medicaid</option>
+                  <option>Energy</option>
+                  <option>Iran War</option>
+                  <option>Foreign Policy</option>
+                  <option>Crime</option>
+                  <option>Constitutional Rights</option>
+                  <option>Elections</option>
+                  <option>Political Performance</option>
+                  <option>Economy</option>
+                  <option>Immigration</option>
+                  <option>Defense</option>
+                  <option>Military</option>
+                  <option>Artificial Intelligence</option>
+                  <option>Technology</option>
+                  <option>Space & Science</option>
+                  <option>Education</option>
+                  <option>Gender Issues</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div class="editor-control-group">
+                <label class="editor-control-label">Verdict</label>
+                <select class="editor-select" id="admin-cm-filter-verdict">
+                  <option value="">All Verdicts</option>
+                  <option>True</option><option>Mostly True</option><option>Substantially True</option>
+                  <option>Plausible/Mixed</option><option>Contested</option><option>Exaggerated</option>
+                  <option>Misleading</option><option>Unproven</option><option>False</option>
+                </select>
+              </div>
+              <div class="editor-control-group">
+                <label class="editor-control-label">Not Reanalyzed Since</label>
+                <input type="date" class="editor-select" id="admin-cm-filter-date" style="color:var(--cream);">
+              </div>
+              <div class="editor-control-group" style="justify-content:flex-end;">
+                <button type="button" class="gold-btn" onclick="adminLoadClaims()" style="margin-top:18px;">Load Claims</button>
+              </div>
+            </div>
+            <div class="cm-action-bar" style="margin-top:14px;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <input type="checkbox" id="admin-cm-select-all" onchange="adminCmToggleAll(this)" style="width:16px; height:16px; cursor:pointer;">
+                <label for="admin-cm-select-all" class="editor-control-label" style="cursor:pointer;">Select All</label>
+                <span id="admin-cm-count" style="font-size:12px; color:var(--text-mid); font-style:italic;"></span>
+              </div>
+              <div style="display:flex; gap:8px;">
+                <button type="button" class="editor-save-rec-btn" onclick="adminBulkReanalyze('feature_refresh')">Feature Refresh</button>
+                <button type="button" class="editor-reanalyze-btn" onclick="adminBulkReanalyze('core_logic_refresh')">Core Logic Refresh</button>
+              </div>
+            </div>
+            <div id="admin-cm-list" style="margin-top:12px;">
+              <div style="text-align:center; padding:32px; color:var(--text-mid); font-style:italic;">Click Load Claims to begin.</div>
+            </div>
+            <div id="admin-cm-progress" style="display:none; margin-top:16px;">
+              <div class="editor-note-block">
+                <div id="admin-cm-progress-text" style="font-size:14px; color:var(--gold); margin-bottom:8px;"></div>
+                <div style="background:rgba(255,255,255,.06); border-radius:4px; height:6px; overflow:hidden;">
+                  <div id="admin-cm-progress-bar" style="height:100%; background:var(--gold); transition:width .3s ease; width:0%;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- E. System / Debug -->
+          <div id="admin-debug" class="admin-section">
+            <div class="admin-section-header">
+              <div class="admin-section-title">System / Debug</div>
+              <div class="admin-section-sub">Platform version and runtime state readout.</div>
+            </div>
+            <div class="admin-debug-row">
+              <span class="admin-debug-label">Analysis Core Version</span>
+              <span class="admin-debug-value">{{ analysis_core_version if analysis_core_version is defined else '—' }}</span>
+            </div>
+            <div class="admin-debug-row">
+              <span class="admin-debug-label">Site Mode</span>
+              <span class="admin-debug-value">{{ site_mode if site_mode is defined else 'Live' }}</span>
+            </div>
+            <div class="admin-debug-row">
+              <span class="admin-debug-label">Users Loaded</span>
+              <span class="admin-debug-value">{{ admin_users | length if admin_users is defined else '—' }}</span>
+            </div>
+            <div class="admin-debug-row">
+              <span class="admin-debug-label">Session User</span>
+              <span class="admin-debug-value">{{ session.get('username', '—') if session is defined else '—' }}</span>
+            </div>
+            <div class="admin-debug-row">
+              <span class="admin-debug-label">Error Log</span>
+              <span class="admin-debug-value" id="debugErrorCount">—</span>
+            </div>
+          </div>
+
+          <!-- F. Owner Controls -->
+          <div id="admin-owner" class="admin-section">
+            <div class="admin-section-header">
+              <div class="admin-section-title" style="color:#c47c7c;">Owner Controls</div>
+              <div class="admin-section-sub">High-sensitivity operational tools. Not for routine editorial use.</div>
+            </div>
+            <div class="owner-controls-zone">
+              <div class="owner-controls-warning">&#9888; Owner-Level Controls — Proceed with care</div>
+              <div style="display:grid; gap:14px;">
+                <div>
+                  <div class="editor-control-label" style="margin-bottom:6px;">Site Mode Override</div>
+                  <div class="site-mode-control-row">
+                    <select class="site-mode-select" id="ownerSiteModeSelect">
+                      <option value="Live" {% if site_mode is defined and site_mode == "Live" %}selected{% endif %}>Live</option>
+                      <option value="Construction" {% if site_mode is defined and site_mode == "Construction" %}selected{% endif %}>Construction</option>
+                      <option value="Testing" {% if site_mode is defined and site_mode == "Testing" %}selected{% endif %}>Testing</option>
+                      <option value="Maintenance" {% if site_mode is defined and site_mode == "Maintenance" %}selected{% endif %}>Maintenance</option>
+                    </select>
+                    <button type="button" class="site-mode-save-btn" onclick="saveSiteMode('ownerSiteModeSelect','ownerSiteModeStatus')">Force Save</button>
+                  </div>
+                  <div class="site-mode-status" id="ownerSiteModeStatus"></div>
+                </div>
+                <div>
+                  <div class="editor-control-label" style="margin-bottom:6px;">Error Console — Force Clear All</div>
+                  <button type="button" class="admin-save-row-btn" style="color:#c47c7c; border-color:rgba(200,80,80,.3);" onclick="adminClearAllErrors()">Clear All Logged Errors</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </article>
+      </div>
+
+      <!-- Admin Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-card">
+          <div class="sidebar-title">Admin Workspace</div>
+          <div style="display:grid; gap:8px; margin-top:8px;">
+            <a href="/editor" class="gold-btn" style="text-decoration:none; display:block; text-align:center; font-size:11px;">Editor Queue</a>
+            <a href="/" class="gold-btn" style="text-decoration:none; display:block; text-align:center; font-size:11px; background:transparent;">Home</a>
+          </div>
+        </div>
+        <div class="sidebar-card">
+          <div class="sidebar-title">Quick Links</div>
+          <div style="display:grid; gap:8px; margin-top:8px;">
+            <a href="/archives" style="color:var(--gold); font-size:13px; text-decoration:none;">Claims Archive</a>
+            <a href="/disputes" style="color:var(--gold); font-size:13px; text-decoration:none;">Disputes</a>
+            <a href="/profile" style="color:var(--gold); font-size:13px; text-decoration:none;">Profile</a>
+          </div>
+        </div>
+      </aside>
+    </div>
+    {% endif %}
+
+    {% if page_mode != "editor" and page_mode != "admin" %}
 
     <main class="main-grid">
       <div class="content-stack">
@@ -7544,8 +8539,8 @@ async function submitPushback() {
     });
 
     document.getElementById('disputeResultModal').addEventListener('click', function(e) {
-      if (e.target === this) closeDisputeResultModal();
-    });
+     if (e.target === this) closeDisputeResultModal();
+   });
 
     async function submitDispute() {
       const checked = Array.from(
@@ -7736,46 +8731,16 @@ console.error('Dispute submission failed:', err);
       const container = document.getElementById('scenarioMapContainer');
       if (!container || !raw) return;
 
-      const disclaimerRegex = /(?:^|\n)\s*NOTE:\s*([\s\S]*?)$/i;
-      const disclaimerMatch = disclaimerRegex.exec(raw);
-      const note = disclaimerMatch ? disclaimerMatch[1].trim() : '';
-      const body = disclaimerMatch ? raw.slice(0, disclaimerMatch.index).trim() : raw.trim();
-
-      const confidenceBoundary = '(?:CONFIDENCE NOTE:|CONFIDENCE:|CONFIDENCE\\b|$)';
+      const noteRegex = /NOTE:([\s\S]*)$/i;
+      const noteM = noteRegex.exec(raw);
+      const note = noteM ? noteM[1].trim() : '';
+      const body = raw.replace(noteRegex, '').trim();
 
       const rankedPatterns = [
-        {
-          key: 'most_supported',
-          label: 'Most Supported Outcome',
-          regex: new RegExp(
-            'MOST SUPPORTED OUTCOME:\\s*([^\\.\\n]+)\\.([\\s\\S]*?)(?=ALTERNATIVE OUTCOME 2:|ALTERNATIVE OUTCOME 3:|PREFERRED OUTCOME:|' + confidenceBoundary + ')',
-            'i'
-          )
-        },
-        {
-          key: 'alternative_2',
-          label: 'Alternative Outcome 2',
-          regex: new RegExp(
-            'ALTERNATIVE OUTCOME 2:\\s*([^\\.\\n]+)\\.([\\s\\S]*?)(?=ALTERNATIVE OUTCOME 3:|PREFERRED OUTCOME:|' + confidenceBoundary + ')',
-            'i'
-          )
-        },
-        {
-          key: 'alternative_3',
-          label: 'Alternative Outcome 3',
-          regex: new RegExp(
-            'ALTERNATIVE OUTCOME 3:\\s*([^\\.\\n]+)\\.([\\s\\S]*?)(?=PREFERRED OUTCOME:|' + confidenceBoundary + ')',
-            'i'
-          )
-        },
-        {
-          key: 'preferred',
-          label: 'Preferred Outcome',
-          regex: new RegExp(
-            'PREFERRED OUTCOME:\\s*([^\\.\\n]+)\\.([\\s\\S]*?)(?=' + confidenceBoundary + ')',
-            'i'
-          )
-        }
+        { key: 'most_supported', label: 'Most Supported Outcome', regex: /MOST SUPPORTED OUTCOME:\s*([^\.\n]+)\.([\s\S]*?)(?=ALTERNATIVE OUTCOME 2:|ALTERNATIVE OUTCOME 3:|PREFERRED OUTCOME:|CONFIDENCE NOTE:|$)/i },
+        { key: 'alternative_2', label: 'Alternative Outcome 2', regex: /ALTERNATIVE OUTCOME 2:\s*([^\.\n]+)\.([\s\S]*?)(?=ALTERNATIVE OUTCOME 3:|PREFERRED OUTCOME:|CONFIDENCE NOTE:|$)/i },
+        { key: 'alternative_3', label: 'Alternative Outcome 3', regex: /ALTERNATIVE OUTCOME 3:\s*([^\.\n]+)\.([\s\S]*?)(?=PREFERRED OUTCOME:|CONFIDENCE NOTE:|$)/i },
+        { key: 'preferred', label: 'Preferred Outcome', regex: /PREFERRED OUTCOME:\s*([^\.\n]+)\.([\s\S]*?)(?=CONFIDENCE NOTE:|$)/i }
       ];
 
       const ranked = [];
@@ -7786,12 +8751,12 @@ console.error('Dispute submission failed:', err);
             key: p.key,
             label: p.label,
             title: m[1].trim(),
-            text: m[2].replace(/\bCONFIDENCE\b\s*:?\s*$/i, '').trim()
+            text: m[2].trim()
           });
         }
       });
 
-      const confidenceMatch = body.match(/(?:CONFIDENCE NOTE:|CONFIDENCE:|CONFIDENCE\b)\s*([\s\S]*?)$/i);
+      const confidenceMatch = body.match(/CONFIDENCE NOTE:\s*([\s\S]*?)$/i);
       const confidenceNote = confidenceMatch ? confidenceMatch[1].trim() : '';
 
       if (ranked.length) {
@@ -7834,7 +8799,7 @@ console.error('Dispute submission failed:', err);
         return;
       }
 
-      const scenarioRegex = /SCENARIO\s+([A-E])\s*[—-]+\s*([^:]+):\s*Confidence:\s*([\w\/]+)\.([\s\S]*?)(?=SCENARIO\s+[A-E]|(?:^|\n)\s*NOTE:|$)/gi;
+      const scenarioRegex = /SCENARIO\s+([A-E])\s*[—-]+\s*([^:]+):\s*Confidence:\s*([\w\/]+)\.([\s\S]*?)(?=SCENARIO\s+[A-E]|NOTE:|$)/gi;
       const scenarios = [];
       let m;
 
@@ -8275,12 +9240,27 @@ console.error('Dispute submission failed:', err);
       currentEditorTab = tab;
       var queueScroll = document.querySelector('.editor-queue-scroll');
       var claimPanel = document.getElementById('claim-management-panel');
+      var breakoutPanel = document.getElementById('breakout-review-panel');
+      var resolvedPanel = document.getElementById('resolved-history-panel');
+
+      // Hide all special panels first
+      if (claimPanel) claimPanel.style.display = 'none';
+      if (breakoutPanel) breakoutPanel.style.display = 'none';
+      if (resolvedPanel) resolvedPanel.style.display = 'none';
+
       if (tab === '__claims__') {
         if (queueScroll) queueScroll.style.display = 'none';
         if (claimPanel) claimPanel.style.display = 'block';
+      } else if (tab === '__breakout__') {
+        if (queueScroll) queueScroll.style.display = 'none';
+        if (breakoutPanel) breakoutPanel.style.display = 'block';
+        loadBreakoutReview();
+      } else if (tab === '__resolved__') {
+        if (queueScroll) queueScroll.style.display = 'none';
+        if (resolvedPanel) resolvedPanel.style.display = 'block';
+        loadResolvedHistory();
       } else {
         if (queueScroll) queueScroll.style.display = 'block';
-        if (claimPanel) claimPanel.style.display = 'none';
         var visibleCount = 0;
         document.querySelectorAll('.editor-card').forEach(function(el) {
           var cat = (el.getAttribute('data-category') || '').trim();
@@ -9980,6 +10960,663 @@ function openSelectiveFromClaim() {
   document.addEventListener('DOMContentLoaded', function() {
     renderSiteErrors();
   });
+
+  /* ── Admin Tab Navigation ───────────────────────────────────────── */
+  function setAdminTab(sectionId, btn) {
+    document.querySelectorAll('.admin-section').forEach(function(s) {
+      s.classList.remove('active');
+    });
+    document.querySelectorAll('.admin-tab-btn').forEach(function(b) {
+      b.classList.remove('active');
+    });
+    var sec = document.getElementById(sectionId);
+    if (sec) sec.classList.add('active');
+    if (btn) btn.classList.add('active');
+
+    // Render error panel when navigating to error console
+    if (sectionId === 'admin-errors') adminLoadErrors();
+    if (sectionId === 'admin-debug') {
+      var dc = document.getElementById('debugErrorCount');
+      if (dc) dc.textContent = String(getSiteErrors().length);
+    }
+  }
+
+  /* ── Admin User Management ──────────────────────────────────────── */
+  function adminFilterUsers(query) {
+    var q = (query || '').toLowerCase().trim();
+    // Filter desktop table rows
+    document.querySelectorAll('#adminUserTableBody .admin-user-row').forEach(function(row) {
+      var uname = (row.getAttribute('data-username') || '').toLowerCase();
+      row.style.display = (!q || uname.indexOf(q) !== -1) ? '' : 'none';
+    });
+    // Filter mobile user cards
+    document.querySelectorAll('#mAdminUserList > div[data-username]').forEach(function(card) {
+      var uname = (card.getAttribute('data-username') || '').toLowerCase();
+      card.style.display = (!q || uname.indexOf(q) !== -1) ? '' : 'none';
+    });
+  }
+
+  async function adminSaveUser(recordId, btn) {
+    var roleEl = document.getElementById('role-' + recordId);
+    var activeEl = document.getElementById('active-' + recordId);
+    var claimsEl = document.getElementById('claims-' + recordId);
+    var statusEl = document.getElementById('userstatus-' + recordId);
+
+    if (!roleEl) return;
+    var payload = {
+      role: roleEl.value,
+      active: activeEl ? activeEl.checked : false,
+      claims_remaining: claimsEl ? parseInt(claimsEl.value) || 0 : 0
+    };
+    btn.disabled = true;
+    if (statusEl) statusEl.textContent = 'Saving…';
+    try {
+      var res = await fetch('/admin/users/' + recordId, {
+        method: 'PATCH',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+      });
+      var data = await res.json();
+      if (res.ok && data.ok) {
+        if (statusEl) statusEl.textContent = 'Saved';
+        setTimeout(function() { if (statusEl) statusEl.textContent = ''; }, 2500);
+      } else {
+        throw new Error(data.error || 'Save failed');
+      }
+    } catch(err) {
+      if (statusEl) statusEl.textContent = 'Error: ' + err.message;
+    }
+    btn.disabled = false;
+  }
+
+  async function mAdminSaveUser(recordId, btn) {
+    var roleEl = document.getElementById('m-role-' + recordId);
+    var activeEl = document.getElementById('m-active-' + recordId);
+    var claimsEl = document.getElementById('m-claims-' + recordId);
+    var statusEl = document.getElementById('m-userstatus-' + recordId);
+
+    if (!roleEl) return;
+    var payload = {
+      role: roleEl.value,
+      active: activeEl ? activeEl.checked : false,
+      claims_remaining: claimsEl ? parseInt(claimsEl.value) || 0 : 0
+    };
+    btn.disabled = true;
+    if (statusEl) statusEl.textContent = 'Saving…';
+    try {
+      var res = await fetch('/admin/users/' + recordId, {
+        method: 'PATCH',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+      });
+      var data = await res.json();
+      if (res.ok && data.ok) {
+        if (statusEl) statusEl.textContent = 'Saved';
+        setTimeout(function() { if (statusEl) statusEl.textContent = ''; }, 2500);
+      } else {
+        throw new Error(data.error || 'Save failed');
+      }
+    } catch(err) {
+      if (statusEl) statusEl.textContent = 'Error: ' + err.message;
+    }
+    btn.disabled = false;
+  }
+
+  /* ── Admin Error Console ────────────────────────────────────────── */
+  /* ── Admin Error Console — Airtable-backed ──────────────────────── */
+  var _adminErrors = [];
+
+  async function adminLoadErrors() {
+    var statusFilter = (document.getElementById('adminErrorStatusFilter') || document.getElementById('mAdminErrorStatusFilter') || {}).value || 'Open';
+    // Sync both selects if both exist
+    var sel1 = document.getElementById('adminErrorStatusFilter');
+    var sel2 = document.getElementById('mAdminErrorStatusFilter');
+    if (sel1) statusFilter = sel1.value;
+    if (sel2 && !sel1) statusFilter = sel2.value;
+
+    var listEl = document.getElementById('adminErrorList');
+    var mListEl = document.getElementById('mAdminErrorList');
+    var loadEl = document.getElementById('adminErrorLoading');
+    var mLoadEl = document.getElementById('mAdminErrorLoading');
+    var emptyEl = document.getElementById('adminErrorEmpty');
+    var mEmptyEl = document.getElementById('mAdminErrorEmpty');
+
+    if (loadEl) { loadEl.style.display = 'block'; }
+    if (mLoadEl) { mLoadEl.style.display = 'block'; }
+    if (listEl) listEl.innerHTML = '';
+    if (mListEl) mListEl.innerHTML = '';
+    if (emptyEl) emptyEl.style.display = 'none';
+    if (mEmptyEl) mEmptyEl.style.display = 'none';
+
+    try {
+      var res = await fetch('/admin/errors?status=' + encodeURIComponent(statusFilter) + '&limit=100');
+      var data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Load failed');
+      _adminErrors = data.errors || [];
+
+      if (loadEl) loadEl.style.display = 'none';
+      if (mLoadEl) mLoadEl.style.display = 'none';
+
+      if (!_adminErrors.length) {
+        if (emptyEl) emptyEl.style.display = '';
+        if (mEmptyEl) mEmptyEl.style.display = '';
+        return;
+      }
+
+      // Render desktop list
+      if (listEl) {
+        listEl.innerHTML = '';
+        _adminErrors.forEach(function(err, idx) {
+          var row = document.createElement('div');
+          row.style.cssText = 'background:rgba(255,255,255,.025); border:1px solid rgba(255,255,255,.06); border-radius:10px; padding:12px 14px;';
+          row.setAttribute('data-error-record', err.record_id);
+
+          var severityColor = {'Low':'#75c28d','Medium':'var(--gold)','High':'#e09050','Critical':'#e07070'}[err.severity] || 'var(--text-mid)';
+          var statusColor = err.status === 'Resolved' ? '#75c28d' : err.status === 'Ignored' ? 'var(--text-dim)' : 'var(--gold)';
+
+          var cb = document.createElement('input');
+          cb.type = 'checkbox';
+          cb.style.cssText = 'width:14px;height:14px;cursor:pointer;flex-shrink:0;margin-right:10px;margin-top:2px;vertical-align:top;';
+          cb.setAttribute('data-record-id', err.record_id);
+
+          var content = document.createElement('div');
+          content.style.cssText = 'display:inline-block; width:calc(100% - 26px); vertical-align:top;';
+          content.innerHTML =
+            '<div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:6px; margin-bottom:6px;">' +
+              '<div>' +
+                '<span style="font-family:\'Libre Baskerville\',Georgia,serif; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:' + severityColor + '; margin-right:8px;">' + escHtml(err.severity || 'Medium') + '</span>' +
+                '<span style="font-family:\'Libre Baskerville\',Georgia,serif; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-mid); margin-right:8px;">' + escHtml(err.error_type || 'Unknown') + '</span>' +
+                '<span style="font-size:10px; color:' + statusColor + '; font-style:italic;">' + escHtml(err.status || 'Open') + '</span>' +
+              '</div>' +
+              '<span style="font-size:11px; color:var(--text-dim);">' + escHtml(err.created_at || '') + '</span>' +
+            '</div>' +
+            '<div style="font-family:\'Crimson Text\',Georgia,serif; font-size:15px; color:var(--cream); margin-bottom:4px;">' + escHtml(err.error_message || '') + '</div>' +
+            (err.route ? '<div style="font-size:11px; color:var(--text-mid); margin-bottom:2px;">Route: ' + escHtml(err.route) + '</div>' : '') +
+            (err.error_source ? '<div style="font-size:11px; color:var(--text-mid); margin-bottom:2px;">Source: ' + escHtml(err.error_source) + '</div>' : '') +
+            (err.username ? '<div style="font-size:11px; color:var(--text-mid); margin-bottom:2px;">User: ' + escHtml(err.username) + '</div>' : '') +
+            (err.claim_slug ? '<div style="font-size:11px; color:var(--text-mid); margin-bottom:2px;">Claim: ' + escHtml(err.claim_slug) + '</div>' : '') +
+            (err.context ? '<div style="font-size:12px; color:var(--text-mid); margin-top:4px; font-style:italic;">' + escHtml(err.context.substring(0, 200)) + '</div>' : '') +
+            (err.resolved_by ? '<div style="font-size:11px; color:#75c28d; margin-top:4px;">Resolved by ' + escHtml(err.resolved_by) + (err.resolved_at ? ' · ' + escHtml(err.resolved_at) : '') + '</div>' : '');
+
+          row.appendChild(cb);
+          row.appendChild(content);
+          listEl.appendChild(row);
+        });
+      }
+
+      // Render mobile list (compact)
+      if (mListEl) {
+        mListEl.innerHTML = '';
+        _adminErrors.forEach(function(err) {
+          var row = document.createElement('div');
+          row.style.cssText = 'background:rgba(255,255,255,.025); border:1px solid rgba(255,255,255,.06); border-radius:10px; padding:12px;';
+          row.setAttribute('data-error-record', err.record_id);
+          var severityColor = {'Low':'#75c28d','Medium':'var(--gold)','High':'#e09050','Critical':'#e07070'}[err.severity] || 'var(--text-mid)';
+          row.innerHTML =
+            '<div style="display:flex; justify-content:space-between; margin-bottom:5px;">' +
+              '<span style="font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:' + severityColor + ';">' + escHtml(err.severity || '') + ' · ' + escHtml(err.error_type || '') + '</span>' +
+              '<input type="checkbox" data-record-id="' + escHtml(err.record_id) + '" style="width:16px;height:16px;cursor:pointer;">' +
+            '</div>' +
+            '<div style="font-size:14px; color:var(--cream); margin-bottom:4px;">' + escHtml(err.error_message || '') + '</div>' +
+            (err.route ? '<div style="font-size:11px; color:var(--text-mid);">' + escHtml(err.route) + '</div>' : '') +
+            (err.created_at ? '<div style="font-size:11px; color:var(--text-dim); margin-top:3px;">' + escHtml(err.created_at) + '</div>' : '');
+          mListEl.appendChild(row);
+        });
+      }
+
+      // Update debug count
+      var dc = document.getElementById('debugErrorCount');
+      if (dc) dc.textContent = String(_adminErrors.length);
+      var mdc = document.getElementById('mDebugErrorCount');
+      if (mdc) mdc.textContent = String(_adminErrors.length);
+
+    } catch(err) {
+      if (loadEl) loadEl.style.display = 'none';
+      if (mLoadEl) mLoadEl.style.display = 'none';
+      var statusEl = document.getElementById('adminErrorStatus');
+      if (statusEl) statusEl.textContent = 'Error loading: ' + err.message;
+    }
+  }
+
+  function adminSelectAllErrors(checked) {
+    document.querySelectorAll('#adminErrorList input[type="checkbox"], #mAdminErrorList input[type="checkbox"]').forEach(function(cb) {
+      cb.checked = checked;
+    });
+  }
+
+  function _getSelectedErrorIds(listId) {
+    var ids = [];
+    document.querySelectorAll('#' + listId + ' input[type="checkbox"]:checked').forEach(function(cb) {
+      var rid = cb.getAttribute('data-record-id');
+      if (rid) ids.push(rid);
+    });
+    return ids;
+  }
+
+  async function adminMarkSelectedResolved() {
+    var ids = _getSelectedErrorIds('adminErrorList').concat(_getSelectedErrorIds('mAdminErrorList'));
+    // Deduplicate
+    ids = ids.filter(function(v, i, a) { return a.indexOf(v) === i; });
+    if (!ids.length) {
+      var statusEl = document.getElementById('adminErrorStatus') || document.getElementById('mAdminErrorStatus');
+      if (statusEl) statusEl.textContent = 'Select at least one error first.';
+      return;
+    }
+    var statusEl = document.getElementById('adminErrorStatus');
+    var mStatusEl = document.getElementById('mAdminErrorStatus');
+    if (statusEl) statusEl.textContent = 'Marking resolved…';
+    if (mStatusEl) mStatusEl.textContent = 'Marking resolved…';
+    try {
+      var res = await fetch('/admin/errors/resolve', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({record_ids: ids})
+      });
+      var data = await res.json();
+      if (res.ok && data.ok) {
+        if (statusEl) statusEl.textContent = data.updated + ' error(s) marked resolved.';
+        if (mStatusEl) mStatusEl.textContent = data.updated + ' error(s) marked resolved.';
+        setTimeout(function() { adminLoadErrors(); }, 1200);
+      } else {
+        throw new Error(data.error || 'Failed');
+      }
+    } catch(err) {
+      if (statusEl) statusEl.textContent = 'Error: ' + err.message;
+      if (mStatusEl) mStatusEl.textContent = 'Error: ' + err.message;
+    }
+  }
+
+  async function adminMarkSelectedIgnored() {
+    var ids = _getSelectedErrorIds('adminErrorList');
+    if (!ids.length) return;
+    var statusEl = document.getElementById('adminErrorStatus');
+    if (statusEl) statusEl.textContent = 'Ignoring…';
+    try {
+      var res = await fetch('/admin/errors/ignore', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({record_ids: ids})
+      });
+      var data = await res.json();
+      if (res.ok && data.ok) {
+        if (statusEl) statusEl.textContent = data.updated + ' error(s) ignored.';
+        setTimeout(function() { adminLoadErrors(); }, 1200);
+      } else { throw new Error(data.error || 'Failed'); }
+    } catch(err) {
+      if (statusEl) statusEl.textContent = 'Error: ' + err.message;
+    }
+  }
+
+  /* ── AI Section-Level Approval ──────────────────────────────────── */
+
+  // Approve All: set resolution type to AI Recommendation and open the full preview
+  async function editorApproveAll(recordId, btn) {
+    btn.disabled = true;
+    var statusEl = document.getElementById('ai-approval-status-' + recordId) ||
+                   document.getElementById('m-ai-approval-status-' + recordId);
+    if (statusEl) statusEl.textContent = 'Loading preview…';
+    // Ensure resolution type is set to AI Recommendation first
+    try {
+      await fetch('/editor/update-resolution-type/' + recordId, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({resolution_type: 'AI Recommendation'})
+      });
+    } catch(e) {}
+    // Open the existing update preview modal (Approve All = all sections pre-checked)
+    openUpdatePreview(recordId, 'AI Recommendation');
+    if (statusEl) statusEl.textContent = '';
+    btn.disabled = false;
+  }
+
+  // Select Sections: set resolution type to Partial Update and open preview with section checkboxes
+  async function editorSelectSections(recordId, btn) {
+    btn.disabled = true;
+    var statusEl = document.getElementById('ai-approval-status-' + recordId) ||
+                   document.getElementById('m-ai-approval-status-' + recordId);
+    if (statusEl) statusEl.textContent = 'Loading section preview…';
+    try {
+      await fetch('/editor/update-resolution-type/' + recordId, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({resolution_type: 'Partial Update'})
+      });
+    } catch(e) {}
+    // Open preview in Partial Update mode (shows checkboxes per section)
+    openUpdatePreview(recordId, 'Partial Update');
+    if (statusEl) statusEl.textContent = '';
+    btn.disabled = false;
+  }
+
+  // Reject: set resolution type to No Update and mark resolved
+  async function editorRejectRecommendation(recordId, btn) {
+    btn.disabled = true;
+    var statusEl = document.getElementById('ai-approval-status-' + recordId) ||
+                   document.getElementById('m-ai-approval-status-' + recordId);
+    if (statusEl) statusEl.textContent = 'Rejecting…';
+    try {
+      await fetch('/editor/update-resolution-type/' + recordId, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({resolution_type: 'No Update'})
+      });
+      var res = await fetch('/editor/resolve/' + recordId, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({resolution_type: 'No Update', status: 'Resolved'})
+      });
+      var data = await res.json();
+      if (res.ok && data.ok) {
+        if (statusEl) statusEl.textContent = 'Rejected. Item resolved.';
+        var bar = document.getElementById('ai-approval-' + recordId) ||
+                  document.getElementById('m-ai-approval-' + recordId);
+        if (bar) {
+          bar.style.opacity = '.4';
+          bar.style.pointerEvents = 'none';
+        }
+      } else {
+        throw new Error(data.error || 'Failed');
+      }
+    } catch(err) {
+      if (statusEl) statusEl.textContent = 'Error: ' + err.message;
+      btn.disabled = false;
+    }
+  }
+
+  /* ── Admin Claim Management ─────────────────────────────────────── */
+  var adminCmClaims = [];
+
+  async function adminLoadClaims() {
+    var topic = (document.getElementById('admin-cm-filter-topic') || {}).value || '';
+    var verdict = (document.getElementById('admin-cm-filter-verdict') || {}).value || '';
+    var date = (document.getElementById('admin-cm-filter-date') || {}).value || '';
+    var listEl = document.getElementById('admin-cm-list');
+    if (listEl) listEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-mid);font-style:italic;">Loading…</div>';
+    try {
+      var url = '/editor/claims?limit=100';
+      if (topic) url += '&topic=' + encodeURIComponent(topic);
+      if (verdict) url += '&verdict=' + encodeURIComponent(verdict);
+      if (date) url += '&not_since=' + encodeURIComponent(date);
+      var res = await fetch(url);
+      var data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Load failed');
+      adminCmClaims = data.claims || [];
+      renderAdminCmList();
+    } catch(err) {
+      if (listEl) listEl.innerHTML = '<div style="color:#e07070;padding:16px;">Error: ' + escHtml(err.message) + '</div>';
+    }
+  }
+
+  function renderAdminCmList() {
+    var listEl = document.getElementById('admin-cm-list');
+    var countEl = document.getElementById('admin-cm-count');
+    if (!listEl) return;
+    if (!adminCmClaims.length) {
+      listEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-mid);font-style:italic;">No claims found.</div>';
+      if (countEl) countEl.textContent = '';
+      return;
+    }
+    var html = '';
+    adminCmClaims.forEach(function(c) {
+      html += '<div class="claim-reanalyze-row" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);">';
+      html += '<input type="checkbox" class="admin-cm-cb" data-record-id="' + escHtml(c.record_id) + '" style="width:15px;height:15px;cursor:pointer;flex-shrink:0;">';
+      html += '<div style="flex:1;min-width:0;">';
+      html += '<a href="/claim/' + escHtml(c.slug) + '" style="color:var(--cream);font-size:13px;text-decoration:none;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" target="_blank">' + escHtml(c.title) + '</a>';
+      html += '<div style="font-size:11px;color:var(--text-mid);margin-top:2px;">' + escHtml(c.verdict || '') + (c.last_reanalyzed ? ' · ' + escHtml(c.last_reanalyzed) : '') + '</div>';
+      html += '</div>';
+      html += '<button type="button" class="claim-reanalyze-btn" style="flex-shrink:0;" onclick="adminSingleReanalyze(\'' + escHtml(c.record_id) + '\', \'feature_refresh\', this)">↻</button>';
+      html += '</div>';
+    });
+    listEl.innerHTML = html;
+    if (countEl) countEl.textContent = '';
+    document.querySelectorAll('.admin-cm-cb').forEach(function(cb) {
+      cb.addEventListener('change', function() {
+        var sel = document.querySelectorAll('.admin-cm-cb:checked').length;
+        if (countEl) countEl.textContent = sel ? sel + ' selected' : '';
+      });
+    });
+  }
+
+  function adminCmToggleAll(masterCb) {
+    document.querySelectorAll('.admin-cm-cb').forEach(function(cb) { cb.checked = masterCb.checked; });
+    var sel = masterCb.checked ? adminCmClaims.length : 0;
+    var countEl = document.getElementById('admin-cm-count');
+    if (countEl) countEl.textContent = sel ? sel + ' selected' : '';
+  }
+
+  async function adminSingleReanalyze(recordId, mode, btn) {
+    var orig = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '…';
+    try {
+      var res = await fetch('/editor/reanalyze-claim/' + recordId, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({reanalysis_mode: mode || 'feature_refresh'})
+      });
+      var data = await res.json();
+      if (res.ok && data.ok) { btn.textContent = '✓'; setTimeout(function() { btn.textContent = orig; btn.disabled = false; }, 2000); }
+      else { throw new Error(data.error || 'Failed'); }
+    } catch(err) {
+      btn.textContent = '!';
+      btn.title = err.message;
+      setTimeout(function() { btn.textContent = orig; btn.disabled = false; }, 3000);
+    }
+  }
+
+  async function adminBulkReanalyze(mode) {
+    var selected = Array.from(document.querySelectorAll('.admin-cm-cb:checked')).map(function(cb) { return cb.getAttribute('data-record-id'); });
+    if (!selected.length) { alert('Select at least one claim.'); return; }
+    var progressEl = document.getElementById('admin-cm-progress');
+    var progressBar = document.getElementById('admin-cm-progress-bar');
+    var progressText = document.getElementById('admin-cm-progress-text');
+    if (progressEl) progressEl.style.display = 'block';
+    var done = 0;
+    var errors = 0;
+    for (var i = 0; i < selected.length; i++) {
+      var rid = selected[i];
+      if (progressText) progressText.textContent = 'Reanalyzing ' + (i+1) + ' of ' + selected.length + '…';
+      if (progressBar) progressBar.style.width = Math.round(((i+1)/selected.length)*100) + '%';
+      try {
+        var res = await fetch('/editor/reanalyze-claim/' + rid, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({reanalysis_mode: mode || 'feature_refresh'})
+        });
+        var data = await res.json();
+        if (res.ok && data.ok) done++; else errors++;
+      } catch(e) { errors++; }
+      await new Promise(function(r) { setTimeout(r, 400); });
+    }
+    if (progressText) progressText.textContent = 'Done. ' + done + ' succeeded' + (errors ? ', ' + errors + ' failed.' : '.');
+    if (progressBar) progressBar.style.width = '100%';
+    setTimeout(function() { if (progressEl) progressEl.style.display = 'none'; }, 4000);
+  }
+
+  /* ── Mobile Admin Claim Management ─────────────────────────────── */
+  var mAdminCmClaims = [];
+
+  async function mAdminLoadClaims() {
+    var topic = (document.getElementById('madmin-cm-topic') || {}).value || '';
+    var verdict = (document.getElementById('madmin-cm-verdict') || {}).value || '';
+    var listEl = document.getElementById('madmin-cm-list');
+    if (listEl) listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-mid);font-style:italic;">Loading…</div>';
+    try {
+      var url = '/editor/claims?limit=50';
+      if (topic) url += '&topic=' + encodeURIComponent(topic);
+      if (verdict) url += '&verdict=' + encodeURIComponent(verdict);
+      var res = await fetch(url);
+      var data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Load failed');
+      mAdminCmClaims = data.claims || [];
+      renderMAdminCmList();
+    } catch(err) {
+      if (listEl) listEl.innerHTML = '<div style="color:#e07070;padding:12px;">Error: ' + escHtml(err.message) + '</div>';
+    }
+  }
+
+  function renderMAdminCmList() {
+    var listEl = document.getElementById('madmin-cm-list');
+    var countEl = document.getElementById('madmin-cm-count');
+    if (!listEl) return;
+    if (!mAdminCmClaims.length) {
+      listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-mid);font-style:italic;">No claims found.</div>';
+      return;
+    }
+    var html = '';
+    mAdminCmClaims.forEach(function(c) {
+      html += '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);">';
+      html += '<input type="checkbox" class="madmin-cm-cb" data-record-id="' + escHtml(c.record_id) + '" style="width:18px;height:18px;cursor:pointer;flex-shrink:0;">';
+      html += '<div style="flex:1;min-width:0;"><div style="font-size:13px;color:var(--cream);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escHtml(c.title) + '</div>';
+      html += '<div style="font-size:11px;color:var(--text-mid);margin-top:2px;">' + escHtml(c.verdict || '') + '</div></div>';
+      html += '</div>';
+    });
+    listEl.innerHTML = html;
+    if (countEl) countEl.textContent = '';
+    document.querySelectorAll('.madmin-cm-cb').forEach(function(cb) {
+      cb.addEventListener('change', function() {
+        var sel = document.querySelectorAll('.madmin-cm-cb:checked').length;
+        if (countEl) countEl.textContent = sel ? sel + ' selected' : '';
+      });
+    });
+  }
+
+  function mAdminCmToggleAll(masterCb) {
+    document.querySelectorAll('.madmin-cm-cb').forEach(function(cb) { cb.checked = masterCb.checked; });
+    var sel = masterCb.checked ? mAdminCmClaims.length : 0;
+    var countEl = document.getElementById('madmin-cm-count');
+    if (countEl) countEl.textContent = sel ? sel + ' selected' : '';
+  }
+
+  async function mAdminBulkReanalyze(mode) {
+    var selected = Array.from(document.querySelectorAll('.madmin-cm-cb:checked')).map(function(cb) { return cb.getAttribute('data-record-id'); });
+    if (!selected.length) { alert('Select at least one claim.'); return; }
+    var progressEl = document.getElementById('madmin-cm-progress');
+    var progressBar = document.getElementById('madmin-cm-progress-bar');
+    var progressText = document.getElementById('madmin-cm-progress-text');
+    if (progressEl) progressEl.style.display = 'block';
+    var done = 0; var errors = 0;
+    for (var i = 0; i < selected.length; i++) {
+      if (progressText) progressText.textContent = 'Reanalyzing ' + (i+1) + ' of ' + selected.length + '…';
+      if (progressBar) progressBar.style.width = Math.round(((i+1)/selected.length)*100) + '%';
+      try {
+        var res = await fetch('/editor/reanalyze-claim/' + selected[i], {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({reanalysis_mode: mode || 'feature_refresh'})
+        });
+        var data = await res.json();
+        if (res.ok && data.ok) done++; else errors++;
+      } catch(e) { errors++; }
+      await new Promise(function(r) { setTimeout(r, 400); });
+    }
+    if (progressText) progressText.textContent = 'Done. ' + done + ' succeeded' + (errors ? ', ' + errors + ' failed.' : '.');
+    setTimeout(function() { if (progressEl) progressEl.style.display = 'none'; }, 4000);
+  }
+
+  /* ── Breakout Review (Editor Queue tab) ─────────────────────────── */
+  var _breakoutLoaded = false;
+
+  async function loadBreakoutReview() {
+    if (_breakoutLoaded) return;
+    var loadingEl = document.getElementById('breakout-review-loading');
+    var listEl = document.getElementById('breakout-review-list');
+    try {
+      var res = await fetch('/admin/breakout-review');
+      var data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Load failed');
+      var items = data.items || [];
+      if (loadingEl) loadingEl.style.display = 'none';
+      if (listEl) {
+        if (!items.length) {
+          listEl.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-mid);font-style:italic;">No breakout claims currently need review.</div>';
+        } else {
+          var html = '';
+          items.forEach(function(item) {
+            html += '<div class="breakout-review-card">';
+            html += '<div class="breakout-review-title"><a href="/claim/' + escHtml(item.slug) + '" style="color:var(--cream);text-decoration:none;">' + escHtml(item.title) + '</a></div>';
+            html += '<div class="breakout-review-meta">';
+            if (item.breakout_status) html += '<span class="breakout-needs-review-badge">' + escHtml(item.breakout_status) + '</span> ';
+            if (item.needs_review) html += '<span class="breakout-needs-review-badge" style="color:var(--gold);border-color:rgba(201,168,76,.3);background:rgba(201,168,76,.08);">Needs Review</span> ';
+            if (item.date) html += '<span style="font-size:11px;color:var(--text-mid);margin-left:6px;">' + escHtml(item.date) + '</span>';
+            html += '</div>';
+            if (item.ai_grouping_notes) html += '<div style="font-size:13px;color:var(--text-mid);margin-top:4px;">' + escHtml(item.ai_grouping_notes) + '</div>';
+            html += '<div style="margin-top:8px;"><a href="/claim/' + escHtml(item.slug) + '" class="gold-btn" style="text-decoration:none;font-size:11px;">Open Claim</a></div>';
+            html += '</div>';
+          });
+          listEl.innerHTML = html;
+        }
+        listEl.style.display = 'block';
+      }
+      _breakoutLoaded = true;
+    } catch(err) {
+      if (loadingEl) loadingEl.textContent = 'Error loading breakout review: ' + err.message;
+    }
+  }
+
+  /* ── Resolved History (Editor Queue tab) ────────────────────────── */
+  var _resolvedLoaded = false;
+
+  async function loadResolvedHistory() {
+    if (_resolvedLoaded) return;
+    var loadingEl = document.getElementById('resolved-history-loading');
+    var listEl = document.getElementById('resolved-history-list');
+    try {
+      var res = await fetch('/admin/resolved-history');
+      var data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Load failed');
+      var items = data.items || [];
+      if (loadingEl) loadingEl.style.display = 'none';
+      if (listEl) {
+        if (!items.length) {
+          listEl.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-mid);font-style:italic;">No resolved items yet.</div>';
+        } else {
+          var html = '';
+          items.forEach(function(item) {
+            html += '<div class="resolved-history-row">';
+            html += '<div class="resolved-history-title">';
+            if (item.claim_slug) html += '<a href="/claim/' + escHtml(item.claim_slug) + '" style="color:var(--text-light);text-decoration:none;">' + escHtml(item.title) + '</a>';
+            else html += escHtml(item.title);
+            if (item.resolution_type) html += ' <span style="font-size:11px;color:var(--text-mid);">· ' + escHtml(item.resolution_type) + '</span>';
+            html += '</div>';
+            html += '<div class="resolved-history-meta"><span class="status-badge">' + escHtml(item.status) + '</span>';
+            if (item.date) html += ' <span style="font-size:11px;color:var(--text-mid);">' + escHtml(item.date) + '</span>';
+            html += '</div>';
+            html += '</div>';
+          });
+          listEl.innerHTML = html;
+        }
+        listEl.style.display = 'block';
+      }
+      _resolvedLoaded = true;
+    } catch(err) {
+      if (loadingEl) loadingEl.textContent = 'Error loading history: ' + err.message;
+    }
+  }
+
+  /* ── Mobile Admin Hub Navigation ───────────────────────────────── */
+  function mAdminNav(sectionId) {
+    var cards = document.getElementById('mAdminCards');
+    if (cards) cards.style.display = 'none';
+    document.querySelectorAll('.m-admin-section').forEach(function(s) {
+      s.classList.remove('active');
+    });
+    var sec = document.getElementById(sectionId);
+    if (sec) sec.classList.add('active');
+    if (sectionId === 'mAdminErrors') adminLoadErrors();
+    if (sectionId === 'mAdminDebug') {
+      var dc = document.getElementById('mDebugErrorCount');
+      if (dc) dc.textContent = String(getSiteErrors().length);
+    }
+  }
+
+  function mAdminBack() {
+    document.querySelectorAll('.m-admin-section').forEach(function(s) {
+      s.classList.remove('active');
+    });
+    var cards = document.getElementById('mAdminCards');
+    if (cards) cards.style.display = 'grid';
+  }
 
 </script>
 

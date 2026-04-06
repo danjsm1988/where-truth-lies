@@ -24,6 +24,7 @@ AIRTABLE_USERS_TABLE_NAME = os.getenv("AIRTABLE_USERS_TABLE_NAME", "Users")
 AIRTABLE_REALITY_TABLE_NAME = os.getenv("AIRTABLE_REALITY_TABLE_NAME", "Reality Anchors")
 AIRTABLE_SETTINGS_TABLE_NAME = os.getenv("AIRTABLE_SETTINGS_TABLE_NAME", "Settings")
 AIRTABLE_DISPUTES_TABLE_NAME = os.getenv("AIRTABLE_DISPUTES_TABLE_NAME", "Disputes")
+AIRTABLE_ERRORS_TABLE_NAME = os.getenv("AIRTABLE_ERRORS_TABLE_NAME", "System Errors")
 
 # ── Analysis Core Version ──────────────────────────────────────────────────────
 # Bump ONLY when FRAME_CLAIM_PROMPT, frame_claim_input(), or foundational verdict
@@ -4687,7 +4688,7 @@ def editor_update_site_mode():
         return jsonify({"error": "Unauthorized"}), 403
     data = request.get_json() or {}
     new_mode = (data.get("site_mode") or "").strip()
-    valid = ["Live", "Construction/ Site Maintenance", "Testing"]
+    valid = ["Live", "Construction", "Testing", "Maintenance"]
     if new_mode not in valid:
         return jsonify({"error": f"Invalid mode. Must be one of: {valid}"}), 400
     try:
@@ -4929,7 +4930,7 @@ def editor_reanalyze_claim(record_id):
 
             # Always store framing object
             update_fields["Canonical Framing JSON"] = json.dumps(framing_obj, ensure_ascii=False)[:100000]
-            update_fields["Framing Version"] = "1.2"
+            update_fields["Framing Version"] = "1.0"
 
             title_locked = bool(claim_fields.get("Title Locked", False))
             slug_locked = bool(claim_fields.get("Slug Locked", True))
@@ -5170,7 +5171,7 @@ def editor_reanalyze_claim_by_slug(slug):
 
             # Always store framing object
             update_fields["Canonical Framing JSON"] = json.dumps(framing_obj, ensure_ascii=False)[:100000]
-            update_fields["Framing Version"] = "1.2"
+            update_fields["Framing Version"] = "1.0"
 
             title_locked = bool(claim_fields.get("Title Locked", False))
             slug_locked = bool(claim_fields.get("Slug Locked", True))
@@ -5876,6 +5877,395 @@ def breakout_lock_check(record_id):
         "breakout_status": f.get("Breakout Status", "Pending Excavation"),
         "slug": f.get("URL Slug", "")
     })
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ADMIN WORKSPACE  (/admin  — superuser only)
+# ══════════════════════════════════════════════════════════════════════════════
+
+def get_all_users():
+    """Fetch all records from the Users table for admin user management."""
+    try:
+        params = {
+            "sort[0][field]": "Username",
+            "sort[0][direction]": "asc"
+        }
+        records = airtable_get_all(AIRTABLE_USERS_TABLE_NAME, params=params)
+        users = []
+        for r in records:
+            f = r.get("fields", {})
+            users.append({
+                "record_id": r.get("id"),
+                "username": f.get("Username", ""),
+                "role": f.get("Role", "standard"),
+                "active": bool(f.get("Active", False)),
+                "claims_remaining": int(f.get("Claims Remaining", 0) or 0)
+            })
+        return users
+    except Exception as e:
+        print(f"GET ALL USERS ERROR: {e}", flush=True)
+        return []
+
+
+def get_breakout_review_queue():
+    """Fetch breakout claims needing editorial review."""
+    try:
+        formula = (
+            "AND("
+            "{Origin Type}='Breakout Claim',"
+            "OR("
+            "{Breakout Status}='Pending Excavation',"
+            "{Needs Review}=TRUE()"
+            ")"
+            ")"
+        )
+        params = {
+            "filterByFormula": formula,
+            "sort[0][field]": "Date Added",
+            "sort[0][direction]": "desc",
+            "maxRecords": 100,
+            "fields[]": [
+                "Analyzed Claim", "Original Quote", "URL Slug", "Breakout Status",
+                "Origin Type", "Needs Review", "AI Grouping Notes", "Date Added",
+                "Overall Verdict", "Breakout Source Section", "Parent Claim Slug"
+            ]
+        }
+        records = airtable_get_all(AIRTABLE_TABLE_NAME, params=params)
+        items = []
+        for r in records:
+            f = r.get("fields", {})
+            items.append({
+                "record_id": r.get("id"),
+                "title": clean_display_title(f.get("Analyzed Claim") or f.get("Original Quote") or "Untitled Breakout"),
+                "slug": f.get("URL Slug", ""),
+                "breakout_status": f.get("Breakout Status", ""),
+                "needs_review": bool(f.get("Needs Review", False)),
+                "ai_grouping_notes": f.get("AI Grouping Notes", ""),
+                "breakout_source_section": f.get("Breakout Source Section", ""),
+                "parent_slug": f.get("Parent Claim Slug", ""),
+                "date": (f.get("Date Added") or "")[:10],
+                "verdict": f.get("Overall Verdict", "")
+            })
+        return items
+    except Exception as e:
+        print(f"BREAKOUT REVIEW ERROR: {e}", flush=True)
+        return []
+
+
+def get_resolved_queue(limit=50):
+    """Fetch resolved/closed dispute queue items for Resolved History tab."""
+    try:
+        formula = "OR({Status}='Resolved', {Status}='Closed')"
+        params = {
+            "filterByFormula": formula,
+            "sort[0][field]": "Last Updated",
+            "sort[0][direction]": "desc",
+            "maxRecords": limit
+        }
+        records = airtable_get_all(AIRTABLE_DISPUTES_TABLE_NAME, params=params)
+        items = []
+        for r in records:
+            f = r.get("fields", {})
+            items.append({
+                "record_id": r.get("id"),
+                "title": f.get("Original Claim Title", "Untitled"),
+                "claim_slug": f.get("Claim Slug", ""),
+                "status": f.get("Status", ""),
+                "resolution_type": f.get("Resolution Type", ""),
+                "editor_queue_category": f.get("Editor Queue Category", ""),
+                "dispute_text": f.get("Dispute Text", ""),
+                "date": (f.get("Date Submitted") or f.get("Last Updated") or "")[:10]
+            })
+        return items
+    except Exception as e:
+        print(f"RESOLVED HISTORY ERROR: {e}", flush=True)
+        return []
+
+
+def log_system_error(message, error_type="Unknown", source="", route="",
+                     context="", claim_slug="", record_id="", username="", severity="Medium"):
+    """Write an error record to the System Errors Airtable table."""
+    if not AIRTABLE_TOKEN or not AIRTABLE_BASE_ID or not AIRTABLE_ERRORS_TABLE_NAME:
+        return
+    try:
+        fields = {
+            "Error Message": str(message)[:5000],
+            "Error Type": error_type,
+            "Status": "Open",
+            "Severity": severity,
+        }
+        if source:
+            fields["Error Source"] = str(source)[:255]
+        if route:
+            fields["Route"] = str(route)[:255]
+        if context:
+            fields["Context"] = str(context)[:5000]
+        if claim_slug:
+            fields["Claim Slug"] = str(claim_slug)[:255]
+        if record_id:
+            fields["Record ID"] = str(record_id)[:255]
+        if username:
+            fields["Username"] = str(username)[:255]
+        requests.post(
+            airtable_url(AIRTABLE_ERRORS_TABLE_NAME),
+            headers=airtable_headers(),
+            json={"fields": fields},
+            timeout=15
+        )
+    except Exception as e:
+        print(f"LOG_SYSTEM_ERROR failed: {e}", flush=True)
+
+
+def get_system_errors(status_filter="Open", limit=100):
+    """Fetch system error records from Airtable. status_filter: 'Open', 'Resolved', or 'All'."""
+    try:
+        if status_filter == "All":
+            formula = "NOT({Status}='')"
+        elif status_filter:
+            safe_status = escape_airtable_formula_value(status_filter)
+            formula = f"{{Status}}='{safe_status}'"
+        else:
+            formula = "{Status}='Open'"
+        params = {
+            "filterByFormula": formula,
+            "sort[0][field]": "Created At",
+            "sort[0][direction]": "desc",
+            "maxRecords": limit
+        }
+        records = airtable_get_all(AIRTABLE_ERRORS_TABLE_NAME, params=params)
+        errors = []
+        for r in records:
+            f = r.get("fields", {})
+            errors.append({
+                "record_id": r.get("id"),
+                "error_message": f.get("Error Message", ""),
+                "error_type": f.get("Error Type", "Unknown"),
+                "error_source": f.get("Error Source", ""),
+                "route": f.get("Route", ""),
+                "context": f.get("Context", ""),
+                "claim_slug": f.get("Claim Slug", ""),
+                "record_id_ref": f.get("Record ID", ""),
+                "username": f.get("Username", ""),
+                "status": f.get("Status", "Open"),
+                "severity": f.get("Severity", "Medium"),
+                "resolved_by": f.get("Resolved By", ""),
+                "resolved_at": (f.get("Resolved At") or "")[:16],
+                "created_at": (f.get("Created At") or "")[:16],
+                "updated_at": (f.get("Updated At") or "")[:16],
+            })
+        return errors
+    except Exception as e:
+        print(f"GET_SYSTEM_ERRORS ERROR: {e}", flush=True)
+        return []
+
+
+@app.route("/admin")
+def admin_page():
+    """Admin workspace — superuser only."""
+    if not session.get("logged_in"):
+        return redirect("/login")
+    if not session.get("true_superuser"):
+        return "Unauthorized", 403
+
+    try:
+        _s = get_site_settings()
+        users = get_all_users()
+
+        return render_template(
+            "index.html",
+            page_mode="admin",
+            site_mode=_s["site_mode"],
+            site_message_title=_s.get("message_title", ""),
+            site_message_body=_s.get("message_body", ""),
+            admin_users=users,
+            analysis_core_version=ANALYSIS_CORE_VERSION,
+            superuser=True,
+            true_superuser=True,
+            recent_claims=get_recent_claims(limit=5),
+            current_claim=None,
+            archived_claims_by_topic={},
+            selected_topic="",
+            user_disputes=[],
+            search_query="",
+            search_results=[],
+            editor_queue=[]
+        )
+    except Exception as e:
+        return f"Admin load error: {str(e)}", 500
+
+
+@app.route("/admin/users", methods=["GET"])
+def admin_users_list():
+    """Return all users as JSON for admin user management."""
+    if not session.get("logged_in"):
+        return jsonify({"error": "Not logged in"}), 401
+    if not session.get("true_superuser"):
+        return jsonify({"error": "Unauthorized"}), 403
+    users = get_all_users()
+    return jsonify({"ok": True, "users": users})
+
+
+@app.route("/admin/users/<record_id>", methods=["PATCH"])
+def admin_update_user(record_id):
+    """Update a user record inline — role, active, claims_remaining."""
+    if not session.get("logged_in"):
+        return jsonify({"error": "Not logged in"}), 401
+    if not session.get("true_superuser"):
+        return jsonify({"error": "Unauthorized"}), 403
+    try:
+        data = request.get_json() or {}
+        update = {}
+        if "role" in data:
+            allowed_roles = ["superuser", "limited_superuser", "standard"]
+            if data["role"] in allowed_roles:
+                update["Role"] = data["role"]
+        if "active" in data:
+            update["Active"] = bool(data["active"])
+        if "claims_remaining" in data:
+            try:
+                update["Claims Remaining"] = int(data["claims_remaining"])
+            except (ValueError, TypeError):
+                pass
+        if not update:
+            return jsonify({"error": "No valid fields to update"}), 400
+        resp = requests.patch(
+            f"{airtable_url(AIRTABLE_USERS_TABLE_NAME)}/{record_id}",
+            headers=airtable_headers(),
+            json={"fields": update},
+            timeout=20
+        )
+        if not resp.ok:
+            return jsonify({"error": f"Airtable error: {resp.text}"}), 500
+        return jsonify({"ok": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/admin/breakout-review", methods=["GET"])
+def admin_breakout_review():
+    """Return breakout claims needing review."""
+    if not session.get("logged_in"):
+        return jsonify({"error": "Not logged in"}), 401
+    if not session.get("true_superuser"):
+        return jsonify({"error": "Unauthorized"}), 403
+    items = get_breakout_review_queue()
+    return jsonify({"ok": True, "items": items})
+
+
+@app.route("/admin/resolved-history", methods=["GET"])
+def admin_resolved_history():
+    """Return resolved/closed dispute queue items."""
+    if not session.get("logged_in"):
+        return jsonify({"error": "Not logged in"}), 401
+    if not session.get("true_superuser"):
+        return jsonify({"error": "Unauthorized"}), 403
+    limit = min(int(request.args.get("limit", 50)), 100)
+    items = get_resolved_queue(limit=limit)
+    return jsonify({"ok": True, "items": items})
+
+
+@app.route("/admin/errors", methods=["GET"])
+def admin_errors_list():
+    """Return system errors from Airtable for the Admin Error Console."""
+    if not session.get("logged_in"):
+        return jsonify({"error": "Not logged in"}), 401
+    if not session.get("true_superuser"):
+        return jsonify({"error": "Unauthorized"}), 403
+    status_filter = request.args.get("status", "Open")
+    limit = min(int(request.args.get("limit", 100)), 200)
+    errors = get_system_errors(status_filter=status_filter, limit=limit)
+    return jsonify({"ok": True, "errors": errors})
+
+
+@app.route("/admin/errors/log", methods=["POST"])
+def admin_errors_log():
+    """Log a new error from the frontend to the System Errors table."""
+    if not session.get("logged_in"):
+        return jsonify({"error": "Not logged in"}), 401
+    if not session.get("true_superuser"):
+        return jsonify({"error": "Unauthorized"}), 403
+    try:
+        data = request.get_json() or {}
+        log_system_error(
+            message=data.get("message", "Unknown error"),
+            error_type=data.get("error_type", "Frontend"),
+            source=data.get("source", ""),
+            route=data.get("route", ""),
+            context=data.get("context", ""),
+            claim_slug=data.get("claim_slug", ""),
+            record_id=data.get("record_id", ""),
+            username=session.get("username", ""),
+            severity=data.get("severity", "Medium")
+        )
+        return jsonify({"ok": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/admin/errors/resolve", methods=["POST"])
+def admin_errors_resolve():
+    """Mark selected error records as Resolved."""
+    if not session.get("logged_in"):
+        return jsonify({"error": "Not logged in"}), 401
+    if not session.get("true_superuser"):
+        return jsonify({"error": "Unauthorized"}), 403
+    try:
+        data = request.get_json() or {}
+        record_ids = data.get("record_ids", [])
+        if not record_ids:
+            return jsonify({"error": "No record IDs provided"}), 400
+        editor_username = session.get("username", "Admin")
+        now_iso = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.000Z")
+        updated = 0
+        for rid in record_ids:
+            try:
+                resp = requests.patch(
+                    f"{airtable_url(AIRTABLE_ERRORS_TABLE_NAME)}/{rid}",
+                    headers=airtable_headers(),
+                    json={"fields": {
+                        "Status": "Resolved",
+                        "Resolved By": editor_username,
+                        "Resolved At": now_iso
+                    }},
+                    timeout=15
+                )
+                if resp.ok:
+                    updated += 1
+            except Exception:
+                pass
+        return jsonify({"ok": True, "updated": updated})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/admin/errors/ignore", methods=["POST"])
+def admin_errors_ignore():
+    """Mark selected error records as Ignored."""
+    if not session.get("logged_in"):
+        return jsonify({"error": "Not logged in"}), 401
+    if not session.get("true_superuser"):
+        return jsonify({"error": "Unauthorized"}), 403
+    try:
+        data = request.get_json() or {}
+        record_ids = data.get("record_ids", [])
+        if not record_ids:
+            return jsonify({"error": "No record IDs provided"}), 400
+        updated = 0
+        for rid in record_ids:
+            try:
+                resp = requests.patch(
+                    f"{airtable_url(AIRTABLE_ERRORS_TABLE_NAME)}/{rid}",
+                    headers=airtable_headers(),
+                    json={"fields": {"Status": "Ignored"}},
+                    timeout=15
+                )
+                if resp.ok:
+                    updated += 1
+            except Exception:
+                pass
+        return jsonify({"ok": True, "updated": updated})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
